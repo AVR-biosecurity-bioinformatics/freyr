@@ -1,5 +1,11 @@
 # PipeRline
 
+This pipeline is currently being re-written in the **Nextflow** language as a _containerised_ and _reproducible_ workflow.
+
+This pipeline is also partially inspired by the [nfcore/ampliseq](https://github.com/nf-core/ampliseq) pipeline!
+
+### old README text
+
 PipeRline is a targets based Metabarcoding pipeline implemented in R
 
 The best place to start is going through the [General introduction to the pipeRline workflow](https://alexpiper.github.io/piperline/vignettes/general.html)
