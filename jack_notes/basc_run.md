@@ -27,7 +27,11 @@ Load interactive job, modules and R session:
     # Load R
     R
 
-Load `renv` R package from my R/4.2.0 library in `home` directory:
+Install `renv` package (version `1.0.3`) in my R/4.2.0 library in home directory:
+
+    > install.packages("renv", version = "1.0.3", repos = "http://cran.rstudio.com/", lib = "~/R_libs/4.2.0")
+
+Load `renv` R package:
 
     > library(renv, lib.loc = "~/R_libs/4.2.0")
 
