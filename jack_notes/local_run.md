@@ -17,3 +17,6 @@ Restore packages from the `./renv.lock` file using `renv`:
 
 > **NOTE:** If you don't use the `rebuild = T` command (at least on initial run?), only one package will be installed for some reason, and you need to delete the project directory and re-clone a fresh project from Github.
 
+> **NOTE:** Needed to install [Rtools42](https://cran.r-project.org/bin/windows/Rtools/rtools42/rtools.html), as `make` was not found and is needed to install packages from source.
+
+
