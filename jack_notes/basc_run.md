@@ -32,6 +32,8 @@ Load interactive job, modules and R session:
 
     # create .Rprofile if it doesn't exist already
     echo '.libPaths("~/R_libs/default")' > ~/.Rprofile
+    #echo 'options(renv.config.pak.enabled = TRUE)' >> ~/.Rprofile
+    # do above if using pak?
 
     # Load R
     R
@@ -40,20 +42,33 @@ Source user `.Rprofile` (which just contains `.libPaths("~/R_libs/default")`) fo
 
     > source("~/.Rprofile")
 
-I'm avoiding using the packages `crew`, `mirai` and `nanonext` as the latter has a dependency that is missing on BASC. As such, I'm using the `_targets_nocrew.R` targets file and the `renv_nocrew.lock` file to install packages.
+I'm avoiding using the packages `crew`, `mirai` and `nanonext` as the latter has a dependency that is missing on BASC. As such, I'm using the `_targets_nocrew.R` targets file and the `renv_nocrew.lock` file to install packages. This file now also doesn't install `taxreturn`.
 
 Install `renv` package (version `1.0.3`):
 
     > install.packages("renv", version = "1.0.3", repos = "http://cran.rstudio.com/")
 
-Load `renv` R package:
+Install `pak` package:
+    > install.packages("pak", repos = "http://cran.rstudio.com/")
 
+Load packages:
+
+    > library(devtools) # trying this to install taxreturn manually
     > library(renv)
+    > library(pak)
+
+Install `taxreturn` manually using `devtools`:
+
+    > install_github("alexpiper/taxreturn@e9dc03a", force = T)
 
 Restore packages from `renv_nocrew.lock` file using `renv`:
 
     > renv::restore(lockfile = "./renv_nocrew.lock")
     # type 'y' to activate project, then "y" again to proceed installation; packages will install from download or cache (takes a while)
+
+Load taxreturn independently from personal library:
+
+    > library(taxreturn)
 
 Error:
 
