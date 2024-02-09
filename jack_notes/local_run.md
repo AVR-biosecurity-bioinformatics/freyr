@@ -50,4 +50,6 @@ After this, running just `> renv:restore()` seems to be working?
 
     Successfully downloaded 174 packages in 2300 seconds.
     # This doesn't seem like enough
+    # Took 1.4h to install BH from cache?
+    # GenomicRanges install completed this time
 
