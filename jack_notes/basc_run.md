@@ -32,14 +32,13 @@ Load interactive job, modules and R session:
 
     # create .Rprofile if it doesn't exist already
     echo '.libPaths("~/R_libs/default")' > ~/.Rprofile
-    #echo 'options(renv.config.pak.enabled = TRUE)' >> ~/.Rprofile
-    # do above if using pak?
+    echo 'options(renv.config.pak.enabled = TRUE)' >> ~/.Rprofile
+    # do above so renv uses pak to install packages (need to load pak first)
 
     # Load R
     R
 
-Source user `.Rprofile` (which just contains `.libPaths("~/R_libs/default")`) for default packages directory:
-
+    # load user source file
     > source("~/.Rprofile")
 
 I'm avoiding using the packages `crew`, `mirai` and `nanonext` as the latter has a dependency that is missing on BASC. As such, I'm using the `_targets_nocrew.R` targets file and the `renv_nocrew.lock` file to install packages. This file now also doesn't install `taxreturn`.
@@ -61,37 +60,29 @@ Install `taxreturn` manually using `devtools`:
 
     > install_github("alexpiper/taxreturn@e9dc03a", force = T)
 
+Load taxreturn independently from personal library:
+
+    > library(taxreturn)
+
 Restore packages from `renv_nocrew.lock` file using `renv`:
 
     > renv::restore(lockfile = "./renv_nocrew.lock")
     # type 'y' to activate project, then "y" again to proceed installation; packages will install from download or cache (takes a while)
 
-Load taxreturn independently from personal library:
+`pak` works really well and installs packages in parallel--much faster!
 
-    > library(taxreturn)
+Create new `_targets_packages_nocrew.R` file that doesn't contain `crew`, `mirai` or `nanonext` and source it, installing the packages:
 
-Error:
+    > source("_targets_packages_nocrew.R")
+    
+    # Source ancillary functions
+    source("R/functions.R")
+    source("R/themes.R")
 
-    Installing taxreturn [0.1] ...
-            FAILED
-    Error in gzfile(file, "rb") : cannot open the connection
-    In addition: Warning message:
-    In gzfile(file, "rb") :
-    cannot open compressed file '/group/pathogens/IAWS/Personal/JackS/piperline_tests/dros_test/renv/staging/1/taxreturn/Meta/package.rds', probable reason 'No such file or directory'
-    Traceback (most recent calls last):
-    13: renv::restore(lockfile = "./renv_nocrew.lock")
-    12: renv_restore_run_actions(project, diff, current, lockfile, rebuild)
-    11: renv_install_impl(records)
-    10: renv_install_staged(records)
-    9: renv_install_default(records)
-    8: handler(package, renv_install_package(record))
-    7: renv_install_package(record)
-    6: withCallingHandlers(renv_install_package_impl(record), error = function(e) {
-            vwritef("\tFAILED")
-            writef(e$output)
-        })
-    5: renv_install_package_impl(record)
-    4: renv_package_augment(installpath, record)
-    3: renv_package_augment_metadata(installpath, remotes)
-    2: readRDS(metapath)
-    1: gzfile(file, "rb")
+Reference database from Zenodo:
+
+    # Download database from zenodo
+    > download_zenodo(
+        doi = "10.5281/zenodo.7655352",
+        path = "reference"
+      )
