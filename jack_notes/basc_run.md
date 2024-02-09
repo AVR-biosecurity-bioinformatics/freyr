@@ -9,7 +9,7 @@ This will run in the `dros_test` directory in `/group/pathogens/IAWS/Personal/Ja
     git clone https://github.com/jackscanlan/piperline.git dros_test
     cd dros_test
 
-Copy example demultiplexed .fastq and samplesheet from another metabarcoding project:
+Copy example demultiplexed `.fastq` and samplesheet from another metabarcoding project:
 
     cp -r /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/JDYG3 ./data
     cp /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/SampleSheet_JDYG3.csv ./data
@@ -35,7 +35,7 @@ Load interactive job, modules and R session:
     echo 'options(renv.config.pak.enabled = TRUE)' >> ~/.Rprofile
     # do above so renv uses pak to install packages (need to load pak first)
 
-    # Load R
+    # Start R session
     R
 
     # load user source file
@@ -48,6 +48,7 @@ Install `renv` package (version `1.0.3`):
     > install.packages("renv", version = "1.0.3", repos = "http://cran.rstudio.com/")
 
 Install `pak` package:
+
     > install.packages("pak", repos = "http://cran.rstudio.com/")
 
 Load packages:
@@ -76,8 +77,8 @@ Create new `_targets_packages_nocrew.R` file that doesn't contain `crew`, `mirai
     > source("_targets_packages_nocrew.R")
     
     # Source ancillary functions
-    source("R/functions.R")
-    source("R/themes.R")
+    > source("R/functions.R")
+    > source("R/themes.R")
 
 Reference database from Zenodo:
 
