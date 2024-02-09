@@ -17,7 +17,7 @@ Copy example demultiplexed .fastq and samplesheet from another metabarcoding pro
 Load interactive job, modules and R session:
 
     # Create new interactive SLURM session
-    sinteractive --ntasks=1 --cpus-per-task=10 --mem-per-cpu=10GB --time=72:00:00
+    sinteractive --ntasks=1 --cpus-per-task=1 --mem-per-cpu=10GB --time=72:00:00
 
     # load modules
     module load R/4.2.0-foss-2021b
@@ -31,7 +31,7 @@ Load interactive job, modules and R session:
     mkdir -p ~/R_libs/default
 
     # create .Rprofile if it doesn't exist already
-    cat '.libPaths("~/R_libs/default")' > ~/.Rprofile2
+    echo '.libPaths("~/R_libs/default")' > ~/.Rprofile
 
     # Load R
     R
@@ -55,3 +55,28 @@ Restore packages from `renv_nocrew.lock` file using `renv`:
     > renv::restore(lockfile = "./renv_nocrew.lock")
     # type 'y' to activate project, then "y" again to proceed installation; packages will install from download or cache (takes a while)
 
+Error:
+
+    Installing taxreturn [0.1] ...
+            FAILED
+    Error in gzfile(file, "rb") : cannot open the connection
+    In addition: Warning message:
+    In gzfile(file, "rb") :
+    cannot open compressed file '/group/pathogens/IAWS/Personal/JackS/piperline_tests/dros_test/renv/staging/1/taxreturn/Meta/package.rds', probable reason 'No such file or directory'
+    Traceback (most recent calls last):
+    13: renv::restore(lockfile = "./renv_nocrew.lock")
+    12: renv_restore_run_actions(project, diff, current, lockfile, rebuild)
+    11: renv_install_impl(records)
+    10: renv_install_staged(records)
+    9: renv_install_default(records)
+    8: handler(package, renv_install_package(record))
+    7: renv_install_package(record)
+    6: withCallingHandlers(renv_install_package_impl(record), error = function(e) {
+            vwritef("\tFAILED")
+            writef(e$output)
+        })
+    5: renv_install_package_impl(record)
+    4: renv_package_augment(installpath, record)
+    3: renv_package_augment_metadata(installpath, remotes)
+    2: readRDS(metapath)
+    1: gzfile(file, "rb")
