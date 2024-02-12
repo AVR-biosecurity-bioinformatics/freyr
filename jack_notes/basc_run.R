@@ -5,6 +5,8 @@ source("~/.Rprofile")
 
 library(renv)
 library(pak)
+library(targets)
+library(tarchetypes)
 
 renv::restore(lockfile = "./renv_nocrew.lock")
 
