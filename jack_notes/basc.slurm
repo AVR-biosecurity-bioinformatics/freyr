@@ -57,5 +57,5 @@ module load Pandoc/2.5
 module load ZeroMQ/4.3.2-GCCcore-9.3.0
 
 # run script that runs pipeline
-Rscript /group/pathogens/IAWS/Personal/JackS/piperline_tests/dros_test/basc_run.R
+Rscript ./basc_run.R
 
