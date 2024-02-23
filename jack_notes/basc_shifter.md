@@ -32,7 +32,10 @@ Enter the container:
 
     # enter container
     # this should be altered to the most recent version of the container
-    shifter --image jackscanlan/pipeline:0.0.2
+    shifter --image jackscanlan/piperline:0.0.2
+
+    # set R library path
+    R_LIBS_USER="/usr/local/lib/R/site-library"
 
 
 Run R script (`basc_shifter.R`) that runs the pipeline inside the container:
