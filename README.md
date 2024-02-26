@@ -1,15 +1,25 @@
 # PipeRline
 
-This pipeline is currently being re-written in the **Nextflow** language as a _containerised_ and _reproducible_ workflow.
+`pipeRline` is a `targets`-based metabarcoding pipeline currently implemented in R. 
 
-This pipeline is also partially inspired by the [nfcore/ampliseq](https://github.com/nf-core/ampliseq) pipeline!
+This pipeline is currently being re-written in the **Nextflow** language as a _containerised_ and _reproducible_ workflow. It is also partially inspired by the [nfcore/ampliseq](https://github.com/nf-core/ampliseq) pipeline!
 
-### old README text
 
-PipeRline is a targets based Metabarcoding pipeline implemented in R
+### Usage
+
+**2024-02-27:** The `R` environment (and `blast+`) is now available in a Docker image available at [Docker Hub](https://hub.docker.com/repository/docker/jackscanlan/piperline/general). Scripts are provided to run the pipeline on the BASC HPC, which uses [SLURM](https://slurm.schedmd.com/) and [Shifter](https://github.com/NERSC/shifter), in the `running_scripts` directory. 
+
+To run the pipeline in a SLURM-based HPC using `shifter`, modify the `RUN_LOC` and `RUN_DIR` variables in `basc_shifter.slurm`, and also modify the `module` commands to be specific for your system. 
+
+
+
+
+
+
+
+## old README text
 
 The best place to start is going through the [General introduction to the pipeRline workflow](https://alexpiper.github.io/piperline/vignettes/general.html)
-
 
 Project specific workflows:
 
