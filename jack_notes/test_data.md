@@ -2,30 +2,29 @@ Aim: To make a test dataset that contains a minimal number of read pairs, that c
 
 Will base this on the `JDYG3` flow cell data available in the `/group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/JDYG3/` directory.
 
+> Note: Need minimum 1000 reads in a sample after filtering, so set subsampling to 5000 reads.
+
 Workflow:
     
     mkdir -p /group/pathogens/IAWS/Personal/JackS/piperline_tests/test_data && \
         cd /group/pathogens/IAWS/Personal/JackS/piperline_tests/test_data
     
-    mkdir full_data subsamples
+    mkdir full_data JDYG3
 
     cp -r /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/JDYG3/*.fastq.gz full_data
 
-    cp full_data/JDYG3_jm00{1,2}A_* subsamples
+    cp full_data/JDYG3_jm00{1,2}A_* JDYG3
 
     module load seqtk
-    cd subsamples
+    cd JDYG3
     for filename in *.fastq.gz; do
-        seqtk sample $filename -s1 1000 | gzip -c > sub_${filename}
+        seqtk sample $filename -s1 5000 | gzip -c > sub_${filename}
     done
     rm JDYG3_*
 
     for filename in *.fastq.gz; do 
         mv -- "$filename" "${filename#*_}"
     done
-
-    # rename subsamples folder to JDYG3 (or the pipeline won't work)
-    mv ../subsamples ../JDYG3
 
     cp /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/SampleSheet_JDYG3.csv .
 

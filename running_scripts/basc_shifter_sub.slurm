@@ -55,7 +55,7 @@ git clone https://github.com/jackscanlan/piperline.git $RUN_DIR && \
 module purge
 
 # copy subsample data into running directory
-cp -r /group/pathogens/IAWS/Personal/JackS/piperline_tests/test_data/subsamples \
+cp -r /group/pathogens/IAWS/Personal/JackS/piperline_tests/test_data/JDYG3 \
     ./data/
 
 # # replace old samplesheet with new samplesheet
