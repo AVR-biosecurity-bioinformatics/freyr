@@ -18,12 +18,16 @@ Workflow:
     for filename in *.fastq.gz; do
         seqtk sample $filename -s1 1000 | gzip -c > sub_${filename}
     done
-
     rm JDYG3_*
+
+    for filename in *.fastq.gz; do 
+        mv -- "$filename" "${filename#*_}"
+    done
 
     cp /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/SampleSheet_JDYG3.csv .
 
-`SampleSheet_JDYG3.csv` then edited to remove non-"jm00{1,2}" samples an reuploaded as `SampleSheet_test.csv`, and converted with `dos2unix`. 
+`SampleSheet_JDYG3.csv` then edited to remove non-"jm00{1,2}" samples and reuploaded as `SampleSheet_test.csv`, and converted with `dos2unix`. 
+
 
 Also copy `runParameters.xml` from other directory:
 
