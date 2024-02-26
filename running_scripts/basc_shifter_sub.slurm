@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # The name of the job:
-#SBATCH --job-name="piperline.container_test"
+#SBATCH --job-name="piperline.subsample_test"
 
 # The name of the output file (name of the job name plus the job ID):
 #SBATCH --output="%x_%j.out"
