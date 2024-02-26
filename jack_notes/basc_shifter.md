@@ -34,6 +34,8 @@ Enter the container:
     # this should be altered to the most recent version of the container
     shifter --image jackscanlan/piperline:0.0.2
 
+    # also remove default R_lub
+
     # set R library path
     R_LIBS_USER="/usr/local/lib/R/site-library"
 

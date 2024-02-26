@@ -1,40 +1,7 @@
 library(targets)
 library(tarchetypes)
-library(crew)
 source("R/functions.R")
 options(tidyverse.quiet = TRUE)
-
-# Set up local controller if threads > 1
-nthreads <- readr::read_csv("sample_data/loci_params.csv", show_col_types = FALSE)$threads
-if(is.null(nthreads)){
-  local_controller <- NULL
-} else if ( nthreads ==1 ){
-  local_controller <- NULL
-} else if (is.numeric(nthreads) & nthreads > 1){
-  message(paste0("Running pipeline across ", nthreads, " parallel threads"))
-  local_controller <- crew::crew_controller_local(
-    name="local",
-    workers = nthreads,
-    host = "127.0.0.1",
-    port = NULL,
-    tls_enable = FALSE,
-    tls_config = NULL,
-    seconds_interval = 0.25,
-    seconds_timeout = 10,
-    seconds_launch = 30,
-    seconds_idle = Inf,
-    seconds_wall = Inf,
-    seconds_exit = 1,
-    tasks_max = Inf,
-    tasks_timers = 0L,
-    reset_globals = TRUE,
-    reset_packages = FALSE,
-    reset_options = FALSE,
-    garbage_collection = FALSE,
-    launch_max = 10L)
-} else {
-  stop("threads parameter must be numeric")
-}
 
 # Load packages -----------------------------------------------------------
 tar_option_set(packages = c(
@@ -60,16 +27,12 @@ tar_option_set(packages = c(
   "dada2",
   "ngsReports",
   "taxreturn",
-  "seqateurs",
-  "mirai",
-  "crew",
-  "nanonext"
+  "seqateurs"
 ),
 imports =c(
   "taxreturn",
   "seqateurs"
 ),
-controller = local_controller,
 workspace_on_error = TRUE)
 
 # Source script files in R directory

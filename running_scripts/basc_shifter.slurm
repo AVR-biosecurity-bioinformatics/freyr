@@ -1,9 +1,10 @@
 #!/bin/bash
-# Created by the DJPR job script generator for Slurm
-# Mon Feb 12 2024 11:37:11 GMT+1100 (Australian Eastern Daylight Time)
 
 # The name of the job:
 #SBATCH --job-name="piperline.container_test"
+
+# The name of the output file (name of the job name plus the job ID):
+#SBATCH --output="%x_%j.out"
 
 # The project ID which this job should run under:
 #SBATCH --account="pathogens"
@@ -18,15 +19,10 @@
 # The total amount of memory in megabytes in the job:
 #SBATCH --mem=20480
 
-# Send yourself an email when the job:
-# aborts abnormally (fails)
+# Send yourself an email when the job aborts, begins and ends:
 #SBATCH --mail-type=FAIL
-# begins
 #SBATCH --mail-type=BEGIN
-# ends successfully
 #SBATCH --mail-type=END
-
-# Use this email address:
 #SBATCH --mail-user=jack.scanlan@agriculture.vic.gov.au
 
 # The maximum running time of the job in days-hours:mins:sec
@@ -38,38 +34,44 @@ if [ "x$SLURM_JOB_ID" == "x" ]; then
    exit 1
 fi
 
+#### Location of run directory ####
+RUN_LOC=/group/pathogens/IAWS/Personal/JackS/piperline_tests
 
+#### Name of run directory; to be made ####
+RUN_DIR=container_test
 
-# Run the job from this directory:
-cd /group/pathogens/IAWS/Personal/JackS/piperline_tests
+# move to the specified directory after checking that directory exists and is not a file
+if [ -d "${RUN_LOC:+$RUN_LOC/}" ]; then
+    cd $RUN_LOC
+else
+    "Run directory is not a valid directory"
+fi 
 
+# clone GitHub repo for the pipeline and move into it
 module purge
-
 module load git/2.41.0-GCCcore-12.3.0-nodocs
-
-git clone https://github.com/jackscanlan/piperline.git container_test && \
-    cd container_test
-
+git clone https://github.com/jackscanlan/piperline.git $RUN_DIR && \
+    cd $RUN_DIR
 module purge
 
+# copy existing data into running directory
 cp -r /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/JDYG3 \
     ./data/
 
-# replace old samplesheet with new samplesheet (just for this example)
+# replace old samplesheet with new samplesheet
 rm ./data/JDYG3/SampleSheet.csv
-
 cp /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/SampleSheet_JDYG3.csv \
     ./data/JDYG3/SampleSheet.csv
 
+# copy across existing reference database
 cp -r /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/reference \
     .
 
+# run pipeline using Docker container
 module load shifter
-
-shifterimg pull docker:jackscanlan/piperline:0.0.2
-
+# shifterimg pull docker:jackscanlan/piperline:0.0.2 ## uncomment if needing to pull image
 shifter --image jackscanlan/piperline:0.0.2
+Rscript ./running_scripts/basc_shifter.R
 
-Rscript ./jack_notes/basc_shifter.R
-
+# exit script
 exit
