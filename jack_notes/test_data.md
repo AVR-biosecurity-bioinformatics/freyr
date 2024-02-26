@@ -4,6 +4,8 @@ Will base this on the `JDYG3` flow cell data available in the `/group/pathogens/
 
 > Note: Need minimum 1000 reads in a sample after filtering, so set subsampling to 5000 reads.
 
+> Note: Also need `Undetermined` reads to correctly produce log PDFs, as well as need `RunInfo.xml` file for flowcell QC. 
+
 Workflow:
     
     mkdir -p /group/pathogens/IAWS/Personal/JackS/piperline_tests/test_data && \
@@ -14,6 +16,7 @@ Workflow:
     cp -r /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/JDYG3/*.fastq.gz full_data
 
     cp full_data/JDYG3_jm00{1,2}A_* JDYG3
+    cp full_data/JDYG3_Undetermined* JDYG3
 
     module load seqtk
     cd JDYG3
@@ -27,6 +30,8 @@ Workflow:
     done
 
     cp /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/SampleSheet_JDYG3.csv .
+    
+    cp /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/JDYG3/RunInfo.xml .
 
 `SampleSheet_JDYG3.csv` then edited to remove non-"jm00{1,2}" samples and reuploaded as `SampleSheet_test.csv`, and converted with `dos2unix`. 
 
