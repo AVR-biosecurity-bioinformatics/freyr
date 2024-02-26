@@ -66,10 +66,9 @@ cp -r /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/reference \
 
 module load shifter
 
-shifterimg pull docker:jackscanlan/piperline:0.0.2
+# shifterimg pull docker:jackscanlan/piperline:0.0.2
 
-shifter --image jackscanlan/piperline:0.0.2
-
-Rscript ./jack_notes/basc_shifter.R
+shifter --image jackscanlan/piperline:0.0.2 \
+    Rscript ./jack_notes/basc_shifter.R
 
 exit
