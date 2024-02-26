@@ -7,7 +7,7 @@ This pipeline is currently being re-written in the **Nextflow** language as a _c
 
 ### Usage
 
-**2024-02-27:** The `R` environment (and `blast+`) is now available in a Docker image available at [Docker Hub](https://hub.docker.com/repository/docker/jackscanlan/piperline/general). Scripts are provided to run the pipeline on the BASC HPC, which uses [SLURM](https://slurm.schedmd.com/) and [Shifter](https://github.com/NERSC/shifter), in the `running_scripts` directory. 
+**2024-02-27:** The `R:4.2.0` environment (and `blast+`) is now available in a (linux/amd64) Docker image available at [Docker Hub](https://hub.docker.com/repository/docker/jackscanlan/piperline/general). Scripts are provided to run the pipeline on the BASC HPC, which uses [SLURM](https://slurm.schedmd.com/) and [Shifter](https://github.com/NERSC/shifter), in the `running_scripts` directory. 
 
 To run the pipeline in a SLURM-based HPC using `shifter`, modify the `RUN_LOC` and `RUN_DIR` variables in `basc_shifter.slurm`, and also modify the `module` commands to be specific for your system. 
 
