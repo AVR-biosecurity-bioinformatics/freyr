@@ -24,6 +24,9 @@ Workflow:
         mv -- "$filename" "${filename#*_}"
     done
 
+    # rename subsamples folder to JDYG3 (or the pipeline won't work)
+    mv ../subsamples ../JDYG3
+
     cp /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/SampleSheet_JDYG3.csv .
 
 `SampleSheet_JDYG3.csv` then edited to remove non-"jm00{1,2}" samples and reuploaded as `SampleSheet_test.csv`, and converted with `dos2unix`. 
