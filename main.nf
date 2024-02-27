@@ -9,3 +9,5 @@
 */
 
 nextflow.enable.dsl = 2
+
+// prepare_inputs.R file is for adding inputs to pipeline (at the moment)
