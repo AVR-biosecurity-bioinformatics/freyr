@@ -55,7 +55,7 @@
 
 `seq_qc`: applies `step_seq_qc()` to `temp_samdf1_grouped`, which uses [`savR` package](https://www.bioconductor.org/packages/3.16/bioc/html/savR.html) to QC the sequencing run from the SAV files (InterOp and RunInfo.xml) 
 
-`switching_qc`: applies `step_switching_calc()` to `temp_samdf1_grouped` to calculate index switching rates and then plot 
+`switching_qc`: applies `step_switching_calc()` to `temp_samdf1_grouped` to calculate index switching rates and then plots this info (heat map?) 
 
 > `step_sample_qc()` function defined in `functions.R` but not used in pipeline. This would use FastQC on sample reads. 
 
@@ -63,86 +63,90 @@
 
 #### "Demultiplex and trim primers" targets
 
-`primer_trim`: 
+`primer_trim`: applies `step_primer_trim()` to files in `temp_samdf1`, trimming primer sequences from reads using the `trim_primers()` function
+- in the future, could replace with a process using (non-R) software to trim primers
 
-`primer_trim_path`:
+`primer_trim_path`: returns the file path for the primer-trimmed reads from `primer_trim`
 
-`temp_samdf2`
+`temp_samdf2`: makes another temp samdf from `temp_samdf1` using `step_demux_samdf()` to update sample and logging sheet to add newly demultiplexed files, and `step_check_files()` to check filenames and missing files and to also hash files
 
 #### "Filter reads" targets
 
-`read_filter`:
+`read_filter`: filters and trims reads (from `primer_trim`) using `step_filter_reads()`, which uses `dada2::filterAndTrim()`
 
-`read_filter_path`: 
+`read_filter_path`: returns the file path for the filtered reads from `read_filter`
 
-`temp_samdf3`:
+`temp_samdf3`: makes another temp samdf from `temp_samdf2` using `step_check_files()` to check filenames and missing files and to also hash files
 
-`prefilt_qualplots`:
+`prefilt_qualplots`: creates quality plots for pre-filter reads using `plot_read_quals()`
 
-`write_prefilt_qualplots`:
+`write_prefilt_qualplots`: writes `prefilt_qualplots` plots to disk
+- merge with above into one process
 
-`postfilt_qualplots`:
+`postfilt_qualplots`: creates quality plots for post-filter reads using `plot_read_quals()`
 
-`write_postfilt_qualplots`:
+`write_postfilt_qualplots`: writes `postfilt_qualplots` plots to disk
+- merge with above into one process
 
 #### "Infer sequence variants with DADA2" targets
 - Could split fwd and rev reads into different 'streams' of processes
 
-`tar_group_by(temp_samdf3_grouped, temp_samdf3, fcid, pcr_primers)`:
+`tar_group_by(temp_samdf3_grouped, temp_samdf3, fcid, pcr_primers)`: groups `temp_samdf3` by `fcid` and `pcr_primers`
 
-`tar_group_by(temp_samdf3_grouped_sample, temp_samdf3, fcid, pcr_primers, sample_id)`:
+`tar_group_by(temp_samdf3_grouped_sample, temp_samdf3, fcid, pcr_primers, sample_id)`: groups `temp_samdf3` by `fcid`, `pcr_primers` and `sample_id`
 
-`error_model_fwd`:
+`error_model_fwd`: runs `step_errormodel()` on forward reads per flow cell, which uses `dada2::learnErrors()` to learn base errors from data with `temp_samdf3_grouped`. Also outputs plots of the error models
 
-`error_model_rev`:
+`error_model_rev`: same as `error_model_fwd` but runs on reverse reads
 
-`denoise_fwd`:
+`denoise_fwd`: run `step_dada2_single2()` on forward reads per sample, which uses `dada2::dada()` to denoise reads using error models from `error_model_fwd`
 
-`denoise_rev`:
+`denoise_rev`: same as `denoise_fwd` but runs on reverse reads
 
-`priors_fwd`:
+`priors_fwd`: pulls 'priors' from `denoise_fwd` output per sample for forward reads
 
-`priors_rev`:
+`priors_rev`: same as `priors_fwd` but for reverse reads
 
-`denoise2_fwd`:
+`denoise2_fwd`: same as `denoise_fwd` but uses priors from `priors_fwd`
 
-`denoise2_rev`:
+`denoise2_rev`: same as `denoise2_fwd` but for reverse reads
 
-`dada`:
+`dada`: merges overlapping denoised read pairs using `dada2::mergePairs()`; else concatenates reads pairs that don't overlap into single reads with 10 Ns in between. Outputs 'seqtab' (sequence tables) by primer sequence
+- this effectively creates the ASVs: all sequences in these output files ('seqtabs') are treated as ASVs
 
-`dada_path`:
+`dada_path`: returns the file paths for `dada` output (ie. merged and concatenated reads)
 
 #### "Filter ASVs" targets
 
-`filtered_seqtab`:
+`filtered_seqtab`: filters ASVs per flow cell/primer combo using `step_filter_asvs()`, which uses `taxreturn::get_binding_position()`, `taxreturn::subset_model()`, `dada2::removeBimeraDenovo()`, `Biostrings::DNAStringSet()`, `taxreturn::map_to_model()` and `taxreturn::codon_filter()`. Also produces some plots of the filtering output.  
 
-`filtered_seqtab_path`:
+`filtered_seqtab_path`: returns the file paths for `filtered_seqtab` output
 
-`write_seqtab_summary`:
+`write_seqtab_summary`: writes `ASV_cleanup_summary.csv` to disk from `filtered_seqtab`
 
-`write_seqtab_qualplots`:
+`write_seqtab_qualplots`: writes `ASV_cleanup_summary.pdf` to disk from `filtered_seqtab`
 
-`merged_seqtab_path`:
+`merged_seqtab_path`: merges filtered seqtabs across all loci (ie. per primer) into a single seqtab using `dada2::mergeSequenceTables()`
 
 #### "Assign taxonomy" targets
 
-`tar_file(idtaxa_db_tracked)`:
+`tar_file(idtaxa_db_tracked)`: pulls IDTAXA database location into file 
 
-`tar_file(ref_fasta_tracked)`:
+`tar_file(ref_fasta_tracked)`: pulls reference database .fasta location info file
 
-`tax_idtaxa`:
+`tax_idtaxa`: runs `step_idtaxa()`, which uses `DECIPHER::IdTaxa()` to classify ASVs according to `idtaxa_db_tracked`
 
-`idtaxa_path`:
+`idtaxa_path`: writes out idtaxa objects from `tax_idtaxa`
 
-`tax_blast_path`:
+`tax_blast_path`: runs `step_blast_tophit()` , which uses `taxreturn::blast_assign_species()` to run `blastn` for each ASV and select the top hit
 
-`joint_tax`:
+`joint_tax`: aggregates the output of `idtaxa_path` and `tax_blast_path` using `coalesce_tax()` and `step_join_tax_blast()` (which uses `seqateurs::na_to_unclassified()`)
 
-`merged_tax`:
+`merged_tax`: merge ASVs in `joint_tax` output if they're the same, I think?
 
-`assignment_plot`:
+`assignment_plot`: creates an assignment plot (bar graph with colours?) using `taxreturn::blast_top_hit()`
 
-`write_assignment_plot`:
+`write_assignment_plot`: writes `assignment_plot` to file as .pdf
 
 `tax_summary`:
 
