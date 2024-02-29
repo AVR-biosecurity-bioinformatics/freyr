@@ -166,14 +166,18 @@
 #### Taxonomic analysis targets
 
 `ps`: creates a `phyloseq` object with `step_phyloseq()` by combining seqtab, taxtab, samdf, sequences, phylogeny, 
+- `PHYLOSEQ_CREATE` nf module
 
 `ps_summary`: outputs unfiltered results using `step_output_summary()` and `step_output_ps()`
+- `PHYLOSEQ_SUMMARY` nf module
 
 `accumulation_curve`: creates accumulation curve plot with `rareplot()`, which uses `vegan::rarecurve()`
+- `ACCUMULATION_CURVE` nf module
 
 `ps_filtered`: filters `ps` output using taxonomic and minimum abundance filters defined in `params`
-
-`ps_filt_summary`: outputs filtered results from `ps_filtered` using `step_output_summary()` and `step_output_ps()`
+- `ps_filt_summary`: outputs filtered results from `ps_filtered` using `step_output_summary()` and `step_output_ps()`
+- `PHYLOSEQ_FILTER` nf module
 
 `read_tracking`: ; creates `read_tracker.csv` and `read_tracker.pdf` to show how reads are filtered and used throughout the pipeline
 - unsure how `phyloseq::tax_table(ps_obj) <- phyloseq::tax_table(ps_obj)  %>%` works; ask Alex about it
+- `READ_TRACKING` nf module

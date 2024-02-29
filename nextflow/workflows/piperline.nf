@@ -4,7 +4,8 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// include { paramsSummaryLog; paramsSummaryMap; fromSamplesheet } from 'plugin/nf-validation'
+include { paramsSummaryLog; paramsSummaryMap; fromSamplesheet } from 'plugin/nf-validation'
+// this allows 'fromSamplesheet' command to pull data from samplesheet file
 
 // def logo = NfcoreTemplate.logo(workflow, params.monochrome_logs)
 // def citation = '\n' + WorkflowMain.citation(workflow) + '\n'
@@ -26,6 +27,7 @@
 // ch_multiqc_logo            = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.empty()
 // ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
 
+// TODO: What channels do I need for config? This could be used to define custom visualisation or output summary formats
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,6 +42,7 @@
 
 // Set non-params Variables
 
+r_functions = "${projectDir}/R/functions.R"
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -109,11 +112,14 @@ include { READ_TRACKING                     }         from '../modules/read_trac
 
 workflow PIPERLINE {
 
+    ch_versions = Channel.empty()
+
     //
     // Create input channels
     //
 
-
+    ch_input_fasta = Channel.empty()
+    ch_input_reads = Channel.empty()
 
     //Filter empty files
 
