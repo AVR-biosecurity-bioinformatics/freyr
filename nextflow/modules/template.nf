@@ -1,15 +1,12 @@
-process PARAMETER_SETUP {
-    def module_name = "parameter_setup"
+process TEMPLATE {
+    def module_name = "template"
+
     // tag 
     // label 
 
     input:
-    path samdf_file
-    path loci_params
 
-    output:  
-    path("input_samdf.csv") ,       emit: input_samdf
-    path("params_df.csv") ,         emit: params_df
+    output:   
 
     publishDir "${projectDir}/output/modules/${module_name}"
 
