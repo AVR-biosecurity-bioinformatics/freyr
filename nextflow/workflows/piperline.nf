@@ -128,6 +128,8 @@ workflow PIPERLINE {
 
     PARAMETER_SETUP ( ch_samdf, ch_loci_params )
 
+    PARAMETER_SETUP.out | view
+
 
 
 
