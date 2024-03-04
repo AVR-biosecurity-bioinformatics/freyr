@@ -120,8 +120,8 @@ workflow PIPERLINE {
     ch_input_fasta = Channel.empty()
     ch_input_reads = Channel.empty()
 
-    ch_samdf = Channel.fromPath('./sample_data/Sample_info.csv') // check file exists
-    ch_loci_params = Channel.fromPath('./sample_data/loci_params.csv') // check file exists
+    ch_samdf = Channel.fromPath('../sample_data/Sample_info.csv') // check file exists
+    ch_loci_params = Channel.fromPath('../sample_data/loci_params.csv') // check file exists
 
     //Filter empty files
 
