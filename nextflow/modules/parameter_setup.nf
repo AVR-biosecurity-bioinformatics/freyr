@@ -32,11 +32,11 @@ process PARAMETER_SETUP {
     print("${samdf}")
 
     # import inputs as objects
-    samdf_file <- read_delim('${samdf}', show_col_types=F)
-    params_file <- read_delim('${params}', show_col_types=F)
+    input_samdf <- read_delim('${samdf}', show_col_types=F, , col_types = cols(.default = "c"))
+    input_params <- read_delim('${params}', show_col_types=F, col_types = cols(.default = "c"))
 
-    if(!exists("samdf_file") || !exists("params_file")) {
-    stop("Need samdf path AND params_file objects to be present. Check module input paths.")
+    if(!exists("input_samdf") || !exists("input_params")) {
+    stop("Need input_samdf path AND input_params objects to be present. Check module input paths.")
 
     # run module code
     source("${projectDir}/bin/$module_script")

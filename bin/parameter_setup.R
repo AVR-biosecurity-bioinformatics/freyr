@@ -40,7 +40,7 @@ default_samdf <- tibble::tibble(
         notes = NA_character_
     )
 # Read in input samdf
-input_samdf <- readr::read_csv(samdf_file, show_col_types = FALSE, col_types = cols(.default = "c"))
+#input_samdf <- readr::read_csv(samdf_file, show_col_types = FALSE, col_types = cols(.default = "c"))
 
 # Make sure all columns are present and same type using a special bind operation
 samdf_checked <- new_bind(default_samdf %>% filter(FALSE), input_samdf) 
@@ -91,7 +91,7 @@ default_params <- tibble::tibble(
         threads = 1
 )
 # Read in params file
-input_params <- readr::read_csv(params_file, show_col_types = FALSE, col_types = cols(.default = "c"))
+#input_params <- readr::read_csv(params_file, show_col_types = FALSE, col_types = cols(.default = "c"))
 
 # Make sure all columns are present and same type using a special bind operation
 params_df <- new_bind(default_params %>% filter(FALSE), input_params) 
