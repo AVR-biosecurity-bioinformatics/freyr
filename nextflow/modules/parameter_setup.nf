@@ -5,8 +5,8 @@ process PARAMETER_SETUP {
     stageInMode = 'copy' 
 
     input:
-    path(samdf_file)
-    path(loci_params)
+    path(samdf)
+    path(params)
 
     output:  
     path("input_samdf.csv") ,       emit: input_samdf
@@ -29,11 +29,11 @@ process PARAMETER_SETUP {
     source("${projectDir}/bin/_targets_packages.R")
     
     print("${projectDir}")
-    print("${samdf_file}")
+    print("${samdf}")
 
     # import inputs as objects
-    samdf_file <- read_delim(${samdf_file}, show_col_types=F)
-    params_file <- read_delim(${loci_params}, show_col_types=F)
+    samdf_file <- read_delim(${samdf}, show_col_types=F)
+    params_file <- read_delim(${params}, show_col_types=F)
 
     if(!exists("samdf_file") || !exists("params_file")) {
     stop("Need samdf path AND params_file objects to be present. Check module input paths.")
