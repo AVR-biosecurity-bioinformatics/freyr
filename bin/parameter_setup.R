@@ -114,7 +114,7 @@ for(i in 1:ncol(default_params)){
     }
 }
 
-### these checks work in a single R session but break 
+### these checks work in a single R session but break in Nextflow
 
 # # Check idtaxa db exists - Needs to handle multiple dbs
 # check_paths <- params_df$idtaxa_db[!is.na(params_df$idtaxa_db)]%>%
