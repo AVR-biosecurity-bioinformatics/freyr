@@ -120,19 +120,19 @@ workflow PIPERLINE {
     ch_input_fasta = Channel.empty()
     ch_input_reads = Channel.empty()
 
-    // ch_samdf = Channel.fromPath("${projectDir}/sample_data/Sample_info.csv",  checkIfExists: true)
-    // ch_loci_params = Channel.fromPath("${projectDir}/sample_data/loci_params.csv",  checkIfExists: true)
+    ch_samdf = Channel.fromPath("${projectDir}/sample_data/Sample_info.csv",  checkIfExists: true)
+    ch_loci_params = Channel.fromPath("${projectDir}/sample_data/loci_params.csv",  checkIfExists: true)
 
-    def file_samdf = "${projectDir}/sample_data/Sample_info.csv"
-    def file_params = "${projectDir}/sample_data/loci_params.csv"
+    // def file_samdf = "${projectDir}/sample_data/Sample_info.csv"
+    // def file_params = "${projectDir}/sample_data/loci_params.csv"
 
     //file_samdf = file("${projectDir}/sample_data/Sample_info.csv",  checkIfExists: true)
     //file_params = file("${projectDir}/sample_data/loci_params.csv",  checkIfExists: true)
     // file_samdf.view { "path: $it" }
 
     // // for debugging if paths exist
-    // ch_samdf.view { "path: $it" }
-    // ch_loci_params.view { "path: $it" }
+    ch_samdf.view { "path: $it" }
+    ch_loci_params.view { "path: $it" }
     
 
 
