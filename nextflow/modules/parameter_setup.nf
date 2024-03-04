@@ -2,7 +2,7 @@ process PARAMETER_SETUP {
     def module_name = "parameter_setup"
     // tag 
     // label
-    // stageInMode = 'copy' 
+    stageInMode = 'copy' 
 
     input:
     path(samdf)
@@ -32,8 +32,8 @@ process PARAMETER_SETUP {
     print("${samdf}")
 
     # import inputs as objects
-    samdf_file <- read_delim("${samdf}", show_col_types=F)
-    params_file <- read_delim("${params}", show_col_types=F)
+    samdf_file <- read_delim('${samdf}', show_col_types=F)
+    params_file <- read_delim('${params}', show_col_types=F)
 
     if(!exists("samdf_file") || !exists("params_file")) {
     stop("Need samdf path AND params_file objects to be present. Check module input paths.")
