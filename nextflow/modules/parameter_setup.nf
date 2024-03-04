@@ -27,6 +27,7 @@ process PARAMETER_SETUP {
     source("${projectDir}/bin/themes.R")
     source("${projectDir}/bin/_targets_packages.R")
     
+    print("${projectDir}")
     print("${samdf_file}")
 
     # import inputs as objects
