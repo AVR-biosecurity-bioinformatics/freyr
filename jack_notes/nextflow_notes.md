@@ -6,3 +6,6 @@ Need to source copy of `.Rprofile` that contains new default library location an
     > source("./jack_notes/.Rprofile")
 
 Add above code to the "R sourcing" code block at the start of every R script (could I wrap this in an R script?)
+
+
+TODO: check for all files previously checked in the `parameters_setup.R` script, which no longer checks because Nextflow breaks the relative paths

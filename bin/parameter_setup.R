@@ -114,29 +114,31 @@ for(i in 1:ncol(default_params)){
     }
 }
 
-# Check idtaxa db exists - Needs to handle multiple dbs
-check_paths <- params_df$idtaxa_db[!is.na(params_df$idtaxa_db)]%>%
-    stringr::str_split(pattern=";", n=Inf) %>% 
-    unlist()
-for(i in seq_along(check_paths)){
-assertthat::is.readable(check_paths[i])
-}
+### these checks work in a single R session but break 
 
-# Check fasta exists
-check_paths <- params_df$ref_fasta[!is.na(params_df$ref_fasta)] %>%
-    stringr::str_split(pattern=";", n=Inf) %>% 
-    unlist()
-for(i in seq_along(check_paths)){
-    assertthat::is.readable(check_paths[i])
-}
+# # Check idtaxa db exists - Needs to handle multiple dbs
+# check_paths <- params_df$idtaxa_db[!is.na(params_df$idtaxa_db)]%>%
+#     stringr::str_split(pattern=";", n=Inf) %>% 
+#     unlist()
+# for(i in seq_along(check_paths)){
+# assertthat::is.readable(check_paths[i])
+# }
 
-# Check phmm exists
-check_paths <- params_df$phmm[!is.na(params_df$phmm)] %>%
-    stringr::str_split(pattern=";", n=Inf) %>% 
-    unlist()
-for(i in seq_along(check_paths)){
-    assertthat::is.readable(check_paths[i])
-}
+# # Check fasta exists
+# check_paths <- params_df$ref_fasta[!is.na(params_df$ref_fasta)] %>%
+#     stringr::str_split(pattern=";", n=Inf) %>% 
+#     unlist()
+# for(i in seq_along(check_paths)){
+#     assertthat::is.readable(check_paths[i])
+# }
+
+# # Check phmm exists
+# check_paths <- params_df$phmm[!is.na(params_df$phmm)] %>%
+#     stringr::str_split(pattern=";", n=Inf) %>% 
+#     unlist()
+# for(i in seq_along(check_paths)){
+#     assertthat::is.readable(check_paths[i])
+# }
 
 
 ## outputs
