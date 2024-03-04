@@ -1,7 +1,8 @@
 process PARAMETER_SETUP {
     def module_name = "parameter_setup"
     // tag 
-    // label 
+    // label
+    stageInMode = 'link' 
 
     input:
     path(samdf_file)
