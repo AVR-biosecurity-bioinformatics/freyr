@@ -21,6 +21,8 @@ process PARAMETER_SETUP {
     #!/usr/bin/env Rscript
 
     # source functions, themes and load packages
+    ### TODO: add these source commands to their own sourced script in "/bin"
+    source("${projectDir}/jack_notes/.Rprofile")
     source("${projectDir}/bin/functions.R")
     source("${projectDir}/bin/themes.R")
     source("${projectDir}/bin/_targets_packages.R")
