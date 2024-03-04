@@ -143,5 +143,5 @@ for(i in 1:ncol(default_params)){
 
 ## outputs
 
-saveRDS(object = input_samdf, file = input_samdf.rds)
-saveRDS(object = params_df, file = params_df.rds)
+saveRDS(object = input_samdf, file = "input_samdf.rds")
+saveRDS(object = params_df, file = "params_df.rds")
