@@ -2,7 +2,7 @@ process PARAMETER_SETUP {
     def module_name = "parameter_setup"
     // tag 
     // label
-    stageInMode = 'copy' 
+    // stageInMode = 'copy' 
 
     input:
     path(samdf)
