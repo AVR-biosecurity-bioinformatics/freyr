@@ -143,5 +143,5 @@ for(i in 1:ncol(default_params)){
 
 ## outputs
 
-write.csv("input_samdf.csv", input_samdf)
-write.csv("params_df.csv", params_df)
+write.csv(file = "input_samdf.csv", x = input_samdf)
+write.csv(file = "params_df.csv", x = params_df)
