@@ -136,7 +136,7 @@ workflow PIPERLINE {
     
 
 
-    PARAMETER_SETUP ( file_samdf, file_params )
+    PARAMETER_SETUP ( ch_samdf, ch_loci_params )
 
     PARAMETER_SETUP.out.input_samdf | view { "$it" }
     PARAMETER_SETUP.out.params_df | view { "$it" }
