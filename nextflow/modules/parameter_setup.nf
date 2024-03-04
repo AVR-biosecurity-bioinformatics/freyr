@@ -37,7 +37,8 @@ process PARAMETER_SETUP {
 
     if(!exists("input_samdf") || !exists("input_params")) {
     stop("Need input_samdf path AND input_params objects to be present. Check module input paths.")
-
+    }
+    
     # run module code
     source("${projectDir}/bin/$module_script")
 
