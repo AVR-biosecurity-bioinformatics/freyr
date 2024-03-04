@@ -123,8 +123,8 @@ workflow PIPERLINE {
     ch_samdf = Channel.fromPath("${projectDir}/sample_data/Sample_info.csv",  checkIfExists: true)
     ch_loci_params = Channel.fromPath("${projectDir}/sample_data/loci_params.csv",  checkIfExists: true)
     // // for debugging if paths exist
-    // ch_samdf.view { "path: $it" }
-    // ch_loci_params.view { "path: $it" }
+    ch_samdf.view { "path: $it" }
+    ch_loci_params.view { "path: $it" }
     
 
 
