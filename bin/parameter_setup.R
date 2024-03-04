@@ -143,5 +143,5 @@ for(i in 1:ncol(default_params)){
 
 ## outputs
 
-write.csv(file = "input_samdf.csv", x = input_samdf)
-write.csv(file = "params_df.csv", x = params_df)
+saveRDS(object = input_samdf, file = input_samdf.rds)
+saveRDS(object = params_df, file = params_df.rds)
