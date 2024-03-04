@@ -4,8 +4,8 @@ process PARAMETER_SETUP {
     // label 
 
     input:
-    path samdf_file
-    path loci_params
+    path(samdf_file)
+    path(loci_params)
 
     output:  
     path("input_samdf.csv") ,       emit: input_samdf
