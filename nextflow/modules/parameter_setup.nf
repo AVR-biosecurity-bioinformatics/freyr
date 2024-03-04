@@ -2,7 +2,6 @@ process PARAMETER_SETUP {
     def module_name = "parameter_setup"
     // tag 
     // label
-    // stageInMode = 'copy' 
 
     input:
     path(samdf)
@@ -12,7 +11,7 @@ process PARAMETER_SETUP {
     path("input_samdf.rds") ,       emit: input_samdf
     path("params_df.rds") ,         emit: params_df
 
-    publishDir "${projectDir}/output/modules/${module_name}"
+    publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
     // when: 
 
