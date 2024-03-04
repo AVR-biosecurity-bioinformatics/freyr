@@ -9,8 +9,8 @@ process PARAMETER_SETUP {
     path(params)
 
     output:  
-    path("input_samdf.csv") ,       emit: input_samdf
-    path("params_df.csv") ,         emit: params_df
+    path("input_samdf.rds") ,       emit: input_samdf
+    path("params_df.rds") ,         emit: params_df
 
     publishDir "${projectDir}/output/modules/${module_name}"
 
