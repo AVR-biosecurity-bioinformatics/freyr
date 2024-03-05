@@ -1,7 +1,7 @@
 process SEQ_QC {
+    def module_name = "seq_qc"
     // tag:
-
-    // label: 'process_low'
+    // label: 
 
     input:
     path sample_info
@@ -9,10 +9,13 @@ process SEQ_QC {
 
     output:
 
+    publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
-    when:
+
+    // when:
 
     script:
+    def module_script = "${module_name}.R"
     """
     #!/usr/bin/env Rscript
 

@@ -1,7 +1,7 @@
 process PARAMETER_SETUP {
     def module_name = "parameter_setup"
-    // tag 
-    // label
+    // tag: 
+    // label: 
 
     input:
     path(samdf)
@@ -29,10 +29,11 @@ process PARAMETER_SETUP {
 
     # source functions, themes and load packages
     ### TODO: add these source commands to their own sourced script in "/bin"
-    source("${projectDir}/jack_notes/.Rprofile")
-    source("${projectDir}/bin/functions.R")
-    source("${projectDir}/bin/themes.R")
-    source("${projectDir}/bin/_targets_packages.R")
+    source("${projectDir}/bin/process_start.R)
+    #source("${projectDir}/jack_notes/.Rprofile")
+    #source("${projectDir}/bin/functions.R")
+    #source("${projectDir}/bin/themes.R")
+    #source("${projectDir}/bin/_targets_packages.R")
     
     print("${projectDir}")
     print("${samdf}")
