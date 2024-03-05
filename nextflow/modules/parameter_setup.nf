@@ -30,9 +30,6 @@ process PARAMETER_SETUP {
     # source functions, themes and load packages from "bin/process_start.R"
     # this only works this way; "projectDir" doesn't mean anything inside script
     sys.source("${projectDir}/bin/process_start.R", list(projectDir="${projectDir}"))
-    
-    print("${projectDir}")
-    print("${samdf}")
 
     # import inputs as objects
     input_samdf <- read_delim('${samdf}', show_col_types=F, , col_types = cols(.default = "c"))
@@ -44,7 +41,7 @@ process PARAMETER_SETUP {
     
     # create directories required by pipeline if they don't exist
     # (formerly 'create_dirs' target)
-    step_validate_folders("${projectDir}")
+    # step_validate_folders("${projectDir}")
 
     # run module code
     source("${projectDir}/bin/$module_script")
