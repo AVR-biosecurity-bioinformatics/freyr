@@ -151,9 +151,13 @@ workflow PIPERLINE {
     // need to also check that files in the .fastq channel match those in the sample sheet
     // (previously 'tar_target(temp_samdf1)')
 
-    PARAMETER_SETUP.out.params_primer |
-        splitCsv(header: true) |
-        view
+    PARAMETER_SETUP.out.params_primer
+        | splitCsv(header: true)
+        | map { row ->
+            meta = row.subMap('sample_id','fcid')
+        
+        }
+        | view
 
     // this takes 
     // SEQ_QC ()

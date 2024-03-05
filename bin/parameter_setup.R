@@ -180,9 +180,11 @@ input_params %>%
 # need a way to check sequencing read inputs
 
 ## save .rds outputs
-
 saveRDS(object = input_samdf, file = "input_samdf.rds")
-saveRDS(object = params_df, file = "params_df.rds")
+saveRDS(object = input_params, file = "input_params.rds")
+
+write_csv("input_samdf.csv", input_samdf)
+write_csv("input_params.csv", input_params)
 
 
 
