@@ -155,7 +155,7 @@ workflow PIPERLINE {
         | splitCsv(header: true)
         | map { row ->
             meta = row.subMap('sample_name','fcid','assay')
-            [meta, [path(row.sample_id)] 
+            [meta, [row.sample_id] 
             ]
         }
         | view
