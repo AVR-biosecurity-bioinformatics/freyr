@@ -183,8 +183,8 @@ input_params %>%
 saveRDS(object = input_samdf, file = "input_samdf.rds")
 saveRDS(object = input_params, file = "input_params.rds")
 
-write_csv("input_samdf.csv", input_samdf)
-write_csv("input_params.csv", input_params)
+write_csv(path = "input_samdf.csv", x = input_samdf)
+write_csv(path = "input_params.csv", x = input_params)
 
 
 
