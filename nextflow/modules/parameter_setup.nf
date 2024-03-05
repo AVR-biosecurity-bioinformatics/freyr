@@ -52,14 +52,6 @@ process PARAMETER_SETUP {
     # run module code
     source("${projectDir}/bin/$module_script")
 
-    # check for sequencing reads and store in an object
-    fastq_path <-
-        purrr::map(list.dirs("${projectDir}/data", recursive=FALSE),
-                                list.files, pattern="_R[12]_", full.names = TRUE) %>%
-        unlist() 
-
-    # saveRDS(object = fastq_path, file = "fastq_path.rds")
-    print(class(fastq_path))
     """
 
 }

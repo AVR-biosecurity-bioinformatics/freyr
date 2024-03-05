@@ -146,12 +146,12 @@ workflow PIPERLINE {
     // TODO: change "test_data" to "data"
     ch_input_fasta = Channel
                             .fromFilePairs("${projectDir}/test_data/**_{R1,R2}*.{fastq,fq}.gz", flat: false)
-                            .view()
+                            // .view()
 
     // need to also check that files in the .fastq channel match those in the sample sheet
     // (previously 'tar_target(temp_samdf1)')
 
-    PARAMETER_SETUP.out.input_samdf |
+    PARAMETER_SETUP.out.params_primer |
         splitCsv |
         view
 
