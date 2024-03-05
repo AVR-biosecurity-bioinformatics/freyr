@@ -142,8 +142,10 @@ workflow PIPERLINE {
     PARAMETER_SETUP.out.params_df | view { "$it" }
 
     // find .fastq files and put into channel (previously 'tar_files(fastq_path)')
+
+    // TODO: change "test_data" to "data"
     ch_input_fasta = Channel
-                            .fromFilePairs("${projectDir}/data/**_{R1,R2}*.{fastq,fq}.gz", flat: false)
+                            .fromFilePairs("${projectDir}/test_data/**_{R1,R2}*.{fastq,fq}.gz", flat: false)
                             .view()
 
     // need to also check that files in the .fastq channel match those in the sample sheet
