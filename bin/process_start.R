@@ -10,9 +10,11 @@ script_list <-
         "bin/_targets_packages.R"
     )
 
-for (script in script_list) {
-    source(file.path(projectDir, script))
-}
+print(script_list)
+
+# for (script in script_list) {
+#     source(file.path(projectDir, script))
+# }
 
 # source(file.path(projectDir, "jack_notes/.Rprofile"))
 # source(file.path(projectDir, "bin/functions.R"))
