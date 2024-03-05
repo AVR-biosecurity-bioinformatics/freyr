@@ -185,6 +185,7 @@ fastq_path <-
     unlist() 
 
 saveRDS(object = fastq_path, file = "fastq_path.rds")
+class(fastq_path)
 
 # # check sequencing reads match those in the sample sheet
 # step_check_files(input_samdf, fastq_path, col_name="starting")
