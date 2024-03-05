@@ -152,7 +152,7 @@ workflow PIPERLINE {
     // (previously 'tar_target(temp_samdf1)')
 
     PARAMETER_SETUP.out.params_primer |
-        splitCsv |
+        splitCsv(header: true) |
         view
 
 
