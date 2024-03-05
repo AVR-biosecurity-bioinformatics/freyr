@@ -8,8 +8,16 @@ process PARAMETER_SETUP {
     path(params)
 
     output:  
-    path("input_samdf.rds") ,       emit: input_samdf
-    path("params_df.rds") ,         emit: params_df
+    path("input_samdf.rds") ,           emit: input_samdf
+    path("params_df.rds") ,             emit: params_df
+    path("params_primer.csv"),          emit: params_primer
+    path("params_readfilter.csv"),      emit: params_readfilter
+    path("params_dada.csv"),            emit: params_dada
+    path("params_asvfilter.csv"),       emit: params_asvfilter
+    path("params_database.csv"),        emit: params_database
+    path("params_ps.csv"),              emit: params_ps
+
+
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -38,8 +46,14 @@ process PARAMETER_SETUP {
     stop("Need input_samdf path AND input_params objects to be present. Check module input paths.")
     }
     
+    # create directories required by pipeline if they don't exist
+    # (formerly 'create_dirs' target)
+    step_validate_folders("${projectDir}")
+
     # run module code
     source("${projectDir}/bin/$module_script")
+
+    
 
     """
 
