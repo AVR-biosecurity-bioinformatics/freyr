@@ -151,6 +151,9 @@ workflow PIPERLINE {
     // need to also check that files in the .fastq channel match those in the sample sheet
     // (previously 'tar_target(temp_samdf1)')
 
+    PARAMETER_SETUP.out.input_samdf |
+        splitCsv |
+        view
 
 
 
