@@ -29,7 +29,7 @@ process PARAMETER_SETUP {
 
     # source functions, themes and load packages
     ### TODO: add these source commands to their own sourced script in "/bin"
-    source("${projectDir}/bin/process_start.R)
+    source("${projectDir}/bin/process_start.R")
     #source("${projectDir}/jack_notes/.Rprofile")
     #source("${projectDir}/bin/functions.R")
     #source("${projectDir}/bin/themes.R")
