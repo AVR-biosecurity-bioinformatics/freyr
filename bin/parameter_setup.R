@@ -178,6 +178,15 @@ input_params %>%
     write_csv("params_ps.csv")
 
 
+## check for sequencing reads and store in an object
+fastq_path <-
+    purrr::map(list.dirs("${projectDir}/data", recursive=FALSE),
+                            list.files, pattern="_R[12]_", full.names = TRUE) %>%
+    unlist() 
+
+# check sequencing reads match those in the sample sheet
+step_check_files(input_samdf, fastq_path, col_name="starting")
+
 ## save .rds outputs
 
 saveRDS(object = input_samdf, file = "input_samdf.rds")
