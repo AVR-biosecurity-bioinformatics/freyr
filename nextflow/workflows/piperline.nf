@@ -52,7 +52,7 @@
 // include { RENAME_RAW_DATA_FILES         } from '../modules/local/rename_raw_data_files'
 
 include { PARAMETER_SETUP                   }         from '../modules/parameter_setup'
-// include { SEQ_QC                            }         from '../modules/seq_qc'
+include { SEQ_QC                            }         from '../modules/seq_qc'
 // include { SWITCHING_QC                      }         from '../modules/switching_qc'
 // include { PRIMER_TRIM                       }         from '../modules/primer_trim'
 // include { SAMDF2                            }         from '../modules/samdf2'
@@ -146,7 +146,7 @@ workflow PIPERLINE {
     // TODO: change "test_data" to "data"
     ch_input_fasta = Channel
                             .fromFilePairs("${projectDir}/test_data/**_{R1,R2}*.{fastq,fq}.gz", flat: false)
-                            // .view()
+                            .view()
 
     // need to also check that files in the .fastq channel match those in the sample sheet
     // (previously 'tar_target(temp_samdf1)')
@@ -155,7 +155,8 @@ workflow PIPERLINE {
         splitCsv(header: true) |
         view
 
-
+    // this takes 
+    // SEQ_QC ()
 
 
 }
