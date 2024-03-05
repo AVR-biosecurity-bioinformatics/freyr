@@ -18,7 +18,6 @@ process PARAMETER_SETUP {
     path("params_ps.csv"),              emit: params_ps
 
 
-
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
     // when: 
@@ -52,8 +51,6 @@ process PARAMETER_SETUP {
 
     # run module code
     source("${projectDir}/bin/$module_script")
-
-    
 
     """
 
