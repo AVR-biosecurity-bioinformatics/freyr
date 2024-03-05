@@ -177,18 +177,7 @@ input_params %>%
                     min_sample_reads, min_taxa_reads, min_taxa_ra) %>%
     write_csv("params_ps.csv")
 
-
-# check for sequencing reads and store in an object
-#fastq_path <-
-    purrr::map(list.dirs("${projectDir}/data", recursive=FALSE),
-                            list.files, pattern="_R[12]_", full.names = TRUE) %>%
-    unlist() 
-
-# saveRDS(object = fastq_path, file = "fastq_path.rds")
-# print(class(fastq_path))
-
-# # check sequencing reads match those in the sample sheet
-# step_check_files(input_samdf, fastq_path, col_name="starting")
+# need a way to check sequencing read inputs
 
 ## save .rds outputs
 
