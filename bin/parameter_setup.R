@@ -179,13 +179,13 @@ input_params %>%
 
 
 # check for sequencing reads and store in an object
-fastq_path <-
+#fastq_path <-
     purrr::map(list.dirs("${projectDir}/data", recursive=FALSE),
                             list.files, pattern="_R[12]_", full.names = TRUE) %>%
     unlist() 
 
-saveRDS(object = fastq_path, file = "fastq_path.rds")
-print(class(fastq_path))
+# saveRDS(object = fastq_path, file = "fastq_path.rds")
+# print(class(fastq_path))
 
 # # check sequencing reads match those in the sample sheet
 # step_check_files(input_samdf, fastq_path, col_name="starting")
