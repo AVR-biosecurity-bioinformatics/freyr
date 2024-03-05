@@ -27,13 +27,9 @@ process PARAMETER_SETUP {
     """
     #!/usr/bin/env Rscript
 
-    # source functions, themes and load packages
-    ### TODO: add these source commands to their own sourced script in "/bin"
+    # source functions, themes and load packages from "bin/process_start.R"
+    # this only works this way; "projectDir" doesn't mean anything inside script
     sys.source("${projectDir}/bin/process_start.R", list(projectDir="${projectDir}"))
-    #source("${projectDir}/jack_notes/.Rprofile")
-    #source("${projectDir}/bin/functions.R")
-    #source("${projectDir}/bin/themes.R")
-    #source("${projectDir}/bin/_targets_packages.R")
     
     print("${projectDir}")
     print("${samdf}")
