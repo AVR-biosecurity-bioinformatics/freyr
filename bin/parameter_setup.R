@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 
+### need to make sure slashes are added correctly after data_dir
 # find all directories within data folder
 if (!exists("data_dir")) {data_dir="data/"} # if data_dir not defined, use "data/"
 runs <- dir(data_dir) # define data directory in module .nf file
