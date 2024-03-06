@@ -137,7 +137,7 @@ workflow PIPERLINE {
     def data_dir = "test_data"
 
     ch_input_fasta = Channel
-                            .fromFilePairs("${projectDir}/${data_dir}/**_{R1,R2}*.{fastq,fq}.gz", flat: false)
+                            .fromFilePairs("${data_dir}/**_{R1,R2}*.{fastq,fq}.gz", flat: false)
                             .view()
 
     // input samplesheet and loci parameters
