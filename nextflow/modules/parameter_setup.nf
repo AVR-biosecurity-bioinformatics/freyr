@@ -24,6 +24,7 @@ process PARAMETER_SETUP {
 
     script:
     def module_script = "${module_name}.R"
+    def data_dir = "${projectDir}/test_data"
     """
     #!/usr/bin/env Rscript
 
@@ -43,8 +44,13 @@ process PARAMETER_SETUP {
     # (formerly 'create_dirs' target)
     # step_validate_folders("${projectDir}")
 
-    # run module code
+    ### run module code
+    # create inputs from flow cell samplesheets, run parameters and loci parameters
+    sys.source("${projectDir}/bin/create_inputs.R", list(data_dir="${data_dir}", projectDir="${projectDir}"))
+    # convert inputs into usable
     source("${projectDir}/bin/$module_script")
+
+    ### TODO: merge two module scripts into one
 
     """
 

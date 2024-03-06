@@ -117,7 +117,7 @@ workflow PIPERLINE {
     // Create input channels
     //
 
-    ch_input_fasta = Channel.empty()
+    ch_input_fasta = Channel.empty() 
     ch_input_reads = Channel.empty()
 
     ch_samdf = Channel.fromPath("${projectDir}/sample_data/Sample_info.csv",  checkIfExists: true)
