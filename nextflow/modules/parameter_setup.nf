@@ -4,8 +4,10 @@ process PARAMETER_SETUP {
     // label: 
 
     input:
-    path(samdf)
-    path(params)
+    path data_dir
+    tuple // reads
+    // path(samdf)
+    // path(params)
 
     output:  
     path("input_samdf.csv") ,           emit: input_samdf
@@ -24,33 +26,32 @@ process PARAMETER_SETUP {
 
     script:
     def module_script = "${module_name}.R"
-    def data_dir = "${projectDir}/test_data"
+    // def data_dir = "${projectDir}/test_data" // this should defined in workflow script
     """
     #!/usr/bin/env Rscript
 
-    # source functions, themes and load packages from "bin/process_start.R"
-    # this only works this way; "projectDir" doesn't mean anything inside script
+    ## source functions, themes and load packages from "bin/process_start.R"
+    # this only works with sys.source; "projectDir" doesn't mean anything inside script otherwise
     sys.source("${projectDir}/bin/process_start.R", list(projectDir="${projectDir}"))
 
-    # import inputs as objects
-    input_samdf <- read_delim('${samdf}', show_col_types=F, , col_types = cols(.default = "c"))
-    input_params <- read_delim('${params}', show_col_types=F, col_types = cols(.default = "c"))
+    ## import inputs as objects
+    # input_samdf <- read_delim('${samdf}', show_col_types=F, , col_types = cols(.default = "c"))
+    # input_params <- read_delim('${params}', show_col_types=F, col_types = cols(.default = "c"))
 
-    if(!exists("input_samdf") || !exists("input_params")) {
-    stop("Need input_samdf path AND input_params objects to be present. Check module input paths.")
-    }
+    # if(!exists("input_samdf") || !exists("input_params")) {
+    # stop("Need input_samdf path AND input_params objects to be present. Check module input paths.")
+    # }
     
-    # create directories required by pipeline if they don't exist
+    ## create directories required by pipeline if they don't exist
     # (formerly 'create_dirs' target)
     # step_validate_folders("${projectDir}")
 
     ### run module code
-    # create inputs from flow cell samplesheets, run parameters and loci parameters
-    sys.source("${projectDir}/bin/create_inputs.R", list(data_dir="${data_dir}", projectDir="${projectDir}"))
-    # convert inputs into usable
-    source("${projectDir}/bin/$module_script")
 
-    ### TODO: merge two module scripts into one
+    sys.source(
+        "${projectDir}/bin/$module_script", # run script
+        list(data_dir="${data_dir}", projectDir="${projectDir}") # import variables from this environment
+        )
 
     """
 

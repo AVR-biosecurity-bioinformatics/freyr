@@ -134,9 +134,14 @@ workflow PIPERLINE {
     // ch_samdf.view { "path: $it" }
     // ch_loci_params.view { "path: $it" }
     
+    def data_dir = "${projectDir}/test_data"
+
+    ch_input_fasta = Channel
+                            .fromFilePairs("${data_dir}/**_{R1,R2}*.{fastq,fq}.gz", flat: false)
+                            .view()
 
     // input samplesheet and loci parameters
-    PARAMETER_SETUP ( ch_samdf, ch_loci_params )
+    // PARAMETER_SETUP ( data_dir, ch_input_fasta )
 
     //PARAMETER_SETUP.out.input_samdf | view { "$it" }
     //PARAMETER_SETUP.out.params_df | view { "$it" }
@@ -144,21 +149,10 @@ workflow PIPERLINE {
     // find .fastq files and put into channel (previously 'tar_files(fastq_path)')
 
     // TODO: change "test_data" to "data"
-    ch_input_fasta = Channel
-                            .fromFilePairs("${projectDir}/test_data/**_{R1,R2}*.{fastq,fq}.gz", flat: false)
-                            .view()
+
 
     // need to also check that files in the .fastq channel match those in the sample sheet
     // (previously 'tar_target(temp_samdf1)')
-
-    PARAMETER_SETUP.out.input_samdf
-        | splitCsv(header: true)
-        | map { row ->
-            meta = row.subMap('sample_name','fcid','assay')
-            [meta, [row.sample_id] 
-            ]
-        }
-        | view
 
     // this takes 
     // SEQ_QC ()
