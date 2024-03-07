@@ -23,7 +23,7 @@ mutate(sample_id = case_when(
 
 list.files(data_dir_abs, pattern = ".fastq.gz", recursive = T, full.names = T)
 
-stop()
+quit(status = 0)
 
 # Check that samples match samplesheet
 fastqFs <- 
