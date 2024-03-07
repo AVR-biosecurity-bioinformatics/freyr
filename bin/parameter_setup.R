@@ -79,17 +79,16 @@ fastq_paths.df %>% # data frame of only Undetermined paths
 
 # join paths df to samplesheet (drops Undetermined reads)
 samdf <- left_join(samdf, fastq_paths.df, by = c("sample_id", "fcid"))
-write_csv(file = "samdf.paths.csv", x = samdf)
-
 
 # Add primers to sample sheet
 samdf <- samdf %>%
-    mutate(pcr_primers = "fwhF2-fwhR2n",
-            for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC",
-            rev_primer_seq = "GTRATWGCHCCDGCTARWACWGG"
-            )
+    mutate(
+        pcr_primers = "fwhF2-fwhR2n",
+        for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC",
+        rev_primer_seq = "GTRATWGCHCCDGCTARWACWGG"
+        )
 
-# write_csv(samdf, paste0(projectDir, "/sample_data/Sample_info.csv"))
+
 
 
 # Params to add in step_add_parameters
