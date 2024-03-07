@@ -38,6 +38,9 @@
 
 // Input
 
+// directory in projectDir where data files are stored; "test_data" for test data
+def data_loc = "test_data"
+
 // report sources
 
 // Set non-params Variables
@@ -120,9 +123,6 @@ workflow PIPERLINE {
     ch_input_fasta = Channel.empty() 
     ch_input_reads = Channel.empty()
 
-    ch_samdf = Channel.fromPath("${projectDir}/sample_data/Sample_info.csv",  checkIfExists: true)
-    ch_loci_params = Channel.fromPath("${projectDir}/sample_data/loci_params.csv",  checkIfExists: true)
-
     // def file_samdf = "${projectDir}/sample_data/Sample_info.csv"
     // def file_params = "${projectDir}/sample_data/loci_params.csv"
 
@@ -133,8 +133,6 @@ workflow PIPERLINE {
     // // for debugging if paths exist
     // ch_samdf.view { "path: $it" }
     // ch_loci_params.view { "path: $it" }
-    
-    def data_loc = "test_data"
 
     ch_input_fasta = Channel
                             .fromFilePairs("${data_loc}/**_{R1,R2}*.{fastq,fq}.gz", flat: false)
@@ -143,16 +141,9 @@ workflow PIPERLINE {
     // input samplesheet and loci parameters
     PARAMETER_SETUP ( data_loc )
 
-    //PARAMETER_SETUP.out.input_samdf | view { "$it" }
-    //PARAMETER_SETUP.out.params_df | view { "$it" }
-
-    // find .fastq files and put into channel (previously 'tar_files(fastq_path)')
-
-    // TODO: change "test_data" to "data"
-
-
-    // need to also check that files in the .fastq channel match those in the sample sheet
-    // (previously 'tar_target(temp_samdf1)')
+    PARAMETER_SETUP.out.samdf
+        | splitCsv ( header: true )
+        | view { row -> "${row.sample_id}, ${row.fwd}, ${row.rev}" }
 
     // this takes 
     // SEQ_QC ()

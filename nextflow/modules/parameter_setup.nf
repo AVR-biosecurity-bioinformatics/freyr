@@ -5,13 +5,10 @@ process PARAMETER_SETUP {
 
     input:
     val data_loc
-    // tuple // reads
-    // path(samdf)
-    // path(params)
 
     output:  
     path("samdf.csv") ,                 emit: samdf
-    path("params.csv") ,                emit: params
+    path("params.csv") ,                emit: loci_params
     path("fastq_paths_all.csv"),        emit: fastq_paths_all
     path("fastq_paths_samples.csv"),    emit: fastq_paths_samples
     path("fastq_paths_ud.csv"),         emit: fastq_paths_ud
@@ -29,7 +26,6 @@ process PARAMETER_SETUP {
 
     script:
     def module_script = "${module_name}.R"
-    // def data_dir = "${projectDir}/test_data" // this should defined in workflow script
     """
     #!/usr/bin/env Rscript
     # defining Nextflow environment variables as R variables
@@ -44,7 +40,6 @@ process PARAMETER_SETUP {
         "${projectDir}/bin/$module_script", # run script
         envir = .GlobalEnv # this allows import of existing objects like projectDir
         )
-
     """
 
 }
