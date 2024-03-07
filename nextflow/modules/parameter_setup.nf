@@ -35,9 +35,10 @@ process PARAMETER_SETUP {
     sys.source("${projectDir}/bin/process_start.R", list(projectDir="${projectDir}"))
 
     ### run module code
-    ls(.GlobalEnv)
+    
     projectDir = "${projectDir}"
-
+    ls(.GlobalEnv)
+    
     sys.source(
         "${projectDir}/bin/$module_script", # run script
         envir = .GlobalEnv # this allows import of existing objects like projectDir
