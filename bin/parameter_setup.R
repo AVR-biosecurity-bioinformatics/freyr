@@ -206,7 +206,7 @@ params_df <- new_bind(default_params %>% filter(FALSE), params)
 # Check columns arent NA
 for(i in 1:ncol(default_params)){
     param_to_check <- colnames(default_params)[i]
-    if(all(is.na(params_df %>% dplyr::pull(!!param_to_check))) & !param_to_check %in% colnames(input_params)){
+    if(all(is.na(params_df %>% dplyr::pull(!!param_to_check))) & !param_to_check %in% colnames(params)){
     warning(paste0("Parameter: ", param_to_check, " is NA, using default: ", default_params %>% dplyr::pull(!!param_to_check)))
     params_df <- params_df %>%
         dplyr::mutate(!!param_to_check := default_params %>% dplyr::pull(!!param_to_check))
