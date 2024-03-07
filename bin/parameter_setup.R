@@ -23,6 +23,8 @@ mutate(sample_id = case_when(
 
 list.files(data_dir_abs, pattern = ".fastq.gz")
 
+stop()
+
 # Check that samples match samplesheet
 fastqFs <- 
     purrr::map(list.dirs(data_dir_abs, recursive=FALSE),
