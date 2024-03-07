@@ -32,9 +32,7 @@ fastqFs <-
 # Filter undetermined reads from sample sheet
 fastqFs <- fastqFs[!str_detect(fastqFs, "Undetermined")]
 
-write_csv(as.data.frame(fastqFs), "fastqFs.txt")
-
-# write_csv(file = "fastqFs.csv", x = fastqFs)
+# write_csv(as.data.frame(fastqFs), "fastqFs.csv")
 
 # Check for fastq files that are missing from samplesheet
 if (length(setdiff(fastqFs, samdf$sample_id)) > 0) {warning("The fastq file/s: ", setdiff(fastqFs, samdf$sample_id), " are not in the sample sheet") }
