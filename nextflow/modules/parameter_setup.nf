@@ -46,7 +46,9 @@ process PARAMETER_SETUP {
 
     sys.source(
         "${projectDir}/bin/$module_script", # run script
-        list(data_dir="${data_dir}", projectDir="${projectDir}") # import variables from this environment
+        list(data_dir="${data_dir}", projectDir="${projectDir}"), # import variables from this environment
+        keep.source = T,
+        keep.parse.data = T
         )
 
     """
