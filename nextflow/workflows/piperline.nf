@@ -120,9 +120,6 @@ workflow PIPERLINE {
     // Create input channels
     //
 
-    ch_input_fasta = Channel.empty() 
-    ch_input_reads = Channel.empty()
-
     // def file_samdf = "${projectDir}/sample_data/Sample_info.csv"
     // def file_params = "${projectDir}/sample_data/loci_params.csv"
 
@@ -133,10 +130,6 @@ workflow PIPERLINE {
     // // for debugging if paths exist
     // ch_samdf.view { "path: $it" }
     // ch_loci_params.view { "path: $it" }
-
-    ch_input_fasta = Channel
-                            .fromFilePairs("${data_loc}/**_{R1,R2}*.{fastq,fq}.gz", flat: false)
-                            //.view()
 
     // input samplesheet and loci parameters
     PARAMETER_SETUP ( data_loc )
@@ -162,6 +155,7 @@ workflow PIPERLINE {
                     file(row.rev, checkIfExists: true)
                 ]]  
             }
+        | set { ch_reads_meta }
         | view 
 
     // this takes 
