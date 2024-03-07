@@ -145,7 +145,7 @@ workflow PIPERLINE {
     // from: https://nextflow-io.github.io/patterns/process-per-csv-record/
     PARAMETER_SETUP.out.samdf
         | splitCsv ( header: true )
-        | map { row -> tuple( row.sample_id, path(row.fwd), path(row.rev) )  }
+        | map { row -> tuple( row.sample_id, file(row.fwd), file(row.rev) )  }
         | view 
 
     // this takes 
