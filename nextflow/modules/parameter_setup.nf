@@ -4,7 +4,7 @@ process PARAMETER_SETUP {
     // label: 
 
     input:
-    val data_dir
+    val data_loc
     // tuple // reads
     // path(samdf)
     // path(params)
@@ -31,11 +31,10 @@ process PARAMETER_SETUP {
     #!/usr/bin/env Rscript
     # defining Nextflow environment variables as R variables
     projectDir = "${projectDir}"
-    data_dir = "${data_dir}"
+    data_loc = "${data_loc}"
 
-    ## source functions, themes and load packages from "bin/process_start.R"
-    # this only works with sys.source; "projectDir" doesn't mean anything inside script otherwise
-    sys.source("${projectDir}/bin/process_start.R", list(projectDir="${projectDir}"))
+    ### source functions and themes, and load packages from "bin/process_start.R"
+    sys.source("${projectDir}/bin/process_start.R", envir = .GlobalEnv)
 
     ### run module code
     sys.source(

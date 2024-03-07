@@ -1,14 +1,14 @@
 #!/usr/bin/env Rscript
 
-### need to make sure slashes are added correctly after data_dir
+### need to make sure slashes are added correctly after data_loc
 # find all directories within data folder
-if (!exists("data_dir")) {data_dir="data"} # if data_dir not defined, use "data/"
-print(paste0("data_dir = ", data_dir))
-data_dir_abs <- paste0(projectDir,"/",data_dir)
-print(paste0("data_dir_abs = ", data_dir_abs))
-runs <- dir(data_dir_abs) # define data directory in module .nf file
-SampleSheet <- list.files(paste0(data_dir_abs,"/", runs), pattern= "SampleSheet", full.names = TRUE) # list all sampleshets
-runParameters <- list.files(paste0(data_dir_abs,"/", runs), pattern= "[Rr]unParameters.xml", full.names = TRUE) # list all run parameter files
+if (!exists("data_loc")) {data_loc="data"} # if data_loc not defined, use "data"
+print(paste0("data_loc = ", data_loc))
+data_loc_abs <- paste0(projectDir,"/",data_loc)
+print(paste0("data_loc_abs = ", data_loc_abs))
+runs <- dir(data_loc_abs) # define data directory in module .nf file
+SampleSheet <- list.files(paste0(data_loc_abs,"/", runs), pattern= "SampleSheet", full.names = TRUE) # list all sampleshets
+runParameters <- list.files(paste0(data_loc_abs,"/", runs), pattern= "[Rr]unParameters.xml", full.names = TRUE) # list all run parameter files
 
 # Create samplesheet containing samples and run parameters for all runs
 samdf <- create_samplesheet(SampleSheet = SampleSheet, runParameters = runParameters, template = "V4") %>%
@@ -23,7 +23,7 @@ mutate(sample_id = case_when(
 
 # Check that samples match samplesheet
 fastqFs <- 
-    purrr::map(list.dirs(data_dir_abs, recursive=FALSE),
+    purrr::map(list.dirs(data_loc_abs, recursive=FALSE),
                     list.files, pattern="_R1_", full.names = TRUE) %>%
     unlist() %>%
     str_remove(pattern = "^(.*)\\/") %>%
@@ -47,15 +47,16 @@ samdf <- samdf %>%
 }
 
 ### TODO: Add .fastq paths to the sample sheet in additional fwd and rev columns
+# list all .fastq.gz files in data directory 
 fastq_paths <- 
-    list.files(data_dir_abs, pattern = "fastq.gz$|fq.gz$", recursive = T, full.names = T)
+    list.files(data_loc_abs, pattern = "fastq.gz$|fq.gz$", recursive = T, full.names = T)
 
-fastq_paths.fwd <- fastq_paths %>% stringr::str_subset("_R1_")
-fastq_paths.rev <- fastq_paths %>% stringr::str_subset("_R2_")
-fastq_paths.base <- fastq_paths.fwd %>% stringr::str_extract("([^\\/]+$)")
-fastq_paths.id <- fastq_paths.base %>% stringr::str_remove(pattern = "(?:.(?!_S))+$")
+fastq_paths.fwd <- fastq_paths %>% stringr::str_subset("_R1_") # list of fwd read paths
+fastq_paths.rev <- fastq_paths %>% stringr::str_subset("_R2_") # list of rev read paths
+fastq_paths.base <- fastq_paths.fwd %>% stringr::str_extract("([^\\/]+$)") # list of fwd read names 
+fastq_paths.id <- fastq_paths.base %>% stringr::str_remove(pattern = "(?:.(?!_S))+$") # list of sample names from read names (everything before "_S")
 
-fastq_paths.df <-
+fastq_paths.df <- # create data frame of read path info
     data.frame(fastq_paths.fwd, fastq_paths.rev, fastq_paths.base, fastq_paths.id) %>%
     dplyr::rename(
         fwd = fastq_paths.fwd, 
@@ -64,6 +65,7 @@ fastq_paths.df <-
         sample_id = fastq_paths.id
         ) 
 
+# join to samplesheet (doesn't include Undetermined reads)
 left_join(samdf, fastq_paths.df, by = "sample_id") %>%
     write_csv("samdf.paths.csv")
 

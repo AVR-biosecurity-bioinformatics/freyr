@@ -134,14 +134,14 @@ workflow PIPERLINE {
     // ch_samdf.view { "path: $it" }
     // ch_loci_params.view { "path: $it" }
     
-    def data_dir = "test_data"
+    def data_loc = "test_data"
 
     ch_input_fasta = Channel
-                            .fromFilePairs("${data_dir}/**_{R1,R2}*.{fastq,fq}.gz", flat: false)
+                            .fromFilePairs("${data_loc}/**_{R1,R2}*.{fastq,fq}.gz", flat: false)
                             //.view()
 
     // input samplesheet and loci parameters
-    PARAMETER_SETUP ( data_dir )
+    PARAMETER_SETUP ( data_loc )
 
     //PARAMETER_SETUP.out.input_samdf | view { "$it" }
     //PARAMETER_SETUP.out.params_df | view { "$it" }
