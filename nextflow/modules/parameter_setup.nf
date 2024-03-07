@@ -34,14 +34,6 @@ process PARAMETER_SETUP {
     # this only works with sys.source; "projectDir" doesn't mean anything inside script otherwise
     sys.source("${projectDir}/bin/process_start.R", list(projectDir="${projectDir}"))
 
-    # if(!exists("input_samdf") || !exists("input_params")) {
-    # stop("Need input_samdf path AND input_params objects to be present. Check module input paths.")
-    # }
-    
-    ## create directories required by pipeline if they don't exist
-    # (formerly 'create_dirs' target)
-    # step_validate_folders("${projectDir}")
-
     ### run module code
 
     sys.source(
