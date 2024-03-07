@@ -14,7 +14,7 @@ process PARAMETER_SETUP {
     path("params.csv") ,                emit: params
     path("fastq_paths_all.csv"),        emit: fastq_paths_all
     path("fastq_paths_samples.csv"),    emit: fastq_paths_samples
-    path("fastq_paths_ud.csv"),    emit: fastq_paths_ud
+    path("fastq_paths_ud.csv"),         emit: fastq_paths_ud
     path("params_primer.csv"),          emit: params_primer
     path("params_readfilter.csv"),      emit: params_readfilter
     path("params_dada.csv"),            emit: params_dada

@@ -58,7 +58,7 @@ fastq_paths.id <- fastq_paths.base %>% stringr::str_remove(pattern = "(?:.(?!_S)
 fastq_paths.fcid <- fastq_paths.base %>% stringr::str_remove(pattern = "(?:.(?!_))+$") # fcid from sample name
 
 fastq_paths.df <- # create data frame of read path info
-    data.frame(fastq_paths.fwd, fastq_paths.rev, fastq_paths.base, fastq_paths.id) %>%
+    data.frame(fastq_paths.fwd, fastq_paths.rev, fastq_paths.base, fastq_paths.id, fastq_paths.fcid) %>%
     dplyr::rename(
         fwd = fastq_paths.fwd, 
         rev = fastq_paths.rev,
