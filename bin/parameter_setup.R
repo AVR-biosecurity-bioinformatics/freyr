@@ -62,10 +62,11 @@ fastq_paths.df <-
         rev = fastq_paths.rev,
         base = fastq_paths.base,
         sample_id = fastq_paths.id
-        ) %>%
-    write_delim("df.txt")
+        ) 
 
-quit(status = 0)
+left_join(samdf, fastq_paths.df, by = "sample_id") %>%
+    write_csv("samdf.paths.csv")
+
 
 # Add primers to sample sheet
 samdf <- samdf %>%
