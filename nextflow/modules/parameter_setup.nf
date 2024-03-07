@@ -36,6 +36,9 @@ process PARAMETER_SETUP {
 
     ### run module code
 
+    projectDir = "/group/pathogens/IAWS/Personal/JackS/nextflow_tests/piperline_nextflow"
+    print(projectDir)
+
     sys.source(
         "${projectDir}/bin/$module_script", # run script
         envir = .GlobalEnv
