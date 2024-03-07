@@ -32,7 +32,7 @@ fastqFs <-
 # Filter undetermined reads from sample sheet
 fastqFs <- fastqFs[!str_detect(fastqFs, "Undetermined")]
 
-paste0("Fastqs: ",fastqFs)
+fastqFs
 
 # Check for fastq files that are missing from samplesheet
 if (length(setdiff(fastqFs, samdf$sample_id)) > 0) {warning("The fastq file/s: ", setdiff(fastqFs, samdf$sample_id), " are not in the sample sheet") }
@@ -296,8 +296,8 @@ params %>%
 saveRDS(object = samdf, file = "samdf.rds")
 saveRDS(object = params, file = "params.rds")
 
-write_csv(path = "samdf.csv", x = samdf)
-write_csv(path = "params.csv", x = params)
+write_csv(file = "samdf.csv", x = samdf)
+write_csv(file = "params.csv", x = params)
 
 
 
