@@ -51,10 +51,11 @@ samdf <- samdf %>%
 fastq_paths <- 
     list.files(data_loc_abs, pattern = "fastq.gz$|fq.gz$", recursive = T, full.names = T)
 
-fastq_paths.fwd <- fastq_paths %>% stringr::str_subset("_R1_") # list of fwd read paths
-fastq_paths.rev <- fastq_paths %>% stringr::str_subset("_R2_") # list of rev read paths
-fastq_paths.base <- fastq_paths.fwd %>% stringr::str_extract("([^\\/]+$)") # list of fwd read names 
+fastq_paths.fwd <- fastq_paths %>% stringr::str_subset(pattern = "_R1_") # list of fwd read paths
+fastq_paths.rev <- fastq_paths %>% stringr::str_subset(pattern = "_R2_") # list of rev read paths
+fastq_paths.base <- fastq_paths.fwd %>% stringr::str_extract(pattern = "([^\\/]+$)") # list of fwd read names 
 fastq_paths.id <- fastq_paths.base %>% stringr::str_remove(pattern = "(?:.(?!_S))+$") # list of sample names from read names (everything before "_S")
+fastq_paths.fcid <- fastq_paths.base %>% stringr::str_remove(pattern = "(?:.(?!_))+$") # fcid from sample name
 
 fastq_paths.df <- # create data frame of read path info
     data.frame(fastq_paths.fwd, fastq_paths.rev, fastq_paths.base, fastq_paths.id) %>%
@@ -62,12 +63,23 @@ fastq_paths.df <- # create data frame of read path info
         fwd = fastq_paths.fwd, 
         rev = fastq_paths.rev,
         base = fastq_paths.base,
-        sample_id = fastq_paths.id
+        sample_id = fastq_paths.id,
+        fcid = fastq_paths.fcid
         ) 
 
-# join to samplesheet (doesn't include Undetermined reads)
-left_join(samdf, fastq_paths.df, by = "sample_id") %>%
-    write_csv("samdf.paths.csv")
+write_csv(file = "fastq_paths_all.csv", x = fastq_paths.df) # write csv of all read paths with metadata
+
+fastq_paths.df %>% # data frame of sample paths
+    stringr::str_subset(pattern = "Undetermined", negate = T) %>% 
+    write_csv(file = "fastq_paths_samples.csv", x = .)
+
+fastq_paths.df %>% # data frame of only Undetermined paths
+    stringr::str_subset(pattern = "Undetermined", negate = F) %>% 
+    write_csv(file = "fastq_paths_ud.csv", x = .)
+
+# join paths df to samplesheet (drops Undetermined reads)
+samdf <- left_join(samdf, fastq_paths.df, by = c("sample_id", "fcid"))
+write_csv(file = "samdf.paths.csv", x = samdf)
 
 
 # Add primers to sample sheet
