@@ -51,7 +51,7 @@ fastq_paths <-
     list.files(data_dir_abs, pattern = "fastq.gz$|fq.gz$", recursive = T, full.names = T)
 
 fastq_paths.fwd <- 
-    fastq_paths %>% stringr::str_extract("_R1_") %>%
+    fastq_paths %>% stringr::str_subset("_R1_") %>%
     as.data.frame() %>%
     write_delim("fwd.txt")
 
