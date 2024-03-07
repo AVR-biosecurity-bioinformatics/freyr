@@ -138,7 +138,7 @@ workflow PIPERLINE {
 
     ch_input_fasta = Channel
                             .fromFilePairs("${data_dir}/**_{R1,R2}*.{fastq,fq}.gz", flat: false)
-                            .view()
+                            //.view()
 
     // input samplesheet and loci parameters
     PARAMETER_SETUP ( data_dir )

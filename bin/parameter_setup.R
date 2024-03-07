@@ -3,6 +3,7 @@
 ### need to make sure slashes are added correctly after data_dir
 # find all directories within data folder
 if (!exists("data_dir")) {data_dir="data"} # if data_dir not defined, use "data/"
+print(data_dir)
 runs <- dir(paste0(data_dir),"/") # define data directory in module .nf file
 SampleSheet <- list.files(paste0(data_dir,"/", runs), pattern= "SampleSheet", full.names = TRUE) # list all sampleshets
 runParameters <- list.files(paste0(data_dir,"/", runs), pattern= "[Rr]unParameters.xml", full.names = TRUE) # list all run parameter files
