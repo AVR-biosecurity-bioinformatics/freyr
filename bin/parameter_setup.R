@@ -5,7 +5,7 @@
 if (!exists("data_dir")) {data_dir="data"} # if data_dir not defined, use "data/"
 print(paste0("data_dir = ", data_dir))
 data_dir_abs <- paste0(projectDir,"/",data_dir)
-print(data_dir_abs)
+print(paste0("data_dir_abs = ", data_dir_abs))
 runs <- dir(data_dir_abs) # define data directory in module .nf file
 SampleSheet <- list.files(paste0(data_dir_abs,"/", runs), pattern= "SampleSheet", full.names = TRUE) # list all sampleshets
 runParameters <- list.files(paste0(data_dir_abs,"/", runs), pattern= "[Rr]unParameters.xml", full.names = TRUE) # list all run parameter files
