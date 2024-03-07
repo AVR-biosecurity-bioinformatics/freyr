@@ -4,7 +4,7 @@ process PARAMETER_SETUP {
     // label: 
 
     input:
-    path data_dir
+    val data_dir
     // tuple // reads
     // path(samdf)
     // path(params)
