@@ -49,7 +49,7 @@ samdf <- samdf %>%
 ### TODO: Add .fastq paths to the sample sheet in additional fwd and rev columns
 
 list.files(data_dir_abs, pattern = "fastq.gz$|fq.gz$", recursive = T, full.names = T) %>%
-stringr::str_extract(data_dir_abs) %>%
+stringr::str_extract(data_dir_abs, negate = T) %>%
 as.data.frame() %>%
 write_delim("list.txt")
 
