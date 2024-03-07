@@ -32,7 +32,7 @@ fastqFs <-
 # Filter undetermined reads from sample sheet
 fastqFs <- fastqFs[!str_detect(fastqFs, "Undetermined")]
 
-print(fastqFs)
+print("Fastqs: ",fastqFs)
 
 # Check for fastq files that are missing from samplesheet
 if (length(setdiff(fastqFs, samdf$sample_id)) > 0) {warning("The fastq file/s: ", setdiff(fastqFs, samdf$sample_id), " are not in the sample sheet") }
