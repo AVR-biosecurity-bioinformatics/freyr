@@ -21,7 +21,7 @@ mutate(sample_id = case_when(
     TRUE ~ sample_id
 ))
 
-list.files(data_dir_abs, pattern = ".fastq.gz")
+list.files(data_dir_abs, pattern = ".fastq.gz", recursive = T, full.names = T)
 
 stop()
 
