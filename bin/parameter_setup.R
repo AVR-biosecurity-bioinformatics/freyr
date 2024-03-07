@@ -22,7 +22,7 @@ mutate(sample_id = case_when(
 ))
 
 list.files(data_dir_abs, pattern = "fastq.gz$|fq.gz$", recursive = T, full.names = T) %>%
-stringr::str_match("_R1_") %>%
+stringr::str_extract("_R1_") %>%
 as.data.frame() %>%
 write_delim("list.txt")
 
