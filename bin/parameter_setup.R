@@ -70,11 +70,11 @@ fastq_paths.df <- # create data frame of read path info
 write_csv(file = "fastq_paths_all.csv", x = fastq_paths.df) # write csv of all read paths with metadata
 
 fastq_paths.df %>% # data frame of sample paths
-    stringr::str_subset(pattern = "Undetermined", negate = T) %>% 
+    dplyr::filter(!grepl("Undetermined",sample_id)) %>% 
     write_csv(file = "fastq_paths_samples.csv", x = .)
 
 fastq_paths.df %>% # data frame of only Undetermined paths
-    stringr::str_subset(pattern = "Undetermined", negate = F) %>% 
+    dplyr::filter(grepl("Undetermined",sample_id)) %>% 
     write_csv(file = "fastq_paths_ud.csv", x = .)
 
 # join paths df to samplesheet (drops Undetermined reads)
