@@ -21,13 +21,6 @@ mutate(sample_id = case_when(
     TRUE ~ sample_id
 ))
 
-list.files(data_dir_abs, pattern = "fastq.gz$|fq.gz$", recursive = T, full.names = T) %>%
-stringr::str_subset("_R1_") %>%
-as.data.frame() %>%
-write_delim("list.txt")
-
-quit(status = 0)
-
 # Check that samples match samplesheet
 fastqFs <- 
     purrr::map(list.dirs(data_dir_abs, recursive=FALSE),
@@ -55,7 +48,12 @@ samdf <- samdf %>%
 
 ### TODO: Add .fastq paths to the sample sheet in additional fwd and rev columns
 
+list.files(data_dir_abs, pattern = "fastq.gz$|fq.gz$", recursive = T, full.names = T) %>%
+stringr::str_extract(data_dir_abs) %>%
+as.data.frame() %>%
+write_delim("list.txt")
 
+quit(status = 0)
 
 # Add primers to sample sheet
 samdf <- samdf %>%
