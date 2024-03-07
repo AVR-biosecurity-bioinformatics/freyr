@@ -141,7 +141,7 @@ workflow PIPERLINE {
                             .view()
 
     // input samplesheet and loci parameters
-    // PARAMETER_SETUP ( data_dir, ch_input_fasta )
+    PARAMETER_SETUP ( data_dir )
 
     //PARAMETER_SETUP.out.input_samdf | view { "$it" }
     //PARAMETER_SETUP.out.params_df | view { "$it" }

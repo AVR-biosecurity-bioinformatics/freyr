@@ -20,7 +20,7 @@ mutate(sample_id = case_when(
 
 # Check that samples match samplesheet
 fastqFs <- 
-    purrr::map(list.dirs("data", recursive=FALSE),
+    purrr::map(list.dirs(data_dir, recursive=FALSE),
                     list.files, pattern="_R1_", full.names = TRUE) %>%
     unlist() %>%
     str_remove(pattern = "^(.*)\\/") %>%
@@ -41,9 +41,6 @@ samdf <- samdf %>%
     filter(!sample_id %in% setdiff(samdf$sample_id, fastqFs))
 }
 
-# Write out sample tracking sheet
-write_csv(samdf, "sample_data/Sample_info.csv")
-
 # Add primers to sample sheet
 samdf <- samdf %>%
     mutate(pcr_primers = "fwhF2-fwhR2n",
@@ -51,7 +48,7 @@ samdf <- samdf %>%
            rev_primer_seq = "GTRATWGCHCCDGCTARWACWGG"
            )
 
-write_csv(samdf, "sample_data/Sample_info.csv")
+# write_csv(samdf, paste0(projectDir, "/sample_data/Sample_info.csv"))
 
 
 # Params to add in step_add_parameters
@@ -76,11 +73,11 @@ params <- tibble(
     concat_unmerged = FALSE,
     genetic_code = "SGC4",
     coding = TRUE,
-    phmm = "reference/folmer_fullength_model.rds",
+    phmm = paste0(projectDir,"/reference/folmer_fullength_model.rds"),
     
     # Taxonomic assignment
-    idtaxa_db = "reference/idtaxa_bftrimmed.rds",
-    ref_fasta = "reference/insecta_hierarchial_bftrimmed.fa.gz",
+    idtaxa_db = paste0(projectDir,"/reference/idtaxa_bftrimmed.rds"),
+    ref_fasta = paste0(projectDir,"/reference/insecta_hierarchial_bftrimmed.fa.gz"),
     idtaxa_confidence = 60,
     run_blast=TRUE,
     blast_min_identity = 97,
@@ -102,7 +99,7 @@ params <- tibble(
     threads = 1
 )
 
-write_csv(params, "sample_data/loci_params.csv")
+# write_csv(params, "sample_data/loci_params.csv")
 
 
 
@@ -150,7 +147,7 @@ default_samdf <- tibble::tibble(
 #input_samdf <- readr::read_csv(samdf_file, show_col_types = FALSE, col_types = cols(.default = "c"))
 
 # Make sure all columns are present and same type using a special bind operation
-samdf_checked <- new_bind(default_samdf %>% filter(FALSE), input_samdf) 
+samdf_checked <- new_bind(default_samdf %>% filter(FALSE), samdf) 
 
 # Check essential parameters are present
 assertthat::assert_that(all(is.character(samdf_checked$sample_id)) & all(!is.na(samdf_checked$sample_id)),
@@ -201,7 +198,7 @@ default_params <- tibble::tibble(
 #input_params <- readr::read_csv(params_file, show_col_types = FALSE, col_types = cols(.default = "c"))
 
 # Make sure all columns are present and same type using a special bind operation
-params_df <- new_bind(default_params %>% filter(FALSE), input_params) 
+params_df <- new_bind(default_params %>% filter(FALSE), params) 
 
 # Check columns arent NA
 for(i in 1:ncol(default_params)){
@@ -250,35 +247,35 @@ for(i in 1:ncol(default_params)){
 ################ Creating temp files needed during targets but not now
 
 # Create params_primer file for later
-input_params %>% 
+params %>% 
     dplyr::select(pcr_primers, target_gene, max_primer_mismatch) %>%
     write_csv("params_primer.csv")
 
 # Create params_readfilter file for later
-input_params %>% 
+params %>% 
     dplyr::select(pcr_primers, target_gene, read_min_length, read_max_length, read_max_ee, 
                 read_trunc_length, read_trim_left, read_trim_right) %>%
     write_csv("params_readfilter.csv")
 
 # Create params_dada file for later
-input_params %>% 
+params %>% 
     dplyr::select(pcr_primers, target_gene, concat_unmerged, high_sensitivity) %>%
     write_csv("params_dada.csv")
 
 # Create params_asvfilter file for later
-input_params %>% 
+params %>% 
     dplyr::select(pcr_primers, target_gene, asv_min_length, asv_max_length,
                 phmm, coding, genetic_code) %>%
     write_csv("params_asvfilter.csv")
 
 # Create temporary params_database file for tracking
-input_params %>% 
+params %>% 
     dplyr::select(pcr_primers, target_gene, idtaxa_db, idtaxa_confidence, 
                 ref_fasta, blast_min_identity, blast_min_coverage, run_blast) %>%
     write_csv("params_database.csv")
 
 # Create temporary params_ps file for tracking
-input_params %>% 
+params %>% 
     dplyr::select(pcr_primers, target_gene, target_kingdom, target_phylum, target_class,
                     target_order, target_family, target_genus, target_species, 
                     min_sample_reads, min_taxa_reads, min_taxa_ra) %>%
@@ -287,11 +284,11 @@ input_params %>%
 # need a way to check sequencing read inputs
 
 ## save .rds outputs
-saveRDS(object = input_samdf, file = "input_samdf.rds")
-saveRDS(object = input_params, file = "input_params.rds")
+saveRDS(object = samdf, file = "samdf.rds")
+saveRDS(object = params, file = "params.rds")
 
-write_csv(path = "input_samdf.csv", x = input_samdf)
-write_csv(path = "input_params.csv", x = input_params)
+write_csv(path = "samdf.csv", x = samdf)
+write_csv(path = "params.csv", x = params)
 
 
 

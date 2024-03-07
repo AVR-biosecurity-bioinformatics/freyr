@@ -5,13 +5,13 @@ process PARAMETER_SETUP {
 
     input:
     path data_dir
-    tuple // reads
+    // tuple // reads
     // path(samdf)
     // path(params)
 
     output:  
-    path("input_samdf.csv") ,           emit: input_samdf
-    path("input_params.csv") ,          emit: input_params
+    path("samdf.csv") ,                 emit: samdf
+    path("params.csv") ,                emit: params
     path("params_primer.csv"),          emit: params_primer
     path("params_readfilter.csv"),      emit: params_readfilter
     path("params_dada.csv"),            emit: params_dada
