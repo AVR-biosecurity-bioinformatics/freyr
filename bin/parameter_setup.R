@@ -4,10 +4,7 @@
 # find all directories within data folder
 if (!exists("data_dir")) {data_dir="data"} # if data_dir not defined, use "data/"
 print(paste0("data_dir = ", data_dir))
-print(projectDir)
-print(paste(projectDir,data_dir, sep = "/"))
-var1 <- paste0(projectDir,"/",data_dir)
-var1
+data_dir_abs <- paste0(projectDir,"/",data_dir)
 print(paste0("data_dir_abs = ", data_dir_abs))
 runs <- dir(data_dir_abs) # define data directory in module .nf file
 SampleSheet <- list.files(paste0(data_dir_abs,"/", runs), pattern= "SampleSheet", full.names = TRUE) # list all sampleshets
