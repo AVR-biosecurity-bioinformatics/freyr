@@ -32,7 +32,7 @@ fastqFs <-
 # Filter undetermined reads from sample sheet
 fastqFs <- fastqFs[!str_detect(fastqFs, "Undetermined")]
 
-class(fastqFs)
+write_txt(file = "fastqFs.txt", fastqRs)
 
 # write_csv(file = "fastqFs.csv", x = fastqFs)
 
