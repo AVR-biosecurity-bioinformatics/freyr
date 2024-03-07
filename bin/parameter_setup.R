@@ -22,6 +22,7 @@ mutate(sample_id = case_when(
 ))
 
 list.files(data_dir_abs, pattern = ".fastq.gz", recursive = T, full.names = T) %>%
+as.data.frame() %>%
     write_delim("list.txt")
 
 quit(status = 0)
