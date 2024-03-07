@@ -140,10 +140,13 @@ workflow PIPERLINE {
 
     // input samplesheet and loci parameters
     PARAMETER_SETUP ( data_loc )
-
+    
+    // get read paths and metadata for each sample from the sample sheet .csv
+    // from: https://nextflow-io.github.io/patterns/process-per-csv-record/
     PARAMETER_SETUP.out.samdf
         | splitCsv ( header: true )
-        | view { row -> "${row.sample_id}, ${row.fwd}, ${row.rev}" }
+        | map { row -> tuple( row.sample_id, path(row.fwd), path(row.rev) )  }
+        | view 
 
     // this takes 
     // SEQ_QC ()
