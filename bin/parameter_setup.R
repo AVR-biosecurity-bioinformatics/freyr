@@ -4,9 +4,11 @@
 # find all directories within data folder
 if (!exists("data_dir")) {data_dir="data"} # if data_dir not defined, use "data/"
 print(data_dir)
-runs <- dir(paste0(data_dir),"/") # define data directory in module .nf file
-SampleSheet <- list.files(paste0(data_dir,"/", runs), pattern= "SampleSheet", full.names = TRUE) # list all sampleshets
-runParameters <- list.files(paste0(data_dir,"/", runs), pattern= "[Rr]unParameters.xml", full.names = TRUE) # list all run parameter files
+data_dir_abs <- paste0(projectDir,"/",data_dir)
+print(data_dir_abs)
+runs <- dir(data_dir_abs) # define data directory in module .nf file
+SampleSheet <- list.files(paste0(data_dir_abs,"/", runs), pattern= "SampleSheet", full.names = TRUE) # list all sampleshets
+runParameters <- list.files(paste0(data_dir_abs,"/", runs), pattern= "[Rr]unParameters.xml", full.names = TRUE) # list all run parameter files
 
 # Create samplesheet containing samples and run parameters for all runs
 samdf <- create_samplesheet(SampleSheet = SampleSheet, runParameters = runParameters, template = "V4") %>%
@@ -21,7 +23,7 @@ mutate(sample_id = case_when(
 
 # Check that samples match samplesheet
 fastqFs <- 
-    purrr::map(list.dirs(data_dir, recursive=FALSE),
+    purrr::map(list.dirs(data_dir_abs, recursive=FALSE),
                     list.files, pattern="_R1_", full.names = TRUE) %>%
     unlist() %>%
     str_remove(pattern = "^(.*)\\/") %>%
