@@ -34,10 +34,6 @@ process PARAMETER_SETUP {
     # this only works with sys.source; "projectDir" doesn't mean anything inside script otherwise
     sys.source("${projectDir}/bin/process_start.R", list(projectDir="${projectDir}"))
 
-    ## import inputs as objects
-    # input_samdf <- read_delim('${samdf}', show_col_types=F, , col_types = cols(.default = "c"))
-    # input_params <- read_delim('${params}', show_col_types=F, col_types = cols(.default = "c"))
-
     # if(!exists("input_samdf") || !exists("input_params")) {
     # stop("Need input_samdf path AND input_params objects to be present. Check module input paths.")
     # }
