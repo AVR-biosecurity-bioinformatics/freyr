@@ -32,6 +32,8 @@ fastqFs <-
 # Filter undetermined reads from sample sheet
 fastqFs <- fastqFs[!str_detect(fastqFs, "Undetermined")]
 
+print(fastqFs)
+
 # Check for fastq files that are missing from samplesheet
 if (length(setdiff(fastqFs, samdf$sample_id)) > 0) {warning("The fastq file/s: ", setdiff(fastqFs, samdf$sample_id), " are not in the sample sheet") }
 
@@ -44,12 +46,16 @@ samdf <- samdf %>%
     filter(!sample_id %in% setdiff(samdf$sample_id, fastqFs))
 }
 
+### TODO: Add .fastq paths to the sample sheet in additional fwd and rev columns
+
+
+
 # Add primers to sample sheet
 samdf <- samdf %>%
     mutate(pcr_primers = "fwhF2-fwhR2n",
-           for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC",
-           rev_primer_seq = "GTRATWGCHCCDGCTARWACWGG"
-           )
+            for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC",
+            rev_primer_seq = "GTRATWGCHCCDGCTARWACWGG"
+            )
 
 # write_csv(samdf, paste0(projectDir, "/sample_data/Sample_info.csv"))
 
