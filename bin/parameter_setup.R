@@ -21,7 +21,8 @@ mutate(sample_id = case_when(
     TRUE ~ sample_id
 ))
 
-list.files(data_dir_abs, pattern = ".fastq.gz", recursive = T, full.names = T)
+list.files(data_dir_abs, pattern = ".fastq.gz", recursive = T, full.names = T) %>%
+    write_delim("list.txt")
 
 quit(status = 0)
 
