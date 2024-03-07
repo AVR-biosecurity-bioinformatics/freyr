@@ -1,3 +1,8 @@
+#### NOTE:
+#### The following variables are defined in the module script blocks:
+#### projectDir : the project directory absolute path; location of main.nf and "working directory"
+#### data_loc : the name of the data directory (usually "data" but could be "test_data")
+
 
 # Sample validation -------------------------------------------------------
 
@@ -160,8 +165,8 @@ step_validate_samdf <- function(samdf, data_dir){
 
 step_seq_qc <- function(fcid, quiet=FALSE, write_all=FALSE){
   
-  seq_dir <- paste0("data/", fcid, "/")
-  qc_dir <- paste0("output/logs/", fcid,"/" )
+  seq_dir <- paste0(projectDir,"/",data_loc,"/",fcid) # note: uses variables defined in module script
+  qc_dir <- paste0(projectDir,"/output/logs/",fcid)
   
   # Check that required files exist
   if(!dir.exists(seq_dir)) {

@@ -11,20 +11,23 @@ process SEQ_QC {
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
-
     // when:
 
     script:
     def module_script = "${module_name}.R"
     """
     #!/usr/bin/env Rscript
-    
-    # source functions, themes and load packages from "bin/process_start.R"
-    # this only works this way; "projectDir" doesn't mean anything inside script
-    sys.source("${projectDir}/bin/process_start.R", list(projectDir="${projectDir}"))
+    # defining Nextflow environment variables as R variables
+    projectDir = "${projectDir}"
+    data_loc = "${data_loc}"
 
-    # run module code
-    source("${projectDir}/bin/$module_script")
+    ### source functions and themes, and load packages from "bin/process_start.R"
+    sys.source("${projectDir}/bin/process_start.R", envir = .GlobalEnv)
 
+    ### run module code
+    sys.source(
+        "${projectDir}/bin/$module_script", # run script
+        envir = .GlobalEnv # this allows import of existing objects like projectDir
+        )
     """
 }
