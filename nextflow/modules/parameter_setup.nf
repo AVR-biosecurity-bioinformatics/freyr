@@ -29,7 +29,7 @@ process PARAMETER_SETUP {
     // def data_dir = "${projectDir}/test_data" // this should defined in workflow script
     """
     #!/usr/bin/env Rscript
-
+    ls(.GlobalEnv)
     ## source functions, themes and load packages from "bin/process_start.R"
     # this only works with sys.source; "projectDir" doesn't mean anything inside script otherwise
     sys.source("${projectDir}/bin/process_start.R", list(projectDir="${projectDir}"))
@@ -38,7 +38,7 @@ process PARAMETER_SETUP {
     
     projectDir = "${projectDir}"
     ls(.GlobalEnv)
-    
+
     sys.source(
         "${projectDir}/bin/$module_script", # run script
         envir = .GlobalEnv # this allows import of existing objects like projectDir
