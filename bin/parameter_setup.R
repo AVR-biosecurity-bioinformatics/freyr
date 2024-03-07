@@ -55,7 +55,7 @@ fastq_paths.rev <- fastq_paths %>% stringr::str_subset("_R2_")
 
 fastq_paths.df <-
     data.frame(fastq_paths.fwd, fastq_paths.rev) %>%
-    names(c("fwd","rev")) %>%
+    #names(c("fwd","rev")) %>%
     write_delim("df.txt")
 
 quit(status = 0)
