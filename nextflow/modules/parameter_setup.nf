@@ -36,7 +36,7 @@ process PARAMETER_SETUP {
 
     ### run module code
 
-    projectDir = "/group/pathogens/IAWS/Personal/JackS/nextflow_tests/piperline_nextflow"
+    projectDir = ${projectDir}
     print(projectDir)
 
     sys.source(
