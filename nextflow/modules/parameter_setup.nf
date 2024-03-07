@@ -36,7 +36,7 @@ process PARAMETER_SETUP {
 
     ### run module code
 
-    projectDir = ${projectDir}
+    projectDir = "${projectDir}"
     print(projectDir)
 
     sys.source(
