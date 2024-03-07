@@ -156,7 +156,8 @@ workflow PIPERLINE {
                 ]]  
             }
         | set { ch_reads_meta }
-        | view 
+
+    ch_reads_meta | view
 
     // this takes 
     // SEQ_QC ()
