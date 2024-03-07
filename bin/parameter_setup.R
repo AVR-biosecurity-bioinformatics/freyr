@@ -7,7 +7,7 @@ print(paste0("data_dir = ", data_dir))
 print(projectDir)
 print(paste(projectDir,data_dir, sep = "/"))
 var1 <- paste(projectDir,data_dir, sep = "/")
-print(var1)
+exists("var1")
 print(paste0("data_dir_abs = ", data_dir_abs))
 runs <- dir(data_dir_abs) # define data directory in module .nf file
 SampleSheet <- list.files(paste0(data_dir_abs,"/", runs), pattern= "SampleSheet", full.names = TRUE) # list all sampleshets
