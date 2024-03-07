@@ -55,7 +55,7 @@ fastq_paths.fwd <- fastq_paths %>% stringr::str_subset(pattern = "_R1_") # list 
 fastq_paths.rev <- fastq_paths %>% stringr::str_subset(pattern = "_R2_") # list of rev read paths
 fastq_paths.base <- fastq_paths.fwd %>% stringr::str_extract(pattern = "([^\\/]+$)") # list of fwd read names 
 fastq_paths.id <- fastq_paths.base %>% stringr::str_remove(pattern = "(?:.(?!_S))+$") # list of sample names from read names (everything before "_S")
-fastq_paths.fcid <- fastq_paths.id %>% stringr::str_remove(pattern = "^([^_]+)_") # fcid from sample name
+fastq_paths.fcid <- fastq_paths.id %>% stringr::str_extract(pattern = "^([^_]+)_") # fcid from sample name
 
 fastq_paths.df <- # create data frame of read path info
     data.frame(fastq_paths.fwd, fastq_paths.rev, fastq_paths.base, fastq_paths.id, fastq_paths.fcid) %>%
