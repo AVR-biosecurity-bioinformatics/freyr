@@ -52,10 +52,15 @@ fastq_paths <-
 
 fastq_paths.fwd <- fastq_paths %>% stringr::str_subset("_R1_")
 fastq_paths.rev <- fastq_paths %>% stringr::str_subset("_R2_")
+fastq_paths.base <- fastq_paths.fwd %>% stringr::str_extract("([^\/]+$)")
 
 fastq_paths.df <-
-    data.frame(fastq_paths.fwd, fastq_paths.rev) %>%
-    dplyr::rename(fwd = fastq_paths.fwd, rev = fastq_paths.rev) %>%
+    data.frame(fastq_paths.fwd, fastq_paths.rev, fastq_paths.base) %>%
+    dplyr::rename(
+        fwd = fastq_paths.fwd, 
+        rev = fastq_paths.rev,
+        base = fastq_paths.base
+        ) %>%
     write_delim("df.txt")
 
 quit(status = 0)
