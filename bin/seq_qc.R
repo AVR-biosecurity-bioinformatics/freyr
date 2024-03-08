@@ -7,9 +7,6 @@ step_switching_calc2 <- function(fcid, barcode_mismatch=1, quiet=FALSE){
   
   seq_dir <- paste0(projectDir,"/",data_loc,"/",fcid) # note: uses variables defined in module script
   qc_dir <- paste0(projectDir,"/output/logs/",fcid)
-  
-    print(seq_dir)
-    print(qc_dir)
 
   # Check that required files exist
   if(!dir.exists(seq_dir)) {
@@ -36,6 +33,8 @@ step_switching_calc2 <- function(fcid, barcode_mismatch=1, quiet=FALSE){
                     stringr::str_remove(pattern = "^(.*)\\/") %>%
                     stringr::str_remove(pattern = "(?:.(?!_S))+$"))
   
+    if(exists("indices")) { print("indices exists") }
+
   # Ensure indices are present
   if(all(is.na(indices$Freq))){
     warning(paste0("No index sequences present in fastq headers for run", fcid, " no switch rate calculated"))
