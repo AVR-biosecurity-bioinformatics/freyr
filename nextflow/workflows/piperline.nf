@@ -169,7 +169,9 @@ workflow PIPERLINE {
 
     // need to produce channels of reads grouped by fcid for seq_qc
 
-    ch_sample_reads_fcid | view
+    ch_sample_reads_fcid 
+    | map { group -> group[0]}
+    | view
 
 
     // this takes 
