@@ -4,8 +4,7 @@ process SEQ_QC {
     // label: 
 
     input:
-    path sample_info
-    path loci_params
+    tuple val(meta), path(reads)
 
     output:
 

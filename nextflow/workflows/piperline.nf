@@ -155,9 +155,21 @@ workflow PIPERLINE {
                     file(row.rev, checkIfExists: true)
                 ]]  
             }
-        | set { ch_reads_meta }
+        | set { ch_sample_reads }
 
-    ch_reads_meta | view
+    // ch_sample_reads | view
+
+    ch_sample_reads 
+    | map { meta, reads ->
+        def key = meta.fcid
+        return tuple(key, meta, file)
+    } 
+    | groupTuple() 
+    | view
+
+    // need to produce channels of reads grouped by fcid for seq_qc
+
+
 
     // this takes 
     // SEQ_QC ()
