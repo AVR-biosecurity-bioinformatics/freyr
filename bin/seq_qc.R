@@ -8,7 +8,7 @@ step_switching_calc(flowcell_id)
 
 # copy output files to log folder
 file.copy(paste0(flowcell_id,"_flowcell_qc.pdf"),paste0(projectDir,"/output/logs/",flowcell_id))
-file.copy(paste0(flowcell_id,"_index_switching.pdf"),paste0(projectDir,"/output/logs/",flowcell_id))
+#file.copy(paste0(flowcell_id,"_index_switching.pdf"),paste0(projectDir,"/output/logs/",flowcell_id))
 
 
 quit(status = 0)
