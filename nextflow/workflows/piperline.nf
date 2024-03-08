@@ -162,7 +162,7 @@ workflow PIPERLINE {
     ch_sample_reads 
     | map { meta, reads ->
         def key = meta.fcid
-        return tuple(key, meta, file)
+        return tuple(key, meta, reads)
     } 
     | groupTuple() 
     | view
