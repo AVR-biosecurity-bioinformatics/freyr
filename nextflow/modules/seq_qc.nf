@@ -4,8 +4,7 @@ process SEQ_QC {
     // label: 
 
     input:
-    val(fcid)
-    tuple val(meta), path(reads)
+    val(flowcell_id)
 
     output:
     path("*_flowcell_qc.pdf"),          emit: flowcell_qc
@@ -19,8 +18,9 @@ process SEQ_QC {
     """
     #!/usr/bin/env Rscript
     # defining Nextflow environment variables as R variables
-    projectDir = "${projectDir}"
-    data_loc = "${data_loc}"
+    projectDir = "$projectDir"
+    data_loc = "$data_loc"
+    flowcell_id = "$flowcell_id"
 
     ### source functions and themes, and load packages from "bin/process_start.R"
     sys.source("${projectDir}/bin/process_start.R", envir = .GlobalEnv)

@@ -171,11 +171,11 @@ workflow PIPERLINE {
 
     ch_sample_reads_fcid 
     | map { group -> group[0]}
-    | view
+    | set { ch_fcid }
 
 
     // this takes 
-    // SEQ_QC ( ch_sample_reads_fcid.fcid ,  )
+    SEQ_QC ( ch_fcid )
 
 
 }

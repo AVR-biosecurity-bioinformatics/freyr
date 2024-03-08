@@ -1,11 +1,8 @@
 #!/usr/bin/env Rscript
 
+print(flowcell_id)
 
-
-
-
-
-
+quit(status = 0)
 
 tar_target(seq_qc, {
             process <- temp_samdf1_grouped %>%
