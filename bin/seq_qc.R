@@ -8,6 +8,9 @@ step_switching_calc2 <- function(fcid, barcode_mismatch=1, quiet=FALSE){
   seq_dir <- paste0(projectDir,"/",data_loc,"/",fcid) # note: uses variables defined in module script
   qc_dir <- paste0(projectDir,"/output/logs/",fcid)
   
+    print(seq_dir)
+    print(qc_dir)
+
   # Check that required files exist
   if(!dir.exists(seq_dir)) {
     stop("input directory doesnt exist, check that the correct path was provided")
