@@ -1,13 +1,15 @@
 #!/usr/bin/env Rscript
 
-print(paste0(projectDir,"/",data_loc,"/",flowcell_id))
-
+# run flow cell QC
 step_seq_qc(flowcell_id)
+
+# run index switching calculation
+step_switching_calc(flowcell_id)
 
 # copy output files to log folder
 file.copy(paste0(flowcell_id,"_flowcell_qc.pdf"),paste0(projectDir,"/output/logs/",flowcell_id))
+file.copy(paste0(flowcell_id,"_index_switching.pdf"),paste0(projectDir,"/output/logs/",flowcell_id))
 
-# step_switching_calc(flowcell_id)
 
 quit(status = 0)
 
