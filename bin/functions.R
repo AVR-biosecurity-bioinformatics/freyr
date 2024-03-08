@@ -222,7 +222,7 @@ step_seq_qc <- function(fcid, quiet=FALSE, write_all=FALSE){
     facet_wrap(~side, scales="free") +
     scale_fill_viridis_c()
   
-  pdf(file=normalizePath(paste0(qc_dir, "/", fcid, "_flowcell_qc.pdf")), width = 11, height = 8 , paper="a4r")
+  pdf(file=normalizePath(paste0(fcid,"_flowcell_qc.pdf")), width = 11, height = 8 , paper="a4r")
     plot(gg.avg_intensity)
     savR::pfBoxplot(fc)
     for (lane in 1:fc@layout@lanecount) {
