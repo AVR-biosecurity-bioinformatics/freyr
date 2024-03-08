@@ -2,8 +2,9 @@
 
 print(paste0(projectDir,"/",data_loc,"/",flowcell_id))
 
-step_seq_qc(flowcell_id)
+step_seq_qc(flowcell_id, write_all=T)
 
+# step_switching_calc
 
 quit(status = 0)
 
