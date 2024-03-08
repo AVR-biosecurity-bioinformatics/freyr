@@ -9,7 +9,7 @@ process SEQ_QC {
 
     output:
     path "${flowcell_id}_flowcell_qc.pdf"
-    path "${flowcell_id}_index_switching.pdf" 
+    // path "${flowcell_id}_index_switching.pdf" 
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
