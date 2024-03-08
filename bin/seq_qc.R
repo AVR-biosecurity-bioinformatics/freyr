@@ -70,6 +70,7 @@ write_csv(as.data.frame(switched),"switched.csv")
     })
   
 if(exists("applied_indices")) { print("applied_indices exists") }
+write_csv(as.data.frame(applied_indices),"applied_indices.csv")
 
   # Check if indices are combinatorial
   if(any(duplicated(applied_indices$index)) | any(duplicated(applied_indices$index2))){
@@ -84,6 +85,8 @@ if(exists("applied_indices")) { print("applied_indices exists") }
     dplyr::pull(sum)
   
 if(exists("other_reads")) { print("other_reads exists") }
+write_csv(as.data.frame(other_reads),"other_reads.csv")
+
 
   #Summary of index switching rate
   if(any(stringr::str_detect(switched$Sample_Name, "Undetermined"), na.rm = TRUE)){
