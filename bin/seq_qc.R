@@ -2,6 +2,9 @@
 
 print(paste0(projectDir,"/",data_loc,"/",flowcell_id))
 
+step_seq_qc(flowcell_id)
+
+
 quit(status = 0)
 
 # tar_target(seq_qc, {
