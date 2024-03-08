@@ -3,6 +3,12 @@
 # run flow cell QC
 step_seq_qc(flowcell_id)
 
+### current issue:
+### doesn't print the gg.switch pdf "${flowcell_id}_index_switching.pdf", which might have something
+### to do with not being able to find Undetermined reads
+### I'm debugging using below function and printing dfs to .csv in workdir
+
+
 step_switching_calc2 <- function(fcid, barcode_mismatch=1, quiet=FALSE){
   
   seq_dir <- paste0(projectDir,"/",data_loc,"/",fcid) # note: uses variables defined in module script
@@ -101,8 +107,10 @@ write_csv(as.data.frame(other_reads),"other_reads.csv")
                          values_from = switch_rate) %>%
       dplyr::mutate(switch_rate =  observed / expected ) %>%
       dplyr::mutate(contam_rate =  switch_rate^2 )
+      write_csv(as.data.frame(res),"res1.csv")
   } else {
     res <- tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_, contam_rate=NA_integer_)
+    write_csv(as.data.frame(res),"res2.csv")
     return(res)
   }
   
