@@ -5,7 +5,7 @@ print(paste0(projectDir,"/",data_loc,"/",flowcell_id))
 step_seq_qc(flowcell_id)
 
 # copy output files to log folder
-file.copy(paste0(fcid,"_flowcell_qc.pdf"),paste0(projectDir,"/output/logs/",fcid))
+file.copy(paste0(flowcell_id,"_flowcell_qc.pdf"),paste0(projectDir,"/output/logs/",flowcell_id))
 
 # step_switching_calc(flowcell_id)
 
