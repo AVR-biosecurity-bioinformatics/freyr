@@ -55,7 +55,7 @@ def data_loc = "test_data"
 // include { RENAME_RAW_DATA_FILES         } from '../modules/local/rename_raw_data_files'
 
 include { PARAMETER_SETUP                   }         from '../modules/parameter_setup'
-// include { SEQ_QC                            }         from '../modules/seq_qc'
+include { SEQ_QC                            }         from '../modules/seq_qc'
 // include { SWITCHING_QC                      }         from '../modules/switching_qc'
 // include { PRIMER_TRIM                       }         from '../modules/primer_trim'
 // include { SAMDF2                            }         from '../modules/samdf2'
