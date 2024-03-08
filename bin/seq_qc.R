@@ -33,7 +33,7 @@ step_switching_calc2 <- function(fcid, barcode_mismatch=1, quiet=FALSE){
                     stringr::str_remove(pattern = "^(.*)\\/") %>%
                     stringr::str_remove(pattern = "(?:.(?!_S))+$"))
   
-    if(exists("indices")) { print("indices exists") }
+
 
   # Ensure indices are present
   if(all(is.na(indices$Freq))){
@@ -47,11 +47,15 @@ step_switching_calc2 <- function(fcid, barcode_mismatch=1, quiet=FALSE){
     dplyr::select(index, index2) %>%
     tidyr::expand(index, index2)
   
+if(exists("combos")) { print("combos exists") }
+
   #get unused combinations resulting from index switching
   switched <- combos %>%
     dplyr::left_join(indices, by=c("index", "index2")) %>%
     tidyr::drop_na()
   
+if(exists("switched")) { print("switched exists") }
+
   # Get a list of orignally applied indexes - Could get this from sample sheet instead
   applied_indices <- switched %>%
     dplyr::filter(!stringr::str_detect(Sample_Name, "Undetermined")) %>%
@@ -63,6 +67,8 @@ step_switching_calc2 <- function(fcid, barcode_mismatch=1, quiet=FALSE){
         dplyr::mutate(Freq = sum(.x$Freq)) 
     })
   
+if(exists("applied_indices")) { print("applied_indices exists") }
+
   # Check if indices are combinatorial
   if(any(duplicated(applied_indices$index)) | any(duplicated(applied_indices$index2))){
     warning(paste0("Combinatorial indexes detected for", fcid, " no switch rate calculated"))
@@ -75,6 +81,8 @@ step_switching_calc2 <- function(fcid, barcode_mismatch=1, quiet=FALSE){
     dplyr::summarise(sum = sum(Freq, na.rm = TRUE)) %>%
     dplyr::pull(sum)
   
+if(exists("other_reads")) { print("other_reads exists") }
+
   #Summary of index switching rate
   if(any(stringr::str_detect(switched$Sample_Name, "Undetermined"), na.rm = TRUE)){
     res <- switched %>%
@@ -95,6 +103,8 @@ step_switching_calc2 <- function(fcid, barcode_mismatch=1, quiet=FALSE){
   
   if(!quiet){message("Index switching rate calculated as: ", res$switch_rate)}
   
+if(exists("res")) { print("res exists") }
+
   #Plot switching - handling barcode mismatch during demultiplexing 
  
   # Update indexes using their hamming distance to those originally appliex
@@ -119,6 +129,8 @@ step_switching_calc2 <- function(fcid, barcode_mismatch=1, quiet=FALSE){
     group_by(index, index2, Sample_Name) %>%
     summarise(Freq = sum(Freq))
 
+if(exists("switch_plot_dat")) { print("switch_plot_dat exists") }
+
   gg.switch <- switch_plot_dat %>%
     dplyr::group_by(Sample_Name, index, index2) %>%
     summarise(Freq = sum(Freq))%>%
@@ -136,7 +148,7 @@ step_switching_calc2 <- function(fcid, barcode_mismatch=1, quiet=FALSE){
       ", Contam rate: ", sprintf("%1.6f%%", res$contam_rate*100),
       ", Other reads: ", other_reads)) 
   
-  saveRDS(object = gg.switch, file = "gg.switch.rds")
+if(exists("gg.switch")) { print("gg.switch exists") }
 
   pdf(file=paste(fcid,"_index_switching.pdf"), width = 11, height = 8 , paper="a4r")
     plot(gg.switch)
