@@ -448,7 +448,7 @@ step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
       ", Switch rate: ", sprintf("%1.4f%%", res$switch_rate*100),
       ", Contam rate: ", sprintf("%1.6f%%", res$contam_rate*100),
       ", Other reads: ", other_reads)) 
-  pdf(file=normalizePath(paste0(qc_dir, fcid,"_index_switching.pdf")), width = 11, height = 8 , paper="a4r")
+  pdf(file=paste(fcid,"_index_switching.pdf")), width = 11, height = 8 , paper="a4r")
     plot(gg.switch)
     try(dev.off(), silent=TRUE)
   return(res)
