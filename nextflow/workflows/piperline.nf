@@ -161,7 +161,7 @@ workflow PIPERLINE {
 
     ch_sample_reads 
     | map { meta, reads ->
-        def key = meta.fcid
+        def key = meta.client_name
         return tuple(key, meta, reads)
     } 
     | groupTuple() 
