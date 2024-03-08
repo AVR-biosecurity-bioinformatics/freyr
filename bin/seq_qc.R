@@ -55,6 +55,8 @@ if(exists("combos")) { print("combos exists") }
     tidyr::drop_na()
   
 if(exists("switched")) { print("switched exists") }
+write_csv("switched.csv",switched)
+
 
   # Get a list of orignally applied indexes - Could get this from sample sheet instead
   applied_indices <- switched %>%
