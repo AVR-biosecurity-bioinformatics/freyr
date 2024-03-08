@@ -134,10 +134,7 @@ step_switching_calc2 <- function(fcid, barcode_mismatch=1, quiet=FALSE){
       ", Contam rate: ", sprintf("%1.6f%%", res$contam_rate*100),
       ", Other reads: ", other_reads)) 
   
-  if (exists("gg.switch")) { 
-    class(gg.switch)
-    stop("gg.switch exists") 
-    }
+  saveRDS(object = gg.switch, file = "gg.switch.rds")
 
   pdf(file=paste(fcid,"_index_switching.pdf"), width = 11, height = 8 , paper="a4r")
     plot(gg.switch)
