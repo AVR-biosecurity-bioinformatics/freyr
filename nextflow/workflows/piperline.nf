@@ -175,7 +175,7 @@ workflow PIPERLINE {
 
 
     // this takes 
-    SEQ_QC ( ch_fcid )
+    SEQ_QC ( data_loc, ch_fcid )
 
 
 }

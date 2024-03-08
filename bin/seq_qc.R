@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-print(flowcell_id)
+print(paste0(projectDir,"/",data_loc,"/",flowcell_id))
 
 quit(status = 0)
 

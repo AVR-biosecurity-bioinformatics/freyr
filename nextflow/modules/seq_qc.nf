@@ -4,7 +4,8 @@ process SEQ_QC {
     // label: 
 
     input:
-    val(flowcell_id)
+    val data_loc
+    val flowcell_id 
 
     output:
     path("*_flowcell_qc.pdf"),          emit: flowcell_qc
