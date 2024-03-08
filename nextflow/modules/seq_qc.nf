@@ -4,9 +4,11 @@ process SEQ_QC {
     // label: 
 
     input:
+    val(fcid)
     tuple val(meta), path(reads)
 
     output:
+    path("*_flowcell_qc.pdf"),          emit: flowcell_qc
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

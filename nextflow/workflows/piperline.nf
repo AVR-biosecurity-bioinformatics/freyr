@@ -161,18 +161,19 @@ workflow PIPERLINE {
 
     ch_sample_reads 
     | map { meta, reads ->
-        def key = meta.client_name
-        return tuple(key, meta, reads)
+        def fcid = meta.fcid
+        return tuple(fcid, reads)
     } 
     | groupTuple() 
     | view
+    //| set { ch_sample_reads_fcid }
 
     // need to produce channels of reads grouped by fcid for seq_qc
 
 
 
     // this takes 
-    // SEQ_QC ()
+    // SEQ_QC ( ch_sample_reads_fcid.fcid ,  )
 
 
 }
