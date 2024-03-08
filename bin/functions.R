@@ -320,8 +320,8 @@ step_multiqc <- function(fcid, quiet=FALSE){
 
 step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
   
-  seq_dir <- paste0("data/", fcid, "/")
-  qc_dir <- paste0("output/logs/", fcid,"/" )
+  seq_dir <- paste0(projectDir,"/",data_loc,"/",fcid) # note: uses variables defined in module script
+  qc_dir <- paste0(projectDir,"/output/logs/",fcid)
   
   # Check that required files exist
   if(!dir.exists(seq_dir)) {

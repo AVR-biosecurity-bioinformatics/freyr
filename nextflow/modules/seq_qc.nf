@@ -8,7 +8,8 @@ process SEQ_QC {
     val flowcell_id 
 
     output:
-    // path("*_flowcell_qc.pdf"),          emit: flowcell_qc
+    path "${flowcell_id}_flowcell_qc.pdf"
+    path "${flowcell_id}_index_switching.pdf" 
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
