@@ -1,5 +1,9 @@
 #!/usr/bin/env Rscript
 
+#### TODO: Pull stats from top of index_switching.pdf and print to a final run report
+### also flag index combos that have higher than average + (some stat)
+
+
 # run flow cell QC
 step_seq_qc(flowcell_id)
 
@@ -7,6 +11,14 @@ step_seq_qc(flowcell_id)
 ### doesn't print the gg.switch pdf "${flowcell_id}_index_switching.pdf", which might have something
 ### to do with not being able to find Undetermined reads
 ### I'm debugging using below function and printing dfs to .csv in workdir
+### "res2.csv" is being written
+### Alex says it's likely an issue with switched indices in the Undetermined reads not being present due to chance subsampling down to 5k reads
+### one solution is to have much larger .fastq files for the Undetermined reads to guarantee switched indices are present
+### another solution is to purposefully find and "spike in" switched reads from the full set to make sure I can 
+
+
+### grep all the reads from Undetermined that contain "TGCGAACT+TGCCATTC", which should have >0 switched reads in it
+
 
 
 step_switching_calc2 <- function(fcid, barcode_mismatch=1, quiet=FALSE){
@@ -110,7 +122,7 @@ write_csv(as.data.frame(other_reads),"other_reads.csv")
       write_csv(as.data.frame(res),"res1.csv")
   } else {
     res <- tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_, contam_rate=NA_integer_)
-    write_csv(as.data.frame(res),"res2.csv")
+    write_csv(as.data.frame(res),"res2.csv") 
     return(res)
   }
   

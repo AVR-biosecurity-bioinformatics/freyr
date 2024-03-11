@@ -5,10 +5,11 @@
 
 > Make sure `jackscanlan/piperline` container has `bash:3.x` and `ps` installed, and make `/bin/bash` the container `ENTRYPOINT`. 
 
+TODO: troubleshoot SEQ_QC; some issue with switching calcs
 
-TODO: Add InterOp folder to test_data in GitHub
+TODO: 
 
-TODO: Figure out why Undetermined reads still not good enough for output/logs
+
 
 TODO: Implement `nf-validation` (ala [here](https://nextflow-io.github.io/nf-validation/latest/)) to handle samplesheets etc. 
 - also read [plugin documentation](https://www.nextflow.io/docs/latest/plugins.html)
