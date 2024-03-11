@@ -4,6 +4,8 @@
 ### also flag index combos that have higher than average + (some stat)
 
 
+### TODO: use index_switch_calc.txt in jack_notes to run same process but in bash, which should be much faster
+
 # run flow cell QC
 step_seq_qc(flowcell_id)
 
