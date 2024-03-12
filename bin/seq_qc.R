@@ -9,20 +9,6 @@
 # run flow cell QC
 step_seq_qc(flowcell_id)
 
-### current issue:
-### doesn't print the gg.switch pdf "${flowcell_id}_index_switching.pdf", which might have something
-### to do with not being able to find Undetermined reads
-### I'm debugging using below function and printing dfs to .csv in workdir
-### "res2.csv" is being written
-### Alex says it's likely an issue with switched indices in the Undetermined reads not being present due to chance subsampling down to 5k reads
-### one solution is to have much larger .fastq files for the Undetermined reads to guarantee switched indices are present
-### another solution is to purposefully find and "spike in" switched reads from the full set to make sure I can 
-
-
-### grep all the reads from Undetermined that contain "TGCGAACT+TGCCATTC", which should have >0 switched reads in it
-
-
-
 step_switching_calc2 <- function(fcid, barcode_mismatch=1, quiet=FALSE){
   
   seq_dir <- paste0(projectDir,"/",data_loc,"/",fcid) # note: uses variables defined in module script
@@ -190,7 +176,7 @@ if(exists("gg.switch")) { print("gg.switch exists") }
 
 
 # run index switching calculation
-step_switching_calc2(flowcell_id)
+step_switching_calc(flowcell_id)
 
 # copy output files to log folder
 file.copy(paste0(flowcell_id,"_flowcell_qc.pdf"),paste0(projectDir,"/output/logs/",flowcell_id))
