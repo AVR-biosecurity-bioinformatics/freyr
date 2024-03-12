@@ -69,6 +69,8 @@ write_csv(as.data.frame(indices),"indices.csv")
     tidyr::expand(index, index2)
   
 if(exists("combos")) { print("combos exists") }
+write_csv(as.data.frame(combos),"combos.csv")
+
 
   #get unused combinations resulting from index switching
   switched <- combos %>%
