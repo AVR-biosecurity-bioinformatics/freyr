@@ -52,7 +52,8 @@ step_switching_calc2 <- function(fcid, barcode_mismatch=1, quiet=FALSE){
     dplyr::mutate(Sample_Name = Sample_Name %>% 
                     stringr::str_remove(pattern = "^(.*)\\/") %>%
                     stringr::str_remove(pattern = "(?:.(?!_S))+$"))
-  
+write_csv(as.data.frame(indices),"indices.csv")
+
 
 
   # Ensure indices are present
