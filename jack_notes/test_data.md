@@ -40,3 +40,40 @@ Also copy `runParameters.xml` from other directory:
 
     cp /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/JDYG3/runParameters.xml .
 
+
+
+Also want to select only reads from Undetermined file that match the following disallowed index combination: "ACCAATGC+CACCACTA"
+
+    cd /home/js7t/personal/nextflow_tests/piperline_nextflow/test_data
+
+    # pull headers from fastq
+    zcat /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/JDYG3/JDYG3_Undetermined_S0_R1_001.fastq.gz | \
+    awk 'sub(/^@/, "")' - > R1_headers.txt
+    zcat /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/JDYG3/JDYG3_Undetermined_S0_R2_001.fastq.gz | \
+    awk 'sub(/^@/, "")' - > R2_headers.txt
+
+    # grep headers matching index
+    grep -F -e "ACCAATGC+CACCACTA" R1_headers.txt > R1_bad.txt
+    grep -F -e "ACCAATGC+CACCACTA" R2_headers.txt > R2_bad.txt
+
+    echo "M03633:489:000000000-JDYG3:1:1102:25699:4289" > single_header.txt
+
+    # use BBMap to subsample reads with disallowed headers
+
+    module load BBMap/38.98-GCC-11.2.0
+
+    filterbyname.sh \
+    in=/group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/JDYG3/JDYG3_Undetermined_S0_R1_001.fastq.gz \
+    in2=/group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/JDYG3/JDYG3_Undetermined_S0_R2_001.fastq.gz \
+    out=./bad_R1.fastq.gz \
+    out2=./bad_R2.fastq.gz \
+    ow=t \
+    substring=name \
+    include=t \
+    names=R1_bad.txt
+
+    # concatenate "bad reads" to end of subsampled Undetermined reads
+    zcat bad_R1.fastq.gz JDYG3/JDYG3_Undetermined_S0_R1_001.fastq.gz | gzip -c > ./JDYG3_Undetermined_S0_R1_001.fastq.gz
+    zcat bad_R2.fastq.gz JDYG3/JDYG3_Undetermined_S0_R2_001.fastq.gz | gzip -c > ./JDYG3_Undetermined_S0_R2_001.fastq.gz
+
+    # then moved into old directory and replaced existing files
