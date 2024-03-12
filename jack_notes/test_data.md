@@ -46,17 +46,37 @@ Also want to select only reads from Undetermined file that match the following d
 
     cd /home/js7t/personal/nextflow_tests/piperline_nextflow/test_data
 
+    mkdir new_ud && cd new_ud
+
     # pull headers from fastq
     zcat /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/JDYG3/JDYG3_Undetermined_S0_R1_001.fastq.gz | \
     awk 'sub(/^@/, "")' - > R1_headers.txt
     zcat /group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/JDYG3/JDYG3_Undetermined_S0_R2_001.fastq.gz | \
     awk 'sub(/^@/, "")' - > R2_headers.txt
 
-    # grep headers matching index
-    grep -F -e "ACCAATGC+CACCACTA" R1_headers.txt > R1_bad.txt
-    grep -F -e "ACCAATGC+CACCACTA" R2_headers.txt > R2_bad.txt
+    # EOF index combinations
+    cat <<EOF > indices.txt
+    GAGACGAT+GTTCTCGT
+    GAGACGAT+ATGCACGA
+    GAGACGAT+CGCTCTAT
+    GAGACGAT+AGAGTAGC
+    GACGATCT+GTTCTCGT
+    GACGATCT+ATGCACGA
+    GACGATCT+CGCTCTAT
+    GACGATCT+AGAGTAGC
+    ACGGAACA+GTTCTCGT
+    ACGGAACA+ATGCACGA
+    ACGGAACA+CGCTCTAT
+    ACGGAACA+AGAGTAGC
+    ACGTTCAG+GTTCTCGT
+    ACGTTCAG+ATGCACGA
+    ACGTTCAG+CGCTCTAT
+    ACGTTCAG+AGAGTAGC
+    EOF
 
-    echo "M03633:489:000000000-JDYG3:1:1102:25699:4289" > single_header.txt
+    # grep headers matching index
+    grep -F -f indices.txt R1_headers.txt > R1_bad.txt
+    grep -F -f indices.txt R2_headers.txt > R2_bad.txt
 
     # use BBMap to subsample reads with disallowed headers
 
@@ -73,7 +93,7 @@ Also want to select only reads from Undetermined file that match the following d
     names=R1_bad.txt
 
     # concatenate "bad reads" to end of subsampled Undetermined reads
-    zcat bad_R1.fastq.gz JDYG3/JDYG3_Undetermined_S0_R1_001.fastq.gz | gzip -c > ./JDYG3_Undetermined_S0_R1_001.fastq.gz
-    zcat bad_R2.fastq.gz JDYG3/JDYG3_Undetermined_S0_R2_001.fastq.gz | gzip -c > ./JDYG3_Undetermined_S0_R2_001.fastq.gz
+    zcat bad_R1.fastq.gz ../JDYG3/JDYG3_Undetermined_S0_R1_001.fastq.gz | gzip -c > ./JDYG3_Undetermined_S0_R1_001.fastq.gz
+    zcat bad_R2.fastq.gz ../JDYG3/JDYG3_Undetermined_S0_R2_001.fastq.gz | gzip -c > ./JDYG3_Undetermined_S0_R2_001.fastq.gz
 
     # then moved into old directory and replaced existing files
