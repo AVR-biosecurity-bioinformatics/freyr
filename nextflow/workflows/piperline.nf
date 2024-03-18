@@ -159,9 +159,9 @@ workflow PIPERLINE {
     ch_sample_reads | view
 
     ////// TODO: import parameters from params
-    // PARAMETER_SETUP.out.params
-    //     | splitCsv ( header: true )
-    //     | view
+    PARAMETER_SETUP.out.params
+        | splitCsv ( header: true )
+        | view
 
 
 
