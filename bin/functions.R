@@ -431,6 +431,7 @@ step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
     tidyr::unnest(c(index, index2)) %>%
     group_by(index, index2, Sample_Name) %>%
     summarise(Freq = sum(Freq))
+  write_csv(file = "switch_plot_dat.csv", x = switch_plot_dat)
 
   gg.switch <- switch_plot_dat %>%
     dplyr::group_by(Sample_Name, index, index2) %>%
@@ -448,7 +449,7 @@ step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
       ", Switch rate: ", sprintf("%1.4f%%", res$switch_rate*100),
       ", Contam rate: ", sprintf("%1.6f%%", res$contam_rate*100),
       ", Other reads: ", other_reads)) 
-
+  saveRDS(object = gg.switch, file = "gg.switch.rds")
   pdf(file=paste(fcid,"_index_switching.pdf"), width = 11, height = 8 , paper="a4r")
     plot(gg.switch)
     try(dev.off(), silent=TRUE)
