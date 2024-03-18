@@ -157,25 +157,24 @@ workflow PIPERLINE {
             }
         | set { ch_sample_reads }
 
-    // ch_sample_reads | view
+    ch_sample_reads | view
 
-    ch_sample_reads 
-    | map { meta, reads ->
-        def fcid = meta.fcid
-        return tuple(fcid, reads)
-    } 
-    | groupTuple() 
-    | set { ch_sample_reads_fcid }
+    // ch_sample_reads 
+    // | map { meta, reads ->
+    //     def fcid = meta.fcid
+    //     return tuple(fcid, reads)
+    // } 
+    // | groupTuple() 
+    // | set { ch_sample_reads_fcid }
 
-    // need to produce channels of reads grouped by fcid for seq_qc
+    // // extract flow cell IDs 
+    // ch_sample_reads_fcid 
+    // | map { group -> group[0]}
+    // | set { ch_fcid }
 
-    ch_sample_reads_fcid 
-    | map { group -> group[0]}
-    | set { ch_fcid }
 
-
-    // this takes 
-    SEQ_QC ( data_loc, ch_fcid )
+    // // run SEQ_QC per flow cell 
+    // SEQ_QC ( data_loc, ch_fcid )
 
 
 }
