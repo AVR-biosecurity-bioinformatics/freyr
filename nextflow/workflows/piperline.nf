@@ -161,6 +161,7 @@ workflow PIPERLINE {
     ////// TODO: import parameters from params
     PARAMETER_SETUP.out.loci_params
         | splitCsv ( header: true )
+        | merge ( ch_sample_reads )
         | view
 
 
