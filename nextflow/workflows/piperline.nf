@@ -139,11 +139,11 @@ workflow PIPERLINE {
         | splitCsv ( header: true )
         | map { row -> 
             meta = row.subMap(
-                'sample_id','sample_name','extraction_rep','amp_rep',
+                'pcr_primers','sample_id','sample_name','extraction_rep','amp_rep',
                 'client_name','experiment_name','sample_type','collection_method',
                 'collection_location','lat_lon','environment','collection_date',
                 'operator_name','description','assay','extraction_method',
-                'amp_method','target_gene','pcr_primers','for_primer_seq',
+                'amp_method','target_gene','for_primer_seq',
                 'rev_primer_seq','index_plate','index_well','i7_index_id',
                 'i7_index','i5_index_id','i5_index','seq_platform',
                 'fcid','for_read_length','rev_read_length','seq_run_id',
@@ -161,7 +161,7 @@ workflow PIPERLINE {
     ////// TODO: import parameters from params
     PARAMETER_SETUP.out.loci_params
         | splitCsv ( header: true )
-        | join ( ch_sample_reads, by: 9 ) 
+        | join ( ch_sample_reads, by: 0 ) 
         | view
 
 
