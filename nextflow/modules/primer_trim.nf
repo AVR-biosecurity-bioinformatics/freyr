@@ -1,11 +1,13 @@
 process PRIMER_TRIM {
     def module_name = "primer_trim"
-    // tag:
+    tag: "$meta.sample_id"
     // label: 
 
     input:
+    tuple val(meta), path(reads)
+    
     val data_loc
-
+    
     output: 
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
@@ -19,7 +21,11 @@ process PRIMER_TRIM {
     # defining Nextflow environment variables as R variables
     projectDir = "$projectDir"
     data_loc = "$data_loc"
-    flowcell_id = "$flowcell_id"
+    sample_id = "$meta.sample_id"
+    for_primer_seq = "$meta.for_primer_seq"
+    rev_primer_seq = "$meta.rev_primer_seq"
+    pcr_primers = "$meta.pcr_primers"
+    fcid = "$meta.fcid"
 
     ### source functions and themes, and load packages from "bin/process_start.R"
     sys.source("${projectDir}/bin/process_start.R", envir = .GlobalEnv)

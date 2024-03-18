@@ -56,8 +56,7 @@ def data_loc = "test_data"
 
 include { PARAMETER_SETUP                   }         from '../modules/parameter_setup'
 include { SEQ_QC                            }         from '../modules/seq_qc'
-// include { SWITCHING_QC                      }         from '../modules/switching_qc'
-// include { PRIMER_TRIM                       }         from '../modules/primer_trim'
+include { PRIMER_TRIM                       }         from '../modules/primer_trim'
 // include { SAMDF2                            }         from '../modules/samdf2'
 // include { READ_FILTER                       }         from '../modules/read_filter' 
 // include { SAMDF3                            }         from '../modules/samdf3'
@@ -159,6 +158,13 @@ workflow PIPERLINE {
 
     ch_sample_reads | view
 
+    ////// TODO: import parameters from params
+    PARAMETER_SETUP.out.params
+        | splitCsv ( header: true )
+        | view
+
+
+
     // ch_sample_reads 
     // | map { meta, reads ->
     //     def fcid = meta.fcid
@@ -176,5 +182,5 @@ workflow PIPERLINE {
     // // run SEQ_QC per flow cell 
     // SEQ_QC ( data_loc, ch_fcid )
 
-
+// PRIMER_TRIM ( ch_sample_reads, data_loc )
 }

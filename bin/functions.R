@@ -570,7 +570,7 @@ plot_read_quals <- function(sample_id, input_dir, truncLen = NULL, quiet=FALSE, 
 
 # Primer trimming ---------------------------------------------------------
 step_primer_trim <- function(sample_id, input_dir, output_dir, qc_dir, for_primer_seq, rev_primer_seq, pcr_primers,
-                             max_mismatch = 0, n = 1e6, qualityType = "Auto", check_paired = TRUE, compress =TRUE, quiet=FALSE){
+                              max_mismatch = 0, n = 1e6, qualityType = "Auto", check_paired = TRUE, compress =TRUE, quiet=FALSE){
   input_dir <- normalizePath(input_dir)
   output_dir <- normalizePath(output_dir)
   qc_dir <- normalizePath(qc_dir)
@@ -641,8 +641,8 @@ step_primer_trim <- function(sample_id, input_dir, output_dir, qc_dir, for_prime
 
 # Primer trimming function
 trim_primers <- function(fwd, rev, fwd_out, rev_out, for_primer_seq, rev_primer_seq, 
-                         n = 1e6, qualityType = "Auto", check_paired = TRUE, id.field = NULL, 
-                         max_mismatch=0, id.sep = "\\s", compress =TRUE, quiet=FALSE){
+                          n = 1e6, qualityType = "Auto", check_paired = TRUE, id.field = NULL, 
+                          max_mismatch=0, id.sep = "\\s", compress =TRUE, quiet=FALSE){
   
   ## iterating through forward and reverse files using fastq streaming
   fF <- ShortRead::FastqStreamer(file.path(fwd), n = n)
@@ -760,12 +760,12 @@ trim_primers <- function(fwd, rev, fwd_out, rev_out, for_primer_seq, rev_primer_
       keep <- keepF & keepF
       
       fqF_primer <- suppressWarnings(ShortRead::ShortReadQ(sread=ShortRead::sread(fqF[keep]), 
-                                                           quality=Biostrings::quality(Biostrings::quality(fqF[keep])),
-                                                           id=ShortRead::id(fqF[keep])))
+                                                            quality=Biostrings::quality(Biostrings::quality(fqF[keep])),
+                                                            id=ShortRead::id(fqF[keep])))
       
       fqR_primer <- suppressWarnings(ShortRead::ShortReadQ(sread=ShortRead::sread(fqR[keep]), 
-                                                           quality=Biostrings::quality(Biostrings::quality(fqR[keep])),
-                                                           id=ShortRead::id(fqR[keep])))
+                                                            quality=Biostrings::quality(Biostrings::quality(fqR[keep])),
+                                                            id=ShortRead::id(fqR[keep])))
       
       # Trim primers from left side
       startF <- max(1, barlenF + 1, na.rm=TRUE)
