@@ -34,8 +34,9 @@ if (!exists("params.data_folder")) { # if data_loc not defined, use "data"
 } else {
     data_loc = params.data_folder
 }
-print(data_loc)
-stop(status = 1)
+print(paste0("data_loc = ", data_loc))
+
+stop(status = 1) #######################################################################
 
 data_loc_abs <- paste0(projectDir,"/",data_loc) # define absolute path for data directory
 runs <- dir(data_loc_abs) # define data directory in module .nf file
