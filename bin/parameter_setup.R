@@ -11,7 +11,7 @@
 
 
 print(params_dict)
-exit(status = 1)
+stop(status = 1)
 
 # find all directories within data folder
 if (!exists("data_loc")) {data_loc="data"} # if data_loc not defined, use "data"
