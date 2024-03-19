@@ -10,13 +10,12 @@
 ###             - join samplesheet by locus-specific params sheet
 
 
-
+print(params_dict)
+exit(status = 1)
 
 # find all directories within data folder
 if (!exists("data_loc")) {data_loc="data"} # if data_loc not defined, use "data"
-print(paste0("data_loc = ", data_loc))
-data_loc_abs <- paste0(projectDir,"/",data_loc)
-print(paste0("data_loc_abs = ", data_loc_abs))
+data_loc_abs <- paste0(projectDir,"/",data_loc) # define absolute path for data directory
 runs <- dir(data_loc_abs) # define data directory in module .nf file
 SampleSheet <- list.files(paste0(data_loc_abs,"/", runs), pattern= "SampleSheet", full.names = TRUE) # list all sampleshets
 runParameters <- list.files(paste0(data_loc_abs,"/", runs), pattern= "[Rr]unParameters.xml", full.names = TRUE) # list all run parameter files

@@ -31,6 +31,7 @@ process PARAMETER_SETUP {
     # defining Nextflow environment variables as R variables
     projectDir = "$projectDir"
     data_loc = "$params.data_folder"
+    params_dict = "$params"
 
     ### source functions and themes, and load packages from "bin/process_start.R"
     sys.source("${projectDir}/bin/process_start.R", envir = .GlobalEnv)
