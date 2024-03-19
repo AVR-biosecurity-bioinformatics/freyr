@@ -10,12 +10,25 @@
 ###             - join samplesheet by locus-specific params sheet
 
 
-# testing how to parse Nextflow params dictionary directly into R variables
+### parse Nextflow params dictionary (aka. "params" in Nextflow) directly into R variables
 print(params_dict)
 
-stringr::str_split_1(params_dict, ", ") %>% 
-    stringr::str_remove("\[|\]") %>% 
-    print()
+params_list <- params_dict %>% # convert Groovy list format into R nested list
+    stringr::str_remove_all("\\[|\\]") %>% 
+    stringr::str_split_1(", ") %>% 
+    stringr::str_split(":")
+
+for (i in 1:length(params_list)) {
+    row <- params_list[[i]]
+    assign(
+        paste0("params.",row[1]),
+        paste0(row[2])
+        )
+}
+print(params.data_folder)
+print(params.param1)
+print(params.param2)
+print(params.param3)
 
 stop(status = 1)
 
