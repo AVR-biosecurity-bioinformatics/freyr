@@ -30,7 +30,7 @@ process PARAMETER_SETUP {
     #!/usr/bin/env Rscript
     # defining Nextflow environment variables as R variables
     projectDir = "$projectDir"
-    data_loc = "$params.data_folder"
+    #data_loc = "$params.data_folder"
     params_dict = "$params"
 
     ### source functions and themes, and load packages from "bin/process_start.R"

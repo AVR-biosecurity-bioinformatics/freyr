@@ -18,12 +18,14 @@ params_list <- params_dict %>% # convert Groovy list format into R nested list
     stringr::str_split_1(", ") %>% 
     stringr::str_split(":")
 
-for (i in 1:length(params_list)) {
-    row <- params_list[[i]]
-    assign(
-        paste0("params.",row[1]),
-        paste0(row[2])
+for (i in 1:length(params_list)) { # loop through components of list
+    row <- params_list[[i]] # select 'i'th row
+    if (row[2] != "null") { # assign parameter to variable if value is not "null" (empty)
+        assign(
+            paste0("params.",row[1]),
+            paste0(row[2])
         )
+    }
 }
 print(params.data_folder)
 print(params.param1)
