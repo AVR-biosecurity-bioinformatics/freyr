@@ -1,6 +1,17 @@
 #!/usr/bin/env Rscript
 
-### need to make sure slashes are added correctly after data_loc
+#### TODO: Parse multi-primer samples correctly
+###     In original pipeline, multiple primer pair names and sequences are delimited with ";"
+###     Need:   - to keep original sample sheet (name: "samplesheet") with contains read paths
+###             - split params by locus-specific columns:
+###                 - pcr_primers, target_gene, asv_min_length,
+###                     asv_max_length, genetic_code, coding, phmm, idtaxa_db, ref_fasta,
+###                     min_sample_reads, and min_taxa_ra 
+###             - join samplesheet by locus-specific params sheet
+
+
+
+
 # find all directories within data folder
 if (!exists("data_loc")) {data_loc="data"} # if data_loc not defined, use "data"
 print(paste0("data_loc = ", data_loc))
@@ -46,7 +57,7 @@ samdf <- samdf %>%
     filter(!sample_id %in% setdiff(samdf$sample_id, fastqFs))
 }
 
-### TODO: Add .fastq paths to the sample sheet in additional fwd and rev columns
+### Add .fastq paths to the sample sheet in additional fwd and rev columns
 # list all .fastq.gz files in data directory 
 fastq_paths <- 
     list.files(data_loc_abs, pattern = "fastq.gz$|fq.gz$", recursive = T, full.names = T)
@@ -80,6 +91,8 @@ fastq_paths.df %>% # data frame of only Undetermined paths
 # join paths df to samplesheet (drops Undetermined reads)
 samdf <- left_join(samdf, fastq_paths.df, by = c("sample_id", "fcid"))
 
+
+### TODO: Do this step programatically, without manual input of strings
 # Add primers to sample sheet
 samdf <- samdf %>%
     mutate(
@@ -90,6 +103,8 @@ samdf <- samdf %>%
 
 
 
+#### TODO: Import parameters from external .csv or Excel spreadsheet
+#### then mutate so make sure paths are updated to absolute
 
 # Params to add in step_add_parameters
 params <- tibble(
@@ -138,8 +153,6 @@ params <- tibble(
     # General pipeline parameters
     threads = 1
 )
-
-# write_csv(params, "sample_data/loci_params.csv")
 
 
 
