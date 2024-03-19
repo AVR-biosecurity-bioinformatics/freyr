@@ -30,7 +30,7 @@ for (i in 1:length(params_list)) { # loop through components of list
 print(params.data_folder)
 print(params.param1)
 print(params.param2)
-print(params.param3)
+exists("params.param3")
 
 stop(status = 1)
 
