@@ -21,7 +21,7 @@ process SEQ_QC {
     #!/usr/bin/env Rscript
     # defining Nextflow environment variables as R variables
     projectDir = "$projectDir"
-    data_loc = "$data_loc"
+    data_loc = "$params.data_folder"
     flowcell_id = "$flowcell_id"
 
     ### source functions and themes, and load packages from "bin/process_start.R"

@@ -5,7 +5,7 @@ process PRIMER_TRIM {
 
     input:
     tuple val(meta), path(reads)
-    
+
     val data_loc
     
     output: 
@@ -20,7 +20,7 @@ process PRIMER_TRIM {
     #!/usr/bin/env Rscript
     # defining Nextflow environment variables as R variables
     projectDir = "$projectDir"
-    data_loc = "$data_loc"
+    data_loc = "$params.data_folder"
     sample_id = "$meta.sample_id"
     for_primer_seq = "$meta.for_primer_seq"
     rev_primer_seq = "$meta.rev_primer_seq"
