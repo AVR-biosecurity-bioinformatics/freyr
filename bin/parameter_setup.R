@@ -12,7 +12,7 @@
 
 # testing how to parse Nextflow params dictionary directly into R variables
 print(params_dict)
-stringr::str_split(params_dict, ", ") %>% print()
+stringr::str_split_l(params_dict, ", ") %>% print()
 
 stop(status = 1)
 
