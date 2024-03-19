@@ -30,7 +30,7 @@ nextflow.enable.dsl = 2
 //     validateParameters()
 // }
 
-WorkflowMain.initialise(workflow, params)
+// WorkflowMain.initialise(workflow, params, log)
 
 
 /*
