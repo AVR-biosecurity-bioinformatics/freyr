@@ -11,7 +11,7 @@
 
 
 ### parse Nextflow params dictionary (aka. "params" in Nextflow) directly into R variables
-print(params_dict)
+if (!exists("params_dict")) {stop("'params_dict' not found; check it is defined in .nf")}
 
 params_list <- params_dict %>% # convert Groovy list format into R nested list
     stringr::str_remove_all("\\[|\\]") %>% 
@@ -27,15 +27,16 @@ for (i in 1:length(params_list)) { # loop through components of list
         )
     }
 }
-print(params.data_folder)
-print(params.param1)
-print(params.param2)
-exists("params.param3")
-
-stop(status = 1)
 
 # find all directories within data folder
-if (!exists("data_loc")) {data_loc="data"} # if data_loc not defined, use "data"
+if (!exists("params.data_folder")) { # if data_loc not defined, use "data"
+    data_loc="data"
+} else {
+    data_loc = params.data_folder
+}
+print(data_loc)
+stop(status = 1)
+
 data_loc_abs <- paste0(projectDir,"/",data_loc) # define absolute path for data directory
 runs <- dir(data_loc_abs) # define data directory in module .nf file
 SampleSheet <- list.files(paste0(data_loc_abs,"/", runs), pattern= "SampleSheet", full.names = TRUE) # list all sampleshets
