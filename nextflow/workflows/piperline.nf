@@ -167,21 +167,21 @@ workflow PIPERLINE {
 
 
     // ch_sample_reads 
-    // | map { meta, reads ->
-    //     def fcid = meta.fcid
-    //     return tuple(fcid, reads)
-    // } 
-    // | groupTuple() 
-    // | set { ch_sample_reads_fcid }
+    | map { meta, reads ->
+        def fcid = meta.fcid
+        return tuple(fcid, reads)
+    } 
+    | groupTuple() 
+    | set { ch_sample_reads_fcid }
 
     // // extract flow cell IDs 
-    // ch_sample_reads_fcid 
-    // | map { group -> group[0]}
-    // | set { ch_fcid }
+    ch_sample_reads_fcid 
+    | map { group -> group[0]}
+    | set { ch_fcid }
 
 
     // // run SEQ_QC per flow cell 
-    // SEQ_QC ( data_loc, ch_fcid )
+    SEQ_QC ( ch_fcid )
 
 // PRIMER_TRIM ( ch_sample_reads, data_loc )
 }

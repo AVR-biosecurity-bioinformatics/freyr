@@ -4,7 +4,7 @@ process SEQ_QC {
     // label: 
 
     input:
-    val data_loc
+    // val data_loc
     val flowcell_id 
 
     output:
