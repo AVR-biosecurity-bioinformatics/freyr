@@ -5,6 +5,16 @@
 
 #### TODO: use index_switch_calc.txt in jack_notes to run same process but in bash, which should be much faster
 
+# check variables defined
+if (!exists("flowcell_id")) {stop("'flowcell_id' not defined!")}
+
+# define data location
+if (!exists("params.data_folder")) { # if data_loc not defined, use "data"
+    data_loc="data"
+} else {
+    data_loc = params.data_folder
+}
+
 # run flow cell QC
 step_seq_qc(flowcell_id)
 

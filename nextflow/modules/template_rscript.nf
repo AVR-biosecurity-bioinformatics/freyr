@@ -1,28 +1,26 @@
-process SEQ_QC {
-    def module_name = "seq_qc"
-    // tag:
-    // label: 
+process TEMPLATE_RSCRIPT {
+    def module_name = "template_rscript"
+    // tag: 
+    // label:  
 
     input:
-    val data_loc
-    val flowcell_id 
+    val input
 
-    output:
-    path "${flowcell_id}_flowcell_qc.pdf"
-    path "${flowcell_id}_index_switching.pdf" 
+    output:   
+    path "output_file.txt"
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
-    // when:
+    // when: 
 
     script:
     def module_script = "${module_name}.R"
     """
     #!/usr/bin/env Rscript
-    
+
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    flowcell_id = "$flowcell_id"
+    input = "$input"
     
     ## global variables
     projectDir = "$projectDir"
@@ -39,4 +37,5 @@ process SEQ_QC {
     )
     
     """
+
 }

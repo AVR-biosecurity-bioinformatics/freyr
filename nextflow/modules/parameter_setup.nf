@@ -28,19 +28,24 @@ process PARAMETER_SETUP {
     def module_script = "${module_name}.R"
     """
     #!/usr/bin/env Rscript
-    # defining Nextflow environment variables as R variables
+    
+    ### defining Nextflow environment variables as R variables
+    ## input channel variables
+    # data_loc = "$data_loc" # not needed if params
+
+    ## global variables
     projectDir = "$projectDir"
-    #data_loc = "$params.data_folder"
     params_dict = "$params"
 
-    ### source functions and themes, and load packages from "bin/process_start.R"
+    ### source functions and themes, load packages, and import Nextflow params
+    ### from "bin/process_start.R"
     sys.source("${projectDir}/bin/process_start.R", envir = .GlobalEnv)
 
     ### run module code
     sys.source(
         "${projectDir}/bin/$module_script", # run script
         envir = .GlobalEnv # this allows import of existing objects like projectDir
-        )
+    )
     """
 
 }
