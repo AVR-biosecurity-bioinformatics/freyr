@@ -1,5 +1,14 @@
 Aim: To make a test dataset that contains a minimal number of read pairs, that can be used to quickly run the pipeline for development purposes. 
 
+### new (dual locus data; two flow cells)
+
+Based on tephritid metabarcoding data found here: `/group/pathogens/IAWS/Projects/Metabarcoding/tephritid_metabarcoding/data/`
+
+Two flow cells (`K77JP` and `K739J`) 
+
+
+### old (single locus data)
+
 Will base this on the `JDYG3` flow cell data available in the `/group/pathogens/IAWS/Projects/Metabarcoding/dros_surveillance/data/JDYG3/` directory.
 
 > Note: Need minimum 1000 reads in a sample after filtering, so set subsampling to 5000 reads.
@@ -97,3 +106,4 @@ Also want to select only reads from Undetermined file that match the following d
     zcat bad_R2.fastq.gz ../JDYG3/JDYG3_Undetermined_S0_R2_001.fastq.gz | gzip -c > ./JDYG3_Undetermined_S0_R2_001.fastq.gz
 
     # then moved into old directory and replaced existing files
+
