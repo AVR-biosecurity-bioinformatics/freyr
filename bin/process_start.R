@@ -30,6 +30,3 @@ params_df <- rbind(params_df, output)
 
 colnames(params_df) <- c("parameter","value")
 # print(params_df) # access params if you need them
-
-stop(status = 1)
-### TODO: make a printable df of the new variables and their values?
