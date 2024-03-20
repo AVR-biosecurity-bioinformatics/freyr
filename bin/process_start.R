@@ -14,13 +14,22 @@ params_list <- params_dict %>% # convert Groovy list format into R nested list
     stringr::str_split_1(", ") %>% 
     stringr::str_split(":")
 
-for (i in 1:length(params_list)) { # loop through components of list
-    row <- params_list[[i]] # select 'i'th row
-    if (row[2] != "null") { # assign parameter to variable if value is not "null" (empty)
+params_df = data.frame()
+
+for (i in 1:length(params_list)) {
+    row <- params_list[[i]]
+    if (row[2] != "null") {
         assign(
             paste0("params.",row[1]),
             paste0(row[2])
         )
     }
+output <- c("parameter" = paste0("params.",row[1]), "value" = row[2])
+params_df <- rbind(params_df, output)
 }
+
+colnames(params_df) <- c("parameter","value")
+print(params_df)
+
+stop(status = 1)
 ### TODO: make a printable df of the new variables and their values?
