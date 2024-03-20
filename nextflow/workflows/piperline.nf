@@ -166,7 +166,7 @@ workflow PIPERLINE {
 
 
 
-    // ch_sample_reads 
+    ch_sample_reads 
     | map { meta, reads ->
         def fcid = meta.fcid
         return tuple(fcid, reads)
