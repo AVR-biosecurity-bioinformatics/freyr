@@ -174,7 +174,7 @@ workflow PIPERLINE {
     | groupTuple() 
     | set { ch_sample_reads_fcid }
 
-    // // extract flow cell IDs 
+    // extract flow cell IDs 
     ch_sample_reads_fcid 
     | map { group -> group[0]}
     | set { ch_fcid }
