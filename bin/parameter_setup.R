@@ -19,11 +19,11 @@ if (!exists("params.data_folder")) { # if data_loc not defined, use "data"
 
 data_loc_abs <- paste0(projectDir,"/",data_loc) # define absolute path for data directory
 runs <- dir(data_loc_abs) # define data directory in module .nf file
-SampleSheet <- #list.files(paste0(data_loc_abs,"/", runs), pattern= "SampleSheet", full.names = TRUE) # list all sampleshets
-                list.files(paste0(runs), pattern= "SampleSheet", full.names = TRUE) # list all sampleshets
+SampleSheet <- list.files(paste0(data_loc_abs,"/", runs), pattern= "SampleSheet", full.names = TRUE) # list all sampleshets
+                #list.files(runs, pattern= "SampleSheet", full.names = TRUE) # list all sampleshets
 print(SampleSheet)
-runParameters <- #list.files(paste0(data_loc_abs,"/", runs), pattern= "[Rr]unParameters.xml", full.names = TRUE) # list all run parameter files
-                list.files(runs, pattern= "[Rr]unParameters.xml", full.names = TRUE) # list all run parameter files
+runParameters <- list.files(paste0(data_loc_abs,"/", runs), pattern= "[Rr]unParameters.xml", full.names = TRUE) # list all run parameter files
+                #list.files(runs, pattern= "[Rr]unParameters.xml", full.names = TRUE) # list all run parameter files
 print(runParameters)
 
 stop(status = 1) ###########################
