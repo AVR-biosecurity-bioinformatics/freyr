@@ -22,3 +22,4 @@ for (i in 1:length(params_list)) { # loop through components of list
         )
     }
 }
+### TODO: make a printable df of the new variables and their values?
