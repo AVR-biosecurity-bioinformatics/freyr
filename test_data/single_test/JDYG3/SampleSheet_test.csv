@@ -1,0 +1,25 @@
+[Header],,,,,,,,
+IEMFileVersion,4,,,,,,,
+Investigator Name,Junji,,,,,,,
+Project Name,Metabarcoding,,,,,,,
+Experiment Name,Junji2,,,,,,,
+Date,19/02/2021,,,,,,,
+Workflow,GenerateFASTQ,,,,,,,
+Application,FASTQ Only,,,,,,,
+Assay,Metabarcoding,,,,,,,
+Description,,,,,,,,
+Chemistry,Amplicon,,,,,,,
+,,,,,,,,
+[Reads],,,,,,,,
+251,,,,,,,,
+251,,,,,,,,
+,,,,,,,,
+[Settings],,,,,,,,
+Adapter,CTGTCTCTTATACACATCT,,,,,,,
+,,,,,,,,
+[Data],,,,,,,,
+Sample_ID,Sample_Name,Sample_Plate,Sample_Well,I7_Index_ID,index,I5_Index_ID,index2,Sample_Project
+jm001A_ext1_pcr1,jm001A_ext1_pcr1,1,A01,AVR_DUI_i7_001,GAGACGAT,AVR_DUI_i5_001,GTTCTCGT,Pathogens
+jm002A_ext1_pcr1,jm002A_ext1_pcr1,1,B01,AVR_DUI_i7_002,ACGGAACA,AVR_DUI_i5_002,CGCTCTAT,Pathogens
+jm001A_ext2_pcr1,jm001A_ext2_pcr1,2,A01,AVR_DUI_i7_097,GACGATCT,AVR_DUI_i5_097,ATGCACGA,Pathogens
+jm002A_ext2_pcr1,jm002A_ext2_pcr1,2,B01,AVR_DUI_i7_098,ACGTTCAG,AVR_DUI_i5_098,AGAGTAGC,Pathogens
