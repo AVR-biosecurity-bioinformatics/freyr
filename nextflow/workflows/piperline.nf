@@ -156,7 +156,7 @@ workflow PIPERLINE {
             }
         | set { ch_sample_reads }
 
-    ch_sample_reads | view
+    // ch_sample_reads | view
 
     ////// TODO: import parameters from params
     // PARAMETER_SETUP.out.loci_params
