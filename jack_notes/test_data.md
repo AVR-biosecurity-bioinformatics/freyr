@@ -4,7 +4,22 @@ Aim: To make a test dataset that contains a minimal number of read pairs, that c
 
 Based on tephritid metabarcoding data found here: `/group/pathogens/IAWS/Projects/Metabarcoding/tephritid_metabarcoding/data/`
 
-Two flow cells (`K77JP` and `K739J`) 
+- Two flow cells (`K77JP` and `K739J`), which are duplicate runs of the same libraries on different flow cells
+- Two primer pairs/loci per sample: COI (fwhF2-fwhR2nDac) and EIF3L (EIF3LminiF4-EIF3lminiR4)
+
+- grab four samples (ie. read pairs), for each flow cell
+    - subsample each file to 5000 reads using seqtk and seed of 1
+    - check indices of each sample and use them to pull all Undetermined reads that match all possible combinations of those indices (allowed and disallowed)
+- copy over reference database files from `/group/pathogens/IAWS/Projects/Metabarcoding/tephritid_metabarcoding/reference` -- specifically need:
+    - `/group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/diagnostic_alignments/model/Bactrocera_COI.rds`
+    - `/group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/diagnostic_alignments/model/Bactrocera_EIF3L.rds`
+    - `/group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/reference/COI_hierarchial.fa.gz`
+    - `/group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/reference/EIF3L_hierarchial.fa.gz`
+    - `/group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/reference/COI_idtaxa.rds`
+    - `/group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/reference/EIF3L_idtaxa.rds`
+- 
+
+
 
 
 ### old (single locus data)

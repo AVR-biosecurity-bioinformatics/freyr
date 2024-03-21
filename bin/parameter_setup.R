@@ -93,14 +93,24 @@ fastq_paths.df %>% # data frame of only Undetermined paths
 samdf <- left_join(samdf, fastq_paths.df, by = c("sample_id", "fcid"))
 
 
-### TODO: Do this step programatically, without manual input of strings
 # Add primers to sample sheet
-samdf <- samdf %>%
-    mutate(
-        pcr_primers = "fwhF2-fwhR2n",
-        for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC",
-        rev_primer_seq = "GTRATWGCHCCDGCTARWACWGG"
-        )
+if (stringr::str_detect(params.data_folder, "single_test$")) { # this is a temp fix for two datasets
+    samdf <- samdf %>%
+        mutate(
+            pcr_primers = "fwhF2-fwhR2n",
+            for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC",
+            rev_primer_seq = "GTRATWGCHCCDGCTARWACWGG"
+            )
+} else {
+    if (stringr::str_detect(params.data_folder, "dual_test$")) {
+        mutate(
+            pcr_primers = "fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4",
+            for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC;GATGCGYCGTTATGCYGATGC",
+            rev_primer_seq = "GTRATWGCHCCIGCTAADACHGG;TTRAAYACTTCYARATCRCC"
+            )
+    } else { stop("Data directory not a valid option.") }
+}
+### TODO: Do this step programatically, without manual input of strings
 
 
 
@@ -108,53 +118,100 @@ samdf <- samdf %>%
 #### then mutate so make sure paths are updated to absolute
 
 # Params to add in step_add_parameters
-params <- tibble(
-    # Primer parameters
-    pcr_primers = "fwhF2-fwhR2n",
-    target_gene="COI",
-    max_primer_mismatch=0,
+if (stringr::str_detect(params.data_folder, "single_test$")) {
+    params <- tibble(
+        # Primer parameters
+        pcr_primers = "fwhF2-fwhR2n",
+        target_gene="COI",
+        max_primer_mismatch=0,
 
-    # Read filtering
-    read_min_length = 20,
-    read_max_length = Inf,
-    read_max_ee = 1,
-    read_trunc_length = 150,
-    read_trim_left = 0, 
-    read_trim_right = 0,
-    
-    # ASV filtering
-    asv_min_length = 195, 
-    asv_max_length = 215,
-    high_sensitivity = TRUE,
-    concat_unmerged = FALSE,
-    genetic_code = "SGC4",
-    coding = TRUE,
-    phmm = paste0(projectDir,"/reference/folmer_fullength_model.rds"),
-    
-    # Taxonomic assignment
-    idtaxa_db = paste0(projectDir,"/reference/idtaxa_bftrimmed.rds"),
-    ref_fasta = paste0(projectDir,"/reference/insecta_hierarchial_bftrimmed.fa.gz"),
-    idtaxa_confidence = 60,
-    run_blast=TRUE,
-    blast_min_identity = 97,
-    blast_min_coverage = 90,
-    target_kingdom = "Metazoa",
-    target_phylum = "Arthropoda",
-    target_class = NA,
-    target_order = NA,
-    target_family = NA,
-    target_genus = NA,
-    target_species= NA,
-    
-    # Sample & Taxon filtering
-    min_sample_reads = 1000,
-    min_taxa_reads= NA,
-    min_taxa_ra = 1e-4, #1e-4 is 0.01%
+        # Read filtering
+        read_min_length = 20,
+        read_max_length = Inf,
+        read_max_ee = 1,
+        read_trunc_length = 150,
+        read_trim_left = 0, 
+        read_trim_right = 0,
         
-    # General pipeline parameters
-    threads = 1
-)
+        # ASV filtering
+        asv_min_length = 195, 
+        asv_max_length = 215,
+        high_sensitivity = TRUE,
+        concat_unmerged = FALSE,
+        genetic_code = "SGC4",
+        coding = TRUE,
+        phmm = paste0(projectDir,"/reference/folmer_fullength_model.rds"),
+        
+        # Taxonomic assignment
+        idtaxa_db = paste0(projectDir,"/reference/idtaxa_bftrimmed.rds"),
+        ref_fasta = paste0(projectDir,"/reference/insecta_hierarchial_bftrimmed.fa.gz"),
+        idtaxa_confidence = 60,
+        run_blast=TRUE,
+        blast_min_identity = 97,
+        blast_min_coverage = 90,
+        target_kingdom = "Metazoa",
+        target_phylum = "Arthropoda",
+        target_class = NA,
+        target_order = NA,
+        target_family = NA,
+        target_genus = NA,
+        target_species= NA,
+        
+        # Sample & Taxon filtering
+        min_sample_reads = 1000,
+        min_taxa_reads= NA,
+        min_taxa_ra = 1e-4, #1e-4 is 0.01%
+            
+        # General pipeline parameters
+        threads = 1
+    )
+} else { if (stringr::str_detect(params.data_folder, "dual_test$")) {
+    params <- tibble(
+        # Primer parameters
+        pcr_primers = c("fwhF2-fwhR2nDac", "EIF3LminiF4-EIF3lminiR4"),
+        target_gene=c("COI", "EIF3L"),
+        max_primer_mismatch=1,
 
+        # Read filtering
+        read_min_length = 20,
+        read_max_length = Inf,
+        read_max_ee = 1,
+        read_trunc_length = 150,
+        read_trim_left = 0,
+        read_trim_right = 0,
+        
+        # ASV filtering
+        asv_min_length = c(195, 207),
+        asv_max_length = c(215, 227),
+        genetic_code = c("SGC4", "SGC0"),
+        coding = c(TRUE, TRUE),
+        phmm = c(paste0(projectDir,"/reference/Bactrocera_COI.rds"), paste0(projectDir,"/reference/Bactrocera_EIF3L.rds")),
+        
+        # Taxonomic assignment
+        idtaxa_db = c(paste0(projectDir,"/reference/COI_idtaxa.rds"),paste0(projectDir,"/reference/EIF3L_idtaxa.rds")),
+        ref_fasta = c(paste0(projectDir,"/reference/COI_hierarchial.fa.gz"), paste0(projectDir,"/reference/EIF3L_hierarchial.fa.gz")),
+        idtaxa_confidence = 60,
+        run_blast=TRUE,
+        blast_min_identity = 97,
+        blast_min_coverage = 90,
+        target_kingdom = "Metazoa",
+        target_phylum = "Arthropoda",
+        target_class = "Insecta",
+        target_order = "Diptera",
+        target_family = NA, 
+        target_genus = NA,  
+        target_species = NA,  
+        
+        # Sample & Taxon filtering
+        min_sample_reads = c(1000, 1000),
+        min_taxa_reads= NA, 
+        min_taxa_ra = c(1e-4, 1e-4),
+        
+        # General pipeline parameters
+        threads = 1
+        )
+    } else { stop("Data directory not a valid option.") }
+}
 
 
 
