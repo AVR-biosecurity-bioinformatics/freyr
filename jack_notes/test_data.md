@@ -17,7 +17,124 @@ Based on tephritid metabarcoding data found here: `/group/pathogens/IAWS/Project
     - `/group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/reference/EIF3L_hierarchial.fa.gz`
     - `/group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/reference/COI_idtaxa.rds`
     - `/group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/reference/EIF3L_idtaxa.rds`
-- 
+
+Workflow:
+    
+    ORIG_DIR="/group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/data"
+    NEW_DIR="/home/js7t/personal/nextflow_tests/piperline_nextflow/test_data"
+
+    cd $NEW_DIR
+    mkdir -p new_dual && cd new_dual # location of new reads
+    mkdir -p full_data/K77JP && mkdir -p full_data/K739J # locations for complete read samples
+    mkdir -p K77JP K739J # ultimate locations for subsampled reads
+
+    # copy 4 reads pairs from each flow cell into full_data dir
+    cp -r ${ORIG_DIR}/K77JP/K77JP_{Mock1_,Mock2_,Trap1_,Trap2_}*.fastq.gz full_data/K77JP
+    cp -r ${ORIG_DIR}/K739J/K739J_{Mock1_,Mock2_,Trap1_,Trap2_}*.fastq.gz full_data/K739J
+
+    # copy InterOp folders, RunInfo.xml and RunParameters.xml into ultimate directories
+    for flowcell in K77JP K739J; do
+        cp -r ${ORIG_DIR}/${flowcell}/InterOp ${NEW_DIR}/new_dual/${flowcell}
+        cp -r ${ORIG_DIR}/${flowcell}/RunInfo.xml ${NEW_DIR}/new_dual/${flowcell}
+        cp -r ${ORIG_DIR}/${flowcell}/RunParameters.xml ${NEW_DIR}/new_dual/${flowcell}
+    done
+
+    ## subsample reads
+    module load seqtk
+    # subsample first flow cell
+    cd /home/js7t/personal/nextflow_tests/piperline_nextflow/test_data/new_dual/full_data/K77JP
+    for filename in *.fastq.gz; do
+        seqtk sample $filename -s1 5000 | gzip -c > ../../K77JP/${filename}
+    done
+    # subsample second flow cell
+    cd /home/js7t/personal/nextflow_tests/piperline_nextflow/test_data/new_dual/full_data/K739J
+    for filename in *.fastq.gz; do
+        seqtk sample $filename -s1 5000 | gzip -c > ../../K739J/${filename}
+    done
+
+    # also downloaded /group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/data/K77JP/SampleSheet_K77JP.csv and K739J equiv. and pruned to Mock1/2 and Trap1/2 samples MANUALLY
+
+    ## sort out Undetermined reads per flowcell
+    # pull headers from fastq files
+    for flowcell in K77JP K739J; do
+        zcat ${ORIG_DIR}/${flowcell}/${flowcell}_Undetermined_S0_R1_001.fastq.gz | \
+        awk 'sub(/^@/, "")' - > ${NEW_DIR}/new_dual/${flowcell}/R1_headers.txt
+        zcat ${ORIG_DIR}/${flowcell}/${flowcell}_Undetermined_S0_R2_001.fastq.gz | \
+        awk 'sub(/^@/, "")' - > ${NEW_DIR}/new_dual/${flowcell}/R2_headers.txt
+    done
+
+    # EOF index combinations
+    cat <<EOF > ${NEW_DIR}/new_dual/indices.txt
+    TGGCATGT+CCTTGTAG
+    CTGATCGT+CCTTGTAG
+    ACTCGTTG+CCTTGTAG
+    TGCGTAGA+CCTTGTAG
+    TGGCATGT+GAACATCG
+    CTGATCGT+GAACATCG
+    ACTCGTTG+GAACATCG
+    TGCGTAGA+GAACATCG
+    TGGCATGT+CACCACTA
+    CTGATCGT+CACCACTA
+    ACTCGTTG+CACCACTA
+    TGCGTAGA+CACCACTA
+    TGGCATGT+TTGGTGAG
+    CTGATCGT+TTGGTGAG
+    ACTCGTTG+TTGGTGAG
+    TGCGTAGA+TTGGTGAG
+    EOF
+
+    # grep headers matching index; only take 100 reads per file
+    for flowcell in K77JP K739J; do
+        grep -F -f ${NEW_DIR}/new_dual/indices.txt ${NEW_DIR}/new_dual/${flowcell}/R1_headers.txt | \
+        head -n 100 > ${NEW_DIR}/new_dual/${flowcell}/R1_bad.txt
+        grep -F -f ${NEW_DIR}/new_dual/indices.txt ${NEW_DIR}/new_dual/${flowcell}/R2_headers.txt | \
+        head -n 100 > ${NEW_DIR}/new_dual/${flowcell}/R2_bad.txt
+    done
+
+    # use BBMap to subsample reads with disallowed headers
+    module load BBMap/38.98-GCC-11.2.0
+
+    for flowcell in K77JP K739J; do
+        filterbyname.sh \
+        in=${ORIG_DIR}/${flowcell}/${flowcell}_Undetermined_S0_R1_001.fastq.gz \
+        in2=${ORIG_DIR}/${flowcell}/${flowcell}_Undetermined_S0_R2_001.fastq.gz \
+        out=${NEW_DIR}/new_dual/${flowcell}/${flowcell}_Undetermined_S0_R1_001.fastq.gz \
+        out2=${NEW_DIR}/new_dual/${flowcell}/${flowcell}_Undetermined_S0_R2_001.fastq.gz \
+        ow=t \
+        substring=name \
+        include=t \
+        names=${NEW_DIR}/new_dual/${flowcell}/R1_bad.txt
+    done
+
+    # delete header files as they're big
+    for flowcell in K77JP K739J; do
+        rm ${NEW_DIR}/new_dual/${flowcell}/R{1,2}_*.txt
+    done
+
+    # make sure .csv files are okay for unix
+    for flowcell in K77JP K739J; do
+        dos2unix ${NEW_DIR}/new_dual/${flowcell}/SampleSheet*
+    done
+
+    # then download and replace
+
+
+Indices for both flow cell samples (same across flow cells) are:
+index:
+TGGCATGT
+CTGATCGT
+ACTCGTTG
+TGCGTAGA
+index2:
+CCTTGTAG
+GAACATCG
+CACCACTA
+TTGGTGAG
+
+
+
+
+
 
 
 
