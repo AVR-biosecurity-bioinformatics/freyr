@@ -421,7 +421,7 @@ for ( I in 1:length(split_samdf)) { # assign new dfs to new variables
         paste0("samdf_",unique(split_samdf[[I]]$target_gene)),
         split_samdf[[I]]
         )
-    write_csv(
+    write_csv( # print dfs inside work dir; maybve export?
         x = get(new_df_name), 
         file = sprintf("%s.csv",new_df_name)
         )
