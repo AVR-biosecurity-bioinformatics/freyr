@@ -18,8 +18,6 @@ if (!exists("params.data_folder")) { # if data_loc not defined, use "data"
 # run flow cell QC
 step_seq_qc(flowcell_id)
 
-stop(" *** stopped manually *** ") ##########################################
-
 # run index switching calculation
 step_switching_calc(flowcell_id)
 
