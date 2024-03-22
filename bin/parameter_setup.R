@@ -408,9 +408,21 @@ params_df %>%
 # saveRDS(object = params_df, file = "params.rds")
 
 ## split samplesheet by primer and join to params by primer
-# samdf %>% 
-#     separate_longer_delim(c(pcr_primers, for_primer_seq, rev_primer_seq, target_gene), delim = ";") %>% 
-#     left_join(., params, by = c("pcr_primers", "target_gene"))
+samdf_params <- # split samdf loci-relevant columns across new rows, then join samdf and params  
+    samdf %>% 
+    separate_longer_delim(c(pcr_primers, for_primer_seq, rev_primer_seq, target_gene), delim = ";") %>% 
+    left_join(., params, by = c("pcr_primers", "target_gene"))
+
+split_samdf <- split(samdf_params, samdf_params$target_gene) # split dfs by target gene
+
+for ( I in 1:length(split_samdf)) { # assign new dfs to new variables
+    new_df_name <- paste0("samdf_",unique(split_samdf[[I]]$target_gene))
+    assign(
+        new_df_name,
+        split_samdf[[I]]
+        )
+    write_csv(new_df_name, sprintf("%s.csv",new_df_name))
+}
 
 
 # stop(" *** stopped manually *** ") ##########################################
