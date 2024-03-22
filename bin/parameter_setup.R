@@ -102,11 +102,12 @@ if (stringr::str_detect(params.data_folder, "single$")) { # this is a temp fix f
             )
 } else {
     if (stringr::str_detect(params.data_folder, "dual$")) {
-        mutate(
-            pcr_primers = "fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4",
-            for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC;GATGCGYCGTTATGCYGATGC",
-            rev_primer_seq = "GTRATWGCHCCIGCTAADACHGG;TTRAAYACTTCYARATCRCC"
-            )
+        samdf <- samdf %>%
+            mutate(
+                pcr_primers = "fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4",
+                for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC;GATGCGYCGTTATGCYGATGC",
+                rev_primer_seq = "GTRATWGCHCCIGCTAADACHGG;TTRAAYACTTCYARATCRCC"
+                )
     } else { stop("Data directory not a valid option.") }
 }
 ### TODO: Do this step programatically, without manual input of strings
