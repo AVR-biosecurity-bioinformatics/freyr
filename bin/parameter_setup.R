@@ -96,7 +96,7 @@ samdf <- left_join(samdf, fastq_paths.df, by = c("sample_id", "fcid"))
 if (stringr::str_detect(params.data_folder, "single$")) { # this is a temp fix for two datasets
     samdf <- samdf %>%
         mutate(
-            target_gene = "COI,"
+            target_gene = "COI",
             pcr_primers = "fwhF2-fwhR2n",
             for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC",
             rev_primer_seq = "GTRATWGCHCCDGCTARWACWGG"
@@ -105,7 +105,7 @@ if (stringr::str_detect(params.data_folder, "single$")) { # this is a temp fix f
     if (stringr::str_detect(params.data_folder, "dual$")) {
         samdf <- samdf %>%
             mutate(
-                target_gene = "COI;EIF3L"
+                target_gene = "COI;EIF3L",
                 pcr_primers = "fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4",
                 for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC;GATGCGYCGTTATGCYGATGC",
                 rev_primer_seq = "GTRATWGCHCCIGCTAADACHGG;TTRAAYACTTCYARATCRCC"
