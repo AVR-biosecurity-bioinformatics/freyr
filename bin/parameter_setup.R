@@ -94,7 +94,7 @@ samdf <- left_join(samdf, fastq_paths.df, by = c("sample_id", "fcid"))
 
 
 # Add primers to sample sheet
-if (stringr::str_detect(params.data_folder, "single_test$")) { # this is a temp fix for two datasets
+if (stringr::str_detect(params.data_folder, "single$")) { # this is a temp fix for two datasets
     samdf <- samdf %>%
         mutate(
             pcr_primers = "fwhF2-fwhR2n",
@@ -102,7 +102,7 @@ if (stringr::str_detect(params.data_folder, "single_test$")) { # this is a temp 
             rev_primer_seq = "GTRATWGCHCCDGCTARWACWGG"
             )
 } else {
-    if (stringr::str_detect(params.data_folder, "dual_test$")) {
+    if (stringr::str_detect(params.data_folder, "dual$")) {
         mutate(
             pcr_primers = "fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4",
             for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC;GATGCGYCGTTATGCYGATGC",
@@ -118,7 +118,7 @@ if (stringr::str_detect(params.data_folder, "single_test$")) { # this is a temp 
 #### then mutate so make sure paths are updated to absolute
 
 # Params to add in step_add_parameters
-if (stringr::str_detect(params.data_folder, "single_test$")) {
+if (stringr::str_detect(params.data_folder, "single$")) {
     params <- tibble(
         # Primer parameters
         pcr_primers = "fwhF2-fwhR2n",
@@ -165,7 +165,7 @@ if (stringr::str_detect(params.data_folder, "single_test$")) {
         # General pipeline parameters
         threads = 1
     )
-} else { if (stringr::str_detect(params.data_folder, "dual_test$")) {
+} else { if (stringr::str_detect(params.data_folder, "dual$")) {
     params <- tibble(
         # Primer parameters
         pcr_primers = c("fwhF2-fwhR2nDac", "EIF3LminiF4-EIF3lminiR4"),
