@@ -324,6 +324,8 @@ for(i in 1:ncol(default_params)){
     }
 }
 
+write_csv(file = "params_df.csv", x = params_df)
+
 # Check class of all columns
 for(i in 1:ncol(default_params)){
     param_to_check <- colnames(default_params)[i]
