@@ -33,8 +33,6 @@ mutate(sample_id = case_when(
     TRUE ~ sample_id
 ))
 
-stop(" *** stopped manually *** ") ##########################################
-
 # Check that samples match samplesheet
 fastqFs <- 
     purrr::map(list.dirs(data_loc_abs, recursive=FALSE),
@@ -94,6 +92,7 @@ fastq_paths.df %>% # data frame of only Undetermined paths
 # join paths df to samplesheet (drops Undetermined reads)
 samdf <- left_join(samdf, fastq_paths.df, by = c("sample_id", "fcid"))
 
+stop(" *** stopped manually *** ") ##########################################
 
 # Add primers to sample sheet
 if (stringr::str_detect(params.data_folder, "single$")) { # this is a temp fix for two datasets
