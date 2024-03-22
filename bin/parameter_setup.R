@@ -112,10 +112,13 @@ if (stringr::str_detect(params.data_folder, "single$")) { # this is a temp fix f
 }
 ### TODO: Do this step programatically, without manual input of strings
 
-stop(" *** stopped manually *** ") ##########################################
-
 #### TODO: Import parameters from external .csv or Excel spreadsheet
 #### then mutate so make sure paths are updated to absolute
+
+write_csv(file = "samdf.csv", x = samdf)
+
+
+
 
 # Params to add in step_add_parameters
 if (stringr::str_detect(params.data_folder, "single$")) {
@@ -398,9 +401,10 @@ params %>%
 saveRDS(object = samdf, file = "samdf.rds")
 saveRDS(object = params, file = "params.rds")
 
-write_csv(file = "samdf.csv", x = samdf)
+
 write_csv(file = "params.csv", x = params)
 
+stop(" *** stopped manually *** ") ##########################################
 
 
 
