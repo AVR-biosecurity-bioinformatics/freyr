@@ -18,9 +18,13 @@ if (!exists("params.data_folder")) { # if data_loc not defined, use "data"
 # run flow cell QC
 step_seq_qc(flowcell_id)
 
+stop(" *** stopped manually *** ") ##########################################
+
 # run index switching calculation
 step_switching_calc(flowcell_id)
 
 # copy output files to log folder
 file.copy(paste0(flowcell_id,"_flowcell_qc.pdf"),paste0(projectDir,"/output/logs/",flowcell_id))
 file.copy(paste0(flowcell_id,"_index_switching.pdf"),paste0(projectDir,"/output/logs/",flowcell_id))
+
+# stop(" *** stopped manually *** ") ##########################################
