@@ -371,12 +371,12 @@ params %>%
                 read_trunc_length, read_trim_left, read_trim_right) %>%
     write_csv("params_readfilter.csv")
 
-stop(" *** stopped manually *** ") ##########################################
-
 # Create params_dada file for later
 params %>% 
     dplyr::select(pcr_primers, target_gene, concat_unmerged, high_sensitivity) %>%
     write_csv("params_dada.csv")
+
+stop(" *** stopped manually *** ") ##########################################
 
 # Create params_asvfilter file for later
 params %>% 
