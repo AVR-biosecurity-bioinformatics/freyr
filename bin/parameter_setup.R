@@ -26,7 +26,7 @@ runParameters <- list.files(paste0(data_loc_abs,"/", runs), pattern= "[Rr]unPara
 samdf <- create_samplesheet(SampleSheet = SampleSheet, runParameters = runParameters, template = "V4") %>%
 distinct()
 
-stop(" *** stopped manually *** ", status = 1) ##########################################
+stop(" *** stopped manually *** ") ##########################################
 
 # Check that sample_ids contain fcid, if not; attach
 samdf <- samdf %>%
