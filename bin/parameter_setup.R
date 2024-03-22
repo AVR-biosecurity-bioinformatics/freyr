@@ -26,6 +26,8 @@ runParameters <- list.files(paste0(data_loc_abs,"/", runs), pattern= "[Rr]unPara
 samdf <- create_samplesheet(SampleSheet = SampleSheet, runParameters = runParameters, template = "V4") %>%
 distinct()
 
+write_csv("samdf_early.csv", samdf)
+
 # Check that sample_ids contain fcid, if not; attach
 samdf <- samdf %>%
 mutate(sample_id = case_when(
@@ -402,7 +404,11 @@ params_df %>%
 # need a way to check sequencing read inputs
 
 ## save .rds outputs
-saveRDS(object = samdf, file = "samdf.rds")
-saveRDS(object = params_df, file = "params.rds")
+# saveRDS(object = samdf, file = "samdf.rds")
+# saveRDS(object = params_df, file = "params.rds")
+
+## split samplesheet by primer and join to params by primer
+
+
 
 # stop(" *** stopped manually *** ") ##########################################

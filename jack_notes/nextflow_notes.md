@@ -21,8 +21,8 @@ Need to source copy of `.Rprofile` that contains new default library location an
     # pull and run latest pipeline (from project directory)
     git pull && nextflow run .
 
-    # run pipeline with "dual" test data
-    git pull && nextflow run . --data_folder test_data/dual -with-report
+    # run pipeline with "dual" test data and output report
+    git pull && nextflow run . --data_folder test_data/dual -with-report report.html
 
     # run pipeline in preview mode with DAG output
     git pull && nextflow run . --data_folder test_data/dual -preview -with-dag dag.html
