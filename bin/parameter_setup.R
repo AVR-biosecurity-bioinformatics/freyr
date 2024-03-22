@@ -26,8 +26,6 @@ runParameters <- list.files(paste0(data_loc_abs,"/", runs), pattern= "[Rr]unPara
 samdf <- create_samplesheet(SampleSheet = SampleSheet, runParameters = runParameters, template = "V4") %>%
 distinct()
 
-write_csv(samdf, "samdf_early.csv")
-
 # Check that sample_ids contain fcid, if not; attach
 samdf <- samdf %>%
 mutate(sample_id = case_when(
@@ -94,10 +92,11 @@ fastq_paths.df %>% # data frame of only Undetermined paths
 # join paths df to samplesheet (drops Undetermined reads)
 samdf <- left_join(samdf, fastq_paths.df, by = c("sample_id", "fcid"))
 
-# Add primers to sample sheet
+# Add primers and target gene to sample sheet
 if (stringr::str_detect(params.data_folder, "single$")) { # this is a temp fix for two datasets
     samdf <- samdf %>%
         mutate(
+            target_gene = "COI,"
             pcr_primers = "fwhF2-fwhR2n",
             for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC",
             rev_primer_seq = "GTRATWGCHCCDGCTARWACWGG"
@@ -106,6 +105,7 @@ if (stringr::str_detect(params.data_folder, "single$")) { # this is a temp fix f
     if (stringr::str_detect(params.data_folder, "dual$")) {
         samdf <- samdf %>%
             mutate(
+                target_gene = "COI;EIF3L"
                 pcr_primers = "fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4",
                 for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC;GATGCGYCGTTATGCYGATGC",
                 rev_primer_seq = "GTRATWGCHCCIGCTAADACHGG;TTRAAYACTTCYARATCRCC"
@@ -408,7 +408,9 @@ params_df %>%
 # saveRDS(object = params_df, file = "params.rds")
 
 ## split samplesheet by primer and join to params by primer
-
+# samdf %>% 
+#     separate_longer_delim(c(pcr_primers, for_primer_seq, rev_primer_seq, target_gene), delim = ";") %>% 
+#     left_join(., params, by = c("pcr_primers", "target_gene"))
 
 
 # stop(" *** stopped manually *** ") ##########################################
