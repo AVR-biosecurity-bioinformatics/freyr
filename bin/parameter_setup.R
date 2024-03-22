@@ -324,8 +324,6 @@ for(i in 1:ncol(default_params)){
     }
 }
 
-write_csv(file = "params_df.csv", x = params_df)
-
 # Check class of all columns
 for(i in 1:ncol(default_params)){
     param_to_check <- colnames(default_params)[i]
@@ -333,6 +331,8 @@ for(i in 1:ncol(default_params)){
     stop(paste0("The column ", param_to_check, " in loci_params.csv file must be of class ", class(default_params %>% dplyr::pull(!!param_to_check))))
     }
 }
+
+write_csv(file = "params.csv", x = params_df)
 
 ### these checks work in a single R session but break in Nextflow
 
@@ -361,43 +361,39 @@ for(i in 1:ncol(default_params)){
 # }
 
 
-write_csv(file = "params.csv", x = params)
-
 
 ################ Creating temp files needed during targets but not now
 
 # Create params_primer file for later
-params %>% 
+params_df %>% 
     dplyr::select(pcr_primers, target_gene, max_primer_mismatch) %>%
     write_csv("params_primer.csv")
 
 # Create params_readfilter file for later
-params %>% 
+params_df %>% 
     dplyr::select(pcr_primers, target_gene, read_min_length, read_max_length, read_max_ee, 
                 read_trunc_length, read_trim_left, read_trim_right) %>%
     write_csv("params_readfilter.csv")
 
 # Create params_dada file for later
-params %>% 
+params_df %>% 
     dplyr::select(pcr_primers, target_gene, concat_unmerged, high_sensitivity) %>%
     write_csv("params_dada.csv")
 
-stop(" *** stopped manually *** ") ##########################################
-
 # Create params_asvfilter file for later
-params %>% 
+params_df %>% 
     dplyr::select(pcr_primers, target_gene, asv_min_length, asv_max_length,
                 phmm, coding, genetic_code) %>%
     write_csv("params_asvfilter.csv")
 
 # Create temporary params_database file for tracking
-params %>% 
+params_df %>% 
     dplyr::select(pcr_primers, target_gene, idtaxa_db, idtaxa_confidence, 
                 ref_fasta, blast_min_identity, blast_min_coverage, run_blast) %>%
     write_csv("params_database.csv")
 
 # Create temporary params_ps file for tracking
-params %>% 
+params_df %>% 
     dplyr::select(pcr_primers, target_gene, target_kingdom, target_phylum, target_class,
                     target_order, target_family, target_genus, target_species, 
                     min_sample_reads, min_taxa_reads, min_taxa_ra) %>%
@@ -407,8 +403,9 @@ params %>%
 
 ## save .rds outputs
 saveRDS(object = samdf, file = "samdf.rds")
-saveRDS(object = params, file = "params.rds")
+saveRDS(object = params_df, file = "params.rds")
 
+stop(" *** stopped manually *** ") ##########################################
 
 
 
