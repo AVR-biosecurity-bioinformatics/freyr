@@ -1,6 +1,6 @@
 process SEQ_QC {
     def module_name = "seq_qc"
-    // tag:
+    tag: "$flowcell_id"
     // label: 
 
     input:
