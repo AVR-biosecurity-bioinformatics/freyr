@@ -358,6 +358,10 @@ for(i in 1:ncol(default_params)){
 #     assertthat::is.readable(check_paths[i])
 # }
 
+
+write_csv(file = "params.csv", x = params)
+
+
 ################ Creating temp files needed during targets but not now
 
 # Create params_primer file for later
@@ -404,7 +408,6 @@ saveRDS(object = samdf, file = "samdf.rds")
 saveRDS(object = params, file = "params.rds")
 
 
-write_csv(file = "params.csv", x = params)
 
 
 
