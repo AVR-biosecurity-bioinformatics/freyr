@@ -92,8 +92,6 @@ fastq_paths.df %>% # data frame of only Undetermined paths
 # join paths df to samplesheet (drops Undetermined reads)
 samdf <- left_join(samdf, fastq_paths.df, by = c("sample_id", "fcid"))
 
-stop(" *** stopped manually *** ") ##########################################
-
 # Add primers to sample sheet
 if (stringr::str_detect(params.data_folder, "single$")) { # this is a temp fix for two datasets
     samdf <- samdf %>%
@@ -113,7 +111,7 @@ if (stringr::str_detect(params.data_folder, "single$")) { # this is a temp fix f
 }
 ### TODO: Do this step programatically, without manual input of strings
 
-
+stop(" *** stopped manually *** ") ##########################################
 
 #### TODO: Import parameters from external .csv or Excel spreadsheet
 #### then mutate so make sure paths are updated to absolute
