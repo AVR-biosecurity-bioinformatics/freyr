@@ -162,6 +162,7 @@ workflow PIPERLINE {
 
     // get names of the multiplexed loci used
     PARAMETER_SETUP.out.samdf_locus
+    | flatten ()
     | splitCsv ()
     | view ()
 
