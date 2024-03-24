@@ -164,7 +164,9 @@ workflow PIPERLINE {
     PARAMETER_SETUP.out.samdf_locus
     | flatten ()
     | splitCsv ( header: true )
-    | view { row -> "${row.target_gene}" }
+    | map { row -> "${row.target_gene}" }
+    | collect ()
+    | view ()
 
 
     // count the number of multiplexed loci 
