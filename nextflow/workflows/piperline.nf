@@ -161,7 +161,8 @@ workflow PIPERLINE {
     PARAMETER_SETUP.out.samdf_locus | view()
 
     // count the number of multiplexed loci 
-    PARAMETER_SETUP.out.samdf_locus
+    PARAMETER_SETUP.out.samdf_locus // outputs a list of .csv files
+        | flatten ()
         | count ()
         | view { "There are $it loci in this run!" } 
 
