@@ -158,12 +158,18 @@ workflow PIPERLINE {
 
     // ch_sample_reads | view
 
-    PARAMETER_SETUP.out.samdf_locus | view()
+
+
+    // get names of the multiplexed loci used
+    PARAMETER_SETUP.out.samdf_locus
+    | splitCsv ()
+    | view ()
+
 
     // count the number of multiplexed loci 
     PARAMETER_SETUP.out.samdf_locus // outputs a list of .csv files
-        | flatten ()
-        | count ()
+        | flatten () // flatten list into individual file paths
+        | count () // count file paths
         | view { "There are $it loci in this run!" } 
 
 
