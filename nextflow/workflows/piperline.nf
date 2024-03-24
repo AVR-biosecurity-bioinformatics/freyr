@@ -181,7 +181,7 @@ workflow PIPERLINE {
 
 
     // // run SEQ_QC per flow cell 
-    // SEQ_QC ( ch_fcid )
+    SEQ_QC ( ch_fcid )
 
 // PRIMER_TRIM ( ch_sample_reads, data_loc )
 }
