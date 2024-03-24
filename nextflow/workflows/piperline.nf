@@ -165,7 +165,7 @@ workflow PIPERLINE {
     | flatten ()
     | splitCsv ( header: true )
     | map { row -> row.target_gene }
-    //| unique ()
+    | unique ()
     //| collect ()
     | view ()
 
