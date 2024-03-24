@@ -164,8 +164,8 @@ workflow PIPERLINE {
     PARAMETER_SETUP.out.samdf_locus
     | flatten ()
     | splitCsv ( header: true )
-    | map { row -> val(row.target_gene) }
-    | collect ()
+    | map { row -> row.target_gene }
+    //| collect ()
     | view ()
 
 
