@@ -158,6 +158,11 @@ workflow PIPERLINE {
 
     // ch_sample_reads | view
 
+    PARAMETER_SETUP.out.samdf_locus
+        | count ()
+        | view { "There are $it loci in this run!" } 
+
+
     ////// TODO: import parameters from params
     // PARAMETER_SETUP.out.loci_params
     //     | splitCsv ( header: true )
@@ -181,7 +186,7 @@ workflow PIPERLINE {
 
 
     // // run SEQ_QC per flow cell 
-    SEQ_QC ( ch_fcid )
+    // SEQ_QC ( ch_fcid )
 
 // PRIMER_TRIM ( ch_sample_reads, data_loc )
 }
