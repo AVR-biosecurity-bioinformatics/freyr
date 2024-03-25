@@ -14,7 +14,7 @@ set -u
 # $5 = meta.target_gene, aka. name of target gene
 # $6 = meta.sample_id, aka. sample ID
 
-# change "I" in primer seq to "N"
+# change "I" in primer seq to "N", if present
 FWD_PRIMER=${3/I/N}
 REV_PRIMER=${4/I/N}
 
@@ -37,12 +37,13 @@ bbduk.sh \
 in=${1} \
 in2=${2} \
 literal=${FWD_PRIMER},${REV_PRIMER} \
-out=no_match1.fq.gz \
-out2=no_match2.fq.gz \
+out=no_match1.fastq.gz \
+out2=no_match2.fastq.gz \
 outm=${6}_${5}_R1.fastq.gz \
 outm2=${6}_${5}_R2.fastq.gz \
 restrictleft=${KMER_LEN} \
 copyundefined=true \
-k=${MINK_LEN}
+k=${MINK_LEN} \
+stats=bbduk_stats.txt
 
 

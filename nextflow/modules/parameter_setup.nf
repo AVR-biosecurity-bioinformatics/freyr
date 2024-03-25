@@ -1,6 +1,6 @@
 process PARAMETER_SETUP {
     def module_name = "parameter_setup"
-    // tag: 
+    tag "Whole dataset"
     // label: 
 
     input:
