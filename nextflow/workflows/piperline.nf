@@ -56,6 +56,7 @@ def data_loc = "test_data"
 
 include { PARAMETER_SETUP                   }         from '../modules/parameter_setup'
 include { SEQ_QC                            }         from '../modules/seq_qc'
+include { SPLIT_LOCI                        }         from '../modules/split_loci'
 // include { PRIMER_TRIM                       }         from '../modules/primer_trim'
 // include { SAMDF2                            }         from '../modules/samdf2'
 // include { READ_FILTER                       }         from '../modules/read_filter' 
@@ -158,23 +159,56 @@ workflow PIPERLINE {
 
     // ch_sample_reads | view
 
-
-
-    // get names of the multiplexed loci used
+    /// parse samplesheets that contain locus-specific parameters
     PARAMETER_SETUP.out.samdf_locus
-    | flatten ()
-    | splitCsv ( header: true )
-    | map { row -> row.target_gene }
-    | unique ()
-    | toList ()
-    | view ()
+        | splitCsv ( header: true )
+        | map { row -> 
+            meta = row.subMap(
+                'sample_id','sample_name','extraction_rep','amp_rep',
+                'client_name','experiment_name','sample_type','collection_method',
+                'collection_location','lat_lon','environment','collection_date',
+                'operator_name','description','assay','extraction_method',
+                'amp_method','target_gene','pcr_primers','for_primer_seq',
+                'rev_primer_seq','index_plate','index_well','i7_index_id',
+                'i7_index','i5_index_id','i5_index','seq_platform',
+                'fcid','for_read_length','rev_read_length','seq_run_id',
+                'seq_id','seq_date','analysis_method','notes',
+                'base','max_primer_mismatch','read_min_length','read_max_length',
+                'read_max_ee','read_trunc_length','read_trim_left','read_trim_right',
+                'asv_min_length','asv_max_length','genetic_code','coding',
+                'phmm','idtaxa_db','ref_fasta','idtaxa_confidence',
+                'run_blast','blast_min_identity','blast_min_coverage','target_kingdom',
+                'target_phylum','target_class','target_order','target_family',
+                'target_genus','target_species','min_sample_reads','min_taxa_reads',
+                'min_taxa_ra','threads'
+                )
+                [ meta, [
+                    file(row.fwd, checkIfExists: true),
+                    file(row.rev, checkIfExists: true)
+                ]]  
+            }
+        | set { ch_sample_locus_reads }
+
+        ch_sample_locus_reads | view ()
+
+    // // get names of the multiplexed loci used
+    // PARAMETER_SETUP.out.samdf_locus
+    // | flatten ()
+    // | splitCsv ( header: true )
+    // | map { row -> row.target_gene }
+    // | unique ()
+    // | toList ()
+    // | view ()
+
+    // PARAMETER_SETUP.out.samdf_locus
+    // | branch {  }
 
 
-    // count the number of multiplexed loci 
-    PARAMETER_SETUP.out.samdf_locus // outputs a list of .csv files
-        | flatten () // flatten list into individual file paths
-        | count () // count file paths
-        | view { "There are $it loci in this run!" } 
+    // // count the number of multiplexed loci 
+    // PARAMETER_SETUP.out.samdf_locus // outputs a list of .csv files
+    //     | flatten () // flatten list into individual file paths
+    //     | count () // count file paths
+    //     | view { "There are $it loci in this run!" } 
 
 
     ////// TODO: import parameters from params
@@ -201,6 +235,10 @@ workflow PIPERLINE {
 
     // // run SEQ_QC per flow cell 
     // SEQ_QC ( ch_fcid )
+
+
+// SPLIT_LOCI (  ) 
+
 
 // PRIMER_TRIM ( ch_sample_reads, data_loc )
 }
