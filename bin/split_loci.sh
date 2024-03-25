@@ -17,8 +17,9 @@ module load BBMap/38.98-GCC-11.2.0
 
 filterbysequence.sh \
 in=${1} \
-in2=${2} \
-literal=${3},${4} \
+#in2=${2} \
+#literal=${3},${4} \
+literal=${3} \
 out=test1_${5}.fastq.gz \
-out2=test2_${5}.fastq.gz \
+#out2=test2_${5}.fastq.gz \
 include=true

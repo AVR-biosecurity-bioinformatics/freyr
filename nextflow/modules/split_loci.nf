@@ -24,7 +24,7 @@ process SPLIT_LOCI {
         ${reads[0]} \
         ${reads[1]} \
         ${meta.for_primer_seq} \
-        ${meta.for_primer_seq} \
+        ${meta.rev_primer_seq} \
         ${meta.target_gene}
     
     """
