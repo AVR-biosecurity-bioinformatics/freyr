@@ -1,6 +1,6 @@
 process SPLIT_LOCI {
     def module_name = "split_loci"
-    tag: "{$meta.sample_id; $meta.target_gene}"
+    tag "{$meta.sample_id; $meta.target_gene}"
     // label:  
 
     input:
