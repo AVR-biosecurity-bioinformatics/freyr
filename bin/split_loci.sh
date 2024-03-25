@@ -13,19 +13,29 @@ set -u
 # $4 = meta.rev_primer_seq, aka. rev primer sequence
 # $5 = meta.target_gene, aka. name of target gene
 
+# get length of fwd primer
+FWD_LEN=${#3}
+# get length of rev primer
+REV_LEN=${#4}
+
+if [ "$FWD_LEN" -ge "$REV_LEN" ]; then
+    KMER_LEN=$FWD_LEN
+    MINK_LEN=$REV_LEN
+else
+    KMER_LEN=$REV_LEN
+    MINK_LEN=$FWD_LEN
+fi
+
 module load BBMap/38.98-GCC-11.2.0
 
-# filterbysequence.sh \
-# in=${1} \
-# in2=${2} \
-# literal=${3},${4} \
-# out=test1_${5}.fastq.gz \
-# out2=test2_${5}.fastq.gz \
-# include=true
-
-# test command single reads 
-filterbysequence.sh \
+bbduk.sh \
 in=${1} \
-literal=${3} \
+in2=${2} \
+literal=${3},${4} \
 out=test1_${5}.fastq.gz \
-include=true
+out2=test2_${5}.fastq.gz \
+include=true \
+restrictleft=${KMER_LEN} \
+mink=${MINK_LEN}
+
+
