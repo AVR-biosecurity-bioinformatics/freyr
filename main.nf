@@ -44,7 +44,7 @@ include { PIPERLINE } from './nextflow/workflows/piperline'
 //
 // WORKFLOW: Run main nf-core/ampliseq analysis pipeline
 //
-workflow RUN_PIPERLINE {
+workflow RUN {
     PIPERLINE ()
 }
 
@@ -60,7 +60,7 @@ workflow RUN_PIPERLINE {
 // See: https://github.com/nf-core/rnaseq/issues/619
 //
 workflow {
-    RUN_PIPERLINE ()
+    RUN ()
 }
 
 /*

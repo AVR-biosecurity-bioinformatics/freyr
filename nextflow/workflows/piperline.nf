@@ -52,8 +52,6 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// include { RENAME_RAW_DATA_FILES         } from '../modules/local/rename_raw_data_files'
-
 include { PARAMETER_SETUP                   }         from '../modules/parameter_setup'
 include { SEQ_QC                            }         from '../modules/seq_qc'
 include { SPLIT_LOCI                        }         from '../modules/split_loci'
@@ -120,16 +118,6 @@ workflow PIPERLINE {
     // Create input channels
     //
 
-    // def file_samdf = "${projectDir}/sample_data/Sample_info.csv"
-    // def file_params = "${projectDir}/sample_data/loci_params.csv"
-
-    //file_samdf = file("${projectDir}/sample_data/Sample_info.csv",  checkIfExists: true)
-    //file_params = file("${projectDir}/sample_data/loci_params.csv",  checkIfExists: true)
-    // file_samdf.view { "path: $it" }
-
-    // // for debugging if paths exist
-    // ch_samdf.view { "path: $it" }
-    // ch_loci_params.view { "path: $it" }
 
     // input samplesheet and loci parameters
     PARAMETER_SETUP ( )
@@ -213,13 +201,12 @@ workflow PIPERLINE {
     ch_sample_reads 
     | map { meta, reads ->
         def fcid = meta.fcid
-        return tuple(fcid, reads)
-    } 
+        return tuple(fcid, reads) } 
     | groupTuple() 
     | set { ch_sample_reads_fcid }
     // extract flow cell IDs as channel
     ch_sample_reads_fcid 
-    | map { group -> group[0]}
+    | map { group -> group[0] }
     | set { ch_fcid }
 
 
