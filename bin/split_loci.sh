@@ -32,8 +32,10 @@ bbduk.sh \
 in=${1} \
 in2=${2} \
 literal=${3},${4} \
-out=test1_${5}.fastq.gz \
-out2=test2_${5}.fastq.gz \
+out=no_match1.fq.gz \
+out2=no_match2.fq.gz \
+outm=test1_${5}.fastq.gz \
+out2m=test2_${5}.fastq.gz \
 restrictleft=${KMER_LEN}
 
 
