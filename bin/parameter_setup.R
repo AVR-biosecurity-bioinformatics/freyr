@@ -1,15 +1,5 @@
 #!/usr/bin/env Rscript
 
-#### TODO: Parse multi-primer samples correctly
-###     In original pipeline, multiple primer pair names and sequences are delimited with ";"
-###     Need:   - to keep original sample sheet (name: "samplesheet") with contains read paths
-###             - split params by locus-specific columns:
-###                 - pcr_primers, target_gene, asv_min_length,
-###                     asv_max_length, genetic_code, coding, phmm, idtaxa_db, ref_fasta,
-###                     min_sample_reads, and min_taxa_ra 
-###             - join samplesheet by locus-specific params sheet
-
-
 # Find all directories within data folder
 if (!exists("params.data_folder")) { # if data_loc not defined, use "data"
     data_loc="data"

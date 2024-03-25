@@ -44,6 +44,11 @@ outm2=${6}_${5}_R2.fastq.gz \
 restrictleft=${KMER_LEN} \
 copyundefined=true \
 k=${MINK_LEN} \
-stats=bbduk_stats.txt
+stats=bbduk_stats_${6}_${5}.txt
 
-
+# count reads in each output file to make sure they are the same
+touch ${6}_${5}_count.txt
+R1=$(zcat ${6}_${5}_R1.fastq.gz | wc -l)
+echo $((`R1`/4)) >> ${6}_${5}_count.txt
+R2=$(zcat ${6}_${5}_R2.fastq.gz | wc -l)
+echo $((`R2`/4)) >> ${6}_${5}_count.txt
