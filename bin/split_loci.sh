@@ -34,7 +34,6 @@ in2=${2} \
 literal=${3},${4} \
 out=test1_${5}.fastq.gz \
 out2=test2_${5}.fastq.gz \
-restrictleft=${KMER_LEN} \
-mink=${MINK_LEN}
+restrictleft=${KMER_LEN}
 
 
