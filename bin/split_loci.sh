@@ -40,6 +40,7 @@ out=no_match1.fq.gz \
 out2=no_match2.fq.gz \
 outm=test1_${5}.fastq.gz \
 outm2=test2_${5}.fastq.gz \
-restrictleft=${KMER_LEN}
+restrictleft=${KMER_LEN} \
+copyundefined=true
 
 

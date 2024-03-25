@@ -4,7 +4,7 @@ process PARAMETER_SETUP {
     // label: 
 
     input:
-    val data_loc
+
 
     output:  
     path("samdf.csv") ,                 emit: samdf
@@ -32,7 +32,6 @@ process PARAMETER_SETUP {
     
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    # data_loc = "$data_loc" # not needed if params
 
     ## global variables
     projectDir = "$projectDir"
