@@ -20,7 +20,7 @@ process SPLIT_LOCI {
     #!/usr/bin/bash
 
     ### run module code
-    bash ${module_name}.sh
+    bash ${module_name}.sh $reads[0] $reads[1] $projectDir
     
     """
 
