@@ -132,7 +132,7 @@ workflow PIPERLINE {
     // ch_loci_params.view { "path: $it" }
 
     // input samplesheet and loci parameters
-    PARAMETER_SETUP ( params.data_folder )
+    PARAMETER_SETUP ( )
     
     // get read paths and metadata for each sample from the sample sheet .csv
     // from: https://training.nextflow.io/advanced/grouping/#grouping-using-submap 
