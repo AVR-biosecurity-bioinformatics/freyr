@@ -13,10 +13,14 @@ set -u
 # $4 = meta.rev_primer_seq, aka. rev primer sequence
 # $5 = meta.target_gene, aka. name of target gene
 
+# change "I" in primer seq to "N"
+FWD_PRIMER=${3/I/N}
+REV_PRIMER=${4/I/N}
+
 # get length of fwd primer
-FWD_LEN=${#3}
+FWD_LEN=${#FWD_PRIMER}
 # get length of rev primer
-REV_LEN=${#4}
+REV_LEN=${#REV_PRIMER}
 
 if [ "$FWD_LEN" -ge "$REV_LEN" ]; then
     KMER_LEN=$FWD_LEN
@@ -31,7 +35,7 @@ module load BBMap/38.98-GCC-11.2.0
 bbduk.sh \
 in=${1} \
 in2=${2} \
-literal=${3},${4} \
+literal=${FWD_PRIMER},${REV_PRIMER} \
 out=no_match1.fq.gz \
 out2=no_match2.fq.gz \
 outm=test1_${5}.fastq.gz \

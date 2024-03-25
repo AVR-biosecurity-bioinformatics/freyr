@@ -39,7 +39,7 @@
 // Input
 
 // directory in projectDir where data files are stored; "test_data" for test data
-def data_loc = "test_data"
+// def data_loc = "test_data" // not needed as parameters are parsed in R script
 
 // report sources
 
