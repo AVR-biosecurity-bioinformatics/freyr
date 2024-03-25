@@ -1,7 +1,8 @@
-#!/usr/bin/bash
-
+#!/bin/bash
+set -e
+set -u
 # testing syntax
-echo "The name of my reads are $reads[0] and $reads[1], while projectDir is $projectDir!"
+echo "The name of my reads are ${1} and ${2}, while projectDir is ${3}!"
 
 # ### use BBDuk to split 
 
