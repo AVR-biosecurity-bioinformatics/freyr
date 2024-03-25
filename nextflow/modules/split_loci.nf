@@ -20,7 +20,7 @@ process SPLIT_LOCI {
     #!/usr/bin/bash
 
     ### run module code
-    ${module_name}.sh
+    bash ${module_name}.sh
     
     """
 
