@@ -1,6 +1,6 @@
 process SPLIT_LOCI {
     def module_name = "split_loci"
-    tag "{$meta.sample_id; $meta.target_gene}"
+    tag "$meta.sample_id; $meta.target_gene"
     // label:  
 
     input:
@@ -8,7 +8,7 @@ process SPLIT_LOCI {
     tuple val(meta), path(reads)
 
     output:   
-    // path "output_file.txt"
+    tuple val(meta), path("${meta.sample_id}_${meta.target_gene}_R*.fastq.gz")
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
