@@ -161,6 +161,7 @@ workflow PIPERLINE {
 
     /// parse samplesheets that contain locus-specific parameters
     PARAMETER_SETUP.out.samdf_locus
+        | flatten ()
         | splitCsv ( header: true )
         | map { row -> 
             meta = row.subMap(
