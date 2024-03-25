@@ -190,7 +190,7 @@ workflow PIPERLINE {
             }
         | set { ch_sample_locus_reads }
 
-        ch_sample_locus_reads | view ()
+        // ch_sample_locus_reads | view ()
 
     // // get names of the multiplexed loci used
     // PARAMETER_SETUP.out.samdf_locus
@@ -201,9 +201,6 @@ workflow PIPERLINE {
     // | toList ()
     // | view ()
 
-    // PARAMETER_SETUP.out.samdf_locus
-    // | branch {  }
-
 
     // // count the number of multiplexed loci 
     // PARAMETER_SETUP.out.samdf_locus // outputs a list of .csv files
@@ -211,15 +208,8 @@ workflow PIPERLINE {
     //     | count () // count file paths
     //     | view { "There are $it loci in this run!" } 
 
-
-    ////// TODO: import parameters from params
-    // PARAMETER_SETUP.out.loci_params
-    //     | splitCsv ( header: true )
-    //     | map { tuple( it[1], *it ) }
-    //     | view
-
-
-
+    /// get names of flow cells ('fcid') as channel
+    // extract fcid from metadata
     ch_sample_reads 
     | map { meta, reads ->
         def fcid = meta.fcid
@@ -227,18 +217,17 @@ workflow PIPERLINE {
     } 
     | groupTuple() 
     | set { ch_sample_reads_fcid }
-
-    // extract flow cell IDs 
+    // extract flow cell IDs as channel
     ch_sample_reads_fcid 
     | map { group -> group[0]}
     | set { ch_fcid }
 
 
-    // // run SEQ_QC per flow cell 
+    // run SEQ_QC per flow cell 
     // SEQ_QC ( ch_fcid )
 
 
-// SPLIT_LOCI (  ) 
+SPLIT_LOCI ( ch_sample_locus_reads ) 
 
 
 // PRIMER_TRIM ( ch_sample_reads, data_loc )
