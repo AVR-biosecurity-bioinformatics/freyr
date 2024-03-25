@@ -12,6 +12,7 @@ set -u
 # $3 = meta.for_primer_seq, aka. fwd primer sequence
 # $4 = meta.rev_primer_seq, aka. rev primer sequence
 # $5 = meta.target_gene, aka. name of target gene
+# $6 = meta.sample_id, aka. sample ID
 
 # change "I" in primer seq to "N"
 FWD_PRIMER=${3/I/N}
@@ -38,8 +39,8 @@ in2=${2} \
 literal=${FWD_PRIMER},${REV_PRIMER} \
 out=no_match1.fq.gz \
 out2=no_match2.fq.gz \
-outm=test1_${5}.fastq.gz \
-outm2=test2_${5}.fastq.gz \
+outm=${6}_${5}.fastq.gz \
+outm2=${6}_${5}.fastq.gz \
 restrictleft=${KMER_LEN} \
 copyundefined=true \
 k=${MINK_LEN}

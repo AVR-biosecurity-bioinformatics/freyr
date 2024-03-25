@@ -1,6 +1,6 @@
 process SPLIT_LOCI {
     def module_name = "split_loci"
-    // tag: 
+    tag: "{$meta.sample_id; $meta.target_gene}"
     // label:  
 
     input:
@@ -25,7 +25,8 @@ process SPLIT_LOCI {
         ${reads[1]} \
         ${meta.for_primer_seq} \
         ${meta.rev_primer_seq} \
-        ${meta.target_gene}
+        ${meta.target_gene} \
+        ${meta.sample_id}
     
     """
 
