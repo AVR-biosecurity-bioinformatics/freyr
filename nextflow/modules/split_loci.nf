@@ -20,7 +20,12 @@ process SPLIT_LOCI {
     #!/usr/bin/bash
 
     ### run module code
-    bash ${module_name}.sh ${reads[0]} ${reads[1]} ${projectDir}
+    bash ${module_name}.sh \
+        ${reads[0]} \
+        ${reads[1]} \
+        ${meta.for_primer_seq} \
+        ${meta.for_primer_seq} \
+        ${meta.target_gene}
     
     """
 
