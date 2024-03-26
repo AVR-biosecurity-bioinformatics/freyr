@@ -25,10 +25,10 @@ process READ_FILTER {
     rev_reads = "${reads[1]}"
     read_min_length = "${meta.read_min_length}"
     read_max_length = "${meta.read_max_length}"
-    read_max_ee = "${read_max_ee}"
-    read_trunc_length = "${read_trunc_length}"
-    read_trim_left = "${read_trim_left}"
-    read_trim_right = "${read_trim_right}"
+    read_max_ee = "${meta.read_max_ee}"
+    read_trunc_length = "${meta.read_trunc_length}"
+    read_trim_left = "${meta.read_trim_left}"
+    read_trim_right = "${meta.read_trim_right}"
     
     ## global variables
     projectDir = "$projectDir"
