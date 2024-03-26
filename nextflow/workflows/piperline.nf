@@ -187,8 +187,7 @@ workflow PIPERLINE {
     | splitCsv ( header: true )
     | map { row -> row.target_gene }
     | unique ()
-    | toList ()
-     .tap { ch_loci_names } // value channel; list
+    | toList ().tap { ch_loci_names } // value channel; list
     | flatten ()
     | count ()
     | set { ch_loci_number } // value channel; integer
