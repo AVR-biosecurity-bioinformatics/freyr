@@ -9,6 +9,7 @@ process PRIMER_TRIM {
 
     output:   
     tuple val(meta), path("${meta.sample_id}_${meta.target_gene}_${meta.pcr_primers}_trim_R*.fastq.gz"), emit: reads
+    path("primer_trim_stats_*.txt")
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
