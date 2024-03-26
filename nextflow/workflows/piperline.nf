@@ -213,6 +213,9 @@ workflow PIPERLINE {
     // run SEQ_QC per flow cell 
     // SEQ_QC ( ch_fcid ) // optional step for testing
 
+    /// TODO: develop mehod to count reads as they move through the pipeline
+    //      ie. input file, after splitting, after primer trimming, after qual trim etc.
+
     SPLIT_LOCI ( ch_sample_locus_reads ) 
 
     // SPLIT_LOCI.out.reads.view()

@@ -8,7 +8,7 @@ process PRIMER_TRIM {
     tuple val(meta), path(reads)
 
     output:   
-    tuple val(meta), path("${meta.sample_id}_${meta.target_gene}_${meta.pcr_primers}_trim_R*.fastq.gz"), emit: reads
+    tuple val(meta), path("${meta.sample_id}_${meta.target_gene}_${meta.pcr_primers}_trim_R{1,2}.fastq.gz"), emit: reads
     // path("primer_trim_*.txt")
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
@@ -28,7 +28,8 @@ process PRIMER_TRIM {
         ${meta.rev_primer_seq} \
         ${meta.pcr_primers} \
         ${meta.target_gene} \
-        ${meta.sample_id}
+        ${meta.sample_id} 
+
     
     """
 
