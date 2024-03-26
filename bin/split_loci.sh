@@ -41,7 +41,8 @@ restrictleft=${KMER_LEN} \
 copyundefined=true \
 k=${MINK_LEN} \
 rcomp=t \
-stats=split_loci_stats_${7}_${6}_${5}.txt
+stats=split_loci_stats_${7}_${6}_${5}.txt \
+lhist=split_loci_lhist_${7}_${6}_${5}.txt
 
 # # count reads in each output file to make sure they are the same
 # touch ${7}_${6}_${5}_count.txt

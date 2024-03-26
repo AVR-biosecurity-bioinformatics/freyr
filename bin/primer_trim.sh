@@ -30,5 +30,7 @@ copyundefined=true \
 rcomp=t \
 tbo=f \
 minoverlap=10 \
-stats=primer_trim_stats_${7}_${6}_${5}.txt
+stats=primer_trim_stats_${7}_${6}_${5}.txt \
+lhist=primer_trim_lhist_${7}_${6}_${5}.txt
+
 
