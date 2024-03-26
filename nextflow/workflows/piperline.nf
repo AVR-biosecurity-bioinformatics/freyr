@@ -219,5 +219,5 @@ workflow PIPERLINE {
 
     PRIMER_TRIM ( SPLIT_LOCI.out.reads )
 
-    PRIMER_TRIM.out.view
+    PRIMER_TRIM.out.reads.view()
 }
