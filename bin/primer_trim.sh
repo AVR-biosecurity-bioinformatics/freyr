@@ -14,23 +14,44 @@ set -u
 FWD_PRIMER=${3/I/N}
 REV_PRIMER=${4/I/N}
 
-module load BBMap/38.98-GCC-11.2.0
+# ## trying with BBMap (BBDuk)
+# module load BBMap/38.98-GCC-11.2.0
 
-bbduk.sh \
-in=${1} \
-in2=${2} \
-literal=${FWD_PRIMER},${REV_PRIMER} \
-out=${7}_${6}_${5}_trim_R1.fastq.gz \
-out2=${7}_${6}_${5}_trim_R2.fastq.gz \
-outm=reject_R1.fastq.gz \
-outm2=reject_R2.fastq.gz \
-ktrim=l \
-k=10 \
-copyundefined=true \
-rcomp=t \
-tbo=f \
-minoverlap=10 \
-stats=primer_trim_stats_${7}_${6}_${5}.txt \
-lhist=primer_trim_lhist_${7}_${6}_${5}.txt
+# bbduk.sh \
+# in=${1} \
+# in2=${2} \
+# literal=${FWD_PRIMER},${REV_PRIMER} \
+# out=${7}_${6}_${5}_trim_R1.fastq.gz \
+# out2=${7}_${6}_${5}_trim_R2.fastq.gz \
+# outm=reject_R1.fastq.gz \
+# outm2=reject_R2.fastq.gz \
+# ktrim=l \
+# k=10 \
+# copyundefined=true \
+# rcomp=t \
+# tbo=f \
+# minoverlap=10 \
+# stats=primer_trim_stats_${7}_${6}_${5}.txt \
+# lhist=primer_trim_lhist_${7}_${6}_${5}.txt
 
+## trying with cutadapt
+module load cutadapt/3.4-GCCcore-10.3.0
 
+# reverse complement the primer sequences
+FWD_PRIMER_RC=$(echo ${FWD_PRIMER} | \
+    tr GATCRYMKSWHBVDNgatcrymkswhbvdn CTAGYRKMSWDVBHNctagyrkmswdvbhn | \
+    rev)
+REV_PRIMER_RC=$(echo ${REV_PRIMER} | \
+    tr GATCRYMKSWHBVDNgatcrymkswhbvdn CTAGYRKMSWDVBHNctagyrkmswdvbhn | \
+    rev)
+
+cutadapt \
+-a ^${FWD_PRIMER}...${REV_PRIMER_RC} \
+-A ^${REV_PRIMER}...${FWD_PRIMER_RC} \
+--discard-untrimmed \
+--rename="{header}" \
+--report=minimal \
+-o ${7}_${6}_${5}_trim_R1.fastq.gz \
+-p ${7}_${6}_${5}_trim_R2.fastq.gz \
+${1} \
+${2}
