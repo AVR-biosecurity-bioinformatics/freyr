@@ -9,7 +9,7 @@ process SPLIT_LOCI {
 
     output:   
     tuple val(meta), path("${meta.sample_id}_${meta.target_gene}_${meta.pcr_primers}_R*.fastq.gz"), emit: reads
-    path("split_loci_stats_*.txt")
+    path("split_loci_*.txt")
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
