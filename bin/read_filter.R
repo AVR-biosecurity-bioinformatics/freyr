@@ -19,9 +19,9 @@
 # using dada2::filterAndTrim directly
 dada2::filterAndTrim(
     fwd = fwd_reads, 
-    filt = "R1_out.fastq.gz",
+    filt = paste0(sample_id,"_",target_gene,"_",pcr_primers,"_filter_R1.fastq.gz"),
     rev = rev_reads, 
-    filt.rev = "R2_out.fastq.gz",
+    filt.rev = paste0(sample_id,"_",target_gene,"_",pcr_primers,"_filter_R2.fastq.gz"),,
     minLen = as.numeric(read_min_length), 
     maxLen = as.numeric(read_max_length), 
     maxEE = as.numeric(read_max_ee), 
