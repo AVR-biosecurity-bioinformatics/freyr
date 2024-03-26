@@ -55,7 +55,7 @@
 include { PARAMETER_SETUP                   }         from '../modules/parameter_setup'
 include { SEQ_QC                            }         from '../modules/seq_qc'
 include { SPLIT_LOCI                        }         from '../modules/split_loci'
-// include { PRIMER_TRIM                       }         from '../modules/primer_trim'
+include { PRIMER_TRIM                       }         from '../modules/primer_trim'
 // include { SAMDF2                            }         from '../modules/samdf2'
 // include { READ_FILTER                       }         from '../modules/read_filter' 
 // include { SAMDF3                            }         from '../modules/samdf3'
