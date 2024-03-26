@@ -12,8 +12,6 @@
 #     output_dir = ,
 #     min_length = ,
 #     max_length = ,
-
-
 # )
 
 # using dada2::filterAndTrim directly

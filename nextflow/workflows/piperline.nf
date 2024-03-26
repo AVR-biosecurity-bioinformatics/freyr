@@ -224,6 +224,11 @@ workflow PIPERLINE {
 
     // PRIMER_TRIM.out.reads.view()
 
-    //// filter reads using dada2
+    //// filter reads using dada2 and input parameters
     READ_FILTER ( PRIMER_TRIM.out.reads )
+
+    // READ_FILTER.out.reads.view()
+
+
+
 }

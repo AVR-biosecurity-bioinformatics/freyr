@@ -26,7 +26,7 @@ mutate(sample_id = case_when(
 # Check that samples match samplesheet
 fastqFs <- 
     purrr::map(list.dirs(data_loc_abs, recursive=FALSE),
-                    list.files, pattern="_R1_", full.names = TRUE) %>%
+                list.files, pattern="_R1_", full.names = TRUE) %>%
     unlist() %>%
     str_remove(pattern = "^(.*)\\/") %>%
     str_remove(pattern = "(?:.(?!_S))+$")
