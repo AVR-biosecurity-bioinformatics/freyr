@@ -1,4 +1,4 @@
-process primer_trim {
+process PRIMER_TRIM {
     def module_name = "primer_trim"
     tag "$meta.sample_id; $meta.target_gene"
     // label:  
