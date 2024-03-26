@@ -31,5 +31,5 @@ dada2::filterAndTrim(
     rm.phix = TRUE, 
     multithread = FALSE, 
     compress = TRUE, 
-    verbose = !quiet
+    verbose = FALSE
 )
