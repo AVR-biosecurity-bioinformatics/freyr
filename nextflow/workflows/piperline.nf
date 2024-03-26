@@ -122,6 +122,7 @@ workflow PIPERLINE {
     // input samplesheet and loci parameters
     PARAMETER_SETUP ( )
     
+    /// TODO: remove this bit if it's not used in final pipeline
     // get read paths and metadata for each sample from the sample sheet .csv
     // from: https://training.nextflow.io/advanced/grouping/#grouping-using-submap 
     PARAMETER_SETUP.out.samdf
@@ -145,7 +146,7 @@ workflow PIPERLINE {
             }
         | set { ch_sample_reads }
 
-    // ch_sample_reads | view
+    // ch_sample_reads | view // check output
 
     /// parse samplesheets that contain locus-specific parameters
     PARAMETER_SETUP.out.samdf_locus
@@ -178,23 +179,20 @@ workflow PIPERLINE {
             }
         | set { ch_sample_locus_reads }
 
-        // ch_sample_locus_reads | view ()
+        // ch_sample_locus_reads | view // check output
 
-    // // get names of the multiplexed loci used
-    // PARAMETER_SETUP.out.samdf_locus
-    // | flatten ()
-    // | splitCsv ( header: true )
-    // | map { row -> row.target_gene }
-    // | unique ()
-    // | toList ()
-    // | view ()
+    // get names and count of the multiplexed loci used
+    PARAMETER_SETUP.out.samdf_locus
+    | flatten ()
+    | splitCsv ( header: true )
+    | map { row -> row.target_gene }
+    | unique ()
+    | toList ()
+    | tap { ch_loci_names } // value channel; list
+    | flatten ()
+    | count ()
+    | set { ch_loci_number } // value channel; integer
 
-
-    // // count the number of multiplexed loci 
-    // PARAMETER_SETUP.out.samdf_locus // outputs a list of .csv files
-    //     | flatten () // flatten list into individual file paths
-    //     | count () // count file paths
-    //     | view { "There are $it loci in this run!" } 
 
     /// get names of flow cells ('fcid') as channel
     // extract fcid from metadata
@@ -211,7 +209,7 @@ workflow PIPERLINE {
 
 
     // run SEQ_QC per flow cell 
-    SEQ_QC ( ch_fcid )
+    // SEQ_QC ( ch_fcid ) // optional step for testing
 
     SPLIT_LOCI ( ch_sample_locus_reads ) 
 
