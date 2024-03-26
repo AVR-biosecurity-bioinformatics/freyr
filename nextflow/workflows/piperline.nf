@@ -56,9 +56,7 @@ include { PARAMETER_SETUP                   }         from '../modules/parameter
 include { SEQ_QC                            }         from '../modules/seq_qc'
 include { SPLIT_LOCI                        }         from '../modules/split_loci'
 include { PRIMER_TRIM                       }         from '../modules/primer_trim'
-// include { SAMDF2                            }         from '../modules/samdf2'
-// include { READ_FILTER                       }         from '../modules/read_filter' 
-// include { SAMDF3                            }         from '../modules/samdf3'
+include { READ_FILTER                       }         from '../modules/read_filter' 
 // include { PREFILT_QUALPLOTS                 }         from '../modules/prefilt_qualplots'
 // include { POSTFILT_QUALPLOTS                }         from '../modules/postfilt_qualplots'
 // include { ERROR_MODEL as ERROR_MODEL_F      }         from '../modules/error_model'
@@ -213,14 +211,19 @@ workflow PIPERLINE {
     // run SEQ_QC per flow cell 
     // SEQ_QC ( ch_fcid ) // optional step for testing
 
-    /// TODO: develop mehod to count reads as they move through the pipeline
+    /// TODO: develop method to count reads as they move through the pipeline
     //      ie. input file, after splitting, after primer trimming, after qual trim etc.
 
+    //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( ch_sample_locus_reads ) 
 
     // SPLIT_LOCI.out.reads.view()
 
+    //// trim primer sequences from the start and end of reads
     PRIMER_TRIM ( SPLIT_LOCI.out.reads )
 
     // PRIMER_TRIM.out.reads.view()
+
+    //// filter reads using dada2
+    READ_FILTER ( PRIMER_TRIM.out.reads )
 }
