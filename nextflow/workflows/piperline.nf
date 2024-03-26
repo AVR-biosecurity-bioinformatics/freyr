@@ -217,5 +217,7 @@ workflow PIPERLINE {
 
     // SPLIT_LOCI.out.reads.view()
 
-    // PRIMER_TRIM ( ch_sample_reads, data_loc )
+    PRIMER_TRIM ( SPLIT_LOCI.out.reads )
+
+    PRIMER_TRIM.out.view
 }

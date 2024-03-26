@@ -33,14 +33,14 @@ bbduk.sh \
 in=${1} \
 in2=${2} \
 literal=${FWD_PRIMER},${REV_PRIMER} \
-out=no_match1.fastq.gz \
-out2=no_match2.fastq.gz \
+out=reject_R1.fastq.gz \
+out2=reject_R2.fastq.gz \
 outm=${7}_${6}_${5}_R1.fastq.gz \
 outm2=${7}_${6}_${5}_R2.fastq.gz \
 restrictleft=${KMER_LEN} \
 copyundefined=true \
 k=${MINK_LEN} \
-stats=bbduk_stats_${7}_${6}_${5}.txt
+stats=split_loci_stats_${7}_${6}_${5}.txt
 
 # # count reads in each output file to make sure they are the same
 # touch ${7}_${6}_${5}_count.txt
@@ -48,3 +48,4 @@ stats=bbduk_stats_${7}_${6}_${5}.txt
 # echo $(( $R1 / 4 )) >> ${7}_${6}_${5}_count.txt
 # R2=$(zcat ${7}_${6}_${5}_R2.fastq.gz | wc -l)
 # echo $(( $R2 / 4 )) >> ${7}_${6}_${5}_count.txt
+
