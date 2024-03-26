@@ -1,11 +1,6 @@
 #!/bin/bash
 set -e
 set -u
-# testing syntax
-# echo "The name of my reads are ${1} and ${2}, while projectDir is ${3}!"
-
-# ### use BBMap to split 
-
 ## args are the following:
 # $1 = reads[0], aka. fwd read path
 # $2 = reads[1], aka. rev read path
@@ -46,9 +41,9 @@ copyundefined=true \
 k=${MINK_LEN} \
 stats=bbduk_stats_${6}_${5}.txt
 
-# count reads in each output file to make sure they are the same
-touch ${6}_${5}_count.txt
-R1=$(zcat ${6}_${5}_R1.fastq.gz | wc -l)
-echo $(( $R1 / 4 )) >> ${6}_${5}_count.txt
-R2=$(zcat ${6}_${5}_R2.fastq.gz | wc -l)
-echo $(( $R2 / 4 )) >> ${6}_${5}_count.txt
+# # count reads in each output file to make sure they are the same
+# touch ${6}_${5}_count.txt
+# R1=$(zcat ${6}_${5}_R1.fastq.gz | wc -l)
+# echo $(( $R1 / 4 )) >> ${6}_${5}_count.txt
+# R2=$(zcat ${6}_${5}_R2.fastq.gz | wc -l)
+# echo $(( $R2 / 4 )) >> ${6}_${5}_count.txt
