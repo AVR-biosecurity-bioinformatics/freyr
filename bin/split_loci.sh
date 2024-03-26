@@ -40,6 +40,7 @@ outm2=${7}_${6}_${5}_R2.fastq.gz \
 restrictleft=${KMER_LEN} \
 copyundefined=true \
 k=${MINK_LEN} \
+rcomp=t \
 stats=split_loci_stats_${7}_${6}_${5}.txt
 
 # # count reads in each output file to make sure they are the same

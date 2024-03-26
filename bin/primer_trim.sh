@@ -24,9 +24,11 @@ out=${7}_${6}_${5}_trim_R1.fastq.gz \
 out2=${7}_${6}_${5}_trim_R2.fastq.gz \
 outm=reject_R1.fastq.gz \
 outm2=reject_R2.fastq.gz \
-ktrim=r \
+ktrim=l \
 k=10 \
 copyundefined=true \
-tbo=t \
+rcomp=t \
+tbo=f \
+minoverlap=10 \
 stats=primer_trim_stats_${7}_${6}_${5}.txt
 
