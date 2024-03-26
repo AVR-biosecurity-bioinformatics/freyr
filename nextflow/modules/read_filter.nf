@@ -31,7 +31,7 @@ process READ_FILTER {
     read_trim_right =   "${meta.read_trim_right}"
     sample_id =         "${meta.sample_id}"
     target_gene =       "${meta.target_gene}"
-    pcr_primers =       "${meta.pcr_primers}""
+    pcr_primers =       "${meta.pcr_primers}"
     
     ## global variables
     projectDir = "$projectDir"
