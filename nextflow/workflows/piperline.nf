@@ -188,7 +188,9 @@ workflow PIPERLINE {
     | map { row -> row.target_gene }
     | unique ()
     | toList ()
-    //.tap { ch_loci_names } // value channel; list
+    | set { ch_loci_names } // value channel; list
+    
+    ch_loci_names
     | flatten ()
     | count ()
     | set { ch_loci_number } // value channel; integer
