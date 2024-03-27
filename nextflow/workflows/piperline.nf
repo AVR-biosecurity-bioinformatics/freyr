@@ -247,7 +247,7 @@ workflow PIPERLINE {
     | groupTuple( by: [0,1,2] )
     | set { ch_error_input_fwd }
 
-    ch_forward_fcid_reads | view
+    ch_error_input_fwd | view
 
     // // reverse read channel
     // READ_FILTER.out.reads
