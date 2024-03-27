@@ -4,8 +4,7 @@
 
 print(reads)
 print(direction)
-stringr::str_split(reads, pattern = " ") %>% as.data_frame() %>%
-    write_csv(file = "fwd.csv", x = .)
+stringr::str_split(reads, pattern = " ") 
 
 stop(" *** stopped manually *** ") ##########################################
 
