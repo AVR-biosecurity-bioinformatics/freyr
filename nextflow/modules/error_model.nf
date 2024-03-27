@@ -43,7 +43,7 @@ process ERROR_MODEL {
     print(reads)
     print(direction)
 
-    stringr::str_(read, pattern = " ") %>% 
+    stringr::str_(reads, pattern = " ") %>% 
         normalizePath(.)
 
     """
