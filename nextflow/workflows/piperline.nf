@@ -239,20 +239,26 @@ workflow PIPERLINE {
     ch_forward = Channel.value( "forward" )
     ch_reverse = Channel.value( "reverse" )
 
-    // split filtered reads into lists of reads per flowcell, also split by direction
+    //// split filtered reads into lists of reads per flowcell, also split by direction
     // forward read channel
     READ_FILTER.out.reads
-    // | map { meta, reads -> 
-    //         [ meta, reads[0] ] }
     | map { meta, reads -> 
-            [ meta.fcid, meta.pcr_primers, reads[0] ] }
-    | groupTuple( by: [0,1] )
-    | set { ch_forward_fcid_reads }
+            [ "forward", meta.fcid, meta.pcr_primers, reads[0] ] }
+    | groupTuple( by: [0,1,2] )
+    | set { ch_error_input_fwd }
 
-    // ch_forward_fcid_reads | view
+    ch_forward_fcid_reads | view
 
-    // error model on forward reads
-    ERROR_MODEL_F ( ch_forward, ch_forward_fcid_reads )
+    // // reverse read channel
+    // READ_FILTER.out.reads
+    // | map { meta, reads -> 
+    //         [ meta.fcid, meta.pcr_primers, reads[1] ] }
+    // | groupTuple( by: [0,1] )
+    // | set { ch_reverse_fcid_reads }
+
+
+    // // error model on forward reads
+    // ERROR_MODEL_F ( ch_forward, ch_error_input_fwd )
 
     // error model on reverse reads
     // ERROR_MODEL_R ( ch_reverse, READ_FILTER.out.reads )
