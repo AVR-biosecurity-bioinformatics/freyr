@@ -43,6 +43,9 @@ process ERROR_MODEL {
     print(reads)
     print(direction)
 
+    stringr::str_(read, pattern = " ") %>% 
+        normalizePath(.)
+
     """
 
 }
