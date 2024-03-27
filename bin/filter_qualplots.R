@@ -9,6 +9,15 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
     fastqFs <- normalizePath(fwd_reads)
     fastqRs <- normalizePath(rev_reads)
     
+    if (stringr::str_detect(fwd_reads, pattern = "_trim_R")) {
+        file_suffix <- "pre"
+    } else if (stringr::str_detect(fwd_reads, pattern = "_filter_R")) {
+        file_suffix <- "post"
+        } else { 
+            stop("*** File names don't make it clear if reads are pre- or post-filtering! ***") 
+            }
+
+
     if(length(fastqFs) == 0 ){
         message(paste0("Sample ", fwd_reads, " Has no reads"))
         return(NULL)
@@ -32,7 +41,7 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
         geom_line(data = Fquals, aes(y = Q75), color = "#FC8D62", linewidth = 0.25, linetype = "dashed") + 
         labs(x = "Reads position", y = "Quality Score") + ylim(c(0, NA))+
         ggtitle(paste0(sample_id," ",target_gene," ",pcr_primers, " Forward Reads")) +
-        scale_x_continuous(breaks=seq(0,300,25))
+        theme(legend.position = "bottom", plot.title = element_text(size = 10))
     
     gg.Rqual <- Rquals %>% 
         dplyr::select(Cycle, reads, starts_with("Q")) %>% 
@@ -45,7 +54,7 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
         labs(x = "Reads position", y = "Quality Score") + ylim(c(0, NA))+
         ggtitle(paste0(sample_id," ",target_gene," ",pcr_primers, " Reverse Reads")) +
         scale_x_continuous(breaks=seq(0,300,25)) +
-        theme(legend.position = "bottom")
+        theme(legend.position = "bottom", plot.title = element_text(size = 10))
     
     
     gg.Fee <- Fquals %>% 
@@ -69,7 +78,7 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
             colour = "Read quantiles") + 
         ggtitle(paste0(sample_id," ",target_gene," ",pcr_primers, " Forward Reads")) +
         scale_x_continuous(breaks=seq(0,300,25)) +
-        theme(legend.position = "bottom")
+        theme(legend.position = "bottom", plot.title = element_text(size = 10))
 
     
     gg.Ree <- Rquals %>% 
@@ -115,7 +124,7 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
 
     # stop(" *** stopped manually *** ") ##########################################
 
-    ggsave(paste0(sample_id,"_",target_gene,"_",pcr_primers,"_pre_qualplots.pdf"), Qualplots)
+    ggsave(paste0(sample_id,"_",target_gene,"_",pcr_primers,"_",file_suffix,"_qualplots.pdf"), Qualplots, width = 11, height = 8)
 
     return(Qualplots)
 }
