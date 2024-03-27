@@ -59,8 +59,8 @@ include { PRIMER_TRIM                               } from '../modules/primer_tr
 include { READ_FILTER                               } from '../modules/read_filter' 
 include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_PRE  } from '../modules/filter_qualplots'
 include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_POST } from '../modules/filter_qualplots'
-// include { ERROR_MODEL as ERROR_MODEL_F      } from '../modules/error_model'
-// include { ERROR_MODEL as ERROR_MODEL_R      } from '../modules/error_model'
+include { ERROR_MODEL as ERROR_MODEL_F      } from '../modules/error_model'
+include { ERROR_MODEL as ERROR_MODEL_R      } from '../modules/error_model'
 // include { DENOISE as DENOISE_F              } from '../modules/denoise'
 // include { DENOISE as DENOISE_R              } from '../modules/denoise'
 // include { DENOISE as DENOISE2_F             } from '../modules/denoise'
@@ -209,7 +209,7 @@ workflow PIPERLINE {
 
 
     // run SEQ_QC per flow cell 
-    SEQ_QC ( ch_fcid ) // optional step for testing
+    // SEQ_QC ( ch_fcid ) // optional step for testing
 
     /// TODO: develop method to count reads as they move through the pipeline
     //      ie. input file, after splitting, after primer trimming, after qual trim etc.
@@ -229,14 +229,26 @@ workflow PIPERLINE {
 
     // READ_FILTER.out.reads.view()
 
-    // // create plots of read quality pre- and post-filtering, per flowcell
-    FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
+    //// create plots of read quality pre- and post-filtering, per flowcell (optional)
+    // FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
 
-    FILTER_QUALPLOTS_POST ( READ_FILTER.out.reads )
+    // FILTER_QUALPLOTS_POST ( READ_FILTER.out.reads )
 
     /// TODO: Use FILTER_QUALPLOTS_COMBINE to combine plots by fcid and type into one PDF
 
+    ch_forward = Channel.value( "forward" )
+    ch_reverse = Channel.value( "reverse" )
+
+    // split filtered reads into lists of reads per flowcell, also split by direction
+    READ_FILTER.out.reads
+    | collectFile ( name: 'READ_FILTER.out.reads.txt', newLine: true, sort: false )
+    | view ()
 
 
+    // error model on forward reads
+    // ERROR_MODEL_F ( ch_forward, READ_FILTER.out.reads )
+
+    // error model on reverse reads
+    // ERROR_MODEL_R ( ch_reverse, READ_FILTER.out.reads )
 
 }

@@ -149,3 +149,5 @@ plot_read_quals2(
     quiet=FALSE, 
     n = 1000
 )
+
+### TODO: Increase "n" to 10000
