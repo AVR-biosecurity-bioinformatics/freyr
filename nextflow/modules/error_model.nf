@@ -44,7 +44,7 @@ process ERROR_MODEL {
     print(direction)
 
     stringr::str_split(reads, pattern = " ") %>% 
-        normalizePath(.)
+        write_csv("fwd.csv")
 
     """
 
