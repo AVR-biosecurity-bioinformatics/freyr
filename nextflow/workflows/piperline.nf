@@ -52,32 +52,33 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { PARAMETER_SETUP                   }         from '../modules/parameter_setup'
-include { SEQ_QC                            }         from '../modules/seq_qc'
-include { SPLIT_LOCI                        }         from '../modules/split_loci'
-include { PRIMER_TRIM                       }         from '../modules/primer_trim'
-include { READ_FILTER                       }         from '../modules/read_filter' 
-include { FILTER_QUALPLOTS                 }         from '../modules/filter_qualplots'
-// include { ERROR_MODEL as ERROR_MODEL_F      }         from '../modules/error_model'
-// include { ERROR_MODEL as ERROR_MODEL_R      }         from '../modules/error_model'
-// include { DENOISE as DENOISE_F              }         from '../modules/denoise'
-// include { DENOISE as DENOISE_R              }         from '../modules/denoise'
-// include { DENOISE as DENOISE2_F             }         from '../modules/denoise'
-// include { DENOISE as DENOISE2_R             }         from '../modules/denoise'
-// include { DADA                              }         from '../modules/dada'
-// include { FILTER_SEQTAB                     }         from '../modules/filter_seqtab'
-// include { MERGE_SEQTAB                      }         from '../modules/merge_seqtab'
-// include { TAX_IDTAXA                        }         from '../modules/tax_idtaxa'
-// include { TAX_BLAST                         }         from '../modules/tax_blast'
-// include { JOINT_TAX                         }         from '../modules/joint_tax'
-// include { MERGE_TAX                         }         from '../modules/merge_tax'
-// include { ASSIGNMENT_PLOT                   }         from '../modules/assignment_plot'
-// include { TAX_SUMMARY                       }         from '../modules/tax_summary'
-// include { PHYLOSEQ_CREATE                   }         from '../modules/phyloseq_create'
-// include { PHYLOSEQ_SUMMARY                  }         from '../modules/phyloseq_summary'
-// include { ACCUMULATION_CURVE                }         from '../modules/accumulation_curve'
-// include { PHYLOSEQ_FILTER                   }         from '../modules/phyloseq_filter'
-// include { READ_TRACKING                     }         from '../modules/read_tracking'
+include { PARAMETER_SETUP                           } from '../modules/parameter_setup'
+include { SEQ_QC                                    } from '../modules/seq_qc'
+include { SPLIT_LOCI                                } from '../modules/split_loci'
+include { PRIMER_TRIM                               } from '../modules/primer_trim'
+include { READ_FILTER                               } from '../modules/read_filter' 
+include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_PRE  } from '../modules/filter_qualplots'
+include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_POST } from '../modules/filter_qualplots'
+// include { ERROR_MODEL as ERROR_MODEL_F      } from '../modules/error_model'
+// include { ERROR_MODEL as ERROR_MODEL_R      } from '../modules/error_model'
+// include { DENOISE as DENOISE_F              } from '../modules/denoise'
+// include { DENOISE as DENOISE_R              } from '../modules/denoise'
+// include { DENOISE as DENOISE2_F             } from '../modules/denoise'
+// include { DENOISE as DENOISE2_R             } from '../modules/denoise'
+// include { DADA                              } from '../modules/dada'
+// include { FILTER_SEQTAB                     } from '../modules/filter_seqtab'
+// include { MERGE_SEQTAB                      } from '../modules/merge_seqtab'
+// include { TAX_IDTAXA                        } from '../modules/tax_idtaxa'
+// include { TAX_BLAST                         } from '../modules/tax_blast'
+// include { JOINT_TAX                         } from '../modules/joint_tax'
+// include { MERGE_TAX                         } from '../modules/merge_tax'
+// include { ASSIGNMENT_PLOT                   } from '../modules/assignment_plot'
+// include { TAX_SUMMARY                       } from '../modules/tax_summary'
+// include { PHYLOSEQ_CREATE                   } from '../modules/phyloseq_create'
+// include { PHYLOSEQ_SUMMARY                  } from '../modules/phyloseq_summary'
+// include { ACCUMULATION_CURVE                } from '../modules/accumulation_curve'
+// include { PHYLOSEQ_FILTER                   } from '../modules/phyloseq_filter'
+// include { READ_TRACKING                     } from '../modules/read_tracking'
 
 
 
@@ -228,15 +229,6 @@ workflow PIPERLINE {
 
     // READ_FILTER.out.reads.view()
 
-    /// create input channels for FILTER_QUALPLOTS that groups read pairs per 
-    ///      flowcell and per pre-/post-filter category
-    // pre-filter reads
-    PRIMER_TRIM.out.reads
-    | map { meta, reads ->
-            def fcid = meta.fcid
-            return tuple(fcid, meta, reads) } 
-    | set { ch_prefilter }
-
     ch_prefilter | view 
     // | collectFile ( 
     //     name: "ch_prefilter.txt", 
@@ -251,7 +243,9 @@ workflow PIPERLINE {
     // | set { ch_postfilter }
 
     // // create plots of read quality pre- and post-filtering, per flowcell
-    // FILTER_QUALPLOTS (  )
+    FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
+
+    // FILTER_QUALPLOTS_POST ( READ_FILTER.out.reads )
 
 
 }

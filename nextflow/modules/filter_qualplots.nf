@@ -4,7 +4,7 @@ process FILTER_QUALPLOTS {
     // label:  
 
     input:
-    val input
+    tuple val(meta), path(reads)
 
     output:   
     path "output_file.txt"
@@ -20,7 +20,12 @@ process FILTER_QUALPLOTS {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-
+    fwd_reads =         "${reads[0]}"
+    rev_reads =         "${reads[1]}"
+    sample_id =         "${meta.sample_id}"
+    fcid =              "${meta.fcid}"
+    target_gene =       "${meta.target_gene}"
+    pcr_primers =       "${meta.pcr_primers}"
     
     ## global variables
     projectDir = "$projectDir"
