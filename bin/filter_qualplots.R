@@ -94,8 +94,6 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
         scale_x_continuous(breaks=seq(0,300,25)) +
         theme(legend.position = "bottom")
     
-    stop(" *** stopped manually *** ") ##########################################
-
     if(!is.null(truncLen)){
         gg.Fqual <- gg.Fqual +
         geom_vline(aes(xintercept=truncLen[1]), colour="blue") +
@@ -112,6 +110,8 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
     }
     
     Qualplots <- (gg.Fqual + gg.Rqual) / (gg.Fee + gg.Ree)
+
+    stop(" *** stopped manually *** ") ##########################################
 
     ggsave(Qualplots, paste0(sample_id,"_",target_gene,"_",pcr_primers,"_qualplots.pdf"))
     
