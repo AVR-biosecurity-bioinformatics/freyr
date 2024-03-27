@@ -246,7 +246,7 @@ workflow PIPERLINE {
     //         [ meta, reads[0] ] }
     | map { meta, reads -> 
             [ meta.fcid, meta.pcr_primers, reads[0] ] }
-    | groupTuple( by: [0,2] )
+    | groupTuple( by: [0,1] )
     | set { ch_forward_fcid_reads }
 
     ch_forward_fcid_reads | view
