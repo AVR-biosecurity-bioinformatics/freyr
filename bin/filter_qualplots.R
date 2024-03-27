@@ -21,8 +21,8 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
     Fquals <- get_qual_stats(fastqFs, n=n)
     Rquals <- get_qual_stats(fastqRs, n=n)
     
-    stop(status = 1) ##########################################################
-
+    stop(" *** stopped manually *** ") ##########################################
+    
     #Plot qualities
     gg.Fqual <- Fquals %>% 
         dplyr::select(Cycle, reads, starts_with("Q")) %>% 
