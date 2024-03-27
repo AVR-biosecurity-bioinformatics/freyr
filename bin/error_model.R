@@ -2,6 +2,12 @@
 
 # check variables defined
 
+print(reads)
+print(direction)
+stringr::str_split(reads, pattern = " ") %>% as.data_frame() %>%
+    write_csv(file = "fwd.csv", x = .)
+
+stop(" *** stopped manually *** ") ##########################################
 
 ### run R code (from step_errormodel)
 if (direction == "forward") { input_reads <- "fwd_reads"
