@@ -238,7 +238,8 @@ workflow PIPERLINE {
     | groupTuple()
     | set { ch_prefilter }
 
-    ch_prefilter | view()
+    ch_prefilter
+    | collectFile ( name: ch_prefilter.txt, newline: true, storeDir: "${projectDir}/output/modules" )
 
 
     // // post-filter reads
