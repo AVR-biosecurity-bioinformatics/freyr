@@ -235,6 +235,7 @@ workflow PIPERLINE {
     | map { meta, reads ->
             def fcid = meta.fcid
             return tuple(fcid, reads) } 
+    | groupTuple()
     | set { ch_prefilter }
 
     ch_prefilter | view()
