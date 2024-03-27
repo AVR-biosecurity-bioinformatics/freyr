@@ -225,27 +225,14 @@ workflow PIPERLINE {
     // PRIMER_TRIM.out.reads.view()
 
     //// filter reads using dada2 and input parameters
-    // READ_FILTER ( PRIMER_TRIM.out.reads )
+    READ_FILTER ( PRIMER_TRIM.out.reads )
 
     // READ_FILTER.out.reads.view()
-
-    // ch_prefilter | view 
-    // | collectFile ( 
-    //     name: "ch_prefilter.txt", 
-    //     newLine: true, 
-    //     storeDir: "${projectDir}/output/modules" 
-    //     )
-
-
-    // // post-filter reads
-    // READ_FILTER.out.reads
-    // | 
-    // | set { ch_postfilter }
 
     // // create plots of read quality pre- and post-filtering, per flowcell
     FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
 
-    // FILTER_QUALPLOTS_POST ( READ_FILTER.out.reads )
+    FILTER_QUALPLOTS_POST ( READ_FILTER.out.reads )
 
 
 }
