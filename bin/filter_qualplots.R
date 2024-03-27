@@ -92,7 +92,7 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
         labs(x = "Reads position", y = "Log10 Cumulative expected errors") +
         ggtitle(paste0(sample_id," ",target_gene," ",pcr_primers, " Reverse Reads")) +
         scale_x_continuous(breaks=seq(0,300,25)) +
-        theme(legend.position = "bottom")
+        theme(legend.position = "bottom", plot.title = element_text(size = 10))
     
     if(!is.null(truncLen)){
         gg.Fqual <- gg.Fqual +
@@ -115,7 +115,7 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
 
     # stop(" *** stopped manually *** ") ##########################################
 
-    ggsave(paste0(sample_id,"_",target_gene,"_",pcr_primers,"_qualplots.pdf"), Qualplots)
+    ggsave(paste0(sample_id,"_",target_gene,"_",pcr_primers,"_pre_qualplots.pdf"), Qualplots)
 
     return(Qualplots)
 }
