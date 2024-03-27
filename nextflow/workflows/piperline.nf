@@ -241,6 +241,7 @@ workflow PIPERLINE {
 
     // split filtered reads into lists of reads per flowcell, also split by direction
     READ_FILTER.out.reads
+        .flatten ()
         .collectFile ( name: 'READ_FILTER.out.reads.txt', newLine: true, sort: false )
         .view ()
 
