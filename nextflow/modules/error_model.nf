@@ -35,16 +35,10 @@ process ERROR_MODEL {
     sys.source("${projectDir}/bin/process_start.R", envir = .GlobalEnv)
 
     ### run module code
-    # sys.source(
-    #     "${projectDir}/bin/$module_script", # run script
-    #     envir = .GlobalEnv # this allows import of existing objects like projectDir
-    # )
-    
-    print(reads)
-    print(direction)
-
-    stringr::str_split(reads, pattern = " ") %>% 
-        write_csv(file = "fwd.csv", x = .)
+    sys.source(
+        "${projectDir}/bin/$module_script", # run script
+        envir = .GlobalEnv # this allows import of existing objects like projectDir
+    )
 
     """
 
