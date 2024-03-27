@@ -118,8 +118,14 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
     return(Qualplots)
 }
 
+print(sample_id) 
+print(fwd_reads) 
+print(rev_reads) 
+print(fcid)
+print(target_gene)
+print(pcr_primers)
 
-
+stop(" *** stopped manually *** ") ##########################################
 
 plot_read_quals2(
     sample_id =     sample_id, 
