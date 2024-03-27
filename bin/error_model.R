@@ -46,16 +46,15 @@ err <- dada2::learnErrors(
     
 ### TODO: increase nbases or use default (1e8)
 
-print(err)
+# print(err)
 
 # stop(" *** stopped manually *** ") ##########################################
 
 
-# #write out errors for diagnostics
-# if(write_all){
-#     write_csv(as.data.frame(err$trans), paste0(qc_dir, "/", fcid, "_err",read,"_observed_transitions.csv"))
-#     write_csv(as.data.frame(err$err_out), paste0(qc_dir, "/", fcid, "_err",read,"_inferred_errors.csv"))
-# }
+#write out errors for diagnostics
+write_csv(as.data.frame(err$trans), paste0(fcid,"_",pcr_primers,"_err",direction,"_observed_transitions.csv"))
+write_csv(as.data.frame(err$err_out), paste0(fcid,"_",pcr_primers,"_err",direction,"_inferred_errors.csv"))
+
 
 # ##output error plots to see how well the algorithm modelled the errors in the different runs
 # p1 <- dada2::plotErrors(err, nominalQ = TRUE) + ggtitle(paste0(pcr_primers, " ", fcid, " Forward Reads"))
