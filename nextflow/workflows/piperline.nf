@@ -235,15 +235,15 @@ workflow PIPERLINE {
     | map { meta, reads ->
             def fcid = meta.fcid
             return tuple(fcid, reads) } 
-    | groupTuple()
+    // | groupTuple()
     | set { ch_prefilter }
 
-    ch_prefilter
-    | collectFile ( 
-        name: "ch_prefilter.txt", 
-        newLine: true, 
-        storeDir: "${projectDir}/output/modules" 
-        )
+    ch_prefilter | view 
+    // | collectFile ( 
+    //     name: "ch_prefilter.txt", 
+    //     newLine: true, 
+    //     storeDir: "${projectDir}/output/modules" 
+    //     )
 
 
     // // post-filter reads
