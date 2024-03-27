@@ -9,7 +9,6 @@ process PRIMER_TRIM {
 
     output:   
     tuple val(meta), path("*_trim_R{1,2}.fastq.gz"), emit: reads
-    // path("primer_trim_*.txt")
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -30,7 +29,6 @@ process PRIMER_TRIM {
         ${meta.target_gene} \
         ${meta.sample_id} 
 
-    
     """
 
 }

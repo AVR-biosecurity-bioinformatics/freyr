@@ -57,8 +57,7 @@ include { SEQ_QC                            }         from '../modules/seq_qc'
 include { SPLIT_LOCI                        }         from '../modules/split_loci'
 include { PRIMER_TRIM                       }         from '../modules/primer_trim'
 include { READ_FILTER                       }         from '../modules/read_filter' 
-// include { PREFILT_QUALPLOTS                 }         from '../modules/prefilt_qualplots'
-// include { POSTFILT_QUALPLOTS                }         from '../modules/postfilt_qualplots'
+include { FILTER_QUALPLOTS                 }         from '../modules/filter_qualplots'
 // include { ERROR_MODEL as ERROR_MODEL_F      }         from '../modules/error_model'
 // include { ERROR_MODEL as ERROR_MODEL_R      }         from '../modules/error_model'
 // include { DENOISE as DENOISE_F              }         from '../modules/denoise'
@@ -229,6 +228,25 @@ workflow PIPERLINE {
 
     // READ_FILTER.out.reads.view()
 
+    /// create input channels for FILTER_QUALPLOTS that groups read pairs per 
+    ///      flowcell and per pre-/post-filter category
+    // pre-filter reads
+    PRIMER_TRIM.out.reads
+    | map { meta, reads ->
+            def fcid = meta.fcid
+            return tuple(fcid, reads) } 
+    | set { ch_prefilter }
+
+    ch_prefilter | view()
+
+
+    // // post-filter reads
+    // READ_FILTER.out.reads
+    // | 
+    // | set { ch_postfilter }
+
+    // // create plots of read quality pre- and post-filtering, per flowcell
+    // FILTER_QUALPLOTS (  )
 
 
 }

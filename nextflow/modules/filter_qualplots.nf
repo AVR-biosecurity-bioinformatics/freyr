@@ -1,13 +1,13 @@
-process READ_FILTER {
-    def module_name = "read_filter"
-    tag "$meta.sample_id; $meta.target_gene"
+process FILTER_QUALPLOTS {
+    def module_name = "filter_qualplots"
+    tag "Whole pipeline" 
     // label:  
 
     input:
-    tuple val(meta), path(reads)
+    val input
 
     output:   
-    tuple val(meta), path("*_filter_R{1,2}.fastq.gz"),           emit: reads
+    path "output_file.txt"
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -20,17 +20,7 @@ process READ_FILTER {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    fwd_reads =         "${reads[0]}"
-    rev_reads =         "${reads[1]}"
-    read_min_length =   "${meta.read_min_length}"
-    read_max_length =   "${meta.read_max_length}"
-    read_max_ee =       "${meta.read_max_ee}"
-    read_trunc_length = "${meta.read_trunc_length}"
-    read_trim_left =    "${meta.read_trim_left}"
-    read_trim_right =   "${meta.read_trim_right}"
-    sample_id =         "${meta.sample_id}"
-    target_gene =       "${meta.target_gene}"
-    pcr_primers =       "${meta.pcr_primers}"
+
     
     ## global variables
     projectDir = "$projectDir"
