@@ -229,7 +229,7 @@ workflow PIPERLINE {
 
     // READ_FILTER.out.reads.view()
 
-    ch_prefilter | view 
+    // ch_prefilter | view 
     // | collectFile ( 
     //     name: "ch_prefilter.txt", 
     //     newLine: true, 
