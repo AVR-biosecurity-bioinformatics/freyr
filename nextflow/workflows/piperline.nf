@@ -241,8 +241,9 @@ workflow PIPERLINE {
 
     // split filtered reads into lists of reads per flowcell, also split by direction
     READ_FILTER.out.reads
-        .collect ()
-        .view ()
+    | map { meta, reads -> 
+            [ meta, reads[0] ] }
+    | view ()
 
 
     // error model on forward reads
