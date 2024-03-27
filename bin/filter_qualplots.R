@@ -116,7 +116,7 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
 
 
 
-plot_read_quals(
+plot_read_quals2(
     sample_id =     sample_id, 
     fwd_reads =     fwd_reads, 
     rev_reads =     rev_reads, 
