@@ -6,8 +6,8 @@
 ### run R code
 
 plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene, pcr_primers, truncLen = NULL, quiet=FALSE, n = 10000){
-    fastqFs <- fwd_reads
-    fastqRs <- rev_reads
+    fastqFs <- normalizePath(fwd_reads)
+    fastqRs <- normalizePath(rev_reads)
     
     if(length(fastqFs) == 0 ){
         message(paste0("Sample ", fwd_reads, " Has no reads"))
@@ -21,6 +21,8 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
     Fquals <- get_qual_stats(fastqFs, n=n)
     Rquals <- get_qual_stats(fastqRs, n=n)
     
+    stop(status = 1) ##########################################################
+
     #Plot qualities
     gg.Fqual <- Fquals %>% 
         dplyr::select(Cycle, reads, starts_with("Q")) %>% 
