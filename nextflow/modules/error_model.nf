@@ -5,7 +5,7 @@ process ERROR_MODEL {
 
     input:
     val direction
-    tuple val(fcid), path(reads)
+    tuple val(fcid), val(pcr_primers), path(reads)
 
 
     output:   
@@ -25,6 +25,7 @@ process ERROR_MODEL {
     fcid =              "${fcid}"
     reads =             "${reads}"
     direction =         "${direction}"
+    pcr_primers =       "${pcr_primers}"
     
     ## global variables
     projectDir = "$projectDir"
