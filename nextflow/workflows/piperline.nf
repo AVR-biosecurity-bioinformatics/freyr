@@ -234,8 +234,7 @@ workflow PIPERLINE {
     PRIMER_TRIM.out.reads
     | map { meta, reads ->
             def fcid = meta.fcid
-            return tuple(fcid, reads) } 
-    // | groupTuple()
+            return tuple(fcid, meta, reads) } 
     | set { ch_prefilter }
 
     ch_prefilter | view 
