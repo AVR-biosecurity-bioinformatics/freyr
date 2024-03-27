@@ -4,7 +4,15 @@
 
 print(reads)
 print(direction)
-stringr::str_split(reads, pattern = " ") 
+
+reads_list <- 
+    stringr::str_extract_all(
+        reads, 
+        pattern = "\\S+?\\.fastq\\.gz|\\S+?\\.fastq|\\S+?\\.fq\\.gz|\\S+?\\.fq" 
+        ) %>% 
+    unlist()
+
+print(reads_list)
 
 stop(" *** stopped manually *** ") ##########################################
 
