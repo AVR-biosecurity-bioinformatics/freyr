@@ -111,6 +111,8 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
     
     Qualplots <- (gg.Fqual + gg.Rqual) / (gg.Fee + gg.Ree)
 
+    Qualplots
+
     stop(" *** stopped manually *** ") ##########################################
 
     ggsave(Qualplots, paste0(sample_id,"_",target_gene,"_",pcr_primers,"_qualplots.pdf"))
