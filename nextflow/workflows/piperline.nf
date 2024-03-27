@@ -245,7 +245,8 @@ workflow PIPERLINE {
     | map { meta, reads -> 
             [ meta, reads[0] ] }
     | map { meta, read -> 
-            [ meta.fcid, read ]}
+            [ meta.fcid, read ] }
+    | groupTuple( by: 0 )
     | view ()
 
 
