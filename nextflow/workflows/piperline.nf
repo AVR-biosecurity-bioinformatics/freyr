@@ -209,7 +209,7 @@ workflow PIPERLINE {
 
 
     // run SEQ_QC per flow cell 
-    // SEQ_QC ( ch_fcid ) // optional step for testing
+    SEQ_QC ( ch_fcid ) // optional step for testing
 
     /// TODO: develop method to count reads as they move through the pipeline
     //      ie. input file, after splitting, after primer trimming, after qual trim etc.
@@ -236,7 +236,7 @@ workflow PIPERLINE {
 
     /// TODO: Use FILTER_QUALPLOTS_COMBINE to combine plots by fcid and type into one PDF
 
-    
+
 
 
 }
