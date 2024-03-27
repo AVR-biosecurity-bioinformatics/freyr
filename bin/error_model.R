@@ -19,9 +19,9 @@ reads_list <- # convert input reads list from Groovy format to R format
         ) %>% 
     unlist()
 
-input_dir <- normalizePath(input_dir)
-output <- normalizePath(output)
-qc_dir <- normalizePath(qc_dir)
+# input_dir <- normalizePath(input_dir)
+# output <- normalizePath(output)
+# qc_dir <- normalizePath(qc_dir)
 
 if(direction == "forward"){
     # filts <- list.files(input_dir, pattern= "*R1_001.*", full.names = TRUE)
@@ -30,7 +30,7 @@ if(direction == "forward"){
     # filts <- list.files(input_dir, pattern="R2_001.*", full.names = TRUE)
     message(paste0("Modelling reverse read error rates for primers: ", pcr_primers, " and flowcell: ", fcid))
 } else {
-    stop ("Read direction must be 'forward' or 'reverse!")
+    stop ("Read direction must be 'forward' or 'reverse'!")
 }
 # # Subset fastqs to just the relevent pcr primers
 # filts <- filts[str_detect(filts,paste0(pcr_primers, "(-|_|$)"))]
@@ -48,6 +48,7 @@ err <- dada2::learnErrors(
     
 ### TODO: increase nbases or use default (1e8)
 
+print(err)
 
 stop(" *** stopped manually *** ") ##########################################
 

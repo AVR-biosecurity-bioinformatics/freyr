@@ -249,10 +249,10 @@ workflow PIPERLINE {
     | groupTuple( by: [0,1] )
     | set { ch_forward_fcid_reads }
 
-    ch_forward_fcid_reads | view
+    // ch_forward_fcid_reads | view
 
     // error model on forward reads
-    // ERROR_MODEL_F ( ch_forward, ch_forward_fcid_reads )
+    ERROR_MODEL_F ( ch_forward, ch_forward_fcid_reads )
 
     // error model on reverse reads
     // ERROR_MODEL_R ( ch_reverse, READ_FILTER.out.reads )
