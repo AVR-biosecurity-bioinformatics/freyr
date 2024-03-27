@@ -111,21 +111,21 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
     
     Qualplots <- (gg.Fqual + gg.Rqual) / (gg.Fee + gg.Ree)
 
-    # stop(" *** stopped manually *** ") ##########################################
-
     ggsave(Qualplots, paste0(sample_id,"_",target_gene,"_",pcr_primers,"_qualplots.pdf"))
-    
+
+    stop(" *** stopped manually *** ") ##########################################
+
     return(Qualplots)
 }
 
-print(sample_id) 
-print(fwd_reads) 
-print(rev_reads) 
-print(fcid)
-print(target_gene)
-print(pcr_primers)
+# print(sample_id) 
+# print(fwd_reads) 
+# print(rev_reads) 
+# print(fcid)
+# print(target_gene)
+# print(pcr_primers)
 
-stop(" *** stopped manually *** ") ##########################################
+# stop(" *** stopped manually *** ") ##########################################
 
 plot_read_quals2(
     sample_id =     sample_id, 
