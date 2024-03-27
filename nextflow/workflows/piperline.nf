@@ -240,9 +240,12 @@ workflow PIPERLINE {
     ch_reverse = Channel.value( "reverse" )
 
     // split filtered reads into lists of reads per flowcell, also split by direction
+    // forward read channel
     READ_FILTER.out.reads
     | map { meta, reads -> 
             [ meta, reads[0] ] }
+    | map { meta, read -> 
+            [ meta.fcid, read ]}
     | view ()
 
 
