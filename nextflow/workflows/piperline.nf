@@ -234,5 +234,9 @@ workflow PIPERLINE {
 
     FILTER_QUALPLOTS_POST ( READ_FILTER.out.reads )
 
+    /// TODO: Use FILTER_QUALPLOTS_COMBINE to combine plots by fcid and type into one PDF
+
+    
+
 
 }

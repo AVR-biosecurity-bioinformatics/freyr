@@ -1,10 +1,10 @@
-process FILTER_QUALPLOTS {
-    def module_name = "filter_qualplots"
-    tag "$meta.sample_id; $meta.target_gene"
+process FILTER_QUALPLOTS_COMBINE {
+    def module_name = "filter_qualplots_combine"
+    tag "Whole pipeline" 
     // label:  
 
     input:
-    tuple val(meta), path(reads)
+
 
     output:   
     path("*_qualplots.pdf")                 , emit: plots
