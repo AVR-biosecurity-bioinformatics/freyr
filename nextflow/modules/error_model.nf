@@ -9,7 +9,7 @@ process ERROR_MODEL {
 
 
     output:   
-    path "output_file.txt"
+
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
