@@ -247,11 +247,11 @@ workflow PIPERLINE {
     | map { meta, reads -> 
             [ meta.fcid, reads[0] ] }
     | groupTuple( by: 0 )
-    | view ()
+    | set { ch_forward_fcid_reads }
 
 
     // error model on forward reads
-    ERROR_MODEL_F ( ch_forward, READ_FILTER.out.reads )
+    ERROR_MODEL_F ( ch_forward, ch_forward_fcid_reads )
 
     // error model on reverse reads
     // ERROR_MODEL_R ( ch_reverse, READ_FILTER.out.reads )
