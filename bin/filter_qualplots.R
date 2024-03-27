@@ -20,9 +20,7 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
     
     Fquals <- get_qual_stats(fastqFs, n=n)
     Rquals <- get_qual_stats(fastqRs, n=n)
-    
-    stop(" *** stopped manually *** ") ##########################################
-    
+        
     #Plot qualities
     gg.Fqual <- Fquals %>% 
         dplyr::select(Cycle, reads, starts_with("Q")) %>% 
@@ -96,6 +94,8 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
         scale_x_continuous(breaks=seq(0,300,25)) +
         theme(legend.position = "bottom")
     
+    stop(" *** stopped manually *** ") ##########################################
+
     if(!is.null(truncLen)){
         gg.Fqual <- gg.Fqual +
         geom_vline(aes(xintercept=truncLen[1]), colour="blue") +
