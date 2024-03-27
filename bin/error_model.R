@@ -4,11 +4,17 @@
 
 
 ### run R code (from step_errormodel)
-if (direction %in% c("forward","reverse")) { 
-    message(sprintf("Read direction is %s!",direction))
-} else (
+if (!direction %in% c("forward","reverse")) { 
     stop(" Input reads direction needs to be set! ")
-)
+}
+
+if (direction == "forward") {
+    direction_short <- "F"
+} else if (direction == "reverse") {
+    direction_short <- "R"
+} else {
+    stop(" Input reads direction needs to be set! ")
+}
 
 reads_list <- # convert input reads list from Groovy format to R format
     stringr::str_extract_all(
@@ -52,12 +58,12 @@ err <- dada2::learnErrors(
 
 
 #write out errors for diagnostics
-write_csv(as.data.frame(err$trans), paste0(fcid,"_",pcr_primers,"_err",direction,"_observed_transitions.csv"))
-write_csv(as.data.frame(err$err_out), paste0(fcid,"_",pcr_primers,"_err",direction,"_inferred_errors.csv"))
+write_csv(as.data.frame(err$trans), paste0(fcid,"_",pcr_primers,"_err",direction_short,"_observed_transitions.csv"))
+write_csv(as.data.frame(err$err_out), paste0(fcid,"_",pcr_primers,"_err",direction_short,"_inferred_errors.csv"))
 
 
-# ##output error plots to see how well the algorithm modelled the errors in the different runs
-# p1 <- dada2::plotErrors(err, nominalQ = TRUE) + ggtitle(paste0(pcr_primers, " ", fcid, " Forward Reads"))
-# pdf(paste0(qc_dir,"/",fcid,"_", pcr_primers, "_", read,"_errormodel.pdf"), width = 11, height = 8 , paper="a4r")
-#     plot(p1)
-# try(dev.off(), silent=TRUE)
+##output error plots to see how well the algorithm modelled the errors in the different runs
+p1 <- dada2::plotErrors(err, nominalQ = TRUE) + ggtitle(paste0(pcr_primers, " ", fcid, " Forward Reads"))
+pdf(paste0(fcid,"_", pcr_primers, "_", direction_short,"_errormodel.pdf"), width = 11, height = 8 , paper="a4r")
+    plot(p1)
+try(dev.off(), silent=TRUE)
