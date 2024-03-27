@@ -27,9 +27,9 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
         tidyr::pivot_longer(cols = starts_with("Q")) %>% 
         ggplot2::ggplot(aes(x = Cycle, y = value, colour = name)) + 
         geom_line(data = Fquals, aes(y = QMean), color = "#66C2A5") + 
-        geom_line(data = Fquals, aes(y = Q25), color = "#FC8D62", size = 0.25, linetype = "dashed") + 
-        geom_line(data = Fquals, aes(y = Q50), color = "#FC8D62", size = 0.25) + 
-        geom_line(data = Fquals, aes(y = Q75), color = "#FC8D62", size = 0.25, linetype = "dashed") + 
+        geom_line(data = Fquals, aes(y = Q25), color = "#FC8D62", linewidth = 0.25, linetype = "dashed") + 
+        geom_line(data = Fquals, aes(y = Q50), color = "#FC8D62", linewidth = 0.25) + 
+        geom_line(data = Fquals, aes(y = Q75), color = "#FC8D62", linewidth = 0.25, linetype = "dashed") + 
         labs(x = "Reads position", y = "Quality Score") + ylim(c(0, NA))+
         ggtitle(paste0(sample_id," ",target_gene," ",pcr_primers, " Forward Reads")) +
         scale_x_continuous(breaks=seq(0,300,25))
@@ -39,9 +39,9 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
         tidyr::pivot_longer(cols = starts_with("Q")) %>% 
         ggplot2::ggplot(aes(x = Cycle, y = value, colour = name)) + 
         geom_line(data = Rquals, aes(y = QMean), color = "#66C2A5") + 
-        geom_line(data = Rquals, aes(y = Q25), color = "#FC8D62", size = 0.25, linetype = "dashed") + 
-        geom_line(data = Rquals, aes(y = Q50), color = "#FC8D62", size = 0.25) + 
-        geom_line(data = Rquals, aes(y = Q75), color = "#FC8D62", size = 0.25, linetype = "dashed") + 
+        geom_line(data = Rquals, aes(y = Q25), color = "#FC8D62", linewidth = 0.25, linetype = "dashed") + 
+        geom_line(data = Rquals, aes(y = Q50), color = "#FC8D62", linewidth = 0.25) + 
+        geom_line(data = Rquals, aes(y = Q75), color = "#FC8D62", linewidth = 0.25, linetype = "dashed") + 
         labs(x = "Reads position", y = "Quality Score") + ylim(c(0, NA))+
         ggtitle(paste0(sample_id," ",target_gene," ",pcr_primers, " Reverse Reads")) +
         scale_x_continuous(breaks=seq(0,300,25)) +
@@ -111,7 +111,7 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
     
     Qualplots <- (gg.Fqual + gg.Rqual) / (gg.Fee + gg.Ree)
 
-    stop(" *** stopped manually *** ") ##########################################
+    # stop(" *** stopped manually *** ") ##########################################
 
     ggsave(Qualplots, paste0(sample_id,"_",target_gene,"_",pcr_primers,"_qualplots.pdf"))
     
