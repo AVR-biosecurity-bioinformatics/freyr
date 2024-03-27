@@ -242,7 +242,8 @@ workflow PIPERLINE {
     | collectFile ( 
         name: "ch_prefilter.txt", 
         newLine: true, 
-        storeDir: "${projectDir}/output/modules" )
+        storeDir: "${projectDir}/output/modules" 
+        )
 
 
     // // post-filter reads
