@@ -4,12 +4,11 @@ process ERROR_MODEL {
     // label:  
 
     input:
-    val direction
-    tuple val(fcid), val(pcr_primers), path(reads)
+    tuple val(direction), val(fcid), val(pcr_primers), path(reads)
 
 
     output:   
-
+    path("*_errormodel{F,R}.rds"),                  emit: errormodel
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -22,10 +21,10 @@ process ERROR_MODEL {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    fcid =              "${fcid}"
-    reads =             "${reads}"
     direction =         "${direction}"
+    fcid =              "${fcid}"
     pcr_primers =       "${pcr_primers}"
+    reads =             "${reads}"
     
     ## global variables
     projectDir = "$projectDir"

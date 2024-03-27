@@ -52,7 +52,8 @@ err <- dada2::learnErrors(
     
 ### TODO: increase nbases or use default (1e8)
 
-# print(err)
+## save output as .rds file
+saveRDS(err, paste0(fcid,"_",pcr_primers,"_errormodel",direction_short,".rds"))
 
 # stop(" *** stopped manually *** ") ##########################################
 

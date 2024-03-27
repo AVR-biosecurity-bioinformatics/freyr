@@ -236,10 +236,8 @@ workflow PIPERLINE {
 
     /// TODO: Use FILTER_QUALPLOTS_COMBINE to combine plots by fcid and type into one PDF
 
-    ch_forward = Channel.value( "forward" )
-    ch_reverse = Channel.value( "reverse" )
 
-    //// split filtered reads into lists of reads per flowcell, also split by direction
+    //// split filtered reads into lists of reads per flowcell, primers and direction
     // forward read channel
     READ_FILTER.out.reads
     | map { meta, reads -> 
@@ -247,20 +245,20 @@ workflow PIPERLINE {
     | groupTuple( by: [0,1,2] )
     | set { ch_error_input_fwd }
 
-    ch_error_input_fwd | view
+    // ch_error_input_fwd | view
 
-    // // reverse read channel
-    // READ_FILTER.out.reads
-    // | map { meta, reads -> 
-    //         [ meta.fcid, meta.pcr_primers, reads[1] ] }
-    // | groupTuple( by: [0,1] )
-    // | set { ch_reverse_fcid_reads }
+    // reverse read channel
+    READ_FILTER.out.reads
+    | map { meta, reads -> 
+            [ "reverse", meta.fcid, meta.pcr_primers, reads[1] ] }
+    | groupTuple( by: [0,1,2] )
+    | set { ch_error_input_rev }
 
 
     // // error model on forward reads
-    // ERROR_MODEL_F ( ch_forward, ch_error_input_fwd )
+    ERROR_MODEL_F ( ch_error_input_fwd )
 
     // error model on reverse reads
-    // ERROR_MODEL_R ( ch_reverse, READ_FILTER.out.reads )
+    ERROR_MODEL_R ( ch_error_input_rev )
 
 }
