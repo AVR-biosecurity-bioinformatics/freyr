@@ -48,7 +48,7 @@ err <- dada2::learnErrors(
 
 print(err)
 
-stop(" *** stopped manually *** ") ##########################################
+# stop(" *** stopped manually *** ") ##########################################
 
 
 # #write out errors for diagnostics
