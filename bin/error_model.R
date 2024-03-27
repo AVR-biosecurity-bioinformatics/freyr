@@ -4,10 +4,8 @@
 
 
 ### run R code (from step_errormodel)
-if (direction == "forward") { 
-    input_reads <- fwd_reads 
-} else if (direction == "reverse") {
-    input_reads <- rev_reads
+if (direction %in% c("forward","reverse")) { 
+    message(sprintf("Read direction is %s!",direction)
 } else (
     stop(" Input reads direction needs to be set! ")
 )
