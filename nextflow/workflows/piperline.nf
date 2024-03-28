@@ -265,12 +265,16 @@ workflow PIPERLINE {
     READ_FILTER.out.reads
     | map { meta, reads -> 
             [ "forward", meta.fcid, meta.pcr_primers, meta, reads[0] ] }
-    | join ( ERROR_MODEL_F.out.errormodel, by: [0,1,2])
+    | combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2])
     | set { ch_denoise_input_forward }
+
+    READ_FILTER.out.reads
+    | count ()
+    | view { "There are $it items in READ_FILTER.out.reads" }
 
     ch_denoise_input_forward
     | count ()
-    | view ()
+    | view { "There are $it items in ch_denoise_input_forward" }
 
     //// denoise forward reads per flowcell, primer and sample
     // DENOISE_F ( ch_denoise_input_forward )
