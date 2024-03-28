@@ -160,7 +160,7 @@ if (stringr::str_detect(params.data_folder, "single$")) {
         # General pipeline parameters
         threads = 1
     )
-} else { if (stringr::str_detect(params.data_folder, "dual$")) {
+} else { if (stringr::str_detect(params.data_folder, "dual$|full_teph$")) {
     params <- tibble(
         # Primer parameters
         pcr_primers = c("fwhF2-fwhR2nDac", "EIF3LminiF4-EIF3lminiR4"),
