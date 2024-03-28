@@ -3,8 +3,6 @@ process ERROR_MODEL {
     // tag: 
     // label:  
 
-    cpus 4
-
     input:
     tuple val(direction), val(fcid), val(pcr_primers), path(reads)
 
