@@ -265,7 +265,7 @@ workflow PIPERLINE {
     READ_FILTER.out.reads
     | map { meta, reads -> 
             [ "forward", meta.fcid, meta.pcr_primers, meta, reads[0] ] }
-    | join ( ERROR_MODEL_F.out.errormodel, by = [0,1,2])
+    | join ( ERROR_MODEL_F.out.errormodel, by: [0,1,2])
     | view
 
 
