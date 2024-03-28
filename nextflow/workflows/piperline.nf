@@ -268,9 +268,12 @@ workflow PIPERLINE {
     | join ( ERROR_MODEL_F.out.errormodel, by: [0,1,2])
     | set { ch_denoise_input_forward }
 
+    ch_denoise_input_forward
+    | count ()
+    | view ()
 
     //// denoise forward reads per flowcell, primer and sample
-    DENOISE_F ( ch_denoise_input_forward )
+    // DENOISE_F ( ch_denoise_input_forward )
 
 
 
