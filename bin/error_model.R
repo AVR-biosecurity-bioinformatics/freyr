@@ -5,7 +5,7 @@
 
 ### run R code (from step_errormodel)
 if (!direction %in% c("forward","reverse")) { 
-    stop(" Input reads direction needs to be set! ")
+    stop(" Input reads direction needs to be 'forward' or 'reverse'! ")
 }
 
 if (direction == "forward") {
@@ -13,7 +13,7 @@ if (direction == "forward") {
 } else if (direction == "reverse") {
     direction_short <- "R"
 } else {
-    stop(" Input reads direction needs to be set! ")
+    stop(" Input reads direction needs to be 'forward' or 'reverse'! ")
 }
 
 reads_list <- # convert input reads list from Groovy format to R format

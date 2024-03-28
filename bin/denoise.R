@@ -5,7 +5,7 @@
 
 ### run R code
 if (!direction %in% c("forward","reverse")) { 
-    stop(" Input reads direction needs to be set! ")
+    stop(" Input reads direction needs to be 'forward' or 'reverse'! ")
 }
 
 if (direction == "forward") {
@@ -13,7 +13,15 @@ if (direction == "forward") {
 } else if (direction == "reverse") {
     direction_short <- "R"
 } else {
-    stop(" Input reads direction needs to be set! ")
+    stop(" Input reads direction needs to be 'forward' or 'reverse'! ")
+}
+
+if (high_sen_mode == "yes" && !priors == "null") {
+
+} else if (high_sen_mode == "no" && priors == "null") {
+
+} else {
+    stop(" 'high_sen_mode' variable must be 'yes' or 'no'! ")
 }
 
 # alex function
