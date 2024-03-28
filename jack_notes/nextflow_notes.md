@@ -31,6 +31,16 @@ Need to source copy of `.Rprofile` that contains new default library location an
     # run pipeline in preview mode with DAG output
     git pull && nextflow run . --data_folder test_data/dual -preview -with-dag dag.html
 
+    ## run on a complete dataset to check how it copes with big sample # and sizes
+    # copy files
+    cp -r /group/pathogens/IAWS/Projects/Metabarcoding/tephritid_metabarcoding/data /group/pathogens/IAWS/Personal/JackS/nextflow_tests/piperline_nextflow/test_data/full_teph
+    # remove other flow cells
+    rm -r /group/pathogens/IAWS/Personal/JackS/nextflow_tests/piperline_nextflow/test_data/full_teph/K3DVL
+    rm -r /group/pathogens/IAWS/Personal/JackS/nextflow_tests/piperline_nextflow/test_data/full_teph/KMLK4
+    # run pipeline
+    git pull && nextflow run . --data_folder test_data/full_teph
+
+
     R
 
     > source("./jack_notes/.Rprofile")

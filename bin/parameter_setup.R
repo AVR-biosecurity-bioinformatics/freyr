@@ -92,7 +92,7 @@ if (stringr::str_detect(params.data_folder, "single$")) { # this is a temp fix f
             rev_primer_seq = "GTRATWGCHCCDGCTARWACWGG"
             )
 } else {
-    if (stringr::str_detect(params.data_folder, "dual$")) {
+    if (stringr::str_detect(params.data_folder, "dual$|full_teph$")) {
         samdf <- samdf %>%
             mutate(
                 target_gene = "COI;EIF3L",
