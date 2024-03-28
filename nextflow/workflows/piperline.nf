@@ -277,7 +277,7 @@ workflow PIPERLINE {
     | view { "There are $it items in ch_denoise_input_forward" }
 
     //// denoise forward reads per flowcell, primer and sample
-    // DENOISE_F ( ch_denoise_input_forward )
+    DENOISE_F ( ch_denoise_input_forward )
 
 
 
