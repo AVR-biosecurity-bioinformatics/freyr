@@ -36,11 +36,8 @@ if(direction == "forward"){
 } else {
     stop ("Read direction must be 'forward' or 'reverse'!")
 }
-# # Subset fastqs to just the relevent pcr primers
-# filts <- filts[str_detect(filts,paste0(pcr_primers, "(-|_|$)"))]
-# message(paste0(length(filts), " fastq files to process for primers: ", pcr_primers, " and flowcell: ", fcid))
 
-# Learn error rates from a subset of the samples and reads (rather than running self-consist with full dataset)
+## Learn error rates 
 err <- dada2::learnErrors(
         reads_list, 
         multithread = FALSE, 
@@ -55,16 +52,14 @@ err <- dada2::learnErrors(
 ## save output as .rds file
 saveRDS(err, paste0(fcid,"_",pcr_primers,"_errormodel",direction_short,".rds"))
 
-# stop(" *** stopped manually *** ") ##########################################
-
-
-#write out errors for diagnostics
+## write out errors for diagnostics
 write_csv(as.data.frame(err$trans), paste0(fcid,"_",pcr_primers,"_err",direction_short,"_observed_transitions.csv"))
 write_csv(as.data.frame(err$err_out), paste0(fcid,"_",pcr_primers,"_err",direction_short,"_inferred_errors.csv"))
 
-
-##output error plots to see how well the algorithm modelled the errors in the different runs
+## output error plots to see how well the algorithm modelled the errors in the different runs
 p1 <- dada2::plotErrors(err, nominalQ = TRUE) + ggtitle(paste0(pcr_primers, " ", fcid," ",direction," Reads"))
 pdf(paste0(fcid,"_", pcr_primers, "_", direction_short,"_errormodel.pdf"), width = 11, height = 8 , paper="a4r")
     plot(p1)
 try(dev.off(), silent=TRUE)
+
+# stop(" *** stopped manually *** ") ##########################################
