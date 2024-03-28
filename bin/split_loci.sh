@@ -33,8 +33,8 @@ bbduk.sh \
 in=${1} \
 in2=${2} \
 literal=${FWD_PRIMER},${REV_PRIMER} \
-out=reject_R1.fastq.gz \
-out2=reject_R2.fastq.gz \
+out=reject1.fastq.gz \
+out2=reject2.fastq.gz \
 outm=${7}_${6}_${5}_R1.fastq.gz \
 outm2=${7}_${6}_${5}_R2.fastq.gz \
 restrictleft=${KMER_LEN} \
