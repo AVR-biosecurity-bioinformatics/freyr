@@ -59,12 +59,12 @@ include { PRIMER_TRIM                               } from '../modules/primer_tr
 include { READ_FILTER                               } from '../modules/read_filter' 
 include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_PRE  } from '../modules/filter_qualplots'
 include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_POST } from '../modules/filter_qualplots'
-include { ERROR_MODEL as ERROR_MODEL_F      } from '../modules/error_model'
-include { ERROR_MODEL as ERROR_MODEL_R      } from '../modules/error_model'
-// include { DENOISE as DENOISE_F              } from '../modules/denoise'
-// include { DENOISE as DENOISE_R              } from '../modules/denoise'
-// include { DENOISE as DENOISE2_F             } from '../modules/denoise'
-// include { DENOISE as DENOISE2_R             } from '../modules/denoise'
+include { ERROR_MODEL as ERROR_MODEL_F              } from '../modules/error_model'
+include { ERROR_MODEL as ERROR_MODEL_R              } from '../modules/error_model'
+include { DENOISE as DENOISE_F                      } from '../modules/denoise'
+include { DENOISE as DENOISE_R                      } from '../modules/denoise'
+// include { DENOISE as DENOISE2_F                     } from '../modules/denoise'
+// include { DENOISE as DENOISE2_R                     } from '../modules/denoise'
 // include { DADA                              } from '../modules/dada'
 // include { FILTER_SEQTAB                     } from '../modules/filter_seqtab'
 // include { MERGE_SEQTAB                      } from '../modules/merge_seqtab'
@@ -117,7 +117,7 @@ workflow PIPERLINE {
     //
 
 
-    // input samplesheet and loci parameters
+    //// input samplesheet and loci parameters
     PARAMETER_SETUP ( )
     
     /// TODO: remove this bit if it's not used in final pipeline
@@ -146,7 +146,7 @@ workflow PIPERLINE {
 
     // ch_sample_reads | view // check output
 
-    /// parse samplesheets that contain locus-specific parameters
+    //// parse samplesheets that contain locus-specific parameters
     PARAMETER_SETUP.out.samdf_locus
         | flatten ()
         | splitCsv ( header: true )
@@ -179,7 +179,7 @@ workflow PIPERLINE {
 
         // ch_sample_locus_reads | view // check output
 
-    // get names and count of the multiplexed loci used
+    //// get names and count of the multiplexed loci used
     PARAMETER_SETUP.out.samdf_locus
     | flatten ()
     | splitCsv ( header: true )
@@ -194,7 +194,7 @@ workflow PIPERLINE {
     | set { ch_loci_number } // value channel; integer
 
 
-    /// get names of flow cells ('fcid') as channel
+    //// get names of flow cells ('fcid') as channel
     // extract fcid from metadata
     ch_sample_reads 
     | map { meta, reads ->
@@ -238,7 +238,7 @@ workflow PIPERLINE {
 
 
     //// split filtered reads into lists of reads per flowcell, primers and direction
-    // forward read channel
+    //// forward read channel
     READ_FILTER.out.reads
     | map { meta, reads -> 
             [ "forward", meta.fcid, meta.pcr_primers, reads[0] ] }
@@ -247,7 +247,7 @@ workflow PIPERLINE {
 
     // ch_error_input_fwd | view
 
-    // reverse read channel
+    //// reverse read channel
     READ_FILTER.out.reads
     | map { meta, reads -> 
             [ "reverse", meta.fcid, meta.pcr_primers, reads[1] ] }
@@ -255,10 +255,16 @@ workflow PIPERLINE {
     | set { ch_error_input_rev }
 
 
-    // // error model on forward reads
+    //// error model on forward reads
     ERROR_MODEL_F ( ch_error_input_fwd )
 
-    // error model on reverse reads
+    //// error model on reverse reads
     ERROR_MODEL_R ( ch_error_input_rev )
+
+
+    //// denoise forward reads per flowcell, primer and sample
+    // DENOISE_F ( ERROR_MODEL_F.out.errormodel )
+
+
 
 }
