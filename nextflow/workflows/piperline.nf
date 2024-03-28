@@ -261,6 +261,7 @@ workflow PIPERLINE {
     //// error model on reverse reads
     ERROR_MODEL_R ( ch_error_input_rev )
 
+    ERROR_MODEL_F.out.errormodel | view
 
     //// denoise forward reads per flowcell, primer and sample
     // DENOISE_F ( ERROR_MODEL_F.out.errormodel )
