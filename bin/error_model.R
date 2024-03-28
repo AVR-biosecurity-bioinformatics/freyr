@@ -64,7 +64,7 @@ write_csv(as.data.frame(err$err_out), paste0(fcid,"_",pcr_primers,"_err",directi
 
 
 ##output error plots to see how well the algorithm modelled the errors in the different runs
-p1 <- dada2::plotErrors(err, nominalQ = TRUE) + ggtitle(paste0(pcr_primers, " ", fcid, " Forward Reads"))
+p1 <- dada2::plotErrors(err, nominalQ = TRUE) + ggtitle(paste0(pcr_primers, " ", fcid," ",direction," Reads"))
 pdf(paste0(fcid,"_", pcr_primers, "_", direction_short,"_errormodel.pdf"), width = 11, height = 8 , paper="a4r")
     plot(p1)
 try(dev.off(), silent=TRUE)
