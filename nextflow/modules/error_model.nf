@@ -8,8 +8,8 @@ process ERROR_MODEL {
 
 
     output:   
-    path("*_errormodel{F,R}.rds"),                  emit: errormodel
-    path("*_errormodel.pdf"),                        emit: plot
+    tuple val(fcid), val(pcr_primers), path("*_errormodel{F,R}.rds"),   emit: errormodel
+    path("*_errormodel.pdf"),                                           emit: plot
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
