@@ -1,15 +1,13 @@
 process DENOISE {
     def module_name = "denoise"
-    // tag: 
+    tag "$fcid; $pcr_primers; $meta.sample_id"
     // label:  
 
     input:
-    tuple val(direction), val(fcid), val(pcr_primers), path(reads)
-
+    tuple val(direction), val(fcid), val(pcr_primers), val(meta), path(reads), path(errormodel)
 
     output:   
-    path("*_errormodel{F,R}.rds"),                      emit: errormodel
-    path("*_errormodel.pdf"),                           emit: plot
+
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -25,7 +23,9 @@ process DENOISE {
     direction =         "${direction}"
     fcid =              "${fcid}"
     pcr_primers =       "${pcr_primers}"
+    sample_id =         "${meta.sample_id}"
     reads =             "${reads}"
+    errormodel =        "${errormodel}"
     
     ## global variables
     projectDir = "$projectDir"
@@ -36,10 +36,12 @@ process DENOISE {
     sys.source("${projectDir}/bin/process_start.R", envir = .GlobalEnv)
 
     ### run module code
-    sys.source(
-        "${projectDir}/bin/$module_script", # run script
-        envir = .GlobalEnv # this allows import of existing objects like projectDir
-    )
+    #sys.source(
+    #    "${projectDir}/bin/$module_script", # run script
+    #    envir = .GlobalEnv # this allows import of existing objects like projectDir
+    #)
+
+    print(errormodel)
 
     """
 
