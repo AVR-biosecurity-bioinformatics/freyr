@@ -65,20 +65,20 @@ include { DENOISE as DENOISE_F                      } from '../modules/denoise'
 include { DENOISE as DENOISE_R                      } from '../modules/denoise'
 // include { DENOISE as DENOISE2_F                     } from '../modules/denoise'
 // include { DENOISE as DENOISE2_R                     } from '../modules/denoise'
-// include { DADA                              } from '../modules/dada'
-// include { FILTER_SEQTAB                     } from '../modules/filter_seqtab'
-// include { MERGE_SEQTAB                      } from '../modules/merge_seqtab'
-// include { TAX_IDTAXA                        } from '../modules/tax_idtaxa'
-// include { TAX_BLAST                         } from '../modules/tax_blast'
-// include { JOINT_TAX                         } from '../modules/joint_tax'
-// include { MERGE_TAX                         } from '../modules/merge_tax'
-// include { ASSIGNMENT_PLOT                   } from '../modules/assignment_plot'
-// include { TAX_SUMMARY                       } from '../modules/tax_summary'
-// include { PHYLOSEQ_CREATE                   } from '../modules/phyloseq_create'
-// include { PHYLOSEQ_SUMMARY                  } from '../modules/phyloseq_summary'
-// include { ACCUMULATION_CURVE                } from '../modules/accumulation_curve'
-// include { PHYLOSEQ_FILTER                   } from '../modules/phyloseq_filter'
-// include { READ_TRACKING                     } from '../modules/read_tracking'
+// include { DADA                                      } from '../modules/dada'
+// include { FILTER_SEQTAB                             } from '../modules/filter_seqtab'
+// include { MERGE_SEQTAB                              } from '../modules/merge_seqtab'
+// include { TAX_IDTAXA                                } from '../modules/tax_idtaxa'
+// include { TAX_BLAST                                 } from '../modules/tax_blast'
+// include { JOINT_TAX                                 } from '../modules/joint_tax'
+// include { MERGE_TAX                                 } from '../modules/merge_tax'
+// include { ASSIGNMENT_PLOT                           } from '../modules/assignment_plot'
+// include { TAX_SUMMARY                               } from '../modules/tax_summary'
+// include { PHYLOSEQ_CREATE                           } from '../modules/phyloseq_create'
+// include { PHYLOSEQ_SUMMARY                          } from '../modules/phyloseq_summary'
+// include { ACCUMULATION_CURVE                        } from '../modules/accumulation_curve'
+// include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_filter'
+// include { READ_TRACKING                             } from '../modules/read_tracking'
 
 
 
@@ -249,7 +249,7 @@ workflow PIPERLINE {
     READ_FILTER.out.reads
     | map { meta, reads -> 
             [ "reverse", meta.fcid, meta.pcr_primers, reads[1] ] }
-    | groupTuple( by: [0,1,2] )
+    | groupTuple ( by: [0,1,2] )
     | set { ch_error_input_rev }
 
 
@@ -262,22 +262,25 @@ workflow PIPERLINE {
     //// input channel for denoising forward reads
     READ_FILTER.out.reads
     | map { meta, reads -> 
-            [ "forward", meta.fcid, meta.pcr_primers, meta, reads[0] ] }
-    | combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2]) // combine with error model
+            [ "forward", meta.fcid, meta.pcr_primers, reads[0] ] }
+    | groupTuple ( by: [0,1,2] )
+    | combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2] ) // combine with error model
     | set { ch_denoise_input_forward }
 
-    //// input channel for denoising reverse reads
-    READ_FILTER.out.reads
-    | map { meta, reads -> 
-            [ "reverse", meta.fcid, meta.pcr_primers, meta, reads[1] ] }
-    | combine ( ERROR_MODEL_R.out.errormodel, by: [0,1,2]) // combine with error model
-    | set { ch_denoise_input_reverse }
+    ch_denoise_input_forward | view ()
 
-    //// denoise forward reads per flowcell, primer and sample
-    DENOISE_F ( ch_denoise_input_forward )
+    // //// input channel for denoising reverse reads
+    // READ_FILTER.out.reads
+    // | map { meta, reads -> 
+    //         [ "reverse", meta.fcid, meta.pcr_primers, meta, reads[1] ] }
+    // | combine ( ERROR_MODEL_R.out.errormodel, by: [0,1,2] ) // combine with error model
+    // | set { ch_denoise_input_reverse }
 
-    //// denoise forward reads per flowcell, primer and sample
-    DENOISE_R ( ch_denoise_input_reverse )
+    // //// denoise forward reads per flowcell, primer and sample
+    // DENOISE_F ( ch_denoise_input_forward )
+
+    // //// denoise forward reads per flowcell, primer and sample
+    // DENOISE_R ( ch_denoise_input_reverse )
 
 
 
