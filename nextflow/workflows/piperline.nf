@@ -237,15 +237,13 @@ workflow PIPERLINE {
     /// TODO: Use FILTER_QUALPLOTS_COMBINE to combine plots by fcid and type into one PDF
 
 
-    //// split filtered reads into lists of reads per flowcell, primers and direction
+    ///// split filtered reads into lists of reads per flowcell, primers and direction
     //// forward read channel
     READ_FILTER.out.reads
     | map { meta, reads -> 
             [ "forward", meta.fcid, meta.pcr_primers, reads[0] ] }
     | groupTuple( by: [0,1,2] )
     | set { ch_error_input_fwd }
-
-    // ch_error_input_fwd | view
 
     //// reverse read channel
     READ_FILTER.out.reads
@@ -261,23 +259,25 @@ workflow PIPERLINE {
     //// error model on reverse reads
     ERROR_MODEL_R ( ch_error_input_rev )
 
-    /// input channel for denoising
+    //// input channel for denoising forward reads
     READ_FILTER.out.reads
     | map { meta, reads -> 
             [ "forward", meta.fcid, meta.pcr_primers, meta, reads[0] ] }
-    | combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2])
+    | combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2]) // combine with error model
     | set { ch_denoise_input_forward }
 
+    //// input channel for denoising reverse reads
     READ_FILTER.out.reads
-    | count ()
-    | view { "There are $it items in READ_FILTER.out.reads" }
-
-    ch_denoise_input_forward
-    | count ()
-    | view { "There are $it items in ch_denoise_input_forward" }
+    | map { meta, reads -> 
+            [ "reverse", meta.fcid, meta.pcr_primers, meta, reads[1] ] }
+    | combine ( ERROR_MODEL_R.out.errormodel, by: [0,1,2]) // combine with error model
+    | set { ch_denoise_input_reverse }
 
     //// denoise forward reads per flowcell, primer and sample
     DENOISE_F ( ch_denoise_input_forward )
+
+    //// denoise forward reads per flowcell, primer and sample
+    DENOISE_R ( ch_denoise_input_reverse )
 
 
 

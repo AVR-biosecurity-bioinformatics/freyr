@@ -36,12 +36,10 @@ process DENOISE {
     sys.source("${projectDir}/bin/process_start.R", envir = .GlobalEnv)
 
     ### run module code
-    #sys.source(
-    #    "${projectDir}/bin/$module_script", # run script
-    #    envir = .GlobalEnv # this allows import of existing objects like projectDir
-    #)
-
-    print(errormodel)
+    sys.source(
+        "${projectDir}/bin/$module_script", # run script
+        envir = .GlobalEnv # this allows import of existing objects like projectDir
+    )
 
     """
 
