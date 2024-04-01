@@ -63,10 +63,10 @@ include { ERROR_MODEL as ERROR_MODEL_F              } from '../modules/error_mod
 include { ERROR_MODEL as ERROR_MODEL_R              } from '../modules/error_model'
 include { DENOISE as DENOISE_F                      } from '../modules/denoise'
 include { DENOISE as DENOISE_R                      } from '../modules/denoise'
-include { DADA_PRIORS as DADA_PRIORS_F              } from '../modules/dada_priors'
-include { DADA_PRIORS as DADA_PRIORS_R              } from '../modules/dada_priors'
-include { DENOISE as DENOISE2_F                     } from '../modules/denoise'
-include { DENOISE as DENOISE2_R                     } from '../modules/denoise'
+// include { DADA_PRIORS as DADA_PRIORS_F              } from '../modules/dada_priors'
+// include { DADA_PRIORS as DADA_PRIORS_R              } from '../modules/dada_priors'
+// include { DENOISE as DENOISE2_F                     } from '../modules/denoise'
+// include { DENOISE as DENOISE2_R                     } from '../modules/denoise'
 // include { DADA                                      } from '../modules/dada'
 // include { FILTER_SEQTAB                             } from '../modules/filter_seqtab'
 // include { MERGE_SEQTAB                              } from '../modules/merge_seqtab'
@@ -292,7 +292,7 @@ workflow PIPERLINE {
     // DENOISE_R ( ch_denoise_input_reverse, ch_high_sen_mode, ch_nopriors )
 
     /// Condition for processing reads in "high sensitivity mode", ie. with priors and pseudo-pooled 2nd denoising
-    if ( params.high_sensitivity ) {
+    // if ( params.high_sensitivity ) {
         //// get priors for forward reads
         // DADA_PRIORS_F ( ch_denoise_input_forward )
 
@@ -304,7 +304,7 @@ workflow PIPERLINE {
     
         //// run pseudo-pooled 2nd denoising with priors on reverse reads
         // DENOISE2_R ( ch_denoise_input_reverse, ch_high_sen_mode )
-    }
+    // }
 
 
 
