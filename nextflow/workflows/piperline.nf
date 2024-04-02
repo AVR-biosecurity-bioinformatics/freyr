@@ -264,7 +264,7 @@ workflow PIPERLINE {
     //// input channel for denoising forward reads
     READ_FILTER.out.reads
     | map { meta, reads -> 
-            [ "forward", meta.fcid, meta.pcr_primers, meta, reads[0], "null" ] }
+            [ "forward", meta.fcid, meta.pcr_primers, meta, reads[0], "." ] }
     | combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2] ) // combine with error model
     | set { ch_denoise_input_forward }
 
@@ -273,7 +273,7 @@ workflow PIPERLINE {
     //// input channel for denoising reverse reads
     READ_FILTER.out.reads
     | map { meta, reads -> 
-            [ "reverse", meta.fcid, meta.pcr_primers, meta, reads[1], "null" ] }
+            [ "reverse", meta.fcid, meta.pcr_primers, meta, reads[1], "." ] }
     | combine ( ERROR_MODEL_R.out.errormodel, by: [0,1,2] ) // combine with error model
     | set { ch_denoise_input_reverse }
 
