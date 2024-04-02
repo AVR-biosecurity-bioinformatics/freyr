@@ -23,8 +23,6 @@ process DADA_PRIORS {
     direction =         "${direction}"
     fcid =              "${fcid}"
     pcr_primers =       "${pcr_primers}"
-    sample_id =         "${meta.sample_id}"
-    reads =             "${reads}"
     priors =            "${priors}"
     
     ## global variables
