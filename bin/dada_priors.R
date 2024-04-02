@@ -6,7 +6,7 @@
 priors_list <- # convert input reads list from Groovy format to R format
     stringr::str_extract_all(
         priors, 
-        pattern = "\\.rds" 
+        pattern = "\\S+?\\.rds" 
         ) %>% 
     unlist()
 
