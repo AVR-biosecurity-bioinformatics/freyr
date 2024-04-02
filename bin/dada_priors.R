@@ -18,7 +18,8 @@ for (i in 1:length(priors_list)) {
 }
 
 # as.data.frame(priors_seq)
-as_tibble(priors_seq)
+saveRDS(priors_seq, "priors.rds")
+as_tibble(priors_seq, .name_repair = "unique")
 #print(priors_seq)
 
 
