@@ -4,11 +4,7 @@
 
 
 ### run R code
-if (!direction %in% c("forward","reverse")) { 
-    stop(" Input reads direction needs to be 'forward' or 'reverse'! ")
-}
-
-if (direction == "forward") {
+if (direction == "forward") { # recode read direction as "F" or "R"
     direction_short <- "F"
 } else if (direction == "reverse") {
     direction_short <- "R"
@@ -16,12 +12,33 @@ if (direction == "forward") {
     stop(" Input reads direction needs to be 'forward' or 'reverse'! ")
 }
 
-if (high_sen_mode == "yes" && !priors == "null") {
+if (n_pass == "first" && priors == "null") { # first pass condition; no priors
+    priors <- NA
 
-} else if (high_sen_mode == "no" && priors == "null") {
+    # run dada2
+    dada2::dada(
+    derep = reads, 
+    err = errormodel, 
+    multithread = FALSE, 
+    priors = priors, 
+    selfConsist = FALSE, 
+    pool = FALSE, 
+    verbose = TRUE
+)
+} else if (n_pass == "second" && !priors == "null") { # second pass condition; priors included
 
+    # run dada2
+    dada2::dada(
+    derep = reads, 
+    err = errormodel, 
+    multithread = FALSE, 
+    priors = priors, 
+    selfConsist = FALSE, 
+    pool = FALSE, 
+    verbose = TRUE
+)
 } else {
-    stop(" 'high_sen_mode' variable must be 'yes' or 'no'! ")
+    stop(" 'n_pass' variable must be 'first' or 'second', and priors must be 'null' or defined! ")
 }
 
 # alex function
@@ -39,13 +56,3 @@ if (high_sen_mode == "yes" && !priors == "null") {
 #     multithread=FALSE
 # )
 
-# direct function from dada2
-dada2::dada(
-    derep = reads, 
-    err = errormodel, 
-    multithread = FALSE, 
-    priors = priors, 
-    selfConsist = FALSE, 
-    pool = FALSE, 
-    verbose = TRUE
-)

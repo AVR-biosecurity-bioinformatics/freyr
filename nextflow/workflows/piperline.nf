@@ -277,33 +277,65 @@ workflow PIPERLINE {
     | combine ( ERROR_MODEL_R.out.errormodel, by: [0,1,2] ) // combine with error model
     | set { ch_denoise_input_reverse }
 
-    // high sensitivity mode condition
-    if ( params.high_sensitivity ) {
-        ch_high_sen_mode = Channel.value ( "yes" )
-    } else { 
-        ch_high_sen_mode = Channel.value ( "no" )
-        ch_nopriors = Channel.empty()
-    }
+
+    //// first pass of denoising (always done)
+    // channels for denoising
+    ch_firstpass = Channel.value ( "first" )
+    ch_secondpass = Channel.value ( "second" )
+    ch_nopriors = Channel.empty()
 
     //// denoise forward reads per flowcell, primer and sample
-    DENOISE_F ( ch_denoise_input_forward, ch_high_sen_mode, ch_nopriors )
+    DENOISE_F ( ch_denoise_input_forward, ch_firstpass, ch_nopriors )
+    
+    //// denoise forward reads per flowcell, primer and sample
+    // DENOISE_R ( ch_denoise_input_reverse, ch_high_sen_mode, ch_nopriors )
+
+    // high sensitivity mode condition
+    if ( params.high_sensitivity ) { // run prior extraction and second pass denoising
+        //// get priors for forward reads
+        // DADA_PRIORS_F ( ch_denoise_input_forward )
+        
+        // DADA_PRIORS_F.out | set { ch_priors_f }
+
+        //// get priors for reverse reads
+        // DADA_PRIORS_R ( ch_denoise_input_forward )
+
+        // DADA_PRIORS_R.out | set { ch_priors_r }
+
+        //// run pseudo-pooled 2nd denoising with priors on forward reads
+        // DENOISE2_F ( ch_denoise_input_forward, ch_secondpass, ch_priors_f )
+
+        //// run pseudo-pooled 2nd denoising with priors on reverse reads
+        // DENOISE2_R ( ch_denoise_input_reverse, ch_secondpass, ch_priors_r )
+
+        //// set output as input for merging and seqtab construction
+
+
+    } else { // don't run second denoising
+
+        //// set output as input for merging and seqtab construction
+
+    }
+
+
+
+
 
     //// denoise forward reads per flowcell, primer and sample
     // DENOISE_R ( ch_denoise_input_reverse, ch_high_sen_mode, ch_nopriors )
 
     /// Condition for processing reads in "high sensitivity mode", ie. with priors and pseudo-pooled 2nd denoising
-    // if ( params.high_sensitivity ) {
-        //// get priors for forward reads
-        // DADA_PRIORS_F ( ch_denoise_input_forward )
-
-        //// get priors for reverse reads
-        // DADA_PRIORS_R ( ch_denoise_input_forward )
-
-        //// run pseudo-pooled 2nd denoising with priors on forward reads
-        // DENOISE2_F ( ch_denoise_input_forward, ch_high_sen_mode, ch_priors_f )
     
-        //// run pseudo-pooled 2nd denoising with priors on reverse reads
-        // DENOISE2_R ( ch_denoise_input_reverse, ch_high_sen_mode )
+    
+    
+
+    
+    
+
+    
+    
+    
+    
     // }
 
 

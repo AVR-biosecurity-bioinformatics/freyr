@@ -5,7 +5,7 @@ process DENOISE {
 
     input:
     tuple val(direction), val(fcid), val(pcr_primers), val(meta), path(reads), path(errormodel)
-    val(high_sen_mode)
+    val(n_pass)
     val(priors)
 
     output:   
@@ -28,7 +28,7 @@ process DENOISE {
     sample_id =         "${meta.sample_id}"
     reads =             "${reads}"
     errormodel =        "${errormodel}"
-    high_sen_mode =     "${high_sen_mode}"
+    n_pass =            "${n_pass}"
     priors =            "${priors}"
     
     ## global variables
