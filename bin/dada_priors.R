@@ -30,5 +30,5 @@ priors <- priors_tibble %>%
 
 saveRDS(priors, paste0(fcid,"_",pcr_primers,"_priors",direction_short,".rds"))
 
-stop(" *** stopped manually *** ") ##########################################
+# stop(" *** stopped manually *** ") ##########################################
 

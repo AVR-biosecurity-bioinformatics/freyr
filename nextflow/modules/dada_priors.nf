@@ -7,7 +7,7 @@ process DADA_PRIORS {
     tuple val(direction), val(fcid), val(pcr_primers), path(priors)
 
     output:   
-
+    path("*_priors{F,R}.rds"),              emit: priors
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
