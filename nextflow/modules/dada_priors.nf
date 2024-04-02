@@ -1,4 +1,4 @@
-process DENOISE {
+process DADA_PRIORS {
     def module_name = "dada_priors"
     tag "$fcid; $pcr_primers"
     // label:  
