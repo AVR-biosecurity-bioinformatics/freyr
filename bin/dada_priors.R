@@ -3,32 +3,32 @@
 # check variables defined
 
 ### run R code
-priors_list <- # convert input reads list from Groovy format to R format
+if (direction == "forward") { # recode read direction as "F" or "R"
+    direction_short <- "F"
+} else if (direction == "reverse") {
+    direction_short <- "R"
+} else {
+    stop(" Input reads direction needs to be 'forward' or 'reverse'! ")
+}
+## parse priors list
+priors_list <- # convert input priors .rds file list from Groovy format to R format
     stringr::str_extract_all(
         priors, 
         pattern = "\\S+?\\.rds" 
         ) %>% 
     unlist()
-
-priors_seq <- list()
-
-for (i in 1:length(priors_list)) {
-    seq_tmp <- readRDS(priors_list[i])$sequence
-    priors_seq <- append(priors_seq, list(seq_tmp))
+priors_tibble <- tibble() # new tibble
+for (i in 1:length(priors_list)) { # loop through .rds files, adding distinct sequences to tibble
+    seq <- unlist(priors_seq[i]) %>% as_tibble_col(column_name = "sequence") %>% distinct()
+    priors_tibble <- rbind(priors_tibble, seq)
 }
+# keep only sequences that appear more than once (ie. are in more than one sample)
+priors <- priors_tibble %>% 
+            group_by(sequence) %>% 
+            summarise(n = n()) %>% 
+            filter(n>1)
 
-# as.data.frame(priors_seq)
-saveRDS(priors_seq, "priors.rds")
-as_tibble(priors_seq, .name_repair = "unique")
-#print(priors_seq)
-
-
-## keep only duplicates within each component
-
-## keep only duplicates between components (ie. unnest then check dupes)
+saveRDS(priors, paste0(fcid,"_",pcr_primers,"_priors",direction_short,".rds"))
 
 stop(" *** stopped manually *** ") ##########################################
 
-# Only keep the ones that appear across more than one sample
-priors <- unlist(process$priors)
-priors <- names(table(priors))[table(priors) > 1]
