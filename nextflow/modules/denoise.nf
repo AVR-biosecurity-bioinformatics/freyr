@@ -9,7 +9,7 @@ process DENOISE {
     val(priors)
 
     output:   
-
+    path("*_dada{1,2}{F,R}.rds")
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

@@ -13,30 +13,36 @@ if (direction == "forward") { # recode read direction as "F" or "R"
 }
 
 if (n_pass == "first" && priors == "null") { # first pass condition; no priors
-    priors <- NA
+    priors <- character(0)
 
     # run dada2
-    dada2::dada(
-    derep = reads, 
-    err = errormodel, 
-    multithread = FALSE, 
-    priors = priors, 
-    selfConsist = FALSE, 
-    pool = FALSE, 
-    verbose = TRUE
-)
+    dada_output <- dada2::dada(
+                        derep = reads, 
+                        err = errormodel, 
+                        multithread = FALSE, 
+                        priors = priors, 
+                        selfConsist = FALSE, 
+                        pool = FALSE, 
+                        verbose = TRUE
+                    )
+
+    saveRDS(dada_output, paste0(sample_id,"_",pcr_primers,"_dada1",direction_short".rds"))
+
 } else if (n_pass == "second" && !priors == "null") { # second pass condition; priors included
 
     # run dada2
-    dada2::dada(
-    derep = reads, 
-    err = errormodel, 
-    multithread = FALSE, 
-    priors = priors, 
-    selfConsist = FALSE, 
-    pool = FALSE, 
-    verbose = TRUE
-)
+    dada_output <- dada2::dada(
+                        derep = reads, 
+                        err = errormodel, 
+                        multithread = FALSE, 
+                        priors = priors, 
+                        selfConsist = FALSE, 
+                        pool = FALSE, 
+                        verbose = TRUE
+                    )
+
+    saveRDS(dada_output, paste0(sample_id,"_",pcr_primers,"_dada2",direction_short".rds"))
+
 } else {
     stop(" 'n_pass' variable must be 'first' or 'second', and priors must be 'null' or defined! ")
 }
