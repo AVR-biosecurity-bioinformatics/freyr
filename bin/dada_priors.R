@@ -17,8 +17,8 @@ for (i in 1:length(priors_list)) {
     priors_seq <- append(priors_seq, list(seq_tmp))
 }
 
-as.data.frame(priors_seq)
-
+# as.data.frame(priors_seq)
+class(priors_seq)
 print(priors_seq)
 
 
