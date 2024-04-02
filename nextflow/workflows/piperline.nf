@@ -315,7 +315,7 @@ workflow PIPERLINE {
         // ch_priors_f | view ()
 
         //// get priors for reverse reads
-        DADA_PRIORS_R ( ch_denoise_input_reverse )
+        DADA_PRIORS_R ( ch_priors_r_pre )
 
         DADA_PRIORS_R.out | set { ch_priors_r }
 
