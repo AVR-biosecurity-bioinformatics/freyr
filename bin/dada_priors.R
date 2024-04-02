@@ -19,7 +19,7 @@ priors_list <- # convert input priors .rds file list from Groovy format to R for
     unlist()
 priors_tibble <- tibble() # new tibble
 for (i in 1:length(priors_list)) { # loop through .rds files, adding distinct sequences to tibble
-    seq <- unlist(priors_seq[i]) %>% as_tibble_col(column_name = "sequence") %>% distinct()
+    seq <- unlist(priors_list[i]) %>% as_tibble_col(column_name = "sequence") %>% distinct()
     priors_tibble <- rbind(priors_tibble, seq)
 }
 # keep only sequences that appear more than once (ie. are in more than one sample)
