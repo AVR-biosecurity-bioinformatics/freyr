@@ -268,7 +268,7 @@ workflow PIPERLINE {
     | combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2] ) // combine with error model
     | set { ch_denoise_input_forward }
 
-    ch_denoise_input_forward | view ()
+    // ch_denoise_input_forward | view ()
 
     //// input channel for denoising reverse reads
     READ_FILTER.out.reads
