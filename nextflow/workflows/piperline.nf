@@ -288,7 +288,7 @@ workflow PIPERLINE {
     DENOISE_F ( ch_denoise_input_forward, ch_firstpass, ch_nopriors )
     
     //// denoise forward reads per flowcell, primer and sample
-    // DENOISE_R ( ch_denoise_input_reverse, ch_high_sen_mode, ch_nopriors )
+    DENOISE_R ( ch_denoise_input_reverse, ch_high_sen_mode, ch_nopriors )
 
     // high sensitivity mode condition
     if ( params.high_sensitivity ) { // run prior extraction and second pass denoising
