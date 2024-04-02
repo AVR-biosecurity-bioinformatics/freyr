@@ -3,7 +3,16 @@
 # check variables defined
 
 ### run R code
+priors_list <- # convert input reads list from Groovy format to R format
+    stringr::str_extract_all(
+        priors, 
+        pattern = "\\.rds" 
+        ) %>% 
+    unlist()
 
+print(priors_list)
+
+stop(" *** stopped manually *** ") ##########################################
 
 readRDS(denoise_fwd[stringr::str_detect(denoise_fwd,  paste0(.x,"_dada1F.rds"))])$sequence
 

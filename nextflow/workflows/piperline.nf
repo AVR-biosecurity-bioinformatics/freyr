@@ -297,11 +297,10 @@ workflow PIPERLINE {
         | map { direction, fcid, pcr_primers, meta, reads, priors ->
                 [ direction, fcid, pcr_primers, priors ] }
         | groupTuple ( by: [0,1,2] )
-        | view ()
+        | set { ch_priors_f_pre }
 
-        
         //// get priors for forward reads
-        // DADA_PRIORS_F ( ch_denoise_input_forward )
+        DADA_PRIORS_F ( ch_priors_f_pre )
         
         // DADA_PRIORS_F.out | set { ch_priors_f }
 

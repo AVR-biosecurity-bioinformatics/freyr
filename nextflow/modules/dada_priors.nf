@@ -4,7 +4,7 @@ process DADA_PRIORS {
     // label:  
 
     input:
-    tuple val(direction), val(fcid), val(pcr_primers), val(meta), path(reads), path(priors)
+    tuple val(direction), val(fcid), val(pcr_primers), path(priors)
 
     output:   
 
