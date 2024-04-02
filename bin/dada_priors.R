@@ -28,6 +28,8 @@ priors <- priors_tibble %>%
             summarise(n = n()) %>% 
             filter(n>1)
 
+print(priors)
+
 saveRDS(priors, paste0(fcid,"_",pcr_primers,"_priors",direction_short,".rds"))
 
 # stop(" *** stopped manually *** ") ##########################################
