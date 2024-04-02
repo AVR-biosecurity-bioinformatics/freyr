@@ -310,19 +310,22 @@ workflow PIPERLINE {
         //// get priors for forward reads
         DADA_PRIORS_F ( ch_priors_f_pre )
         
-        DADA_PRIORS_F.out | set { ch_priors_f }
+        /// combine with forward read data channel
+        READ_FILTER.out.reads
+        | map { meta, reads -> 
+                [ "forward", meta.fcid, meta.pcr_primers, meta, reads[0] ] }
+        | combine ( DADA_PRIORS_F.out.priors, by: [0,1,2] )
+        | set { ch_denoise2_input_forward }
 
-        // ch_priors_f | view ()
+        ch_denoise2_input_forward | view()
 
         //// get priors for reverse reads
-        DADA_PRIORS_R ( ch_priors_r_pre )
+        // DADA_PRIORS_R ( ch_priors_r_pre )
 
-        DADA_PRIORS_R.out | set { ch_priors_r }
-
-        ch_priors_r | view ()
+        // DADA_PRIORS_R.out | set { ch_priors_r }
 
         //// run pseudo-pooled 2nd denoising with priors on forward reads
-        // DENOISE2_F ( ch_denoise_input_forward, ch_secondpass, ch_priors_f )
+        // DENOISE2_F ( ch_denoise2_input_forward, ch_secondpass, ch_priors_f )
 
         //// run pseudo-pooled 2nd denoising with priors on reverse reads
         // DENOISE2_R ( ch_denoise_input_reverse, ch_secondpass, ch_priors_r )
