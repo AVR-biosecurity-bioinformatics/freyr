@@ -264,7 +264,7 @@ workflow PIPERLINE {
     //// input channel for denoising forward reads
     READ_FILTER.out.reads
     | map { meta, reads -> 
-            [ "forward", meta.fcid, meta.pcr_primers, meta, reads[0] ] }
+            [ "forward", meta.fcid, meta.pcr_primers, meta, reads[0], null ] }
     | combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2] ) // combine with error model
     | set { ch_denoise_input_forward }
 
@@ -273,7 +273,7 @@ workflow PIPERLINE {
     //// input channel for denoising reverse reads
     READ_FILTER.out.reads
     | map { meta, reads -> 
-            [ "reverse", meta.fcid, meta.pcr_primers, meta, reads[1] ] }
+            [ "reverse", meta.fcid, meta.pcr_primers, meta, reads[1], null ] }
     | combine ( ERROR_MODEL_R.out.errormodel, by: [0,1,2] ) // combine with error model
     | set { ch_denoise_input_reverse }
 
@@ -282,13 +282,12 @@ workflow PIPERLINE {
     // channels for denoising
     ch_firstpass = Channel.value ( "first" )
     ch_secondpass = Channel.value ( "second" )
-    ch_nopriors = Channel.value( "null" )
 
     //// denoise forward reads per flowcell, primer and sample
-    DENOISE_F ( ch_denoise_input_forward, ch_firstpass, ch_nopriors )
+    DENOISE_F ( ch_denoise_input_forward, ch_firstpass )
     
     //// denoise forward reads per flowcell, primer and sample
-    DENOISE_R ( ch_denoise_input_reverse, ch_firstpass, ch_nopriors )
+    DENOISE_R ( ch_denoise_input_reverse, ch_firstpass )
 
     // high sensitivity mode condition
     if ( params.high_sensitivity ) { // run prior extraction and second pass denoising
@@ -317,18 +316,16 @@ workflow PIPERLINE {
         | combine ( DADA_PRIORS_F.out.priors, by: [0,1,2] )
         | set { ch_denoise2_input_forward }
 
-        ch_denoise2_input_forward | view()
-
         //// get priors for reverse reads
         // DADA_PRIORS_R ( ch_priors_r_pre )
 
         // DADA_PRIORS_R.out | set { ch_priors_r }
 
         //// run pseudo-pooled 2nd denoising with priors on forward reads
-        // DENOISE2_F ( ch_denoise2_input_forward, ch_secondpass, ch_priors_f )
+        DENOISE2_F ( ch_denoise2_input_forward, ch_secondpass )
 
         //// run pseudo-pooled 2nd denoising with priors on reverse reads
-        // DENOISE2_R ( ch_denoise_input_reverse, ch_secondpass, ch_priors_r )
+        // DENOISE2_R ( ch_denoise_input_reverse, ch_secondpass )
 
         //// set output as input for merging and seqtab construction
 

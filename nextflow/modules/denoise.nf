@@ -4,9 +4,8 @@ process DENOISE {
     // label:  
 
     input:
-    tuple val(direction), val(fcid), val(pcr_primers), val(meta), path(reads), path(errormodel)
+    tuple val(direction), val(fcid), val(pcr_primers), val(meta), path(reads), path(errormodel), path(priors)
     val(n_pass)
-    val(priors)
 
     output:
     tuple val(direction), val(fcid), val(pcr_primers), val(meta), path(reads), path("*_dada{1,2}{F,R}.rds"), emit: priors
