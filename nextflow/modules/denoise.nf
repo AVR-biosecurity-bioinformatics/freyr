@@ -8,8 +8,8 @@ process DENOISE {
     val(n_pass)
     val(priors)
 
-    output:   
-    path("*_dada{1,2}{F,R}.rds")
+    output:
+    tuple val(direction), val(fcid), val(pcr_primers), val(meta), path(reads), path("*_dada{1,2}{F,R}.rds"), emit: priors
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

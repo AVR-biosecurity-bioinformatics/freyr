@@ -287,7 +287,7 @@ workflow PIPERLINE {
     //// denoise forward reads per flowcell, primer and sample
     DENOISE_F ( ch_denoise_input_forward, ch_firstpass, ch_nopriors )
 
-    DENOISE_F.out | view ()
+    DENOISE_F.out.priors | view ()
     
     //// denoise forward reads per flowcell, primer and sample
     DENOISE_R ( ch_denoise_input_reverse, ch_firstpass, ch_nopriors )
