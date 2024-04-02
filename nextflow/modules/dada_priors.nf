@@ -4,12 +4,10 @@ process DADA_PRIORS {
     // label:  
 
     input:
-    tuple val(direction), val(fcid), val(pcr_primers), val(meta), path(reads), path(errormodel)
-    val(n_pass)
-    val(priors)
+    tuple val(direction), val(fcid), val(pcr_primers), val(meta), path(reads), path(priors)
 
     output:   
-    path("*_dada{1,2}{F,R}.rds")
+
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -27,8 +25,6 @@ process DADA_PRIORS {
     pcr_primers =       "${pcr_primers}"
     sample_id =         "${meta.sample_id}"
     reads =             "${reads}"
-    errormodel =        "${errormodel}"
-    n_pass =            "${n_pass}"
     priors =            "${priors}"
     
     ## global variables

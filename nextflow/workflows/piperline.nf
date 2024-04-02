@@ -286,14 +286,20 @@ workflow PIPERLINE {
 
     //// denoise forward reads per flowcell, primer and sample
     DENOISE_F ( ch_denoise_input_forward, ch_firstpass, ch_nopriors )
-
-    DENOISE_F.out.priors | view ()
     
     //// denoise forward reads per flowcell, primer and sample
     DENOISE_R ( ch_denoise_input_reverse, ch_firstpass, ch_nopriors )
 
     // high sensitivity mode condition
     if ( params.high_sensitivity ) { // run prior extraction and second pass denoising
+        //// group priors for each read file
+        DENOISE_F.out.priors
+        | map { direction, fcid, pcr_primers, meta, reads, priors ->
+                [ direction, fcid, pcr_primers, priors ] }
+        | groupTuple ( by: [0,1,2] )
+        | view ()
+
+        
         //// get priors for forward reads
         // DADA_PRIORS_F ( ch_denoise_input_forward )
         
