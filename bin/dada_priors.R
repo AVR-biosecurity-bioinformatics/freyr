@@ -32,11 +32,12 @@ print(priors_tibble)
 priors <- priors_tibble %>% 
             group_by(sequence) %>% 
             summarise(n = n()) %>% 
-            filter(n>1)
+            filter(n>1) %>%
+            pull(sequence)
 
 print(priors)
 
 saveRDS(priors, paste0(fcid,"_",pcr_primers,"_priors",direction_short,".rds"))
 
-stop(" *** stopped manually *** ") ##########################################
+# stop(" *** stopped manually *** ") ##########################################
 
