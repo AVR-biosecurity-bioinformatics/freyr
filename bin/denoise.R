@@ -1,9 +1,10 @@
 #!/usr/bin/env Rscript
 
 # check variables defined
-print(errormodel)
 
 ### run R code
+errormodel <- readRDS(errormodel) # import error model
+
 if (direction == "forward") { # recode read direction as "F" or "R"
     direction_short <- "F"
 } else if (direction == "reverse") {
