@@ -63,8 +63,8 @@ include { ERROR_MODEL as ERROR_MODEL_F              } from '../modules/error_mod
 include { ERROR_MODEL as ERROR_MODEL_R              } from '../modules/error_model'
 include { DENOISE as DENOISE_F                      } from '../modules/denoise'
 include { DENOISE as DENOISE_R                      } from '../modules/denoise'
-// include { DADA_PRIORS as DADA_PRIORS_F              } from '../modules/dada_priors'
-// include { DADA_PRIORS as DADA_PRIORS_R              } from '../modules/dada_priors'
+include { DADA_PRIORS as DADA_PRIORS_F              } from '../modules/dada_priors'
+include { DADA_PRIORS as DADA_PRIORS_R              } from '../modules/dada_priors'
 // include { DENOISE as DENOISE2_F                     } from '../modules/denoise'
 // include { DENOISE as DENOISE2_R                     } from '../modules/denoise'
 // include { DADA                                      } from '../modules/dada'
@@ -286,6 +286,8 @@ workflow PIPERLINE {
 
     //// denoise forward reads per flowcell, primer and sample
     DENOISE_F ( ch_denoise_input_forward, ch_firstpass, ch_nopriors )
+
+    DENOISE_F.out | view ()
     
     //// denoise forward reads per flowcell, primer and sample
     DENOISE_R ( ch_denoise_input_reverse, ch_firstpass, ch_nopriors )
