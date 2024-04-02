@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 # check variables defined
-
+print(errormodel)
 
 ### run R code
 if (direction == "forward") { # recode read direction as "F" or "R"
