@@ -13,7 +13,7 @@ if (direction == "forward") { # recode read direction as "F" or "R"
     stop(" Input reads direction needs to be 'forward' or 'reverse'! ")
 }
 
-if ( priors %in% c("null",".") ) { priors <- "null" } # define as null
+if ( priors %in% c("null","/.") ) { priors <- "null" } # define as null
 
 if (n_pass == "first" && priors == "null") { # first pass condition; no priors
     priors <- character(0)
