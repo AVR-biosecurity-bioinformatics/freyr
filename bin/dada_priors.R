@@ -17,7 +17,14 @@ for (i in 1:length(priors_list)) {
     priors_seq <- append(priors_seq, list(seq_tmp))
 }
 
+as.data.frame(priors_seq)
+
 print(priors_seq)
+
+
+## keep only duplicates within each component
+
+## keep only duplicates between components (ie. unnest then check dupes)
 
 stop(" *** stopped manually *** ") ##########################################
 
