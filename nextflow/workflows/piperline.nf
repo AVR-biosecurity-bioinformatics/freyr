@@ -302,7 +302,9 @@ workflow PIPERLINE {
         //// get priors for forward reads
         DADA_PRIORS_F ( ch_priors_f_pre )
         
-        // DADA_PRIORS_F.out | set { ch_priors_f }
+        DADA_PRIORS_F.out | set { ch_priors_f }
+
+        ch_priors_f | view ()
 
         //// get priors for reverse reads
         // DADA_PRIORS_R ( ch_denoise_input_forward )
