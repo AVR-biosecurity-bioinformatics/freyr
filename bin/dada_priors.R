@@ -18,8 +18,8 @@ for (i in 1:length(priors_list)) {
 }
 
 # as.data.frame(priors_seq)
-class(priors_seq)
-print(priors_seq)
+as_tibble(priors_seq)
+#print(priors_seq)
 
 
 ## keep only duplicates within each component

@@ -18,15 +18,14 @@ Need to source copy of `.Rprofile` that contains new default library location an
     ## this includes cutadapt
     module load Nextflow R/4.2.0-foss-2021b pkgconfig/1.5.1-GCCcore-9.3.0-Python-3.8.2 GDAL/3.3.0-foss-2021a BLAST+/2.11.0-gompi-2020a Pandoc/2.5 ZeroMQ/4.3.2-GCCcore-9.3.0 cutadapt/3.4-GCCcore-10.3.0
 
-    ##this includes git for interactive jobs (two-line)
-    module load git/2.21.0-GCCcore-8.2.0-nodocs
-    module load Nextflow R/4.2.0-foss-2021b pkgconfig/1.5.1-GCCcore-9.3.0-Python-3.8.2 GDAL/3.3.0-foss-2021a BLAST+/2.11.0-gompi-2020a Pandoc/2.5 ZeroMQ/4.3.2-GCCcore-9.3.0 
+    ##this includes git for interactive jobs (one-line)
+    module load git/2.21.0-GCCcore-8.2.0-nodocs && module load Nextflow R/4.2.0-foss-2021b pkgconfig/1.5.1-GCCcore-9.3.0-Python-3.8.2 GDAL/3.3.0-foss-2021a BLAST+/2.11.0-gompi-2020a Pandoc/2.5 ZeroMQ/4.3.2-GCCcore-9.3.0 
     
     # pull and run latest pipeline (from project directory)
     git pull && nextflow run .
 
     # run pipeline with "dual" test data (default is "single")
-    git pull && nextflow run . --data_folder test_data/dual
+    git pull && nextflow run . -resume --data_folder test_data/dual
 
     # run pipeline in preview mode with DAG output
     git pull && nextflow run . --data_folder test_data/dual -preview -with-dag dag.html
