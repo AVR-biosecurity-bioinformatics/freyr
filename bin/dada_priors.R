@@ -14,9 +14,10 @@ priors_seq <- list()
 
 for (i in 1:length(priors_list)) {
     seq_tmp <- readRDS(priors_list[i])$sequence
-    print(seq_tmp)
-    #priors_seq <- append(priors_seq, list(seq_tmp))
+    priors_seq <- append(priors_seq, list(seq_tmp))
 }
+
+print(priors_seq)
 
 stop(" *** stopped manually *** ") ##########################################
 
