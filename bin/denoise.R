@@ -26,7 +26,7 @@ if (n_pass == "first" && priors == "null") { # first pass condition; no priors
                         verbose = TRUE
                     )
 
-    saveRDS(dada_output, paste0(sample_id,"_",pcr_primers,"_dada1",direction_short".rds"))
+    saveRDS(dada_output, paste0(sample_id,"_",pcr_primers,"_dada1",direction_short,".rds"))
 
 } else if (n_pass == "second" && !priors == "null") { # second pass condition; priors included
 
@@ -41,7 +41,7 @@ if (n_pass == "first" && priors == "null") { # first pass condition; no priors
                         verbose = TRUE
                     )
 
-    saveRDS(dada_output, paste0(sample_id,"_",pcr_primers,"_dada2",direction_short".rds"))
+    saveRDS(dada_output, paste0(sample_id,"_",pcr_primers,"_dada2",direction_short,".rds"))
 
 } else {
     stop(" 'n_pass' variable must be 'first' or 'second', and priors must be 'null' or defined! ")
