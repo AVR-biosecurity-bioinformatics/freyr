@@ -10,11 +10,15 @@ priors_list <- # convert input reads list from Groovy format to R format
         ) %>% 
     unlist()
 
-print(priors_list)
+priors_seq <- list()
+
+for (i in 1:length(priors_list)) {
+    seq_tmp <- readRDS(priors_list[i])$sequence
+    print(seq_tmp)
+    #priors_seq <- append(priors_seq, list(seq_tmp))
+}
 
 stop(" *** stopped manually *** ") ##########################################
-
-readRDS(denoise_fwd[stringr::str_detect(denoise_fwd,  paste0(.x,"_dada1F.rds"))])$sequence
 
 # Only keep the ones that appear across more than one sample
 priors <- unlist(process$priors)
