@@ -22,7 +22,7 @@ print(priors_list)
 
 priors_tibble <- tibble() # new tibble
 for (i in 1:length(priors_list)) { # loop through .rds files, adding distinct sequences to tibble
-    seq <- unlist(priors_list[i]) %>% as_tibble_col(column_name = "sequence") %>% distinct()
+    seq <- readRDS(priors_list[i]) %>% as_tibble_col(column_name = "sequence") %>% distinct()
     priors_tibble <- rbind(priors_tibble, seq)
 }
 
