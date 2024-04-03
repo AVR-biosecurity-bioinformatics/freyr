@@ -61,13 +61,13 @@ include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_PRE  } from '../modules/filter_qu
 include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_POST } from '../modules/filter_qualplots'
 include { ERROR_MODEL as ERROR_MODEL_F              } from '../modules/error_model'
 include { ERROR_MODEL as ERROR_MODEL_R              } from '../modules/error_model'
-include { DENOISE as DENOISE1_F                      } from '../modules/denoise'
-include { DENOISE as DENOISE1_R                      } from '../modules/denoise'
+include { DENOISE as DENOISE1_F                     } from '../modules/denoise'
+include { DENOISE as DENOISE1_R                     } from '../modules/denoise'
 include { DADA_PRIORS as DADA_PRIORS_F              } from '../modules/dada_priors'
 include { DADA_PRIORS as DADA_PRIORS_R              } from '../modules/dada_priors'
 include { DENOISE as DENOISE2_F                     } from '../modules/denoise'
 include { DENOISE as DENOISE2_R                     } from '../modules/denoise'
-// include { DADA                                      } from '../modules/dada'
+include { DADA_MERGEREADS                           } from '../modules/dada_mergereads'
 // include { FILTER_SEQTAB                             } from '../modules/filter_seqtab'
 // include { MERGE_SEQTAB                              } from '../modules/merge_seqtab'
 // include { TAX_IDTAXA                                } from '../modules/tax_idtaxa'
@@ -112,7 +112,7 @@ include { DENOISE as DENOISE2_R                     } from '../modules/denoise'
 
 workflow PIPERLINE {
 
-    ch_versions = Channel.empty()
+    // ch_versions = Channel.empty()
 
     //
     // Create input channels
@@ -330,7 +330,6 @@ workflow PIPERLINE {
         //// run pseudo-pooled 2nd denoising with priors on reverse reads
         DENOISE2_R ( ch_denoise2_input_reverse, ch_secondpass )
 
-        //// set output as input for merging and seqtab construction
         /// join F and R denoise2 outputs
         // prepare forward reads
         DENOISE2_F.out.seq
@@ -349,9 +348,7 @@ workflow PIPERLINE {
         | combine ( ch_seq_reverse, by: [0,1,2,3] ) 
         | set { ch_seq_combined }
 
-    } else { // don't run second denoising
-
-        //// set output as input for merging and seqtab construction
+    } else { // don't run second denoising step with priors
         /// join F and R DENOISE1 outputs
         // prepare forward reads
         DENOISE1_F.out.seq
@@ -371,26 +368,7 @@ workflow PIPERLINE {
         | set { ch_seq_combined }
     }
 
-
-
-
-
-    //// denoise forward reads per flowcell, primer and sample
-    // DENOISE_R ( ch_denoise_input_reverse, ch_high_sen_mode, ch_nopriors )
-
-    /// Condition for processing reads in "high sensitivity mode", ie. with priors and pseudo-pooled 2nd denoising
-    
-    
-    
-
-    
-    
-
-    
-    
-    
-    
-    // }
+    DADA_MERGEREADS ( ch_seq_combined )
 
 
 

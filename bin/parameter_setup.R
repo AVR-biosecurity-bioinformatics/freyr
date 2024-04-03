@@ -306,6 +306,8 @@ default_params <- tibble::tibble(
 # Make sure all columns are present and same type using a special bind operation
 params_df <- new_bind(default_params %>% filter(FALSE), params) 
 
+write_csv(file = "params.csv", x = params_df)
+
 # Check columns arent NA
 for(i in 1:ncol(default_params)){
     param_to_check <- colnames(default_params)[i]
@@ -324,7 +326,6 @@ for(i in 1:ncol(default_params)){
     }
 }
 
-write_csv(file = "params.csv", x = params_df)
 
 ### these checks work in a single R session but break in Nextflow
 
