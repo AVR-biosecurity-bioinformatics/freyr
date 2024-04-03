@@ -4,7 +4,7 @@ process DADA_MERGEREADS {
     // label:  
 
     input:
-    tuple val(sample_id), val(fcid), val(pcr_primers), val(meta), path(seqF), path(seqR)
+    tuple val(sample_id), val(fcid), val(pcr_primers), val(meta), path(reads), path(seqs)
 
     output:
 
@@ -22,9 +22,10 @@ process DADA_MERGEREADS {
     sample_id =         "${meta.sample_id}"
     fcid =              "${fcid}"
     pcr_primers =       "${pcr_primers}"
-    reads =             "${reads}"
-    seqF =              "${seqF}"
-    seqR =              "${seqR}"
+    reads_F =           "${reads[0]}"
+    reads_R =           "${reads[1]}"
+    seqs_F =            "${seqs[0]}"
+    seqs_R =            "${seqs[1]}"
     
     ## global variables
     projectDir = "$projectDir"

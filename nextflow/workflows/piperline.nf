@@ -352,25 +352,27 @@ workflow PIPERLINE {
                     [ file(seqF, checkIfExists: true), file(seqR, checkIfExists: true) ] ] }
         | set { ch_seq_combined }
 
-        ch_seq_combined | view ()
-
     } else { // don't run second denoising step with priors
         /// join F and R DENOISE1 outputs
         // prepare forward reads
         DENOISE1_F.out.seq
-        | map { direction, fcid, pcr_primers, meta, reads, seqF ->
-                [ meta.sample_id, fcid, pcr_primers, meta, reads, seqF ] }
+        | map { direction, fcid, pcr_primers, meta, readsF, seqF ->
+                [ meta.sample_id, fcid, pcr_primers, meta, readsF, seqF ] }
         | set { ch_seq_forward }
 
         // prepare reverse reads
         DENOISE1_R.out.seq
-        | map { direction, fcid, pcr_primers, meta, reads, seqR ->
-                [ meta.sample_id, fcid, pcr_primers, meta, reads, seqR ] }
+        | map { direction, fcid, pcr_primers, meta, readsR, seqR ->
+                [ meta.sample_id, fcid, pcr_primers, meta, readsR, seqR ] }
         | set { ch_seq_reverse }
 
         // join
         ch_seq_forward
-        | combine ( ch_seq_reverse, by: [0,1,2,3,4] ) 
+        | combine ( ch_seq_reverse, by: [0,1,2,3] ) 
+        | map { sample_id, fcid, pcr_primers, meta, readsF, seqF, readsR, seqR ->
+                [ sample_id, fcid, pcr_primers, meta, 
+                    [ file(readsF, checkIfExists: true), file(readsR, checkIfExists: true) ], 
+                    [ file(seqF, checkIfExists: true), file(seqR, checkIfExists: true) ] ] }
         | set { ch_seq_combined }
     }
 
