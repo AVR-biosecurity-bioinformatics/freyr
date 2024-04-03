@@ -178,6 +178,8 @@ if (stringr::str_detect(params.data_folder, "single$")) {
         # ASV filtering
         asv_min_length = c(195, 207),
         asv_max_length = c(215, 227),
+        high_sensitivity = TRUE,
+        concat_unmerged = FALSE,
         genetic_code = c("SGC4", "SGC0"),
         coding = c(TRUE, TRUE),
         phmm = c(paste0(projectDir,"/reference/Bactrocera_COI.rds"), paste0(projectDir,"/reference/Bactrocera_EIF3L.rds")),
