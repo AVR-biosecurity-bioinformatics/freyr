@@ -336,8 +336,13 @@ workflow PIPERLINE {
         //// run pseudo-pooled 2nd denoising with priors on reverse reads
         DENOISE2_R ( ch_denoise2_input_reverse, ch_secondpass )
 
-        //// set output as input for merging and seqtab construction
+        DENOISE2_F.out.seq | view ()
 
+        //// set output as input for merging and seqtab construction
+        // join F and R denoise2 outputs
+        // DENOISE2_F.out.seq
+        // | map { direction, fcid, pcr_primers, meta, reads, seq ->
+        //         [ fcid, pcr_primers, meta ] }
 
     } else { // don't run second denoising
 
