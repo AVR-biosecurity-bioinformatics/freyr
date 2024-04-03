@@ -61,7 +61,7 @@ if ( concat_unmerged ) {
 
 print(mergers)
 
-stop(" *** stopped manually *** ") ##########################################
+# stop(" *** stopped manually *** ") ##########################################
 
 #Construct sequence table
 seqtab <- dada2::makeSequenceTable(mergers)
