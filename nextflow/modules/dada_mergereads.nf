@@ -22,6 +22,7 @@ process DADA_MERGEREADS {
     sample_id =         "${meta.sample_id}"
     fcid =              "${fcid}"
     pcr_primers =       "${pcr_primers}"
+    reads =             "${reads}"
     seqF =              "${seqF}"
     seqR =              "${seqR}"
     

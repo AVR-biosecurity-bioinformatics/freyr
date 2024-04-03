@@ -334,18 +334,20 @@ workflow PIPERLINE {
         // prepare forward reads
         DENOISE2_F.out.seq
         | map { direction, fcid, pcr_primers, meta, reads, seqF ->
-                [ meta.sample_id, fcid, pcr_primers, meta, seqF ] }
+                [ meta.sample_id, fcid, pcr_primers, meta, readsF, seqF ] }
         | set { ch_seq_forward }
+
+        ch_seq_forward | view ()
 
         // prepare reverse reads
         DENOISE2_R.out.seq
         | map { direction, fcid, pcr_primers, meta, reads, seqR ->
-                [ meta.sample_id, fcid, pcr_primers, meta, seqR ] }
+                [ meta.sample_id, fcid, pcr_primers, meta, readsR, seqR ] }
         | set { ch_seq_reverse }
 
         // join
         ch_seq_forward
-        | combine ( ch_seq_reverse, by: [0,1,2,3] ) 
+        | combine ( ch_seq_reverse, by: [0,1,2,3,4] ) 
         | set { ch_seq_combined }
 
     } else { // don't run second denoising step with priors
@@ -353,22 +355,22 @@ workflow PIPERLINE {
         // prepare forward reads
         DENOISE1_F.out.seq
         | map { direction, fcid, pcr_primers, meta, reads, seqF ->
-                [ meta.sample_id, fcid, pcr_primers, meta, seqF ] }
+                [ meta.sample_id, fcid, pcr_primers, meta, reads, seqF ] }
         | set { ch_seq_forward }
 
         // prepare reverse reads
         DENOISE1_R.out.seq
         | map { direction, fcid, pcr_primers, meta, reads, seqR ->
-                [ meta.sample_id, fcid, pcr_primers, meta, seqR ] }
+                [ meta.sample_id, fcid, pcr_primers, meta, reads, seqR ] }
         | set { ch_seq_reverse }
 
         // join
         ch_seq_forward
-        | combine ( ch_seq_reverse, by: [0,1,2,3] ) 
+        | combine ( ch_seq_reverse, by: [0,1,2,3,4] ) 
         | set { ch_seq_combined }
     }
 
-    DADA_MERGEREADS ( ch_seq_combined )
+    // DADA_MERGEREADS ( ch_seq_combined )
 
 
 

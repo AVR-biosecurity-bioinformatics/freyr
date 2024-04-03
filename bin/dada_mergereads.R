@@ -10,3 +10,6 @@ seqR <- readRDS(seqR)
 print(seqR)
 
 stop(" *** stopped manually *** ") ##########################################
+
+
+mergePairs()
