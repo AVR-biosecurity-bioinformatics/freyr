@@ -211,7 +211,7 @@ workflow PIPERLINE {
 
 
     // run SEQ_QC per flow cell 
-    // SEQ_QC ( ch_fcid ) // optional step for testing
+    SEQ_QC ( ch_fcid ) // optional step for testing
 
     /// TODO: develop method to count reads as they move through the pipeline
     //      ie. input file, after splitting, after primer trimming, after qual trim etc.
@@ -219,22 +219,16 @@ workflow PIPERLINE {
     //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( ch_sample_locus_reads ) 
 
-    // SPLIT_LOCI.out.reads.view()
-
     //// trim primer sequences from the start and end of reads
     PRIMER_TRIM ( SPLIT_LOCI.out.reads )
-
-    // PRIMER_TRIM.out.reads.view()
 
     //// filter reads using dada2 and input parameters
     READ_FILTER ( PRIMER_TRIM.out.reads )
 
-    // READ_FILTER.out.reads.view()
-
     //// create plots of read quality pre- and post-filtering, per flowcell (optional)
-    // FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
+    FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
 
-    // FILTER_QUALPLOTS_POST ( READ_FILTER.out.reads )
+    FILTER_QUALPLOTS_POST ( READ_FILTER.out.reads )
 
     /// TODO: Use FILTER_QUALPLOTS_COMBINE to combine plots by fcid and type into one PDF
 
