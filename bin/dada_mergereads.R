@@ -59,6 +59,18 @@ if ( concat_unmerged ) {
     mergers <- mergers_rescued
 }
 
-saveRDS(mergers, paste0(sample_id,"_",pcr_primers,"_mergers.rds"))
+# Construct sequence table for fcid x pcr_primers from merged reads per sample
+seqtab <- dada2::makeSequenceTable(mergers)
+saveRDS(seqtab, paste0(sample_id,"_",pcr_primers,"_seqtab.rds"))
+
+# # Track reads
+# getN <- function(x) sum(getUniques(x))
+# res <- cbind(sapply(dadaFs, getN), sapply(dadaRs, getN), sapply(mergers, getN)) %>%
+#     magrittr::set_colnames(c("dadaFs", "dadaRs", "merged")) %>%
+#     as.data.frame() %>%
+#     rownames_to_column("sample_id") %>%
+#     dplyr::mutate(sample_id = stringr::str_remove(basename(sample_id), pattern="_S[0-9]+_R[1-2]_.*$")) %>%
+#     as_tibble()
+# return(res)
 
 # stop(" *** stopped manually *** ") ##########################################
