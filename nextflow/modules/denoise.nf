@@ -16,6 +16,7 @@ process DENOISE {
 
     script:
     def module_script = "${module_name}.R"
+    def priors_path = priors.name != "NO_FILE" ? priors.name : "NO_FILE"
     """
     #!/usr/bin/env Rscript
 

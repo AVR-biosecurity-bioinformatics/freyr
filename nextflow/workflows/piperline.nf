@@ -266,8 +266,8 @@ workflow PIPERLINE {
     | map { meta, reads -> 
             [ "forward", meta.fcid, meta.pcr_primers, meta, reads[0] ] }
     | combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2] ) // combine with error model
-    | map { direction, fcid, pcr_primers, meta, reads, errormodel -> // add null path for priors
-            [ direction, fcid, pcr_primers, meta, reads, errormodel, "/." ] }
+    | map { direction, fcid, pcr_primers, meta, reads, errormodel -> // add empty file path for priors
+            [ direction, fcid, pcr_primers, meta, reads, errormodel, "$projectDir/assets/NO_FILE" ] }
     | set { ch_denoise_input_forward }
 
     // ch_denoise_input_forward | view ()
@@ -277,8 +277,8 @@ workflow PIPERLINE {
     | map { meta, reads -> 
             [ "reverse", meta.fcid, meta.pcr_primers, meta, reads[1] ] }
     | combine ( ERROR_MODEL_R.out.errormodel, by: [0,1,2] ) // combine with error model
-    | map { direction, fcid, pcr_primers, meta, reads, errormodel -> // add null path for priors
-            [ direction, fcid, pcr_primers, meta, reads, errormodel, "/." ] }
+    | map { direction, fcid, pcr_primers, meta, reads, errormodel -> // add empty file path for priors
+            [ direction, fcid, pcr_primers, meta, reads, errormodel, "$projectDir/assets/NO_FILE" ] }
     | set { ch_denoise_input_reverse }
 
 
