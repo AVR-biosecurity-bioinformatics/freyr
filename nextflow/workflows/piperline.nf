@@ -165,7 +165,7 @@ workflow PIPERLINE {
                 'seq_id','seq_date','analysis_method','notes',
                 'base','max_primer_mismatch','read_min_length','read_max_length',
                 'read_max_ee','read_trunc_length','read_trim_left','read_trim_right',
-                'asv_min_length','asv_max_length','genetic_code','coding',
+                'asv_min_length','asv_max_length','high_sensitivity','concat_unmerged','genetic_code','coding',
                 'phmm','idtaxa_db','ref_fasta','idtaxa_confidence',
                 'run_blast','blast_min_identity','blast_min_coverage','target_kingdom',
                 'target_phylum','target_class','target_order','target_family',

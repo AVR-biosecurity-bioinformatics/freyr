@@ -26,6 +26,7 @@ process DADA_MERGEREADS {
     reads_R =           "${reads[1]}"
     seqs_F =            "${seqs[0]}"
     seqs_R =            "${seqs[1]}"
+    concat_unmerged =   "${meta.concat_unmerged}"
     
     ## global variables
     projectDir = "$projectDir"
