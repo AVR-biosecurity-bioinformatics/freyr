@@ -376,7 +376,12 @@ workflow PIPERLINE {
         | set { ch_seq_combined }
     }
 
+    // merge paired-end reads per sample
     DADA_MERGEREADS ( ch_seq_combined )
+
+    // format for FILTER_SEQTAB
+    DADA_MERGEREADS.out.mergers 
+    | view ()
 
 
 

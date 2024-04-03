@@ -7,6 +7,7 @@ process DADA_MERGEREADS {
     tuple val(sample_id), val(fcid), val(pcr_primers), val(meta), path(reads), path(seqs)
 
     output:
+    tuple val(sample_id), val(fcid), val(pcr_primers), val(meta), path("*_mergers.rds"), emit: mergers
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

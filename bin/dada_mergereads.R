@@ -59,11 +59,6 @@ if ( concat_unmerged ) {
     mergers <- mergers_rescued
 }
 
-print(mergers)
+saveRDS(mergers, paste0(sample_id,"_",pcr_primers,"_mergers.rds"))
 
 # stop(" *** stopped manually *** ") ##########################################
-
-#Construct sequence table
-seqtab <- dada2::makeSequenceTable(mergers)
-saveRDS(seqtab, paste0(sample_id,"_",pcr_primers,"_seqtab.rds"))
-
