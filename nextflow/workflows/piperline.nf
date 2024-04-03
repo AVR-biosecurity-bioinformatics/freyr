@@ -337,8 +337,6 @@ workflow PIPERLINE {
                 [ meta.sample_id, fcid, pcr_primers, meta, readsF, seqF ] }
         | set { ch_seq_forward }
 
-        ch_seq_forward | view ()
-
         // prepare reverse reads
         DENOISE2_R.out.seq
         | map { direction, fcid, pcr_primers, meta, readsR, seqR ->
@@ -347,8 +345,10 @@ workflow PIPERLINE {
 
         // join
         ch_seq_forward
-        | combine ( ch_seq_reverse, by: [0,1,2,3,4] ) 
+        | combine ( ch_seq_reverse, by: [0,1,2,3] ) 
         | set { ch_seq_combined }
+
+        ch_seq_combined | view ()
 
     } else { // don't run second denoising step with priors
         /// join F and R DENOISE1 outputs
