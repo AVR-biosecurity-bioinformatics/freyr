@@ -4,10 +4,9 @@ process FILTER_SEQTAB {
     // label:  
 
     input:
-    tuple val(sample_id), val(fcid), val(pcr_primers), val(meta), path(reads), path(seqs)
+    tuple val(fcid), val(pcr_primers), path(mergers)
 
     output:
-    tuple val(sample_id), val(fcid), val(pcr_primers), val(meta), path("*_mergers.rds"), emit: mergers
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -20,14 +19,9 @@ process FILTER_SEQTAB {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    sample_id =         "${meta.sample_id}"
     fcid =              "${fcid}"
     pcr_primers =       "${pcr_primers}"
-    reads_F =           "${reads[0]}"
-    reads_R =           "${reads[1]}"
-    seqs_F =            "${seqs[0]}"
-    seqs_R =            "${seqs[1]}"
-    concat_unmerged =   "${meta.concat_unmerged}"
+    mergers =           "${mergers}"
     
     ## global variables
     projectDir = "$projectDir"

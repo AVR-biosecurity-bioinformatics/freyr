@@ -68,7 +68,7 @@ include { DADA_PRIORS as DADA_PRIORS_R              } from '../modules/dada_prio
 include { DENOISE as DENOISE2_F                     } from '../modules/denoise'
 include { DENOISE as DENOISE2_R                     } from '../modules/denoise'
 include { DADA_MERGEREADS                           } from '../modules/dada_mergereads'
-// include { FILTER_SEQTAB                             } from '../modules/filter_seqtab'
+include { FILTER_SEQTAB                             } from '../modules/filter_seqtab'
 // include { MERGE_SEQTAB                              } from '../modules/merge_seqtab'
 // include { TAX_IDTAXA                                } from '../modules/tax_idtaxa'
 // include { TAX_BLAST                                 } from '../modules/tax_blast'
@@ -376,7 +376,7 @@ workflow PIPERLINE {
         | set { ch_seq_combined }
     }
 
-    // merge paired-end reads per sample
+    //// merge paired-end reads per sample
     DADA_MERGEREADS ( ch_seq_combined )
 
     // format for FILTER_SEQTAB
@@ -384,7 +384,10 @@ workflow PIPERLINE {
     | map { sample_id, fcid, pcr_primers, meta, mergers ->
             [ fcid, pcr_primers, mergers ] } 
     | groupTuple ( by: [0,1] )
-    | view ()
+    | set { ch_mergers }
+
+    //// merge sequences (ASVs) into seqtab per fcid x primer pair and filter
+    FILTER_SEQTAB ( ch_mergers )
 
 
 
