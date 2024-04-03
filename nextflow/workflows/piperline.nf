@@ -333,7 +333,7 @@ workflow PIPERLINE {
         /// join F and R denoise2 outputs
         // prepare forward reads
         DENOISE2_F.out.seq
-        | map { direction, fcid, pcr_primers, meta, reads, seqF ->
+        | map { direction, fcid, pcr_primers, meta, readsF, seqF ->
                 [ meta.sample_id, fcid, pcr_primers, meta, readsF, seqF ] }
         | set { ch_seq_forward }
 
@@ -341,7 +341,7 @@ workflow PIPERLINE {
 
         // prepare reverse reads
         DENOISE2_R.out.seq
-        | map { direction, fcid, pcr_primers, meta, reads, seqR ->
+        | map { direction, fcid, pcr_primers, meta, readsR, seqR ->
                 [ meta.sample_id, fcid, pcr_primers, meta, readsR, seqR ] }
         | set { ch_seq_reverse }
 
