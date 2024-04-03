@@ -337,7 +337,7 @@ workflow PIPERLINE {
         DENOISE2_R ( ch_denoise2_input_reverse, ch_secondpass )
 
         //// set output as input for merging and seqtab construction
-
+        
 
     } else { // don't run second denoising
 
