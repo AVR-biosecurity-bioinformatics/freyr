@@ -4,13 +4,11 @@
 
 ### run R code
 seqs_F <- readRDS(seqs_F)
-print(seqs_F)
 
 seqs_R <- readRDS(seqs_R)
-print(seqs_R)
 
 ## merge pairs, keeping unmerged reads only if concat_unmerged is FALSE
-if ( params.concat_unmerged ) {
+if ( concat_unmerged ) {
     mergers <- dada2::mergePairs(
                         dadaF = seqs_F,
                         derepF = reads_F,
@@ -37,7 +35,7 @@ if ( params.concat_unmerged ) {
 ## TODO: write out unmerged reads? (pull from functions.R)
 
 ## concatenate unmerged reads
-if ( params.concat_unmerged ) {
+if ( concat_unmerged ) {
     message("concat_unmerged is set to TRUE - Concatenating unmerged forward and reverse reads")
     mergers_rescued <- mergers
     for(i in 1:length(mergers)) {
