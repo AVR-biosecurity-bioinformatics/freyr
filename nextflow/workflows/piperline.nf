@@ -380,7 +380,10 @@ workflow PIPERLINE {
     DADA_MERGEREADS ( ch_seq_combined )
 
     // format for FILTER_SEQTAB
-    DADA_MERGEREADS.out.mergers 
+    DADA_MERGEREADS.out.mergers
+    | map { sample_id, fcid, pcr_primers, meta, mergers ->
+            [ fcid, pcr_primers, mergers ] } 
+    | groupTuple ( by: [0,1] )
     | view ()
 
 

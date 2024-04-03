@@ -1,6 +1,6 @@
 process DADA_MERGEREADS {
     def module_name = "dada_mergereads"
-    // tag "$fcid; $pcr_primers"
+    tag "$meta.sample_id; $pcr_primers"
     // label:  
 
     input:
