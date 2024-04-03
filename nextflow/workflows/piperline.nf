@@ -314,8 +314,6 @@ workflow PIPERLINE {
         DADA_PRIORS_F ( ch_priors_f_pre )
         
         /// combine with forward read data channel
-        ch_denoise_input_forward | view 
-
         ch_denoise_input_forward
         | map { direction, fcid, pcr_primers, meta, reads, errormodel, priors -> // remove null priors
                 [ direction, fcid, pcr_primers, meta, reads, errormodel ] }
