@@ -61,8 +61,8 @@ include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_PRE  } from '../modules/filter_qu
 include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_POST } from '../modules/filter_qualplots'
 include { ERROR_MODEL as ERROR_MODEL_F              } from '../modules/error_model'
 include { ERROR_MODEL as ERROR_MODEL_R              } from '../modules/error_model'
-include { DENOISE as DENOISE_F                      } from '../modules/denoise'
-include { DENOISE as DENOISE_R                      } from '../modules/denoise'
+include { DENOISE as DENOISE1_F                      } from '../modules/denoise'
+include { DENOISE as DENOISE1_R                      } from '../modules/denoise'
 include { DADA_PRIORS as DADA_PRIORS_F              } from '../modules/dada_priors'
 include { DADA_PRIORS as DADA_PRIORS_R              } from '../modules/dada_priors'
 include { DENOISE as DENOISE2_F                     } from '../modules/denoise'
@@ -288,23 +288,23 @@ workflow PIPERLINE {
     ch_secondpass = Channel.value ( "second" )
 
     //// denoise forward reads per flowcell, primer and sample
-    DENOISE_F ( ch_denoise_input_forward, ch_firstpass )
+    DENOISE1_F ( ch_denoise_input_forward, ch_firstpass )
     
     //// denoise forward reads per flowcell, primer and sample
-    DENOISE_R ( ch_denoise_input_reverse, ch_firstpass )
+    DENOISE1_R ( ch_denoise_input_reverse, ch_firstpass )
 
     // high sensitivity mode condition
     if ( params.high_sensitivity ) { // run prior extraction and second pass denoising
         //// group priors for each read file
         /// forward reads
-        DENOISE_F.out.seq
+        DENOISE1_F.out.seq
         | map { direction, fcid, pcr_primers, meta, reads, priors ->
                 [ direction, fcid, pcr_primers, priors ] }
         | groupTuple ( by: [0,1,2] )
         | set { ch_priors_f_pre }
 
         /// reverse reads
-        DENOISE_R.out.seq
+        DENOISE1_R.out.seq
         | map { direction, fcid, pcr_primers, meta, reads, priors ->
                 [ direction, fcid, pcr_primers, priors ] }
         | groupTuple ( by: [0,1,2] )
@@ -353,12 +353,28 @@ workflow PIPERLINE {
         // join
         ch_seq_forward
         | combine ( ch_seq_reverse, by: [0,1,2,3] ) 
-        | view ()
+        | set { ch_seq_combined }
 
     } else { // don't run second denoising
 
         //// set output as input for merging and seqtab construction
+        /// join F and R DENOISE1 outputs
+        // prepare forward reads
+        DENOISE1_F.out.seq
+        | map { direction, fcid, pcr_primers, meta, reads, seqF ->
+                [ meta.sample_id, fcid, pcr_primers, meta, seqF ] }
+        | set { ch_seq_forward }
 
+        // prepare reverse reads
+        DENOISE1_R.out.seq
+        | map { direction, fcid, pcr_primers, meta, reads, seqR ->
+                [ meta.sample_id, fcid, pcr_primers, meta, seqR ] }
+        | set { ch_seq_reverse }
+
+        // join
+        ch_seq_forward
+        | combine ( ch_seq_reverse, by: [0,1,2,3] ) 
+        | set { ch_seq_combined }
     }
 
 
