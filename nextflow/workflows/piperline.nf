@@ -376,7 +376,7 @@ workflow PIPERLINE {
         | set { ch_seq_combined }
     }
 
-    // DADA_MERGEREADS ( ch_seq_combined )
+    DADA_MERGEREADS ( ch_seq_combined )
 
 
 
