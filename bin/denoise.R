@@ -30,6 +30,8 @@ if ( n_pass == "first" && priors == "NO_FILE" ) { # first pass condition; no pri
     saveRDS(dada_output, paste0(sample_id,"_",pcr_primers,"_dada1",direction_short,".rds"))
 
 } else if ( n_pass == "second" && !priors == "NO_FILE" ) { # second pass condition; priors included
+    # import priors
+    priors <- readRDS(priors)
 
     # run dada2
     dada_output <- dada2::dada(
