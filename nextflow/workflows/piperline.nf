@@ -351,8 +351,8 @@ workflow PIPERLINE {
         | set { ch_seq_reverse }
 
         // join
-        DENOISE2_F.out.seq
-        | combine ( DENOISE2_R.out.seq, by: [0,1,2,3] ) 
+        ch_seq_forward
+        | combine ( ch_seq_reverse, by: [0,1,2,3] ) 
         | view ()
 
     } else { // don't run second denoising
