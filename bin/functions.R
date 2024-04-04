@@ -4,7 +4,9 @@
 #### data_loc : the name of the data directory (usually "data" but could be "test_data")
 
 
-## jack's functions
+#### jack's functions
+
+## collapses repetive Groovy list variables down to a single variable
 parse_nf_var_repeat <- function(x) {
   stringr::str_extract_all(
     x, 
