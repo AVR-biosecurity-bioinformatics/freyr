@@ -33,10 +33,11 @@ seqs_F_list <- # convert input sequences list from Groovy format to R format
 seqs_F_extracted <- list() # new list
 for (i in 1:length(seqs_F_list)) { # loop through reading .rds files and add to list
     seq <- readRDS(seqs_F_list[i])
-    seqs_F_extracted <- append(seqs_F_extracted, seq)
+    print(seq)
+    # seqs_F_extracted <- append(seqs_F_extracted, seq)
 }
 
-print(seqs_F_extracted)
+# seqs_F_extracted
 
 stop(" *** stopped manually *** ") ##########################################
 
