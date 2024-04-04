@@ -74,7 +74,6 @@ if ( concat_unmerged ) {
                     )
 }
 
-stop(" *** stopped manually *** ") ##########################################
 
 ## TODO: write out unmerged reads? (pull from functions.R)
 
@@ -104,6 +103,9 @@ if ( concat_unmerged ) {
 }
 
 print(mergers)
+
+stop(" *** stopped manually *** ") ##########################################
+
 
 # Construct sequence table for fcid x pcr_primers from merged reads per sample
 seqtab <- dada2::makeSequenceTable(mergers)
