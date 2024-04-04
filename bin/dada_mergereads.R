@@ -23,11 +23,9 @@ reads_R_list <- # convert input reads list from Groovy format to R format
 seqs_F_list <- # convert input sequences list from Groovy format to R format
     stringr::str_extract_all(
         seqs_F, 
-        pattern = "\\S+?_dada{1,2}F\\.rds" 
+        pattern = "\\S+?_dada[1,2]F\\.rds" 
         ) %>% 
     unlist()
-print(seqs_F_list)
-stop(" *** stopped manually *** ") ##########################################
 
 seqs_F_extracted <- tibble() # new tibble
 for (i in 1:length(seqs_F_list)) { # loop through reading .rds files and add to list
@@ -40,7 +38,7 @@ print(seqs_F_extracted)
 seqs_R_list <- # convert input sequences list from Groovy format to R format
     stringr::str_extract_all(
         seqs_R, 
-        pattern = "\\S+?_dada{1,2}R\\.rds" 
+        pattern = "\\S+?_dada[1,2]R\\.rds" 
         ) %>% 
     unlist()
 seqs_R_extracted <- tibble() # new tibble
@@ -50,6 +48,7 @@ for (i in 1:length(seqs_R_list)) { # loop through reading .rds files and add to 
 }
 print(seqs_R_extracted)
 
+stop(" *** stopped manually *** ") ##########################################
 
 ## merge pairs, keeping unmerged reads only if concat_unmerged is FALSE
 if ( concat_unmerged ) {
