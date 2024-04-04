@@ -352,7 +352,7 @@ workflow PIPERLINE {
                 file(readsR, checkIfExists: true), 
                 file(seqF, checkIfExists: true),
                 file(seqR, checkIfExists: true) ] } 
-        | groupTuple ( by: [0,1,2] )
+        | groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples
         | set { ch_seq_combined }
 
     } else { // don't run second denoising step with priors
