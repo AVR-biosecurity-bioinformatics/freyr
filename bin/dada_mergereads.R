@@ -116,13 +116,15 @@ if ( concat_unmerged ) {
 # Construct sequence table for fcid x pcr_primers from merged reads per sample
 seqtab <- dada2::makeSequenceTable(mergers)
 
-print(seqtab)
+print(class(seqtab))
 
-saveRDS(seqtab, paste0(fcid,"_",pcr_primers,"_seqtab.rds"))
-write_csv(seqtab, paste0(fcid,"_",pcr_primers,"_seqtab.csv"))
+stop(" *** stopped manually *** ") ##########################################
 
 
-# stop(" *** stopped manually *** ") ##########################################
+saveRDS(seqtab, paste0(sample_id,"_",pcr_primers,"_seqtab.rds"))
+write_csv(seqtab, paste0(sample_id,"_",pcr_primers,"_seqtab.csv"))
+
+
 
 
 # # Track reads
