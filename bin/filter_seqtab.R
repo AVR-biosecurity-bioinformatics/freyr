@@ -252,7 +252,7 @@ out_plot <- gg.abundance / gg.unique
 ggsave(paste0(fcid,"_",pcr_primers,"_ASV_cleanup_summary.pdf"), out_plot, width = 11, height = 8)
 # summary table
 bind_rows(unique(cleanup)) %>%
-    write_csv(paste0(fcid,"_",pcr_primers,"_ASV_cleanup_summary.csv")
+    write_csv(paste0(fcid,"_",pcr_primers,"_ASV_cleanup_summary.csv"))
 # filtered seqtab
 saveRDS(seqtab_final, paste0(fcid,"_",pcr_primers,"_seqtab.cleaned.rds"))
 
