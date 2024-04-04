@@ -347,7 +347,7 @@ workflow PIPERLINE {
         ch_seq_forward
         | combine ( ch_seq_reverse, by: [0,1,2,3] ) // combine by sample_id
         | map { sample_id, fcid, pcr_primers, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
-                [ fcid, pcr_primers, meta.concat_unmerged, sample_id,
+                [ fcid, pcr_primers, meta.concat_unmerged, meta,
                 file(readsF, checkIfExists: true),
                 file(readsR, checkIfExists: true), 
                 file(seqF, checkIfExists: true),
