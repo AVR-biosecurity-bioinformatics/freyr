@@ -19,6 +19,8 @@ reads_R_list <- # convert input reads list from Groovy format to R format
         ) %>% 
     unlist()
 
+stop(" *** stopped manually *** ") ##########################################
+
 ## process F seqs
 seqs_F_list <- # convert input sequences list from Groovy format to R format
     stringr::str_extract_all(
@@ -47,7 +49,6 @@ for (i in 1:length(seqs_R_list)) { # loop through reading .rds files and add to 
 }
 print(seqs_R_extracted)
 
-stop(" *** stopped manually *** ") ##########################################
 
 ## merge pairs, keeping unmerged reads only if concat_unmerged is FALSE
 if ( concat_unmerged ) {
