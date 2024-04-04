@@ -1,13 +1,13 @@
 process DADA_MERGEREADS {
     def module_name = "dada_mergereads"
-    tag "$meta.sample_id; $pcr_primers"
+    tag "$fcid; $pcr_primers"
     // label:  
 
     input:
-    tuple val(sample_id), val(fcid), val(pcr_primers), val(meta), path(reads), path(seqs)
+    tuple val(fcid), val(pcr_primers), val(concat_unmerged), path(reads), path(seqs)
 
     output:
-    tuple val(sample_id), val(fcid), val(pcr_primers), val(meta), path("*_seqtab.rds"), emit: seqtab
+    // tuple val(sample_id), val(fcid), val(pcr_primers), val(meta), path("*_seqtab.rds"), emit: seqtab
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -20,14 +20,13 @@ process DADA_MERGEREADS {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    sample_id =         "${meta.sample_id}"
     fcid =              "${fcid}"
     pcr_primers =       "${pcr_primers}"
     reads_F =           "${reads[0]}"
     reads_R =           "${reads[1]}"
     seqs_F =            "${seqs[0]}"
     seqs_R =            "${seqs[1]}"
-    concat_unmerged =   "${meta.concat_unmerged}"
+    concat_unmerged =   "${concat_unmerged}"
     
     ## global variables
     projectDir = "$projectDir"

@@ -3,9 +3,51 @@
 # check variables defined
 
 ### run R code
-seqs_F <- readRDS(seqs_F)
+## process F reads
+reads_F_list <- # convert input reads list from Groovy format to R format
+    stringr::str_extract_all(
+        reads_F, 
+        pattern = "\\S+?\\.fastq\\.gz|\\S+?\\.fastq|\\S+?\\.fq\\.gz|\\S+?\\.fq" 
+        ) %>% 
+    unlist()
 
-seqs_R <- readRDS(seqs_R)
+## process R reads
+reads_R_list <- # convert input reads list from Groovy format to R format
+    stringr::str_extract_all(
+        reads_R, 
+        pattern = "\\S+?\\.fastq\\.gz|\\S+?\\.fastq|\\S+?\\.fq\\.gz|\\S+?\\.fq" 
+        ) %>% 
+    unlist()
+
+## process F seqs
+seqs_F_list <- # convert input sequences list from Groovy format to R format
+    stringr::str_extract_all(
+        seqs_F, 
+        pattern = "\\S+?_dada{1,2}F\\.rds" 
+        ) %>% 
+    unlist()
+seqs_F_extracted <- tibble() # new tibble
+for (i in 1:length(seqs_F_list)) { # loop through reading .rds files and add to list
+    seq <- readRDS(seqs_F_list[i])
+    seqs_F_extracted <- append(seqs_F_extracted, seq)
+}
+print(seqs_F_extracted)
+
+## process R seqs
+seqs_R_list <- # convert input sequences list from Groovy format to R format
+    stringr::str_extract_all(
+        seqs_R, 
+        pattern = "\\S+?_dada{1,2}R\\.rds" 
+        ) %>% 
+    unlist()
+seqs_R_extracted <- tibble() # new tibble
+for (i in 1:length(seqs_R_list)) { # loop through reading .rds files and add to list
+    seq <- readRDS(seqs_R_list[i])
+    seqs_R_extracted <- append(seqs_R_extracted, seq)
+}
+print(seqs_R_extracted)
+
+stop(" *** stopped manually *** ") ##########################################
 
 ## merge pairs, keeping unmerged reads only if concat_unmerged is FALSE
 if ( concat_unmerged ) {
@@ -66,7 +108,6 @@ seqtab <- dada2::makeSequenceTable(mergers)
 
 print(seqtab)
 
-stop(" *** stopped manually *** ") ##########################################
 
 
 saveRDS(seqtab, paste0(sample_id,"_",pcr_primers,"_seqtab.rds"))
