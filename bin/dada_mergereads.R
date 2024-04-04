@@ -19,8 +19,6 @@ reads_R_list <- # convert input reads list from Groovy format to R format
         ) %>% 
     unlist()
 
-stop(" *** stopped manually *** ") ##########################################
-
 ## process F seqs
 seqs_F_list <- # convert input sequences list from Groovy format to R format
     stringr::str_extract_all(
@@ -28,6 +26,9 @@ seqs_F_list <- # convert input sequences list from Groovy format to R format
         pattern = "\\S+?_dada{1,2}F\\.rds" 
         ) %>% 
     unlist()
+print(seqs_F_list)
+stop(" *** stopped manually *** ") ##########################################
+
 seqs_F_extracted <- tibble() # new tibble
 for (i in 1:length(seqs_F_list)) { # loop through reading .rds files and add to list
     seq <- readRDS(seqs_F_list[i])
