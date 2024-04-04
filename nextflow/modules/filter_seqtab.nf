@@ -4,7 +4,7 @@ process FILTER_SEQTAB {
     // label:  
 
     input:
-    tuple val(fcid), val(pcr_primers), path(mergers)
+    tuple val(fcid), val(pcr_primers), path(seqtab)
 
     output:
 
@@ -21,7 +21,7 @@ process FILTER_SEQTAB {
     ## input channel variables
     fcid =              "${fcid}"
     pcr_primers =       "${pcr_primers}"
-    mergers =           "${mergers}"
+    seqtab =            "${seqtab}"
     
     ## global variables
     projectDir = "$projectDir"
