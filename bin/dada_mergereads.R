@@ -118,11 +118,11 @@ seqtab <- dada2::makeSequenceTable(mergers)
 
 print(class(seqtab))
 
-stop(" *** stopped manually *** ") ##########################################
+# stop(" *** stopped manually *** ") ##########################################
 
 
 saveRDS(seqtab, paste0(sample_id,"_",pcr_primers,"_seqtab.rds"))
-write_csv(seqtab, paste0(sample_id,"_",pcr_primers,"_seqtab.csv"))
+write_csv(as_tibble(seqtab), paste0(sample_id,"_",pcr_primers,"_seqtab.csv"))
 
 
 
