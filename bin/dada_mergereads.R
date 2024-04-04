@@ -30,15 +30,13 @@ seqs_F_list <- # convert input sequences list from Groovy format to R format
         ) %>% 
     unlist()
 
-seqs_F_extracted <- list() # new list
-for (i in 1:length(seqs_F_list)) { # loop through reading .rds files and add to list
-    seq <- readRDS(seqs_F_list[i])
-    seqs_F_extracted <- append(seqs_F_extracted, seq)
-}
+seqs_F_extracted <- lapply(seqs_F_list, readRDS)
 
-# print(seqs_F_extracted)
-
-
+# seqs_F_extracted <- list() # new list
+# for (i in 1:length(seqs_F_list)) { # loop through reading .rds files and add to list
+#     seq <- readRDS(seqs_F_list[i])
+#     seqs_F_extracted <- append(seqs_F_extracted, seq)
+# }
 
 ## process R seqs
 seqs_R_list <- # convert input sequences list from Groovy format to R format
@@ -48,11 +46,13 @@ seqs_R_list <- # convert input sequences list from Groovy format to R format
         ) %>% 
     unlist()
 
-seqs_R_extracted <- list() # new list
-for (i in 1:length(seqs_R_list)) { # loop through reading .rds files and add to list
-    seq <- readRDS(seqs_R_list[i])
-    seqs_R_extracted <- append(seqs_R_extracted, seq)
-}
+seqs_R_extracted <- lapply(seqs_R_list, readRDS)
+
+# seqs_R_extracted <- list() # new list
+# for (i in 1:length(seqs_R_list)) { # loop through reading .rds files and add to list
+#     seq <- readRDS(seqs_R_list[i])
+#     seqs_R_extracted <- append(seqs_R_extracted, seq)
+# }
 
 
 
@@ -113,6 +113,7 @@ if ( concat_unmerged ) {
 
 print(mergers)
 
+stop(" *** stopped manually *** ") ##########################################
 
 
 # Construct sequence table for fcid x pcr_primers from merged reads per sample
