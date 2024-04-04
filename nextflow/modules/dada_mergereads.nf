@@ -4,10 +4,10 @@ process DADA_MERGEREADS {
     // label:  
 
     input:
-    tuple val(fcid), val(pcr_primers), val(concat_unmerged), val(sample_id), path(readsF), path(readsR), path(seqsF), path(seqsR)
+    tuple val(fcid), val(pcr_primers), val(concat_unmerged), val(meta), path(readsF), path(readsR), path(seqsF), path(seqsR)
 
     output:
-    tuple val(fcid), val(pcr_primers), path("*_seqtab.rds"), emit: seqtab
+    tuple val(fcid), val(pcr_primers), val(meta), path("*_seqtab.rds"), emit: seqtab
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -22,7 +22,7 @@ process DADA_MERGEREADS {
     ## input channel variables
     fcid =              "${fcid}"
     pcr_primers =       "${pcr_primers}"
-    sample_id =         "${sample_id}"
+    sample_id =         "${meta.sample_id}"
     reads_F =           "${readsF}"
     reads_R =           "${readsR}"
     seqs_F =            "${seqsF}"
