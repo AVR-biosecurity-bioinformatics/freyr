@@ -108,18 +108,10 @@ if ( concat_unmerged ) {
     mergers <- mergers_rescued
 }
 
-
-
 # Construct sequence table for fcid x pcr_primers from merged reads per sample
 seqtab <- dada2::makeSequenceTable(mergers)
 
-# stop(" *** stopped manually *** ") ##########################################
-
 saveRDS(seqtab, paste0(fcid,"_",pcr_primers,"_seqtab.rds"))
-write_csv(as_tibble(seqtab), paste0(fcid,"_",pcr_primers,"_seqtab.csv"))
-
-
-
 
 # # Track reads
 # getN <- function(x) sum(getUniques(x))
@@ -131,3 +123,4 @@ write_csv(as_tibble(seqtab), paste0(fcid,"_",pcr_primers,"_seqtab.csv"))
 #     as_tibble()
 # return(res)
 
+# stop(" *** stopped manually *** ") ##########################################

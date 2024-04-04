@@ -371,21 +371,22 @@ workflow PIPERLINE {
 
         // join
         ch_seq_forward
-        | combine ( ch_seq_reverse, by: [0,1,2,3] ) 
-        | map { sample_id, fcid, pcr_primers, meta, readsF, seqF, readsR, seqR ->
-                [ sample_id, fcid, pcr_primers, meta, 
-                    [ file(readsF, checkIfExists: true), file(readsR, checkIfExists: true) ], 
-                    [ file(seqF, checkIfExists: true), file(seqR, checkIfExists: true) ] ] }
+        | combine ( ch_seq_reverse, by: [0,1,2,3] ) // combine by sample_id
+        | map { sample_id, fcid, pcr_primers, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
+                [ fcid, pcr_primers, meta.concat_unmerged, meta,
+                file(readsF, checkIfExists: true),
+                file(readsR, checkIfExists: true), 
+                file(seqF, checkIfExists: true),
+                file(seqR, checkIfExists: true) ] } 
+        | groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples
         | set { ch_seq_combined }
     }
 
     //// merge paired-end reads per fcid x pcr_primers
     DADA_MERGEREADS ( ch_seq_combined )
 
-    DADA_MERGEREADS.out.seqtab | view
-
     //// filter seqtab
-    // FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
+    FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
 
 
 

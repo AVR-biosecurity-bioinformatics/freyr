@@ -4,7 +4,7 @@ process FILTER_SEQTAB {
     // label:  
 
     input:
-    tuple val(fcid), val(pcr_primers), path(seqtab)
+    tuple val(fcid), val(pcr_primers), val(meta), path(seqtab)
 
     output:
 
@@ -22,6 +22,14 @@ process FILTER_SEQTAB {
     fcid =              "${fcid}"
     pcr_primers =       "${pcr_primers}"
     seqtab =            "${seqtab}"
+    asv_min_length =    "${meta.asv_min_length}"
+    asv_max_length =    "${asv_max_length}"
+    phmm =              "${meta.phmm}"
+    coding =            "${meta.coding}"
+    genetic_code =      "${genetic_code}"
+    for_primer_seq =    "${meta.for_primer_seq}"
+    rev_primer_seq =    "${meta.rev_primer_seq}"
+
     
     ## global variables
     projectDir = "$projectDir"
