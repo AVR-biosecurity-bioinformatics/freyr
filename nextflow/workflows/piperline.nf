@@ -383,7 +383,7 @@ workflow PIPERLINE {
     DADA_MERGEREADS ( ch_seq_combined )
 
     //// filter seqtab
-    FILTER_SEQTAB ( ch_seqtab_samples )
+    FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
 
 
 
