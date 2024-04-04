@@ -1,6 +1,9 @@
 #!/usr/bin/env Rscript
 
 # check variables defined
+if ( !concat_unmerged %in% c(TRUE, FALSE) ) {
+    stop("**** 'concat_unmerged' must be TRUE or FALSE ****")
+}
 
 ### run R code
 ## process F reads
@@ -32,7 +35,6 @@ for (i in 1:length(seqs_F_list)) { # loop through reading .rds files and add to 
     seq <- readRDS(seqs_F_list[i])
     seqs_F_extracted <- append(seqs_F_extracted, seq)
 }
-print(seqs_F_extracted)
 
 ## process R seqs
 seqs_R_list <- # convert input sequences list from Groovy format to R format
@@ -46,9 +48,6 @@ for (i in 1:length(seqs_R_list)) { # loop through reading .rds files and add to 
     seq <- readRDS(seqs_R_list[i])
     seqs_R_extracted <- append(seqs_R_extracted, seq)
 }
-print(seqs_R_extracted)
-
-stop(" *** stopped manually *** ") ##########################################
 
 ## merge pairs, keeping unmerged reads only if concat_unmerged is FALSE
 if ( concat_unmerged ) {
@@ -74,6 +73,8 @@ if ( concat_unmerged ) {
                         returnRejects = FALSE
                     )
 }
+
+stop(" *** stopped manually *** ") ##########################################
 
 ## TODO: write out unmerged reads? (pull from functions.R)
 
