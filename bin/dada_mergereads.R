@@ -50,6 +50,11 @@ for (i in 1:length(seqs_R_list)) { # loop through reading .rds files and add to 
     seqs_R_extracted <- append(seqs_R_extracted, seq)
 }
 
+print(seqs_F_extracted[[1]])
+
+stop(" *** stopped manually *** ") ##########################################
+
+
 ## merge pairs, keeping unmerged reads only if concat_unmerged is FALSE
 if ( concat_unmerged ) {
     mergers <- dada2::mergePairs(
@@ -105,7 +110,6 @@ if ( concat_unmerged ) {
 
 print(mergers)
 
-stop(" *** stopped manually *** ") ##########################################
 
 
 # Construct sequence table for fcid x pcr_primers from merged reads per sample
