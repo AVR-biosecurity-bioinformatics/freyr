@@ -379,15 +379,15 @@ workflow PIPERLINE {
     //// merge paired-end reads per sample
     DADA_MERGEREADS ( ch_seq_combined )
 
-    // format for FILTER_SEQTAB
-    DADA_MERGEREADS.out.seqtab
-    | map { sample_id, fcid, pcr_primers, meta, seqtab ->
-            [ fcid, pcr_primers, seqtab ] } 
-    | groupTuple ( by: [0,1] )
-    | set { ch_seqtab_samples }
+    // // format for FILTER_SEQTAB
+    // DADA_MERGEREADS.out.seqtab
+    // | map { sample_id, fcid, pcr_primers, meta, seqtab ->
+    //         [ fcid, pcr_primers, seqtab ] } 
+    // | groupTuple ( by: [0,1] )
+    // | set { ch_seqtab_samples }
 
     //// merge sequences (ASVs) into seqtab per fcid x primer pair and filter
-    FILTER_SEQTAB ( ch_seqtab_samples )
+    // FILTER_SEQTAB ( ch_seqtab_samples )
 
 
 
