@@ -30,7 +30,7 @@ seqs_F_list <- # convert input sequences list from Groovy format to R format
         ) %>% 
     unlist()
 
-seqs_F_extracted <- tibble() # new tibble
+seqs_F_extracted <- list() # new list
 for (i in 1:length(seqs_F_list)) { # loop through reading .rds files and add to list
     seq <- readRDS(seqs_F_list[i])
     seqs_F_extracted <- append(seqs_F_extracted, seq)
@@ -44,7 +44,7 @@ seqs_R_list <- # convert input sequences list from Groovy format to R format
         ) %>% 
     unlist()
 
-seqs_R_extracted <- tibble() # new tibble
+seqs_R_extracted <- list() # new list
 for (i in 1:length(seqs_R_list)) { # loop through reading .rds files and add to list
     seq <- readRDS(seqs_R_list[i])
     seqs_R_extracted <- append(seqs_R_extracted, seq)
