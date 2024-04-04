@@ -7,10 +7,11 @@ if ( !concat_unmerged %in% c(TRUE, FALSE) ) {
 
 ### run R code
 ## process sample IDs to name the read and seq lists
+## NOTE: the format of this list is different: "[a,b,c]" not "a b c"
 sample_id_list <-
     stringr::str_extract_all(
         sample_id, 
-        pattern = "\\S+?" 
+        pattern = "[^\\s,\\[\\]]+" # extract all runs of characters that aren't ' ' ',' '[' or ']' 
         ) %>% 
     unlist()
 
