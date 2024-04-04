@@ -382,8 +382,10 @@ workflow PIPERLINE {
     //// merge paired-end reads per fcid x pcr_primers
     DADA_MERGEREADS ( ch_seq_combined )
 
+    DADA_MERGEREADS.out.seqtab | view
+
     //// filter seqtab
-    FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
+    // FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
 
 
 
