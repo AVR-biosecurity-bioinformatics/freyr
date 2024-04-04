@@ -6,6 +6,14 @@ if ( !concat_unmerged %in% c(TRUE, FALSE) ) {
 }
 
 ### run R code
+## process sample IDs to name the read and seq lists
+sample_id_list <-
+    stringr::str_extract_all(
+        sample_id, 
+        pattern = "\\S+?" 
+        ) %>% 
+    unlist()
+
 ## process F reads
 reads_F_list <- # convert input reads list from Groovy format to R format
     stringr::str_extract_all(
@@ -13,6 +21,7 @@ reads_F_list <- # convert input reads list from Groovy format to R format
         pattern = "\\S+?\\.fastq\\.gz|\\S+?\\.fastq|\\S+?\\.fq\\.gz|\\S+?\\.fq" 
         ) %>% 
     unlist()
+names(reads_F_list) <- sample_id_list
 
 ## process R reads
 reads_R_list <- # convert input reads list from Groovy format to R format
@@ -21,6 +30,7 @@ reads_R_list <- # convert input reads list from Groovy format to R format
         pattern = "\\S+?\\.fastq\\.gz|\\S+?\\.fastq|\\S+?\\.fq\\.gz|\\S+?\\.fq" 
         ) %>% 
     unlist()
+names(reads_R_list) <- sample_id_list
 
 ## process F seqs
 seqs_F_list <- # convert input sequences list from Groovy format to R format
@@ -31,12 +41,7 @@ seqs_F_list <- # convert input sequences list from Groovy format to R format
     unlist()
 
 seqs_F_extracted <- lapply(seqs_F_list, readRDS)
-
-# seqs_F_extracted <- list() # new list
-# for (i in 1:length(seqs_F_list)) { # loop through reading .rds files and add to list
-#     seq <- readRDS(seqs_F_list[i])
-#     seqs_F_extracted <- append(seqs_F_extracted, seq)
-# }
+names(seqs_F_extracted) <- sample_id_list
 
 ## process R seqs
 seqs_R_list <- # convert input sequences list from Groovy format to R format
@@ -47,16 +52,7 @@ seqs_R_list <- # convert input sequences list from Groovy format to R format
     unlist()
 
 seqs_R_extracted <- lapply(seqs_R_list, readRDS)
-
-# seqs_R_extracted <- list() # new list
-# for (i in 1:length(seqs_R_list)) { # loop through reading .rds files and add to list
-#     seq <- readRDS(seqs_R_list[i])
-#     seqs_R_extracted <- append(seqs_R_extracted, seq)
-# }
-
-
-
-
+names(seqs_R_extracted) <- sample_id_list
 
 ## merge pairs, keeping unmerged reads only if concat_unmerged is FALSE
 if ( concat_unmerged ) {
