@@ -118,9 +118,12 @@ seqtab <- dada2::makeSequenceTable(mergers)
 
 print(seqtab)
 
-stop(" *** stopped manually *** ") ##########################################
-
 saveRDS(seqtab, paste0(sample_id,"_",pcr_primers,"_seqtab.rds"))
+write_csv(seqtab, paste0(sample_id,"_",pcr_primers,"_seqtab.csv"))
+
+
+# stop(" *** stopped manually *** ") ##########################################
+
 
 # # Track reads
 # getN <- function(x) sum(getUniques(x))

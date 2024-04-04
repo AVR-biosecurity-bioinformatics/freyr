@@ -7,7 +7,7 @@ process DADA_MERGEREADS {
     tuple val(fcid), val(pcr_primers), val(concat_unmerged), path(readsF), path(readsR), path(seqsF), path(seqsR)
 
     output:
-    // tuple val(sample_id), val(fcid), val(pcr_primers), val(meta), path("*_seqtab.rds"), emit: seqtab
+    tuple val(fcid), val(pcr_primers), path("*_seqtab.rds"), emit: seqtab
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
