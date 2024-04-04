@@ -36,6 +36,11 @@ for (i in 1:length(seqs_F_list)) { # loop through reading .rds files and add to 
     seqs_F_extracted <- append(seqs_F_extracted, seq)
 }
 
+print(class(seqs_F_extracted))
+
+stop(" *** stopped manually *** ") ##########################################
+
+
 ## process R seqs
 seqs_R_list <- # convert input sequences list from Groovy format to R format
     stringr::str_extract_all(
@@ -109,7 +114,6 @@ if ( concat_unmerged ) {
 
 print(mergers)
 
-stop(" *** stopped manually *** ") ##########################################
 
 
 # Construct sequence table for fcid x pcr_primers from merged reads per sample
