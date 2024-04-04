@@ -5,13 +5,16 @@
 
 
 ### run R code
-## extract variables
+## extract variables and deal with repetition
+asv_min_length <-   parse_nf_var_repeat(asv_min_length)
+asv_max_length <-   parse_nf_var_repeat(asv_max_length)
+phmm <-             parse_nf_var_repeat(phmm)
+coding <-           parse_nf_var_repeat(coding)
+genetic_code <-     parse_nf_var_repeat(genetic_code)
+for_primer_seq <-   parse_nf_var_repeat(for_primer_seq)
+rev_primer_seq <-   parse_nf_var_repeat(rev_primer_seq)
+
 print(asv_min_length)
-print(asv_max_length)
-print(phmm)
-print(coding)
-print(genetic_code)
-print(for_primer_seq)
 print(rev_primer_seq)
 
 stop(" *** stopped manually *** ") ##########################################

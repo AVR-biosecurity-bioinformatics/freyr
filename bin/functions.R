@@ -4,6 +4,18 @@
 #### data_loc : the name of the data directory (usually "data" but could be "test_data")
 
 
+## jack's functions
+parse_nf_var_repeat <- function(x) {
+  stringr::str_extract_all(
+    x, 
+    pattern = "[^\\s,\\[\\]]+" # extract all runs of characters that aren't ' ' ',' '[' or ']' 
+    ) %>% 
+  unlist() %>%
+  as_tibble_col(column_name = "variable") %>% 
+  unique() %>% 
+  pull(variable)
+}
+
 # Sample validation -------------------------------------------------------
 
 
