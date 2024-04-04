@@ -345,12 +345,12 @@ workflow PIPERLINE {
 
         // join
         ch_seq_forward
-        | combine ( ch_seq_reverse, by: [0,1,2,3] ) 
-        | map { sample_id, fcid, pcr_primers, meta, readsF, seqF, readsR, seqR ->
-                [ sample_id, fcid, pcr_primers, meta, 
-                    [ file(readsF, checkIfExists: true), file(readsR, checkIfExists: true) ], 
-                    [ file(seqF, checkIfExists: true), file(seqR, checkIfExists: true) ] ] }
-        | set { ch_seq_combined }
+        | combine ( ch_seq_reverse, by: [0,1,2,3] ) // combine by sample_id
+        | map { sample_id, fcid, pcr_primers, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
+                [ fcid, pcr_primers, readsF, readsR, seqF, seqR ] } 
+        | groupTuple ( by: [0,1] )
+        | view ()
+        // | set { ch_seq_combined }
 
     } else { // don't run second denoising step with priors
         /// join F and R DENOISE1 outputs
@@ -376,8 +376,8 @@ workflow PIPERLINE {
         | set { ch_seq_combined }
     }
 
-    //// merge paired-end reads per sample
-    DADA_MERGEREADS ( ch_seq_combined )
+    //// merge paired-end reads per fcid x pcr_primers
+    // DADA_MERGEREADS ( ch_seq_combined )
 
     // // format for FILTER_SEQTAB
     // DADA_MERGEREADS.out.seqtab
