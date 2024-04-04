@@ -121,8 +121,8 @@ print(class(seqtab))
 # stop(" *** stopped manually *** ") ##########################################
 
 
-saveRDS(seqtab, paste0(sample_id,"_",pcr_primers,"_seqtab.rds"))
-write_csv(as_tibble(seqtab), paste0(sample_id,"_",pcr_primers,"_seqtab.csv"))
+saveRDS(seqtab, paste0(fcid,"_",pcr_primers,"_seqtab.rds"))
+write_csv(as_tibble(seqtab), paste0(fcid,"_",pcr_primers,"_seqtab.csv"))
 
 
 
