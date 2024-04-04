@@ -43,6 +43,7 @@ seqs_R_list <- # convert input sequences list from Groovy format to R format
         pattern = "\\S+?_dada[1,2]R\\.rds" 
         ) %>% 
     unlist()
+
 seqs_R_extracted <- tibble() # new tibble
 for (i in 1:length(seqs_R_list)) { # loop through reading .rds files and add to list
     seq <- readRDS(seqs_R_list[i])
@@ -52,10 +53,10 @@ for (i in 1:length(seqs_R_list)) { # loop through reading .rds files and add to 
 ## merge pairs, keeping unmerged reads only if concat_unmerged is FALSE
 if ( concat_unmerged ) {
     mergers <- dada2::mergePairs(
-                        dadaF = seqs_F,
-                        derepF = reads_F,
-                        dadaR = seqs_R,
-                        derepR= reads_R,
+                        dadaF = seqs_F_extracted,
+                        derepF = reads_F_list,
+                        dadaR = seqs_R_extracted,
+                        derepR= reads_R_list,
                         verbose = TRUE,
                         minOverlap = 12,
                         trimOverhang = TRUE,
@@ -63,10 +64,10 @@ if ( concat_unmerged ) {
                     )
 } else {
     mergers <- dada2::mergePairs(
-                        dadaF = seqs_F,
-                        derepF = reads_F,
-                        dadaR = seqs_R,
-                        derepR= reads_R,
+                        dadaF = seqs_F_extracted,
+                        derepF = reads_F_list,
+                        dadaR = seqs_R_extracted,
+                        derepR= reads_R_list,
                         verbose = TRUE,
                         minOverlap = 12,
                         trimOverhang = TRUE,
