@@ -50,7 +50,7 @@ for (i in 1:length(seqs_R_list)) { # loop through reading .rds files and add to 
     seqs_R_extracted <- append(seqs_R_extracted, seq)
 }
 
-print(seqs_F_extracted[[1]])
+print(seqs_F_extracted)
 
 stop(" *** stopped manually *** ") ##########################################
 
