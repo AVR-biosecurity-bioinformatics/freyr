@@ -36,9 +36,8 @@ for (i in 1:length(seqs_F_list)) { # loop through reading .rds files and add to 
     seqs_F_extracted <- append(seqs_F_extracted, seq)
 }
 
-print(unlist(seqs_F_extracted))
+# print(seqs_F_extracted)
 
-stop(" *** stopped manually *** ") ##########################################
 
 
 ## process R seqs
