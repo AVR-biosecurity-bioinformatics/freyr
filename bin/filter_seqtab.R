@@ -7,14 +7,6 @@ if(is.na(phmm)){phmm <- NULL}
 if(is.na(for_primer_seq)){for_primer_seq <- NULL}
 if(is.na(rev_primer_seq)){rev_primer_seq <- NULL}
 
-check_frame = coding 
-quiet = FALSE # switch quiet off for now
-multithread = FALSE # multithreading switched off for now
-### TODO: Implement multithreading
-
-# set primers vector
-primers <- c(for_primer_seq, rev_primer_seq)
-
 # read seqtab from file 
 if(is.matrix(seqtab) | is.data.frame(seqtab)){
     if(!quiet){message("Input is a matrix or data frame")}
@@ -33,6 +25,13 @@ genetic_code <-     parse_nf_var_repeat(genetic_code)
 for_primer_seq <-   parse_nf_var_repeat(for_primer_seq)
 rev_primer_seq <-   parse_nf_var_repeat(rev_primer_seq)
 
+check_frame <- coding 
+quiet <- FALSE # switch quiet off for now
+multithread <- FALSE # multithreading switched off for now
+### TODO: Implement multithreading
+
+# set primers vector
+primers <- c(for_primer_seq, rev_primer_seq)
 
 ### run R code
 
