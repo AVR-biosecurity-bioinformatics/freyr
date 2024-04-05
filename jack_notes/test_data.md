@@ -18,6 +18,15 @@ Based on tephritid metabarcoding data found here: `/group/pathogens/IAWS/Project
     - `/group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/reference/COI_idtaxa.rds`
     - `/group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/reference/EIF3L_idtaxa.rds`
 
+cp /group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/diagnostic_alignments/model/Bactrocera_COI.rds /home/js7t/personal/nextflow_tests/piperline_nextflow/reference
+cp /group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/diagnostic_alignments/model/Bactrocera_EIF3L.rds /home/js7t/personal/nextflow_tests/piperline_nextflow/reference
+cp /group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/reference/COI_hierarchial.fa.gz /home/js7t/personal/nextflow_tests/piperline_nextflow/reference
+cp /group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/reference/EIF3L_hierarchial.fa.gz /home/js7t/personal/nextflow_tests/piperline_nextflow/reference
+cp /group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/reference/COI_idtaxa.rds /home/js7t/personal/nextflow_tests/piperline_nextflow/reference
+cp /group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/reference/EIF3L_idtaxa.rds /home/js7t/personal/nextflow_tests/piperline_nextflow/reference
+
+
+
 Workflow:
     
 ORIG_DIR="/group/home/js7t/projects/Metabarcoding/tephritid_metabarcoding/data"
