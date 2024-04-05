@@ -148,6 +148,8 @@ workflow PIPERLINE {
 
     // ch_sample_reads | view // check output
 
+    PARAMETER_SETUP.out.samdf_locus | view
+
     //// parse samplesheets that contain locus-specific parameters
     PARAMETER_SETUP.out.samdf_locus
         | flatten ()
