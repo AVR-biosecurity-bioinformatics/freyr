@@ -135,6 +135,11 @@ if (is(phmm_model, "PHMM") & any(reads_lengthfilt > 0)){
     names(reads_phmmfilt) <- rownames(seqtab)
 }
 
+print(reads_phmmfilt)
+print(check_frame)
+
+stop(" *** stopped manually *** ") ##########################################
+
 ## Filter sequences containing stop codons
 if(check_frame & any(reads_phmmfilt > 0)){
     seqs <- Biostrings::DNAStringSet(colnames(seqtab_phmm))
