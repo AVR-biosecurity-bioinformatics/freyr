@@ -219,7 +219,7 @@ gg.abundance <-
         title=pcr_primers,
         subtitle = "Abundance of sequences",
         x = "ASV length",
-        y = "ASV abundance",
+        y = "log10 ASV abundance",
         fill = "ASV type"
         )
 
