@@ -137,7 +137,7 @@ if (is(phmm_model, "PHMM") & any(reads_lengthfilt > 0)){
 print(reads_phmmfilt)
 print(check_frame)
 
-stop(" *** stopped manually *** ") ##########################################
+# stop(" *** stopped manually *** ") ##########################################
 
 ## Filter sequences containing stop codons
 if(check_frame & any(reads_phmmfilt > 0)){
