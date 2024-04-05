@@ -25,7 +25,7 @@ genetic_code <-     parse_nf_var_repeat(genetic_code)
 for_primer_seq <-   parse_nf_var_repeat(for_primer_seq)
 rev_primer_seq <-   parse_nf_var_repeat(rev_primer_seq)
 
-check_frame <- coding 
+check_frame <- as.logical(coding)
 quiet <- FALSE # switch quiet off for now
 multithread <- FALSE # multithreading switched off for now
 ### TODO: Implement multithreading
