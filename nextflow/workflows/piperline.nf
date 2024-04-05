@@ -148,7 +148,7 @@ workflow PIPERLINE {
 
     // ch_sample_reads | view // check output
 
-    PARAMETER_SETUP.out.samdf_locus | view
+    // PARAMETER_SETUP.out.samdf_locus | view
 
     //// parse samplesheets that contain locus-specific parameters
     PARAMETER_SETUP.out.samdf_locus
@@ -181,7 +181,7 @@ workflow PIPERLINE {
             }
         | set { ch_sample_locus_reads }
 
-        // ch_sample_locus_reads | view // check output
+        ch_sample_locus_reads | view // check output
 
     //// get names and count of the multiplexed loci used
     PARAMETER_SETUP.out.samdf_locus
