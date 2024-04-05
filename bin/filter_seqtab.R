@@ -199,11 +199,12 @@ cols <- c(`Chimera` = "#9e0142",
 
 gg.abundance <- 
     ggplot2::ggplot(cleanup, aes(x=length, y=Abundance, fill=type)) +
-    geom_bar(stat="identity") + 
+    #geom_bar(stat="identity") + 
+    geom_col() +
+    scale_y_continuous(trans = pseudo_log_trans(sigma = 1)) + 
     scale_x_continuous(limits=c(min(cleanup$length)-10, max(cleanup$length)+10))+
     theme_bw()+
     scale_fill_manual(values = cols)+
-    scale_y_continuous(trans = pseudo_log_trans(sigma = 1) +)
     theme(
         strip.background = element_rect(colour = "black", fill = "lightgray"),
         strip.text = element_text(size=9, family = ""),
