@@ -7,7 +7,6 @@ process PARAMETER_SETUP {
 
 
     output:  
-    path("samdf.csv") ,                 emit: samdf
     path("params.csv") ,                emit: loci_params
     path("samdf_*.csv") ,               emit: samdf_locus
     // path("fastq_paths_all.csv"),        emit: fastq_paths_all

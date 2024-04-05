@@ -1,6 +1,6 @@
 process DENOISE {
     def module_name = "denoise"
-    tag "$fcid; $pcr_primers"
+    tag "$meta.sample_id; $pcr_primers"
     // label:  
 
     input:

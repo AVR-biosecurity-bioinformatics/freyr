@@ -107,7 +107,7 @@ if (stringr::str_detect(params.data_folder, "single$")) { # this is a temp fix f
 #### TODO: Import parameters from external .csv or Excel spreadsheet
 #### then mutate so make sure paths are updated to absolute
 
-write_csv(file = "samdf.csv", x = samdf)
+# write_csv(file = "samdf.csv", x = samdf)
 
 
 
