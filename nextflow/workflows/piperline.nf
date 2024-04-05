@@ -382,11 +382,13 @@ workflow PIPERLINE {
         | set { ch_seq_combined }
     }
 
-    //// merge paired-end reads per fcid x pcr_primers
+    //// merge paired-end reads per flowcell x locus combo
     DADA_MERGEREADS ( ch_seq_combined )
 
-    //// filter seqtab
+    //// filter sequence table
     FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
+
+    //// merge sequence tables across loci (per flowcell)
 
 
 
