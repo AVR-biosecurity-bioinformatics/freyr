@@ -121,34 +121,6 @@ workflow PIPERLINE {
 
     //// input samplesheet and loci parameters
     PARAMETER_SETUP ( )
-    
-    //// TODO: remove this bit if it's not used in final pipeline
-    //// get read paths and metadata for each sample from the sample sheet .csv
-    //// from: https://training.nextflow.io/advanced/grouping/#grouping-using-submap 
-    PARAMETER_SETUP.out.samdf
-        | splitCsv ( header: true )
-        | map { row -> 
-            meta = row.subMap(
-                'sample_id','sample_name','extraction_rep','amp_rep',
-                'client_name','experiment_name','sample_type','collection_method',
-                'collection_location','lat_lon','environment','collection_date',
-                'operator_name','description','assay','extraction_method',
-                'amp_method','target_gene','pcr_primers','for_primer_seq',
-                'rev_primer_seq','index_plate','index_well','i7_index_id',
-                'i7_index','i5_index_id','i5_index','seq_platform',
-                'fcid','for_read_length','rev_read_length','seq_run_id',
-                'seq_id','seq_date','analysis_method','notes','base'
-                )
-                [ meta, [
-                    file(row.fwd, checkIfExists: true),
-                    file(row.rev, checkIfExists: true)
-                ]]  
-            }
-        | set { ch_sample_reads }
-
-    // ch_sample_reads | view // check output
-
-    // PARAMETER_SETUP.out.samdf_locus | view
 
     //// parse samplesheets that contain locus-specific parameters
     PARAMETER_SETUP.out.samdf_locus
@@ -181,8 +153,6 @@ workflow PIPERLINE {
             }
         | set { ch_sample_locus_reads }
 
-        ch_sample_locus_reads | view // check output
-
     //// get names and count of the multiplexed loci used
     PARAMETER_SETUP.out.samdf_locus
     | flatten ()
@@ -200,7 +170,7 @@ workflow PIPERLINE {
 
     //// get names of flow cells ('fcid') as channel
     // extract fcid from metadata
-    ch_sample_reads 
+    ch_sample_locus_reads 
     | map { meta, reads ->
         def fcid = meta.fcid
         return tuple(fcid, reads) } 
