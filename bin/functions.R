@@ -16,8 +16,7 @@ parse_nf_var_repeat <- function(x) {
     unlist() %>%
     as_tibble_col(column_name = "col") %>% 
     unique() %>%
-    pull(col) %>%
-    as.list()
+    pull(col)
   
   if (length(variable) == 1) {
     out <- variable
