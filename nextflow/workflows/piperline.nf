@@ -69,7 +69,7 @@ include { DENOISE as DENOISE2_F                     } from '../modules/denoise'
 include { DENOISE as DENOISE2_R                     } from '../modules/denoise'
 include { DADA_MERGEREADS                           } from '../modules/dada_mergereads'
 include { FILTER_SEQTAB                             } from '../modules/filter_seqtab'
-// include { MERGE_SEQTAB                              } from '../modules/merge_seqtab'
+include { MERGE_SEQTAB                              } from '../modules/merge_seqtab'
 // include { TAX_IDTAXA                                } from '../modules/tax_idtaxa'
 // include { TAX_BLAST                                 } from '../modules/tax_blast'
 // include { JOINT_TAX                                 } from '../modules/joint_tax'
@@ -360,8 +360,13 @@ workflow PIPERLINE {
     //// filter sequence table
     FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
 
-    //// merge sequence tables across loci (per flowcell)
+    //// combine locus-specific seqtab by fcid
+    FILTER_SEQTAB.out.seqtab 
+    | groupTuple ( by: 0 )
+    | view ()
 
+    //// merge sequence tables across loci (per flowcell)
+    // MERGE_SEQTAB (  )
 
 
 
