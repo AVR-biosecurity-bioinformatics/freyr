@@ -14,8 +14,11 @@ ranks <-                c("Root", "Kingdom", "Phylum", "Class", "Order", "Family
 run_blast <-            as.logical(run_blast)
 database <-             ref_fasta
 identity <-             blast_min_identity
-coverage <-              blast_min_coverage
+coverage <-             blast_min_coverage
 
+print(ref_fasta)
+
+stop(" *** stopped manually *** ") ##########################################
 ### run R code
 seqtab <- readRDS(seqtab) # read in seqtab
 
@@ -92,3 +95,5 @@ if (isTRUE(run_blast)) { # run BLAST if requested
     saveRDS(out, paste0(fcid,"_",pcr_primers,"_",db_name,"_blast.rds"))
 
 }
+
+# stop(" *** stopped manually *** ") ##########################################
