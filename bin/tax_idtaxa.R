@@ -14,7 +14,10 @@ threshold <- idtaxa_confidence
 
 
 ### run R code
-trainingSet <- readRDS(normalizePath(database))
+
+seqtab <- readRDS(seqtab) # read in seqtab
+trainingSet <- readRDS(normalizePath(database)) # read in training database for IDTAXA
+
 # get the sequences from the seqtab
 seqs <- Biostrings::DNAStringSet(getSequences(seqtab)) # Create a DNAStringSet from the ASVs
 
