@@ -10,7 +10,7 @@ multithread <- FALSE # multithreading switched off for now
 remove_Ns <- FALSE
 
 database <- idtaxa_db
-threshold <- idtaxa_confidence
+threshold <- as.numeric(idtaxa_confidence)
 
 
 ### run R code
