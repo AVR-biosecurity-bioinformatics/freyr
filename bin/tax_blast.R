@@ -16,10 +16,6 @@ database <-             ref_fasta
 identity <-             blast_min_identity
 coverage <-             blast_min_coverage
 
-print(ref_fasta)
-print(target_gene)
-
-stop(" *** stopped manually *** ") ##########################################
 ### run R code
 seqtab <- readRDS(seqtab) # read in seqtab
 
