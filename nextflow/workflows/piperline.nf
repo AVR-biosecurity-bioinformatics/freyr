@@ -70,7 +70,7 @@ include { DENOISE as DENOISE2_R                     } from '../modules/denoise'
 include { DADA_MERGEREADS                           } from '../modules/dada_mergereads'
 include { FILTER_SEQTAB                             } from '../modules/filter_seqtab'
 include { TAX_IDTAXA                                } from '../modules/tax_idtaxa'
-// include { TAX_BLAST                                 } from '../modules/tax_blast'
+include { TAX_BLAST                                 } from '../modules/tax_blast'
 // include { JOINT_TAX                                 } from '../modules/joint_tax'
 // include { MERGE_TAX                                 } from '../modules/merge_tax'
 // include { ASSIGNMENT_PLOT                           } from '../modules/assignment_plot'
@@ -359,9 +359,11 @@ workflow PIPERLINE {
     //// filter sequence table
     FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
 
-    /// use IDTAXA to assign taxonomy
+    //// use IDTAXA to assign taxonomy
     TAX_IDTAXA ( FILTER_SEQTAB.out.seqtab )
 
+    //// use blastn to assign taxonomy
+    TAX_BLAST ( FILTER_SEQTAB.out.seqtab )
 
 
 

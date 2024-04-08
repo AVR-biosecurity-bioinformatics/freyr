@@ -8,14 +8,24 @@
 
 ## collapses repetive Groovy list variables down to a single variable
 parse_nf_var_repeat <- function(x) {
-  stringr::str_extract_all(
-    x, 
-    pattern = "[^\\s,\\[\\]]+" # extract all runs of characters that aren't ' ' ',' '[' or ']' 
-    ) %>% 
-  unlist() %>%
-  as_tibble_col(column_name = "variable") %>% 
-  unique() %>% 
-  pull(variable)
+  variable <- 
+    stringr::str_extract_all(
+      x, 
+      pattern = "[^\\s,\\[\\]]+" # extract all runs of characters that aren't ' ' ',' '[' or ']' 
+      ) %>% 
+    unlist() %>%
+    as_tibble_col(column_name = "col") %>% 
+    unique() %>%
+    pull(col) %>%
+    as.list()
+  
+  if (length(variable) == 1) {
+    out <- variable
+  } else {
+    out <- stop("*** nf variable contains multiple unique values! ***")
+    )
+  }
+  return(out)
 }
 
 # Sample validation -------------------------------------------------------

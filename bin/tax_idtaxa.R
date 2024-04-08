@@ -4,14 +4,14 @@
 idtaxa_confidence <-    parse_nf_var_repeat(idtaxa_confidence)
 idtaxa_db <-            parse_nf_var_repeat(idtaxa_db)
 
-return_ids <- TRUE
-quiet <- FALSE # switch quiet off for now
-multithread <- FALSE # multithreading switched off for now
-remove_Ns <- FALSE
-ranks = c("Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+return_ids <-           TRUE
+quiet <-                FALSE # switch quiet off for now
+multithread <-          FALSE # multithreading switched off for now
+remove_Ns <-            FALSE
+ranks <-                c("Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
 
-database <- idtaxa_db
-threshold <- as.numeric(idtaxa_confidence)
+database <-             idtaxa_db
+threshold <-            as.numeric(idtaxa_confidence)
 
 
 ### run R code
