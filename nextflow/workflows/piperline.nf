@@ -373,7 +373,7 @@ workflow PIPERLINE {
     // | set { ch_joint_tax_input }
 
     //// aggregate taxonomic assignment
-    JOINT_TAX ( ch_joint_tax_input )
+    // JOINT_TAX ( ch_joint_tax_input )
 
 
 
