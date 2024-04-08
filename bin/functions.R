@@ -1989,6 +1989,7 @@ remove_if_exists <- function(file, quiet=FALSE){
   }
 }
 
+# new function from piperline commit: https://github.com/alexpiper/piperline/commit/87bcce2951c41adc5dd73ffa97e0a401e8040c1c
 create_samplesheet <- function(SampleSheet, runParameters, template = "V4"){
   if (missing(runParameters)) {stop("Error: need to provide a runParameters file in .xml format")}
   if (missing(SampleSheet)) {stop("Error: need to provide a SampleSheet file in .csv format")}
@@ -1997,11 +1998,11 @@ create_samplesheet <- function(SampleSheet, runParameters, template = "V4"){
     stop("Error: you have provided ", length(SampleSheet) , " SampleSheets and ", length(runParameters), " runParameters files. One of each must be provided per run")
   }
   
-  #Parse files
+  # Parse all input samplesheets
   merged <- purrr::map2(SampleSheet, runParameters, parse_seqrun) %>%
     dplyr::bind_rows()
   
-  # Reformat to the format required
+  # Reformat to internal samplesheet format
   if (is.character(template) && template=="V4"){
     # Define template fields
     template_fields <- c("sample_id", "sample_name", "extraction_rep", "amp_rep", "client_name", 
@@ -2019,7 +2020,7 @@ create_samplesheet <- function(SampleSheet, runParameters, template = "V4"){
     stop("Error, only template='V4' or a user provided data framecurrently supported")
   }
   
-  # lookup table for renaming
+  # lookup table for renaming columns
   lookup <- c(i7_index = "index",
               i5_index = "index2",
               index_plate = "sample_plate",
