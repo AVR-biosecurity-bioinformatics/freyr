@@ -69,8 +69,7 @@ include { DENOISE as DENOISE2_F                     } from '../modules/denoise'
 include { DENOISE as DENOISE2_R                     } from '../modules/denoise'
 include { DADA_MERGEREADS                           } from '../modules/dada_mergereads'
 include { FILTER_SEQTAB                             } from '../modules/filter_seqtab'
-include { MERGE_SEQTAB                              } from '../modules/merge_seqtab'
-// include { TAX_IDTAXA                                } from '../modules/tax_idtaxa'
+include { TAX_IDTAXA                                } from '../modules/tax_idtaxa'
 // include { TAX_BLAST                                 } from '../modules/tax_blast'
 // include { JOINT_TAX                                 } from '../modules/joint_tax'
 // include { MERGE_TAX                                 } from '../modules/merge_tax'
@@ -81,7 +80,7 @@ include { MERGE_SEQTAB                              } from '../modules/merge_seq
 // include { ACCUMULATION_CURVE                        } from '../modules/accumulation_curve'
 // include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_filter'
 // include { READ_TRACKING                             } from '../modules/read_tracking'
-
+include { MERGE_SEQTAB                              } from '../modules/merge_seqtab'
 
 
 
@@ -360,17 +359,14 @@ workflow PIPERLINE {
     //// filter sequence table
     FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
 
-    //// combine locus-specific seqtab by fcid
-    FILTER_SEQTAB.out.seqtab 
-    | groupTuple ( by: 0 )
-    | view ()
-
-    //// merge sequence tables across loci (per flowcell)
-    // MERGE_SEQTAB (  )
+    /// use IDTAXA to assign taxonomy
+    TAX_IDTAXA ( FILTER_SEQTAB.out.seqtab )
 
 
 
 
-    
-    
+
+
+    /// merge final seqtab across and within flowcells (after assignment)
+    // MERGE_SEQTAB ()
 }
