@@ -369,7 +369,8 @@ workflow PIPERLINE {
     TAX_IDTAXA.out.taxtab
     | combine ( TAX_BLAST.out.blast, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
     | combine ( FILTER_SEQTAB.out.seqtab, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
-    | set { ch_joint_tax_input }
+    | view ()
+    // | set { ch_joint_tax_input }
 
     //// aggregate taxonomic assignment
     JOINT_TAX ( ch_joint_tax_input )
