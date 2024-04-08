@@ -47,6 +47,8 @@ if (isTRUE(run_blast)) { # run BLAST if requested
             dplyr::rename(blast_genus = Genus, blast_spp = Species) %>%
             dplyr::filter(!is.na(blast_spp)) 
         
+        stop(" *** stopped manually *** ") ##########################################
+
         if( nrow(blast_spp) > 0 ) {
         # Transform into taxtab format
         out <- tibble::enframe(getSequences(seqtab), name=NULL, value="OTU") %>%
