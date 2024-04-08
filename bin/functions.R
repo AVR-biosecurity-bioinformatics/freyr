@@ -23,7 +23,6 @@ parse_nf_var_repeat <- function(x) {
     out <- variable
   } else {
     out <- stop("*** nf variable contains multiple unique values! ***")
-    )
   }
   return(out)
 }
