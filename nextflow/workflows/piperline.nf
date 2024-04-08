@@ -365,6 +365,11 @@ workflow PIPERLINE {
     //// use blastn to assign taxonomy
     TAX_BLAST ( FILTER_SEQTAB.out.seqtab )
 
+    //// merge tax assignment outputs
+    TAX_IDTAXA.out.taxtab
+    | combine ( TAX_BLAST.out.blast, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
+    | view ()
+
 
 
 
