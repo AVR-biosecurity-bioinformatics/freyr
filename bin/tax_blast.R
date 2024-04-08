@@ -9,7 +9,8 @@ run_blast <-            parse_nf_var_repeat(run_blast)
 
 quiet <-                FALSE # switch quiet off for now
 multithread <-          FALSE # multithreading switched off for now
-ranks <-                c("Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+# ranks <-                c("Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species") # trying without root to solve error
+ranks <-                c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
 
 run_blast <-            as.logical(run_blast)
 database <-             ref_fasta
