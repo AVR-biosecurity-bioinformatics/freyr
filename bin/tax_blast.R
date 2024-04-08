@@ -17,6 +17,7 @@ identity <-             blast_min_identity
 coverage <-             blast_min_coverage
 
 print(ref_fasta)
+print(target_gene)
 
 stop(" *** stopped manually *** ") ##########################################
 ### run R code
