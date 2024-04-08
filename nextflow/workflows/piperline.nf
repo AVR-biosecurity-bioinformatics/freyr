@@ -71,7 +71,7 @@ include { DADA_MERGEREADS                           } from '../modules/dada_merg
 include { FILTER_SEQTAB                             } from '../modules/filter_seqtab'
 include { TAX_IDTAXA                                } from '../modules/tax_idtaxa'
 include { TAX_BLAST                                 } from '../modules/tax_blast'
-// include { JOINT_TAX                                 } from '../modules/joint_tax'
+include { JOINT_TAX                                 } from '../modules/joint_tax'
 // include { MERGE_TAX                                 } from '../modules/merge_tax'
 // include { ASSIGNMENT_PLOT                           } from '../modules/assignment_plot'
 // include { TAX_SUMMARY                               } from '../modules/tax_summary'
@@ -365,10 +365,14 @@ workflow PIPERLINE {
     //// use blastn to assign taxonomy
     TAX_BLAST ( FILTER_SEQTAB.out.seqtab )
 
-    //// merge tax assignment outputs
+    //// merge tax assignment outputs and filtered seqtab (pre-assignment)
     TAX_IDTAXA.out.taxtab
     | combine ( TAX_BLAST.out.blast, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
-    | view ()
+    | combine ( FILTER_SEQTAB.out.seqtab, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
+    | set { ch_joint_tax_input }
+
+    //// aggregate taxonomic assignment
+    JOINT_TAX ( ch_joint_tax_input )
 
 
 
