@@ -380,7 +380,9 @@ workflow PIPERLINE {
     | map { fcid, pcr_primers, meta, taxtab -> // add arbitrary grouping key
             [ "key", fcid, pcr_primers, meta, taxtab ] }
     | groupTuple ( by: 0 ) // group into tuples using "key"
-    | view ()
+    | set { ch_mergetax_input }
+
+    ch_mergetax_input | view()
 
     //// merge tax tables across flowcells
     // MERGE_TAX (  )
