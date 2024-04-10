@@ -376,8 +376,10 @@ workflow PIPERLINE {
 
     //// group taxtab across flowcell and pcr_primer 
     JOINT_TAX.out.taxtab
+    | map { fcid, pcr_primers, meta, taxtab -> // add arbitrary grouping key
+            [ "key", fcid, pcr_primers, meta, taxtab ] }
+    | groupTuple ( by: 0 ) // group into tuples using "key"
     | view ()
-    // | groupTuple (  )
 
     //// merge tax tables across flowcells
     // MERGE_TAX (  )
