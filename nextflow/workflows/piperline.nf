@@ -72,7 +72,7 @@ include { FILTER_SEQTAB                             } from '../modules/filter_se
 include { TAX_IDTAXA                                } from '../modules/tax_idtaxa'
 include { TAX_BLAST                                 } from '../modules/tax_blast'
 include { JOINT_TAX                                 } from '../modules/joint_tax'
-// include { MERGE_TAX                                 } from '../modules/merge_tax'
+include { MERGE_TAX                                 } from '../modules/merge_tax'
 // include { ASSIGNMENT_PLOT                           } from '../modules/assignment_plot'
 // include { TAX_SUMMARY                               } from '../modules/tax_summary'
 // include { PHYLOSEQ_CREATE                           } from '../modules/phyloseq_create'
@@ -373,6 +373,14 @@ workflow PIPERLINE {
 
     //// aggregate taxonomic assignment
     JOINT_TAX ( ch_joint_tax_input )
+
+    //// group taxtab across flowcell and pcr_primer 
+    JOINT_TAX.out.taxtab
+    | view ()
+    // | groupTuple (  )
+
+    //// merge tax tables across flowcells
+    // MERGE_TAX (  )
 
 
 

@@ -7,7 +7,7 @@ process JOINT_TAX {
     tuple val(fcid), val(pcr_primers), val(meta), path(idtaxa_output), path(blast_output), path(seqtab)
 
     output:
-    tuple val(fcid), val(pcr_primers), val(meta), path("*_taxblast.rds")
+    tuple val(fcid), val(pcr_primers), val(meta), path("*_taxblast.rds"), emit: taxtab
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
