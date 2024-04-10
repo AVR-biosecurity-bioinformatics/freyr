@@ -375,6 +375,7 @@ workflow PIPERLINE {
     JOINT_TAX ( ch_joint_tax_input )
 
     //// group taxtab across flowcell and pcr_primer 
+    /// creates tuple of lists of fcid, pcr_primer, meta and taxtab files
     JOINT_TAX.out.taxtab
     | map { fcid, pcr_primers, meta, taxtab -> // add arbitrary grouping key
             [ "key", fcid, pcr_primers, meta, taxtab ] }
