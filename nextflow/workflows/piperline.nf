@@ -253,7 +253,8 @@ workflow PIPERLINE {
     ch_secondpass = Channel.value ( "second" )
 
     //// denoise forward reads per flowcell, primer and sample
-    DENOISE1_F ( ch_denoise_input_forward, ch_firstpass )
+    // DENOISE1_F ( ch_denoise_input_forward, ch_firstpass )
+    DENOISE1_F ( ch_denoise_input_forward, "first" )
     
     //// denoise forward reads per flowcell, primer and sample
     DENOISE1_R ( ch_denoise_input_reverse, ch_firstpass )
