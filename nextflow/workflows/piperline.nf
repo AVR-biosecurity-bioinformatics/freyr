@@ -247,17 +247,12 @@ workflow PIPERLINE {
     | set { ch_denoise_input_reverse }
 
 
-    //// first pass of denoising (always done)
-    // channels for denoising
-    ch_firstpass = Channel.value ( "first" )
-    ch_secondpass = Channel.value ( "second" )
-
-    //// denoise forward reads per flowcell, primer and sample
+    //// first pass of denoising per flowcell, primer and sample
     // DENOISE1_F ( ch_denoise_input_forward, ch_firstpass )
     DENOISE1_F ( ch_denoise_input_forward, "first" )
     
     //// denoise forward reads per flowcell, primer and sample
-    DENOISE1_R ( ch_denoise_input_reverse, ch_firstpass )
+    DENOISE1_R ( ch_denoise_input_reverse, "first" )
 
     // high sensitivity mode condition
     if ( params.high_sensitivity ) { // run prior extraction and second pass denoising
@@ -297,10 +292,10 @@ workflow PIPERLINE {
         | set { ch_denoise2_input_reverse }
 
         //// run pseudo-pooled 2nd denoising with priors on forward reads
-        DENOISE2_F ( ch_denoise2_input_forward, ch_secondpass )
+        DENOISE2_F ( ch_denoise2_input_forward, "second" )
 
         //// run pseudo-pooled 2nd denoising with priors on reverse reads
-        DENOISE2_R ( ch_denoise2_input_reverse, ch_secondpass )
+        DENOISE2_R ( ch_denoise2_input_reverse, "second" )
 
         /// join F and R denoise2 outputs
         // prepare forward reads
