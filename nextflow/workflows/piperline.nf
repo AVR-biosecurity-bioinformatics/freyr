@@ -248,7 +248,6 @@ workflow PIPERLINE {
 
 
     //// first pass of denoising per flowcell, primer and sample
-    // DENOISE1_F ( ch_denoise_input_forward, ch_firstpass )
     DENOISE1_F ( ch_denoise_input_forward, "first" )
     
     //// denoise forward reads per flowcell, primer and sample
