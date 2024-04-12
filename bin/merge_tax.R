@@ -31,9 +31,30 @@ for (i in 1:length(taxtab_list)) { # loop through .rds files, adding distinct se
 
 ### run R code
 
-taxtab_tibble %>% 
+tax_merged <- taxtab_tibble %>% 
     purrr::map(~{ .x %>% tibble::as_tibble(rownames = "OTU") }) %>%
     dplyr::bind_rows() %>%
     dplyr::distinct() # Remove any exact duplicates from save ASV being in different seqtab
+
+# Check for duplicated ASVs across taxtabs
+if(any(duplicated(tax_merged$OTU))){
+    warning("Duplicated ASVs detected, selecting first occurrence")
+    out <- tax_merged %>%
+        dplyr::group_by(OTU) %>%
+        dplyr::slice(1) %>%
+        tibble::column_to_rownames("OTU") %>%
+        as.matrix()
+} else{
+    out <- tax_merged %>%
+    tibble::column_to_rownames("OTU") %>%
+    as.matrix()
+}
+
+# Check that output dimensions match input
+if(!all(rownames(out) %in% colnames(.y))){
+    stop("Number of ASVs classified does not match the number of input ASVs")
+}
+
+saveRDS(out, "merged_tax.rds")
 
 stop(" *** stopped manually *** ") ##########################################
