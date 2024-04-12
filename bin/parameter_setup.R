@@ -421,6 +421,10 @@ for ( I in 1:length(split_samdf)) { # assign new dfs to new variables
 }
 
 ### check parameters for validity
+
+## check all parameters for the absence of spaces, which will affect file names later on
+
+
 ## BLAST database ranks
 ## TODO: ignore this check if 'params.tax_ranks' is set explicitly
 check_param <- params_df$ref_fasta[!is.na(params_df$ref_fasta)] %>% 
