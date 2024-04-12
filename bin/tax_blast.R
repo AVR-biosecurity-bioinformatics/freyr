@@ -16,16 +16,16 @@ quiet <-                FALSE # switch quiet off for now
 multithread <-          FALSE # multithreading switched off for now
 
 # extract number of ranks from ref_fasta 
-if ( stringr::str_detect(ref_fasta, "\\.fa\\.gz$") ) { # if compressed
+if ( stringr::str_detect(ref_fasta, "\\.fa\\.gz$|\\.fasta\\.gz$") ) { # if compressed
     n_ranks <- read_lines(gzfile(ref_fasta), n_max = 1) %>% # pull first line of .fa.gz
             stringr::str_extract(pattern = ";.*?$") %>% # extract the taxonomic rank information (including first ';')
             stringr::str_count(pattern = "[^;]+") # count the number of ranks between the ';'
-} else if ( stringr::str_detect(ref_fasta, "\\.fa$") ) { # if uncompressed
+} else if ( stringr::str_detect(ref_fasta, "\\.fa$|\\.fasta$") ) { # if uncompressed
     n_ranks <- read_lines(ref_fasta, n_max = 1) %>% # pull first line of .fa.gz
             stringr::str_extract(pattern = ";.*?$") %>% # extract the taxonomic rank information (including first ';')
             stringr::str_count(pattern = "[^;]+") # count the number of ranks between the ';'
 } else { # if extension is not expected
-    stop ("*** 'ref_fasta' (BLAST database) file must have '.fa' or '.fa.gz' extension! ***")
+    stop ("*** 'ref_fasta' (BLAST database) file must have '.fa(sta)' or '.fa(sta).gz' extension! ***")
 }
 # set ranks based on number of ranks (only works for 7 or 8 ranks)
 if ( n_ranks == 8 ) {
