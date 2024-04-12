@@ -24,7 +24,13 @@ for (i in 1:length(taxtab_list)) { # loop through .rds files, adding distinct se
     taxtab_tibble <- rbind(taxtab_tibble, taxtab_i)
 
 }
+
+print(taxtab_tibble)
+
+stop(" *** stopped manually *** ") ##########################################
+
 #### INCOMPLETE
+
 
 
 

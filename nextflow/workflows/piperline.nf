@@ -382,7 +382,7 @@ workflow PIPERLINE {
     // ch_mergetax_input | view()
 
     //// merge tax tables across flowcells
-    // MERGE_TAX ( ch_mergetax_input )
+    MERGE_TAX ( ch_mergetax_input )
 
 
 
