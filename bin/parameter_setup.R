@@ -420,5 +420,31 @@ for ( I in 1:length(split_samdf)) { # assign new dfs to new variables
         )
 }
 
+### check parameters for validity
+## BLAST database ranks
+## TODO: ignore this check if 'params.tax_ranks' is set explicitly
+check_param <- params_df$ref_fasta[!is.na(params_df$ref_fasta)] %>% 
+    stringr::str_split(pattern=";", n=Inf) %>% 
+    unlist()
+for (i in seq_along(check_param)) {
+    ref_fasta_path <- normalizePath(check_param[i])
+    if ( stringr::str_match(ref_fasta_path, "\\.fa\\.gz$") ) { # if compressed
+        n_ranks <- read_lines(gzfile(ref_fasta_path), n_max = 1) %>% # pull first line of .fa.gz
+                stringr::str_extract(pattern = ";.*?$") %>% # extract the taxonomic rank information (including first ';')
+                stringr::str_count(pattern = "[^;]+") # count the number of ranks between the ';'
+    } else if ( stringr::str_match(ref_fasta_path, "\\.fa$") ) { # if uncompressed
+        n_ranks <- read_lines(ref_fasta_path, n_max = 1) %>% # pull first line of .fa.gz
+                stringr::str_extract(pattern = ";.*?$") %>% # extract the taxonomic rank information (including first ';')
+                stringr::str_count(pattern = "[^;]+") # count the number of ranks between the ';'
+    } else { # if extension is not expected
+        stop ("*** 'ref_fasta' (BLAST database) file must have '.fa' or '.fa.gz' extension! ***")
+    }
+    # set ranks based on number of ranks (only works for 7 or 8 ranks)
+    if ( n_ranks > 8 | n_ranks < 7 ) {
+        stop ("*** BLAST database contains <7 or >8 ranks--please set ranks explicitly using 'params.tax_ranks'! ***")
+    } else {
+        message ("*** 'ref_fasta' parameter is valid ***")
+    }
+}
 
 # stop(" *** stopped manually *** ") ##########################################

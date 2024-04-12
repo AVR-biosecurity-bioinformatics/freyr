@@ -4,10 +4,10 @@ process MERGE_TAX {
     // label:  
 
     input:
-    tuple val(fcid), val(pcr_primers), val(meta), path(idtaxa_output), path(blast_output), path(seqtab)
+    tuple val(fcid), val(pcr_primers), val(meta), path(taxtab)
 
     output:
-    tuple val(fcid), val(pcr_primers), val(meta), path("*_taxblast.rds")
+
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -22,10 +22,8 @@ process MERGE_TAX {
     ## input channel variables
     fcid =                  "${fcid}"
     pcr_primers =           "${pcr_primers}"
-    target_gene =           "${meta.target_gene}"
-    idtaxa_output =         "${idtaxa_output}"
-    blast_output =          "${blast_output}"
-    seqtab =                "${seqtab}"
+    meta =                  "${meta}"
+    taxtab =                "${taxtab}"
     
     ## global variables
     projectDir = "$projectDir"

@@ -1,5 +1,10 @@
 #!/usr/bin/env Rscript
 
+### TODO: Add explicit taxonomic ranks option to parameters 'params.tax_ranks'
+
+### TODO: Do parameter parsing for ranks at an earlier stage, such as the parameter setup module
+
+
 ## check and define variables 
 target_gene <-          parse_nf_var_repeat(target_gene)
 ref_fasta <-            parse_nf_var_repeat(ref_fasta)
@@ -9,11 +14,34 @@ run_blast <-            parse_nf_var_repeat(run_blast)
 
 quiet <-                FALSE # switch quiet off for now
 multithread <-          FALSE # multithreading switched off for now
-# ranks <-                c("Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species") # trying without root to solve error
-ranks <-                c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+
+# extract number of ranks from ref_fasta 
+if ( stringr::str_match(ref_fasta, "\\.fa\\.gz$") ) { # if compressed
+    n_ranks <- read_lines(gzfile(ref_fasta), n_max = 1) %>% # pull first line of .fa.gz
+            stringr::str_extract(pattern = ";.*?$") %>% # extract the taxonomic rank information (including first ';')
+            stringr::str_count(pattern = "[^;]+") # count the number of ranks between the ';'
+} else if ( stringr::str_match(ref_fasta, "\\.fa$") ) { # if uncompressed
+    n_ranks <- read_lines(ref_fasta, n_max = 1) %>% # pull first line of .fa.gz
+            stringr::str_extract(pattern = ";.*?$") %>% # extract the taxonomic rank information (including first ';')
+            stringr::str_count(pattern = "[^;]+") # count the number of ranks between the ';'
+} else { # if extension is not expected
+    stop ("*** 'ref_fasta' (BLAST database) file must have '.fa' or '.fa.gz' extension! ***")
+}
+# set ranks based on number of ranks (only works for 7 or 8 ranks)
+if ( n_ranks == 8 ) {
+    ranks <- c("Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+    message("** BLAST database contains 8 ranks--setting to 'Root>>Species' **")
+} else if ( n_ranks == 7 ) {
+    ranks <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+    message("** BLAST database contains 7 ranks--setting to 'Kingdom>>Species' **")
+} else if ( n_ranks < 7 ) {
+    stop ("*** BLAST database contains fewer than 7 ranks--please set ranks explicitly using 'params.tax_ranks'! ***")
+} else {
+    stop ("*** BLAST database contains more than 8 ranks--please set ranks explicitly using 'params.tax_ranks'! ***")
+}
 
 run_blast <-            as.logical(run_blast)
-database <-             ref_fasta
+database <-             normalizePath(ref_fasta)
 identity <-             blast_min_identity
 coverage <-             blast_min_coverage
 
