@@ -2,6 +2,7 @@ process MERGE_TAX {
     def module_name = "merge_tax"
     tag "Whole dataset"
     // label:  
+    cache 'deep'
 
     input:
     tuple val(fcid), val(pcr_primers), val(meta), path(taxtab)
