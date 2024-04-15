@@ -50,8 +50,9 @@ if(any(duplicated(tax_merged$OTU))){
     as.matrix()
 }
 
-print(out)
+# print(out)
 
+### TODO: Not sure dimensions of merged seqtab
 # Check that output dimensions match input
 ### .y is mergedseqtab
 # if(!all(rownames(out) %in% colnames(.y))){
@@ -60,4 +61,4 @@ print(out)
 
 saveRDS(out, "merged_tax.rds")
 
-stop(" *** stopped manually *** ") ##########################################
+# stop(" *** stopped manually *** ") ##########################################

@@ -1,13 +1,13 @@
 process MERGE_TAX {
     def module_name = "merge_tax"
-    tag "$fcid; $pcr_primers"
+    tag "Whole dataset"
     // label:  
 
     input:
     tuple val(fcid), val(pcr_primers), val(meta), path(taxtab)
 
     output:
-
+    tuple val(fcid), val(pcr_primers), val(meta), path("merged_tax.rds")
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
