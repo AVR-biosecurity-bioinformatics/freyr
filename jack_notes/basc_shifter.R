@@ -6,7 +6,7 @@ library(pak)
 library(targets)
 library(tarchetypes)
 
-source("_targets_packages_nocrew.R")
+source("_targets_packages.R")
 source("R/functions.R")
 source("R/themes.R")
 
@@ -115,4 +115,4 @@ write_csv(params, "sample_data/loci_params.csv")
 
 # run pipeline
 
-tar_make(script = "_targets_nocrew.R")
+tar_make(script = "_targets.R")
