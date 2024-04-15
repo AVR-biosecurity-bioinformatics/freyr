@@ -1,6 +1,4 @@
 #!/bin/bash
-# Created by the DJPR job script generator for Slurm
-# Mon Feb 12 2024 11:37:11 GMT+1100 (Australian Eastern Daylight Time)
 
 # The name of the job:
 #SBATCH --job-name="piperline.container_test"

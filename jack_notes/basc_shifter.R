@@ -7,7 +7,7 @@ library(targets)
 library(tarchetypes)
 
 source("_targets_packages.R")
-source("R/functions.R")
+source("R/functions_old.R") # uses the old functions.R file before I changed things for Nextflow
 source("R/themes.R")
 
 runs <- dir("data/") #Find all directories within data
