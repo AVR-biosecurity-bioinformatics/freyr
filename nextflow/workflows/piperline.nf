@@ -126,7 +126,7 @@ workflow PIPERLINE {
         | flatten ()
         | splitCsv ( header: true )
         | map { row -> 
-            meta = row.subMap(
+            def meta = row.subMap(
                 'sample_id','sample_name','extraction_rep','amp_rep',
                 'client_name','experiment_name','sample_type','collection_method',
                 'collection_location','lat_lon','environment','collection_date',

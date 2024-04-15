@@ -60,5 +60,6 @@ if(any(duplicated(tax_merged$OTU))){
 # }
 
 saveRDS(out, "merged_tax.rds")
+write.table(out, "merged_tax.txt", sep = ",")
 
 # stop(" *** stopped manually *** ") ##########################################
