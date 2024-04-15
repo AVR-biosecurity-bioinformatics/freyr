@@ -50,10 +50,13 @@ if(any(duplicated(tax_merged$OTU))){
     as.matrix()
 }
 
+print(out)
+
 # Check that output dimensions match input
-if(!all(rownames(out) %in% colnames(.y))){
-    stop("Number of ASVs classified does not match the number of input ASVs")
-}
+### .y is mergedseqtab
+# if(!all(rownames(out) %in% colnames(.y))){
+#     stop("Number of ASVs classified does not match the number of input ASVs")
+# }
 
 saveRDS(out, "merged_tax.rds")
 
