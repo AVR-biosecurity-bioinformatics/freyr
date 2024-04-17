@@ -73,7 +73,7 @@ include { TAX_IDTAXA                                } from '../modules/tax_idtax
 include { TAX_BLAST                                 } from '../modules/tax_blast'
 include { JOINT_TAX                                 } from '../modules/joint_tax'
 include { MERGE_TAX                                 } from '../modules/merge_tax'
-// include { ASSIGNMENT_PLOT                           } from '../modules/assignment_plot'
+include { ASSIGNMENT_PLOT                           } from '../modules/assignment_plot'
 // include { TAX_SUMMARY                               } from '../modules/tax_summary'
 // include { PHYLOSEQ_CREATE                           } from '../modules/phyloseq_create'
 // include { PHYLOSEQ_SUMMARY                          } from '../modules/phyloseq_summary'
@@ -382,6 +382,20 @@ workflow PIPERLINE {
     //// merge tax tables across flowcells
     MERGE_TAX ( ch_mergetax_input )
 
+    //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
+    // FILTER_SEQTAB.out.seqtab
+    // tuple val(fcid), val(pcr_primers), val(meta), path("*_seqtab.cleaned.rds"), emit: seqtab
+    | 
+    
+    // JOINT_TAX.out.taxtab
+    // tuple val(fcid), val(pcr_primers), val(meta), path("*_taxblast.rds"), emit: taxtab
+
+    
+
+
+
+    //// do assignment plot
+    // ASSIGNMENT_PLOT ( MERGE_TAX.out.merged_tax )
 
 
 

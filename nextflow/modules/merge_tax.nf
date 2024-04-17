@@ -7,8 +7,7 @@ process MERGE_TAX {
     tuple val(pcr_primers), val(fcid), val(meta), path(taxtab)
 
     output:
-    tuple val(pcr_primers), val(fcid), val(meta), path("*_merged_tax.rds")
-    path("*.rds")
+    tuple val(pcr_primers), val(fcid), val(meta), path("*_merged_tax.rds"), emit: merged_tax
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

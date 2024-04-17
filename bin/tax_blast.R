@@ -76,7 +76,8 @@ if (isTRUE(run_blast)) { # run BLAST if requested
             dplyr::rename(blast_genus = Genus, blast_spp = Species) %>%
             dplyr::filter(!is.na(blast_spp)) 
         
-        # stop(" *** stopped manually *** ") ##########################################
+        ## save BLAST output for later
+        saveRDS(blast_spp, paste0(fcid,"_",pcr_primers,"_blast_spp.rds"))
 
         if( nrow(blast_spp) > 0 ) {
         # Transform into taxtab format

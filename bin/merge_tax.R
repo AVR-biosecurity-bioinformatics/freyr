@@ -3,15 +3,14 @@
 
 ## check and define variables
 
-#### INCOMPLETE
-fcid_list <- # convert Groovy to R list format
-    stringr::str_extract_all(fcid, pattern = "[^\\s,\\[\\]]+") %>% unlist()
+## this isn't needed as fcid and meta aren't used in the code
+# fcid_list <- # convert Groovy to R list format
+#     stringr::str_extract_all(fcid, pattern = "[^\\s,\\[\\]]+") %>% unlist()
 
-meta_list <-  # convert Groovy to R list format
-    stringr::str_extract_all(meta, pattern = "[^\\[\\]]+") %>% 
-    unlist() %>% str_subset(pattern = "^[^,]") # remove elements that start with ","
-meta_list2 <- meta_list %>% stringr::str_split(pattern = ", ") # nested list; elements are samples x pcr_primers
-#### INCOMPLETE above
+# meta_list <-  # convert Groovy to R list format
+#     stringr::str_extract_all(meta, pattern = "[^\\[\\]]+") %>% 
+#     unlist() %>% str_subset(pattern = "^[^,]") # remove elements that start with ","
+# meta_list2 <- meta_list %>% stringr::str_split(pattern = ", ") # nested list; elements are samples x pcr_primers
 
 
 taxtab_list <- # convert Groovy to R list format
@@ -19,7 +18,7 @@ taxtab_list <- # convert Groovy to R list format
 
 taxtab_list <- lapply(taxtab_list, readRDS) # read in taxtabs and store as list of tibbles
 
-saveRDS(taxtab_list, paste0(pcr_primers,"_taxtab_list.rds"))
+# saveRDS(taxtab_list, paste0(pcr_primers,"_taxtab_list.rds"))
 
 ### run R code
 
@@ -28,7 +27,7 @@ tax_merged <- taxtab_list %>%
     dplyr::bind_rows() %>%
     dplyr::distinct() # Remove any exact duplicates from save ASV being in different seqtab
 
-saveRDS(tax_merged, paste0(pcr_primers,"_tax_merged.rds"))
+# saveRDS(tax_merged, paste0(pcr_primers,"_tax_merged.rds"))
 
 # Check for duplicated ASVs across taxtabs
 if(any(duplicated(tax_merged$OTU))){
