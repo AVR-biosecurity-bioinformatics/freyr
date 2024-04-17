@@ -26,7 +26,7 @@ for (i in 1:length(taxtab_list)) { # loop through .rds files, adding distinct se
     taxtab_tibble <- rbind(taxtab_tibble, taxtab_i)
 }
 
-
+saveRDS(taxtab_tibble, "taxtab_tibble.rds")
 
 
 ### run R code
@@ -35,6 +35,8 @@ tax_merged <- taxtab_tibble %>%
     purrr::map(~{ .x %>% tibble::as_tibble(rownames = "OTU") }) %>%
     dplyr::bind_rows() %>%
     dplyr::distinct() # Remove any exact duplicates from save ASV being in different seqtab
+
+saveRDS(tax_merged, "tax_merged.rds")
 
 # Check for duplicated ASVs across taxtabs
 if(any(duplicated(tax_merged$OTU))){
