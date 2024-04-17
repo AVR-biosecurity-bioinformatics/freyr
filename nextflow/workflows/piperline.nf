@@ -385,7 +385,7 @@ workflow PIPERLINE {
     //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
     // FILTER_SEQTAB.out.seqtab
     // tuple val(fcid), val(pcr_primers), val(meta), path("*_seqtab.cleaned.rds"), emit: seqtab
-    | 
+    
     
     // JOINT_TAX.out.taxtab
     // tuple val(fcid), val(pcr_primers), val(meta), path("*_taxblast.rds"), emit: taxtab
