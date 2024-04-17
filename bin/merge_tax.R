@@ -20,14 +20,9 @@ meta_list2 <- meta_list %>% stringr::str_split(pattern = ", ") # nested list; el
 taxtab_list <- # convert Groovy to R list format
     stringr::str_extract_all(taxtab, pattern = "[^\\s,\\[\\]]+") %>% unlist()
 
-taxtab_tibble <- tibble() # read in taxtabs
-for (i in 1:length(taxtab_list)) { # loop through .rds files, adding distinct sequences to tibble
-    taxtab_i <- readRDS(taxtab_list[i])
-    taxtab_tibble <- rbind(taxtab_tibble, taxtab_i)
-}
+taxtab_list <- lapply(taxtab_list, readRDS) # read in taxtabs and store as list of tibbles
 
-saveRDS(taxtab_tibble, "taxtab_tibble.rds")
-
+saveRDS(taxtab_list, "taxtab_list.rds")
 
 ### run R code
 
@@ -41,13 +36,13 @@ saveRDS(tax_merged, "tax_merged.rds")
 # Check for duplicated ASVs across taxtabs
 if(any(duplicated(tax_merged$OTU))){
     warning("Duplicated ASVs detected, selecting first occurrence")
-    out <- tax_merged %>%
+    merged_tax <- tax_merged %>%
         dplyr::group_by(OTU) %>%
         dplyr::slice(1) %>%
         tibble::column_to_rownames("OTU") %>%
         as.matrix()
 } else{
-    out <- tax_merged %>%
+    merged_tax <- tax_merged %>%
     tibble::column_to_rownames("OTU") %>%
     as.matrix()
 }
@@ -61,7 +56,7 @@ if(any(duplicated(tax_merged$OTU))){
 #     stop("Number of ASVs classified does not match the number of input ASVs")
 # }
 
-saveRDS(out, "merged_tax.rds")
-write.table(out, "merged_tax.txt", sep = ",")
+saveRDS(merged_tax, "merged_tax.rds")
+write.table(merged_tax, "merged_tax.txt", sep = ",")
 
 # stop(" *** stopped manually *** ") ##########################################
