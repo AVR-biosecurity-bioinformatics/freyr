@@ -57,6 +57,6 @@ if(any(duplicated(tax_merged$OTU))){
 # }
 
 saveRDS(merged_tax, "merged_tax.rds")
-write.table(merged_tax, "merged_tax.txt", sep = ",")
+write.table(merged_tax, "merged_tax.csv", sep = ",")
 
 # stop(" *** stopped manually *** ") ##########################################

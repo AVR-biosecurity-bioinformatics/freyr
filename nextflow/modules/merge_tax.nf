@@ -10,6 +10,7 @@ process MERGE_TAX {
     output:
     tuple val(fcid), val(pcr_primers), val(meta), path("merged_tax.rds")
     path("*.rds")
+    path("*.csv")
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
