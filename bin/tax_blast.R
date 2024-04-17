@@ -51,8 +51,8 @@ seqtab <- readRDS(seqtab) # read in seqtab
 
 if (isTRUE(run_blast)) { # run BLAST if requested
     
-    seqmap <- tibble::enframe(getSequences(seqtab), name = NULL, value="OTU") %>%
-        mutate(name = paste0("SV", seq(length(getSequences(seqtab)))))
+    seqmap <- tibble::enframe(dada2::getSequences(seqtab), name = NULL, value="OTU") %>%
+        mutate(name = paste0("SV", seq(length(dada2::getSequences(seqtab)))))
     
     seqs <- taxreturn::char2DNAbin(seqmap$OTU)
     names(seqs) <- seqmap$name
@@ -81,7 +81,7 @@ if (isTRUE(run_blast)) { # run BLAST if requested
 
         if( nrow(blast_spp) > 0 ) {
         # Transform into taxtab format
-        out <- tibble::enframe(getSequences(seqtab), name=NULL, value="OTU") %>%
+        out <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") %>%
             dplyr::left_join(
                 blast_spp %>%
                 dplyr::select(name = OTU, Genus = blast_genus, Species = blast_spp) %>%
@@ -92,14 +92,14 @@ if (isTRUE(run_blast)) { # run BLAST if requested
             as.matrix()
         } else {
             warning(paste0("No Species assigned with BLAST to ", database, " -- have you used the correct database?"))
-        out <- tibble::enframe(getSequences(seqtab), name=NULL, value="OTU") %>%
+        out <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") %>%
                 dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
                 column_to_rownames("OTU") %>%
                 as.matrix()
         }
     } else {
         warning(paste0("No sequences present in seqtab -- BLAST skipped"))
-        out <- tibble::enframe(getSequences(seqtab), name = NULL, value = "OTU") %>%
+        out <- tibble::enframe(dada2::getSequences(seqtab), name = NULL, value = "OTU") %>%
         dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
         column_to_rownames("OTU") %>%
         as.matrix()
@@ -116,7 +116,7 @@ if (isTRUE(run_blast)) { # run BLAST if requested
     
 } else { # if BLAST not requested, produce null output
     
-    out <- tibble::enframe(getSequences(seqtab), name = NULL, value = "OTU") %>%
+    out <- tibble::enframe(dada2::getSequences(seqtab), name = NULL, value = "OTU") %>%
                     dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
                     column_to_rownames("OTU") %>%
                     as.matrix()

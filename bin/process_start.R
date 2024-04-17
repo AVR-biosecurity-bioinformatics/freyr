@@ -1,4 +1,6 @@
 ### load listed R scripts 
+if (!exists("projectDir")) { projectDir <- "." } # if not running in Nextflow, use current directory
+
 source(file.path(projectDir, "jack_notes/.Rprofile"))
 source(file.path(projectDir, "bin/functions.R"))
 source(file.path(projectDir, "bin/themes.R"))
