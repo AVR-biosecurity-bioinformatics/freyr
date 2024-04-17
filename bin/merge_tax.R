@@ -26,7 +26,7 @@ saveRDS(taxtab_list, "taxtab_list.rds")
 
 ### run R code
 
-tax_merged <- taxtab_tibble %>% 
+tax_merged <- taxtab_list %>% 
     purrr::map(~{ .x %>% tibble::as_tibble(rownames = "OTU") }) %>%
     dplyr::bind_rows() %>%
     dplyr::distinct() # Remove any exact duplicates from save ASV being in different seqtab
