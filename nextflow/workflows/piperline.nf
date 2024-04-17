@@ -369,14 +369,12 @@ workflow PIPERLINE {
     //// aggregate taxonomic assignment
     JOINT_TAX ( ch_joint_tax_input )
 
-    //// group taxtab across flowcell and pcr_primer 
-    /// creates tuple of lists of fcid, pcr_primer, meta and taxtab files
+    //// group taxtab across flowcells (per locus)
+    /// creates tuple of lists of fcid, meta and taxtab files
     JOINT_TAX.out.taxtab
     | map { fcid, pcr_primers, meta, taxtab -> // add arbitrary grouping key
-            [ "key", fcid, pcr_primers, meta, taxtab ] }
-    | groupTuple ( by: 0 ) // group into tuples using "key"
-    | map { key, fcid, pcr_primers, meta, taxtab ->  // remove key
-            [ fcid, pcr_primers, meta, taxtab ] } 
+            [ pcr_primers, fcid, meta, taxtab ] }
+    | groupTuple ( by: 0 ) // group into tuples using pcr_primers
     | set { ch_mergetax_input }
 
     // ch_mergetax_input | view()

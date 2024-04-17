@@ -7,8 +7,9 @@
 fcid_list <- # convert Groovy to R list format
     stringr::str_extract_all(fcid, pattern = "[^\\s,\\[\\]]+") %>% unlist()
 
-pcr_primers_list <- # convert Groovy to R list format
-    stringr::str_extract_all(pcr_primers, pattern = "[^\\s,\\[\\]]+") %>% unlist()
+### TODO: remove; don't need pcr_primers list as this is a grouping variable for process
+# pcr_primers_list <- # convert Groovy to R list format
+#     stringr::str_extract_all(pcr_primers, pattern = "[^\\s,\\[\\]]+") %>% unlist()
 
 meta_list <-  # convert Groovy to R list format
     stringr::str_extract_all(meta, pattern = "[^\\[\\]]+") %>% 
@@ -56,7 +57,6 @@ if(any(duplicated(tax_merged$OTU))){
 #     stop("Number of ASVs classified does not match the number of input ASVs")
 # }
 
-saveRDS(merged_tax, "merged_tax.rds")
-write.table(merged_tax, "merged_tax.csv", sep = ",")
+saveRDS(merged_tax, paste0(pcr_primers,"_merged_tax.rds"))
 
 # stop(" *** stopped manually *** ") ##########################################

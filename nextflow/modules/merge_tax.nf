@@ -1,16 +1,13 @@
 process MERGE_TAX {
     def module_name = "merge_tax"
-    tag "Whole dataset"
+    tag "$pcr_primers"
     // label:  
-    cache 'deep'
 
     input:
-    tuple val(fcid), val(pcr_primers), val(meta), path(taxtab)
+    tuple val(pcr_primers), val(fcid), val(meta), path(taxtab)
 
     output:
-    tuple val(fcid), val(pcr_primers), val(meta), path("merged_tax.rds")
-    path("*.rds")
-    path("*.csv")
+    tuple val(pcr_primers), val(fcid), val(meta), path("*_merged_tax.rds")
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -23,8 +20,8 @@ process MERGE_TAX {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    fcid =                  "${fcid}"
     pcr_primers =           "${pcr_primers}"
+    fcid =                  "${fcid}"
     meta =                  "${meta}"
     taxtab =                "${taxtab}"
     
