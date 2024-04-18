@@ -81,22 +81,23 @@ if (isTRUE(run_blast)) { # run BLAST if requested
         # filter by identity and coverage
         ### TODO (Alex): update this (you weren't happy with it)
         blast_spp <- blast_spp_low %>% 
-        dplyr::filter(pident >= identity, qcovs >= coverage) %>% 
-        dplyr::group_by(qseqid) %>%
-        dplyr::mutate(spp = Species %>% stringr::str_remove("^.* ")) %>%
-        dplyr::reframe(spp = paste(sort(unique(spp)), collapse = "/"), Genus, pident, qcovs, max_score, total_score, evalue) %>%
-        dplyr::mutate(binomial = paste(Genus, spp)) %>%
-        dplyr::distinct() %>%
-        dplyr::group_by(qseqid) %>% # added to resolve issue of returning NAs for Species (add_tally added up all rows ungrouped)
-        dplyr::add_tally() %>%
-        dplyr::mutate(binomial =  dplyr::case_when( #Leave unassigned if conflicted at genus level
-            n > 1 ~ as.character(NA),
-            n == 1 ~ binomial
-            )
-        ) %>%
-        dplyr::select(OTU = qseqid, Genus, Species = binomial, pident, qcovs, max_score, total_score, evalue) %>% 
-        dplyr::rename(blast_genus = Genus, blast_spp = Species) %>%
-        dplyr::filter(!is.na(blast_spp)) 
+            dplyr::filter(pident >= identity, qcovs >= coverage) %>% 
+            dplyr::group_by(qseqid) %>%
+            dplyr::mutate(spp = Species %>% stringr::str_remove("^.* ")) %>%
+            dplyr::reframe(spp = paste(sort(unique(spp)), collapse = "/"), Genus, pident, qcovs, max_score, total_score, evalue) %>%
+            dplyr::mutate(binomial = paste(Genus, spp)) %>%
+            dplyr::distinct() %>%
+            dplyr::group_by(qseqid) %>% # added to resolve issue of returning NAs for Species (add_tally added up all rows ungrouped)
+            dplyr::add_tally() %>%
+            dplyr::ungroup() %>% 
+            dplyr::mutate(binomial =  dplyr::case_when( #Leave unassigned if conflicted at genus level
+                n > 1 ~ as.character(NA),
+                n == 1 ~ binomial
+                )
+            ) %>%
+            dplyr::select(OTU = qseqid, Genus, Species = binomial, pident, qcovs, max_score, total_score, evalue) %>% 
+            dplyr::rename(blast_genus = Genus, blast_spp = Species) %>%
+            dplyr::filter(!is.na(blast_spp)) 
 
         if( nrow(blast_spp) > 0 ) {
         # Transform into taxtab format
