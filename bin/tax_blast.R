@@ -94,8 +94,9 @@ if (isTRUE(run_blast)) { # run BLAST if requested
             n == 1 ~ binomial
             )
         ) %>%
-    dplyr::select(OTU = qseqid, Genus, Species = binomial, pident, qcovs, max_score, total_score, evalue)
-
+        dplyr::select(OTU = qseqid, Genus, Species = binomial, pident, qcovs, max_score, total_score, evalue) %>% 
+        dplyr::rename(blast_genus = Genus, blast_spp = Species) %>%
+        dplyr::filter(!is.na(blast_spp)) 
 
         if( nrow(blast_spp) > 0 ) {
         # Transform into taxtab format
