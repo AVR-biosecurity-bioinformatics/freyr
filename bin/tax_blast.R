@@ -104,9 +104,10 @@ if (isTRUE(run_blast)) { # run BLAST if requested
         out <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") %>%
             dplyr::left_join(
                 blast_spp %>%
-                dplyr::select(name = OTU, Genus = blast_genus, Species = blast_spp) %>%
-                left_join(seqmap) %>%
-                dplyr::select(-name), by="OTU"
+                    dplyr::select(name = OTU, Genus = blast_genus, Species = blast_spp) %>%
+                    left_join(seqmap, by = "name") %>%
+                    dplyr::select(-name), 
+                by="OTU"
                 ) %>%
             column_to_rownames("OTU") %>%
             as.matrix()
@@ -130,9 +131,8 @@ if (isTRUE(run_blast)) { # run BLAST if requested
         stop("Number of ASVs classified does not match the number of input ASVs")
     }
     
-    if(!is.null(output)){
-        saveRDS(out, paste0(fcid,"_",pcr_primers,"_",db_name,"_blast.rds"))
-        }
+    # save output
+    saveRDS(out, paste0(fcid,"_",pcr_primers,"_",db_name,"_blast.rds"))
     
 } else { # if BLAST not requested, produce null output
     
@@ -140,7 +140,12 @@ if (isTRUE(run_blast)) { # run BLAST if requested
                     dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
                     column_to_rownames("OTU") %>%
                     as.matrix()
+
+    EMPTY_FILE <- c()
+
+    saveRDS(EMPTY_FILE, "empty_file.txt")
     
+    # save output
     saveRDS(out, paste0(fcid,"_",pcr_primers,"_",db_name,"_blast.rds"))
 
 }
