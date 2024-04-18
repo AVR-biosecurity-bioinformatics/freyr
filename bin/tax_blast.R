@@ -117,6 +117,9 @@ if (isTRUE(run_blast)) { # run BLAST if requested
                 dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
                 column_to_rownames("OTU") %>%
                 as.matrix()
+                
+                EMPTY_FILE <- c()
+                saveRDS(EMPTY_FILE, "empty_file1.txt")
         }
     } else {
         warning(paste0("No sequences present in seqtab -- BLAST skipped"))
@@ -143,7 +146,7 @@ if (isTRUE(run_blast)) { # run BLAST if requested
 
     EMPTY_FILE <- c()
 
-    saveRDS(EMPTY_FILE, "empty_file.txt")
+    saveRDS(EMPTY_FILE, "empty_file2.txt")
     
     # save output
     saveRDS(out, paste0(fcid,"_",pcr_primers,"_",db_name,"_blast.rds"))
