@@ -61,23 +61,41 @@ if (isTRUE(run_blast)) { # run BLAST if requested
     db_name <- basename(database) %>% stringr::str_remove("_.*$")
     
     if ( length(seqs) > 0 ) { # if there are ASV sequences, run BLAST
-        
-        blast_spp <- taxreturn::blast_assign_species(
+        ## make low stringency, ident = 60, coverage = 80, then save
+        blast_spp_low <- taxreturn::blast_top_hit(
             query = seqs,
             db = database, 
-            identity = identity, 
-            coverage = coverage, 
+            identity = 60, 
+            coverage = 80, 
             evalue = 1e06,
             max_target_seqs = 5, 
             max_hsp = 5, 
             ranks = ranks, 
-            delim = ";"
-            ) %>%
-            dplyr::rename(blast_genus = Genus, blast_spp = Species) %>%
-            dplyr::filter(!is.na(blast_spp)) 
-        
-        ## save BLAST output for later
-        saveRDS(blast_spp, paste0(fcid,"_",pcr_primers,"_blast_spp.rds"))
+            delim = ";",
+            resolve_ties="all"
+            )
+
+        ## save BLAST output for assignment plot
+        saveRDS(blast_spp_low, paste0(fcid,"_",pcr_primers,"_blast_spp_low.rds"))
+
+        # filter by identity and coverage
+        ### TODO (Alex): update this (you weren't happy with it)
+        blast_spp <- blast_spp_low %>% 
+        dplyr::filter(pident >= identity, qcovs >= coverage) %>% 
+        dplyr::group_by(qseqid) %>%
+        dplyr::mutate(spp = Species %>% stringr::str_remove("^.* ")) %>%
+        dplyr::reframe(spp = paste(sort(unique(spp)), collapse = "/"), Genus, pident, qcovs, max_score, total_score, evalue) %>%
+        dplyr::mutate(binomial = paste(Genus, spp)) %>%
+        dplyr::distinct() %>%
+        dplyr::group_by(qseqid) %>% # added to resolve issue of returning NAs for Species (add_tally added up all rows ungrouped)
+        dplyr::add_tally() %>%
+        dplyr::mutate(binomial =  dplyr::case_when( #Leave unassigned if conflicted at genus level
+            n > 1 ~ as.character(NA),
+            n == 1 ~ binomial
+            )
+        ) %>%
+    dplyr::select(OTU = qseqid, Genus, Species = binomial, pident, qcovs, max_score, total_score, evalue)
+
 
         if( nrow(blast_spp) > 0 ) {
         # Transform into taxtab format

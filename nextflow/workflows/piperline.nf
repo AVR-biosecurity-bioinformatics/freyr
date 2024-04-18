@@ -74,7 +74,7 @@ include { TAX_BLAST                                 } from '../modules/tax_blast
 include { JOINT_TAX                                 } from '../modules/joint_tax'
 include { MERGE_TAX                                 } from '../modules/merge_tax'
 include { ASSIGNMENT_PLOT                           } from '../modules/assignment_plot'
-// include { TAX_SUMMARY                               } from '../modules/tax_summary'
+include { TAX_SUMMARY                               } from '../modules/tax_summary'
 // include { PHYLOSEQ_CREATE                           } from '../modules/phyloseq_create'
 // include { PHYLOSEQ_SUMMARY                          } from '../modules/phyloseq_summary'
 // include { ACCUMULATION_CURVE                        } from '../modules/accumulation_curve'
@@ -390,7 +390,7 @@ workflow PIPERLINE {
     // JOINT_TAX.out.taxtab
     // tuple val(fcid), val(pcr_primers), val(meta), path("*_taxblast.rds"), emit: taxtab
 
-    
+    // TAX_BLAST.out.blast_assignment
 
 
 

@@ -8,7 +8,7 @@ process TAX_BLAST {
 
     output:
     tuple val(fcid), val(pcr_primers), val(meta), path("*_blast.rds"), emit: blast
-    path("*_blast_spp.rds")
+    tuple val(fcid), val(pcr_primers), val(meta), path("*_blast_spp_low.rds"), emit: blast_assignment
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

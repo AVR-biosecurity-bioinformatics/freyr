@@ -14,6 +14,14 @@
 
 
 
+### add resolve_ties= 'first' code filtering to the blast_spp_low output
+# blast_spp_low <- blast_spp_low %>%
+#     dplyr::mutate(row_n = dplyr::row_number()) %>%
+#     dplyr::top_n(1, row_n) %>% # Break ties by position
+#     dplyr::select(-row_n) %>%
+#     dplyr::ungroup()
+
+
 stop(" *** stopped manually *** ") ##########################################
 
 
@@ -52,6 +60,9 @@ temp_samdf3_grouped %>%
                 seqs <- taxreturn::char2DNAbin(seqmap$OTU)
                 names(seqs) <- seqmap$name
                 
+
+
+
                 if(length(seqs) > 0) {
                     blast_top_hit(
                         query = seqs,
