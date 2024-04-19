@@ -356,12 +356,13 @@ workflow PIPERLINE {
 
     //// use IDTAXA to assign taxonomy
     TAX_IDTAXA ( FILTER_SEQTAB.out.seqtab )
+    ch_taxtab = TAX_IDTAXA.out.taxtab
 
     //// use blastn to assign taxonomy
     TAX_BLAST ( FILTER_SEQTAB.out.seqtab )
 
     //// merge tax assignment outputs and filtered seqtab (pre-assignment)
-    TAX_IDTAXA.out.taxtab
+    ch_taxtab
     | combine ( TAX_BLAST.out.blast, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
     | combine ( FILTER_SEQTAB.out.seqtab, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
     | set { ch_joint_tax_input }
