@@ -8,6 +8,7 @@ tax <-      readRDS(tax)
 
 # convert blast 'resolve_ties="all"' output to 'resolve_ties="first"'
 blast <- blast %>%
+    dplyr::group_by(qseqid) %>% 
     dplyr::mutate(row_n = dplyr::row_number()) %>%
     dplyr::top_n(1, row_n) %>% # Break ties by position
     dplyr::select(-row_n) %>%
@@ -16,9 +17,10 @@ blast <- blast %>%
 ### run R code
 
 #filter tax table
-tax %>% 
+tax <- tax %>% 
     seqateurs::unclassified_to_na(rownames=FALSE) %>%
-    dplyr::mutate(lowest = seqateurs::lowest_classified(.)) 
+    dplyr::mutate(lowest = seqateurs::lowest_classified(.)) # causes warning: ' argument is not an atomic vector; coercing'
+    ### TODO: resolve above warning message
 
 # make seqmap 
 seqmap <- tibble::enframe(getSequences(seqtab), name = NULL, value="OTU") %>%
@@ -33,8 +35,6 @@ blast <- blast %>%
     dplyr::select(name = qseqid, acc, blastspp, pident, total_score, max_score, evalue, qcovs) %>%
     left_join(seqmap) %>%
     dplyr::select(-name)
-
-stop(" *** stopped manually *** ") ##########################################
 
 # combine blast output and tax table
 if ( nrow(blast) > 0 & nrow(tax) > 0 ){
