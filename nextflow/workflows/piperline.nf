@@ -74,7 +74,7 @@ include { TAX_BLAST                                 } from '../modules/tax_blast
 include { JOINT_TAX                                 } from '../modules/joint_tax'
 include { MERGE_TAX                                 } from '../modules/merge_tax'
 include { ASSIGNMENT_PLOT                           } from '../modules/assignment_plot'
-include { TAX_SUMMARY                               } from '../modules/tax_summary'
+// include { TAX_SUMMARY                               } from '../modules/tax_summary'
 // include { PHYLOSEQ_CREATE                           } from '../modules/phyloseq_create'
 // include { PHYLOSEQ_SUMMARY                          } from '../modules/phyloseq_summary'
 // include { ACCUMULATION_CURVE                        } from '../modules/accumulation_curve'
@@ -383,17 +383,12 @@ workflow PIPERLINE {
     MERGE_TAX ( ch_mergetax_input )
 
     //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
-    // FILTER_SEQTAB.out.seqtab
-    // tuple val(fcid), val(pcr_primers), val(meta), path("*_seqtab.cleaned.rds"), emit: seqtab
+    FILTER_SEQTAB.out.seqtab 
+    | combine ( TAX_BLAST.out.blast_assignment, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
+    | combine ( JOINT_TAX.out.taxtab, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
+    // | set { ch_assignment_plot_input }
+    | view()
     
-    
-    // JOINT_TAX.out.taxtab
-    // tuple val(fcid), val(pcr_primers), val(meta), path("*_taxblast.rds"), emit: taxtab
-
-    // TAX_BLAST.out.blast_assignment
-
-
-
     //// do assignment plot
     // ASSIGNMENT_PLOT ( MERGE_TAX.out.merged_tax )
 
