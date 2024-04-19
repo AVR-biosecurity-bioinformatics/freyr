@@ -59,6 +59,9 @@ if (isTRUE(run_blast)) { # run BLAST if requested
     
     # Get the filename of that db that we can use to name the output files
     db_name <- basename(database) %>% stringr::str_remove("_.*$")
+
+    # empty file to debug output
+    EMPTY_FILE <- c()
     
     if ( length(seqs) > 0 ) { # if there are ASV sequences, run BLAST
         ## make low stringency, ident = 60, coverage = 80, then save
@@ -99,6 +102,8 @@ if (isTRUE(run_blast)) { # run BLAST if requested
             dplyr::rename(blast_genus = Genus, blast_spp = Species) %>%
             dplyr::filter(!is.na(blast_spp)) 
 
+        saveRDS(blast_spp, paste0(fcid,"_",pcr_primers,"_blast_spp.rds"))
+
         if( nrow(blast_spp) > 0 ) {
         # Transform into taxtab format
         out <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") %>%
@@ -111,6 +116,8 @@ if (isTRUE(run_blast)) { # run BLAST if requested
                 ) %>%
             column_to_rownames("OTU") %>%
             as.matrix()
+
+            saveRDS(EMPTY_FILE, paste0(fcid,"_",pcr_primers,"_empty_file1.txt"))
         } else {
             warning(paste0("No Species assigned with BLAST to ", database, " -- have you used the correct database?"))
         out <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") %>%
@@ -118,8 +125,7 @@ if (isTRUE(run_blast)) { # run BLAST if requested
                 column_to_rownames("OTU") %>%
                 as.matrix()
                 
-                EMPTY_FILE <- c()
-                saveRDS(EMPTY_FILE, paste0(fcid,"_",pcr_primers,"_empty_file1.txt"))
+                saveRDS(EMPTY_FILE, paste0(fcid,"_",pcr_primers,"_empty_file2.txt"))
         }
     } else {
         warning(paste0("No sequences present in seqtab -- BLAST skipped"))
@@ -127,6 +133,8 @@ if (isTRUE(run_blast)) { # run BLAST if requested
         dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
         column_to_rownames("OTU") %>%
         as.matrix()
+
+        saveRDS(EMPTY_FILE, paste0(fcid,"_",pcr_primers,"_empty_file3.txt"))
     }
     
     # Check that output dimensions match input
@@ -144,9 +152,7 @@ if (isTRUE(run_blast)) { # run BLAST if requested
                     column_to_rownames("OTU") %>%
                     as.matrix()
 
-    EMPTY_FILE <- c()
-
-    saveRDS(EMPTY_FILE, "empty_file2.txt")
+    saveRDS(EMPTY_FILE, "empty_file4.txt")
     
     # save output
     saveRDS(out, paste0(fcid,"_",pcr_primers,"_",db_name,"_blast.rds"))
