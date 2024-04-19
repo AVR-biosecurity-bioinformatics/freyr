@@ -119,7 +119,7 @@ if (isTRUE(run_blast)) { # run BLAST if requested
                 as.matrix()
                 
                 EMPTY_FILE <- c()
-                saveRDS(EMPTY_FILE, "empty_file1.txt")
+                saveRDS(EMPTY_FILE, paste0(fcid,"_",pcr_primers,"_empty_file1.txt"))
         }
     } else {
         warning(paste0("No sequences present in seqtab -- BLAST skipped"))
