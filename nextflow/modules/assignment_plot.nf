@@ -4,10 +4,10 @@ process ASSIGNMENT_PLOT {
     // label:  
 
     input:
-    tuple val(fcid), val(pcr_primers), val(meta), path(seqtab), path(blast), path(joint_tax)
+    tuple val(fcid), val(pcr_primers), val(meta), path(seqtab), path(blast), path(tax), val(target_gene), path(idtaxa_db), path(ref_fasta)
 
     output:
-
+    path("*_taxonomic_assignment_summary.pdf"), emit: plot
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -25,8 +25,10 @@ process ASSIGNMENT_PLOT {
     meta =                  "${meta}"
     seqtab =                "${seqtab}"
     blast =                 "${blast}"
-    joint_tax =             "${joint_tax}"
-    ref_fasta =             "${meta.ref_fasta}"
+    tax =                   "${tax}"
+    target_gene =           "${target_gene}"
+    id_taxa =               "${idtaxa_db}"
+    ref_fasta =             "${ref_fasta}"
     
     ## global variables
     projectDir = "$projectDir"

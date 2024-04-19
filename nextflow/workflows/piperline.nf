@@ -398,11 +398,10 @@ workflow PIPERLINE {
     | combine ( TAX_BLAST.out.blast_assignment, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
     | combine ( JOINT_TAX.out.taxtab, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
     | combine ( ch_loci_info, by: 1 )
-    | view()
-    // | set { ch_assignment_plot_input }
+    | set { ch_assignment_plot_input }
         
     //// do assignment plot
-    // ASSIGNMENT_PLOT ( MERGE_TAX.out.merged_tax )
+    ASSIGNMENT_PLOT ( ch_assignment_plot_input )
 
 
 
