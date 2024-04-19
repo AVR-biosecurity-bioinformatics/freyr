@@ -353,18 +353,20 @@ workflow PIPERLINE {
 
     //// filter sequence table
     FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
+    ch_seqtab = FILTER_SEQTAB.out.seqtab
 
     //// use IDTAXA to assign taxonomy
     TAX_IDTAXA ( FILTER_SEQTAB.out.seqtab )
-    ch_taxtab = TAX_IDTAXA.out.taxtab
+    ch_tax_idtaxa = TAX_IDTAXA.out.taxtab
 
     //// use blastn to assign taxonomy
     TAX_BLAST ( FILTER_SEQTAB.out.seqtab )
+    ch_tax_blast = TAX_BLAST.out.blast
 
     //// merge tax assignment outputs and filtered seqtab (pre-assignment)
-    ch_taxtab
-    | combine ( TAX_BLAST.out.blast, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
-    | combine ( FILTER_SEQTAB.out.seqtab, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
+    ch_tax_idtaxa
+    | combine ( ch_tax_blast, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
+    | combine ( ch_seqtab, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
     | set { ch_joint_tax_input }
 
     //// aggregate taxonomic assignment
