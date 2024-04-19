@@ -27,7 +27,7 @@ process ASSIGNMENT_PLOT {
     blast =                 "${blast}"
     tax =                   "${tax}"
     target_gene =           "${target_gene}"
-    id_taxa =               "${idtaxa_db}"
+    idtaxa_db =               "${idtaxa_db}"
     ref_fasta =             "${ref_fasta}"
     
     ## global variables
