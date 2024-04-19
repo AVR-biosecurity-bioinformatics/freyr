@@ -42,8 +42,8 @@ if ( n_ranks == 8 ) {
 
 run_blast <-            as.logical(run_blast)
 database <-             normalizePath(ref_fasta)
-identity <-             blast_min_identity
-coverage <-             blast_min_coverage
+identity <-             as.numeric(blast_min_identity)
+coverage <-             as.numeric(blast_min_coverage)
 
 ### run R code
 seqtab <- readRDS(seqtab) # read in seqtab
