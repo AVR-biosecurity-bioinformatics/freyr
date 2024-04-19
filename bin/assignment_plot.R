@@ -34,6 +34,8 @@ blast <- blast %>%
     left_join(seqmap) %>%
     dplyr::select(-name)
 
+stop(" *** stopped manually *** ") ##########################################
+
 # combine blast output and tax table
 if ( nrow(blast) > 0 & nrow(tax) > 0 ){
                 joint <- blast %>% 
