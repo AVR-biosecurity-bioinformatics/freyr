@@ -65,7 +65,7 @@ if ( !is.null(joint) ) {
         geom_histogram(colour="black", binwidth = 1, position = "stack") + 
         labs(
             title = paste0(fcid, "  ", pcr_primers, " Top hit identity distribution"),
-            subtitle = paste0("IDTAXA database:", itdtaxa_db, " BLAST database:", ref_fasta),
+            subtitle = paste0("IDTAXA database:", idtaxa_db, " BLAST database:", ref_fasta),
             x = "BLAST top hit % identity",
             y = "Sequence Variants"
             ) + 
