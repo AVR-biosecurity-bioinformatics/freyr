@@ -4,10 +4,10 @@ process ASSIGNMENT_PLOT {
     // label:  
 
     input:
-    tuple val(pcr_primers), val(fcid), val(meta), path(merged_tax)
+    tuple val(fcid), val(pcr_primers), val(meta), path(seqtab), path(blast), path(joint_tax)
 
     output:
-    tuple val(pcr_primers), val(fcid), val(meta), path("*_merged_tax.rds"), emit: merged_tax
+
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -20,10 +20,13 @@ process ASSIGNMENT_PLOT {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    pcr_primers =           "${pcr_primers}"
     fcid =                  "${fcid}"
+    pcr_primers =           "${pcr_primers}"
     meta =                  "${meta}"
-    taxtab =                "${taxtab}"
+    seqtab =                "${seqtab}"
+    blast =                 "${blast}"
+    joint_tax =             "${joint_tax}"
+    ref_fasta =             "${meta.ref_fasta}"
     
     ## global variables
     projectDir = "$projectDir"
