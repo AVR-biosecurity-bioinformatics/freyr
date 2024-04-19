@@ -388,16 +388,18 @@ workflow PIPERLINE {
     // create channel linking pcr_primers and databases (from params)
     ch_sample_locus_reads 
     | map { meta, reads -> 
-            [ meta.pcr_primers, meta.target_gene, meta.idtaxa_db, meta.ref_fasta ] }
+            [ meta.target_gene, meta.pcr_primers, meta.idtaxa_db, meta.ref_fasta ] }
     | unique()
-    | view()
+    | set { ch_loci_info }
 
     //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
     /// channel has one item per fcid x pcr_primer combo
     FILTER_SEQTAB.out.seqtab 
     | combine ( TAX_BLAST.out.blast_assignment, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
     | combine ( JOINT_TAX.out.taxtab, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
-    | set { ch_assignment_plot_input }
+    | combine ( ch_loci_info, by: 1 )
+    | view()
+    // | set { ch_assignment_plot_input }
         
     //// do assignment plot
     // ASSIGNMENT_PLOT ( MERGE_TAX.out.merged_tax )
