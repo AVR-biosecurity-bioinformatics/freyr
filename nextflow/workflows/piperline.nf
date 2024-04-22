@@ -75,12 +75,12 @@ include { JOINT_TAX                                 } from '../modules/joint_tax
 include { MERGE_TAX                                 } from '../modules/merge_tax'
 include { ASSIGNMENT_PLOT                           } from '../modules/assignment_plot'
 // include { TAX_SUMMARY                               } from '../modules/tax_summary'
+include { MERGE_SEQTAB                              } from '../modules/merge_seqtab'
 // include { PHYLOSEQ_CREATE                           } from '../modules/phyloseq_create'
 // include { PHYLOSEQ_SUMMARY                          } from '../modules/phyloseq_summary'
 // include { ACCUMULATION_CURVE                        } from '../modules/accumulation_curve'
 // include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_filter'
 // include { READ_TRACKING                             } from '../modules/read_tracking'
-include { MERGE_SEQTAB                              } from '../modules/merge_seqtab'
 
 
 
@@ -357,7 +357,7 @@ workflow PIPERLINE {
 
     //// use IDTAXA to assign taxonomy
     TAX_IDTAXA ( FILTER_SEQTAB.out.seqtab )
-    ch_tax_idtaxa = TAX_IDTAXA.out.taxtab
+    ch_tax_idtaxa = TAX_IDTAXA.out.tax
 
     //// use blastn to assign taxonomy
     TAX_BLAST ( FILTER_SEQTAB.out.seqtab )
@@ -403,9 +403,13 @@ workflow PIPERLINE {
     //// do assignment plot
     ASSIGNMENT_PLOT ( ch_assignment_plot_input )
 
+    /// generate taxonomic assignment summary per locus
+    /// input: TAX_IDTAXA.out.ids ('idtaxa_ids' in R code) which is flowcell x locus
 
 
 
-    /// merge final seqtab across and within flowcells (after assignment)
+    /// merge final seqtab across loci
     // MERGE_SEQTAB ()
+
+    /// generate phyloseq objects for whole dataset 
 }

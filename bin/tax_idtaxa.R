@@ -9,6 +9,8 @@ quiet <-                FALSE # switch quiet off for now
 multithread <-          FALSE # multithreading switched off for now
 remove_Ns <-            FALSE
 ranks <-                c("Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+### TODO: Check that ranks of IDTAXA and BLAST assignment need to be the same?
+### if so, implement similar code to tax_blast.R to extract ranks from database
 
 database <-             idtaxa_db
 threshold <-            as.numeric(idtaxa_confidence)
@@ -89,7 +91,10 @@ if(!all(colnames(tax) %in% ranks)){
     stop("Number of ranks does not match")
 }
 
+# subset tax object to just tax
+
 # Write out idtaxa objects
-saveRDS(tax, paste0(fcid,"_",pcr_primers,"_",db_name,"_taxtab.rds"))
+saveRDS(tax, paste0(fcid,"_",pcr_primers,"_",db_name,"_idtaxa_tax.rds"))
+saveRDS(ids, paste0(fcid,"_",pcr_primers,"_",db_name,"_idtaxa_ids.rds"))
 
 # stop(" *** stopped manually *** ") ##########################################

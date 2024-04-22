@@ -7,7 +7,10 @@ process TAX_IDTAXA {
     tuple val(fcid), val(pcr_primers), val(meta), path(seqtab)
 
     output:
-    tuple val(fcid), val(pcr_primers), val(meta), path("*_taxtab.rds"), emit: taxtab
+    tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_tax.rds"), emit: tax
+    tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_ids.rds"), emit: ids
+
+
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
