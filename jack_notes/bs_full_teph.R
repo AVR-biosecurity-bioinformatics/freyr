@@ -117,4 +117,4 @@ write_csv(params, "sample_data/loci_params.csv")
 
 # run pipeline
 
-tar_make(script = "_targets.R")
+tar_make(script = "_targets_rank7.R")
