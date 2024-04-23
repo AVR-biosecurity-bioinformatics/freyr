@@ -38,5 +38,12 @@ process SEQ_QC {
         envir = .GlobalEnv # this allows import of existing objects like projectDir
     )
     
+    ### save .RData for debugging
+    if ("${params.rdata}" == "true") {
+        save.image()
+    } else {
+        NULL
+    }
+
     """
 }
