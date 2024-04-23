@@ -844,7 +844,7 @@ tar_target(write_seqtab_qualplots, {
                                  .f = ~step_idtaxa(
                                    seqtab = ..3,
                                    database = ..4,
-                                   ranks = c("Kingdom", "Phylum","Class", "Order", "Family", "Genus","Species"),
+                                   ranks = c("Root","Kingdom", "Phylum","Class", "Order", "Family", "Genus","Species"),
                                    qc_dir = "output/logs/",
                                    threshold = ..5,
                                    multithread = FALSE, 
