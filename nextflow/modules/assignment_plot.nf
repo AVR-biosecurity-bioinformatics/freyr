@@ -4,7 +4,7 @@ process ASSIGNMENT_PLOT {
     // label:  
 
     input:
-    tuple val(fcid), val(pcr_primers), val(meta), path(seqtab), path(blast), path(tax), val(target_gene), path(idtaxa_db), path(ref_fasta)
+    tuple val(fcid), val(pcr_primers), path(seqtab), path(blast), path(tax), val(target_gene), path(idtaxa_db), path(ref_fasta)
 
     output:
     path("*_taxonomic_assignment_summary.pdf"), emit: plot

@@ -411,6 +411,8 @@ workflow PIPERLINE {
         .combine ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by fcid, pcr_primers 
         .combine ( JOINT_TAX.out.taxtab, by: [0,1] ) // combine by fcid, pcr_primers
         .combine ( ch_loci_info, by: 1 )
+        .map { pcr_primers, fcid, seqtab, blast, tax, target_gene, idtaxa_db, ref_fasta ->
+            [ fcid, pcr_primers, seqtab, blast, tax, target_gene, idtaxa_db, ref_fasta ] } 
         .set { ch_assignment_plot_input }
 
     ch_assignment_plot_input .view()
