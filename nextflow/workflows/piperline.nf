@@ -400,18 +400,20 @@ workflow PIPERLINE {
         .groupTuple ( by: 0 ) // group into tuples using pcr_primers
         .set { ch_mergetax_input }
 
-    ch_mergetax_input .view()
+    // ch_mergetax_input .view()
 
-    // //// merge tax tables across flowcells
-    // MERGE_TAX ( ch_mergetax_input )
+    //// merge tax tables across flowcells
+    MERGE_TAX ( ch_mergetax_input )
 
-    // //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
-    // /// channel has one item per fcid x pcr_primer combo
-    // FILTER_SEQTAB.out.seqtab 
-    //     .combine ( TAX_BLAST.out.blast_assignment, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
-    //     .combine ( JOINT_TAX.out.taxtab, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
-    //     .combine ( ch_loci_info, by: 1 )
-    //     .set { ch_assignment_plot_input }
+    //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
+    /// channel has one item per fcid x pcr_primer combo
+    ch_seqtab
+        .combine ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by fcid, pcr_primers 
+        .combine ( JOINT_TAX.out.taxtab, by: [0,1] ) // combine by fcid, pcr_primers
+        .combine ( ch_loci_info, by: 1 )
+        .set { ch_assignment_plot_input }
+
+    ch_assignment_plot_input .view()
         
     // //// do assignment plot
     // ASSIGNMENT_PLOT ( ch_assignment_plot_input )
