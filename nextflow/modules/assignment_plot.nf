@@ -23,7 +23,6 @@ process ASSIGNMENT_PLOT {
     ## input channel variables
     fcid =                  "${fcid}"
     pcr_primers =           "${pcr_primers}"
-    meta =                  "${meta}"
     seqtab =                "${seqtab}"
     blast =                 "${blast}"
     tax =                   "${tax}"
