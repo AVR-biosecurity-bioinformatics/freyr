@@ -4,10 +4,10 @@ process JOINT_TAX {
     // label:  
 
     input:
-    tuple val(fcid), val(pcr_primers), val(meta), path(idtaxa_output), path(blast_output), path(seqtab)
-
+    tuple val(fcid), val(pcr_primers), val(target_gene), path(idtaxa_db), path(ref_fasta), path(tax), path(blast), path(seqtab)
+    
     output:
-    tuple val(fcid), val(pcr_primers), val(meta), path("*_taxblast.rds"), emit: taxtab
+    tuple val(fcid), val(pcr_primers), path("*_taxblast.rds"), emit: taxtab
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -22,9 +22,9 @@ process JOINT_TAX {
     ## input channel variables
     fcid =                  "${fcid}"
     pcr_primers =           "${pcr_primers}"
-    target_gene =           "${meta.target_gene}"
-    idtaxa_output =         "${idtaxa_output}"
-    blast_output =          "${blast_output}"
+    target_gene =           "${target_gene}"
+    idtaxa_output =         "${tax}"
+    blast_output =          "${blast}"
     seqtab =                "${seqtab}"
     
     ## global variables

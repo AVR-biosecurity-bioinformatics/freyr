@@ -386,66 +386,61 @@ workflow PIPERLINE {
         .map { pcr_primers, fcid, tax, target_gene, idtaxa_db, ref_fasta  ->
             [ fcid, pcr_primers, target_gene, idtaxa_db, ref_fasta, tax ] }
         .combine ( ch_tax_blast, by: [0,1] ) 
-        .combine ( ch_seqtab, by: [0,1 ])
-        .view () 
+        .combine ( ch_seqtab, by: [0,1] )
+        .set { ch_joint_tax_input } // fcid, pcr_primers, target_gene, idtaxa_db, ref_fasta, tax, blast, seqtab
 
-//     ch_tax_idtaxa
-//         .combine ( ch_tax_blast, by: [0,1,2] )
-//         .combine ( ch_seqtab, by: [0,1,2] )
-//         .set { ch_joint_tax_input }
+    //// aggregate taxonomic assignment
+    JOINT_TAX ( ch_joint_tax_input )
 
-//     //// aggregate taxonomic assignment
-//     JOINT_TAX ( ch_joint_tax_input )
+    //// group taxtab across flowcells (per locus)
+    /// creates tuple of lists of fcid, meta and taxtab files
+    JOINT_TAX.out.taxtab
+        .map { fcid, pcr_primers, taxtab -> // add arbitrary grouping key
+                [ pcr_primers, fcid, taxtab ] }
+        .groupTuple ( by: 0 ) // group into tuples using pcr_primers
+        .set { ch_mergetax_input }
 
-//     //// group taxtab across flowcells (per locus)
-//     /// creates tuple of lists of fcid, meta and taxtab files
-//     JOINT_TAX.out.taxtab
-//         .map { fcid, pcr_primers, meta, taxtab -> // add arbitrary grouping key
-//                 [ pcr_primers, fcid, meta, taxtab ] }
-//         .groupTuple ( by: 0 ) // group into tuples using pcr_primers
-//         .set { ch_mergetax_input }
+    ch_mergetax_input .view()
 
-//     // ch_mergetax_input .view()
+    // //// merge tax tables across flowcells
+    // MERGE_TAX ( ch_mergetax_input )
 
-//     //// merge tax tables across flowcells
-//     MERGE_TAX ( ch_mergetax_input )
-
-//     //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
-//     /// channel has one item per fcid x pcr_primer combo
-//     FILTER_SEQTAB.out.seqtab 
-//         .combine ( TAX_BLAST.out.blast_assignment, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
-//         .combine ( JOINT_TAX.out.taxtab, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
-//         .combine ( ch_loci_info, by: 1 )
-//         .set { ch_assignment_plot_input }
+    // //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
+    // /// channel has one item per fcid x pcr_primer combo
+    // FILTER_SEQTAB.out.seqtab 
+    //     .combine ( TAX_BLAST.out.blast_assignment, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
+    //     .combine ( JOINT_TAX.out.taxtab, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
+    //     .combine ( ch_loci_info, by: 1 )
+    //     .set { ch_assignment_plot_input }
         
-//     //// do assignment plot
-//     ASSIGNMENT_PLOT ( ch_assignment_plot_input )
+    // //// do assignment plot
+    // ASSIGNMENT_PLOT ( ch_assignment_plot_input )
 
-//     /// generate taxonomic assignment summary per locus (also hash seq)
-//     /* 
-//     input: TAX_IDTAXA.out.ids ('idtaxa_ids' in R code) 
-//         tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_tax.rds")
-//     input: TAX_IDTAXA.out.tax ('idtaxa' in R code) 
-//         tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_ids.rds")
-//     input: ASSIGNMENT_PLOT.out.joint
-//         tuple val(fcid), val(pcr_primers), val(meta), val(target_gene), path("*_joint.rds")
-//     input: TAX_BLAST.out.n_ranks 
-//         tuple val(fcid), val(pcr_primers), path("n_ranks.txt")
-//     */
-//     TAX_IDTAXA.out.tax // fcid, pcr_primers, meta, "*_idtaxa_tax.rds"
-//         .combine ( TAX_IDTAXA.out.ids, by: [0,1,2] ) // + "*_idtaxa_ids.rds"
-//         .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1,2] ) // + target_gene, "*_joint.rds"
-//         .combine ( TAX_BLAST.out.n_ranks, by: [0,1] ) // + "n_ranks.txt"
-//         .set { ch_tax_summary_input }
+    // /// generate taxonomic assignment summary per locus (also hash seq)
+    // /* 
+    // input: TAX_IDTAXA.out.ids ('idtaxa_ids' in R code) 
+    //     tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_tax.rds")
+    // input: TAX_IDTAXA.out.tax ('idtaxa' in R code) 
+    //     tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_ids.rds")
+    // input: ASSIGNMENT_PLOT.out.joint
+    //     tuple val(fcid), val(pcr_primers), val(meta), val(target_gene), path("*_joint.rds")
+    // input: TAX_BLAST.out.n_ranks 
+    //     tuple val(fcid), val(pcr_primers), path("n_ranks.txt")
+    // */
+    // TAX_IDTAXA.out.tax // fcid, pcr_primers, meta, "*_idtaxa_tax.rds"
+    //     .combine ( TAX_IDTAXA.out.ids, by: [0,1,2] ) // + "*_idtaxa_ids.rds"
+    //     .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1,2] ) // + target_gene, "*_joint.rds"
+    //     .combine ( TAX_BLAST.out.n_ranks, by: [0,1] ) // + "n_ranks.txt"
+    //     .set { ch_tax_summary_input }
 
-//     // view ( ch_tax_summary_input )
+    // // view ( ch_tax_summary_input )
 
-//     // TAX_IDTAXA.out.tax.combine ( TAX_IDTAXA.out.ids, by: [0,1,2] ).view()
+    // // TAX_IDTAXA.out.tax.combine ( TAX_IDTAXA.out.ids, by: [0,1,2] ).view()
 
-//     TAX_SUMMARY ( ch_tax_summary_input )
+    // TAX_SUMMARY ( ch_tax_summary_input )
 
-//     //// merge TAX_SUMMARY outputs together across loci using seq hashes as names
+    // //// merge TAX_SUMMARY outputs together across loci using seq hashes as names
 
 
-//     /// generate phyloseq objects for whole dataset 
+    // /// generate phyloseq objects for whole dataset 
 }
