@@ -44,6 +44,9 @@ if ( nrow(blast) > 0 & nrow(tax) > 0 ){
                     NULL
                 }
 
+# save joint object
+saveRDS(joint, paste0(fcid,"_",pcr_primers,"_joint.rds"))
+
 # make assignment plot
 if ( !is.null(joint) ) {
     # colours for plot
