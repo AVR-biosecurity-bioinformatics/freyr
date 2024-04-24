@@ -386,8 +386,7 @@ workflow PIPERLINE {
         .map { pcr_primers, fcid, tax, target_gene, idtaxa_db, ref_fasta  ->
             [ fcid, pcr_primers, target_gene, idtaxa_db, ref_fasta, tax ] }
         .combine ( ch_tax_blast, by: [0,1] ) 
-        // .map { fcid, pcr_primers, target_gene, idtaxa_db, ref_fasta, tax, blast  ->
-        //     [ fcid, pcr_primers, target_gene, idtaxa_db, ref_fasta, tax ] }
+        .combine ( ch_seqtab, by: [0,1 ])
         .view () 
 
 //     ch_tax_idtaxa
