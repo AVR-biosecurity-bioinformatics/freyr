@@ -123,9 +123,9 @@ workflow PIPERLINE {
 
     //// parse samplesheets that contain locus-specific parameters
     PARAMETER_SETUP.out.samdf_locus
-        | flatten ()
-        | splitCsv ( header: true )
-        | map { row -> 
+        .flatten ()
+        .splitCsv ( header: true )
+        .map { row -> 
             def meta = row.subMap(
                 'sample_id','sample_name','extraction_rep','amp_rep',
                 'client_name','experiment_name','sample_type','collection_method',
@@ -150,35 +150,35 @@ workflow PIPERLINE {
                     file(row.rev, checkIfExists: true)
                 ]]  
             }
-        | set { ch_sample_locus_reads }
+        .set { ch_sample_locus_reads }
 
     //// get names and count of the multiplexed loci used
     PARAMETER_SETUP.out.samdf_locus
-    | flatten ()
-    | splitCsv ( header: true )
-    | map { row -> row.target_gene }
-    | unique ()
-    | toList ()
-    | set { ch_loci_names } // value channel; list
+    .flatten ()
+    .splitCsv ( header: true )
+    .map { row -> row.target_gene }
+    .unique ()
+    .toList ()
+    .set { ch_loci_names } // value channel; list
     
     ch_loci_names
-    | flatten ()
-    | count ()
-    | set { ch_loci_number } // value channel; integer
+    .flatten ()
+    .count ()
+    .set { ch_loci_number } // value channel; integer
 
 
     //// get names of flow cells ('fcid') as channel
     // extract fcid from metadata
     ch_sample_locus_reads 
-    | map { meta, reads ->
+    .map { meta, reads ->
         def fcid = meta.fcid
         return tuple(fcid, reads) } 
-    | groupTuple() 
-    | set { ch_sample_reads_fcid }
+    .groupTuple() 
+    .set { ch_sample_reads_fcid }
     // extract flow cell IDs as channel
     ch_sample_reads_fcid 
-    | map { group -> group[0] }
-    | set { ch_fcid }
+    .map { group -> group[0] }
+    .set { ch_fcid }
 
 
     // run SEQ_QC per flow cell 
@@ -207,17 +207,17 @@ workflow PIPERLINE {
     ///// split filtered reads into lists of reads per flowcell, primers and direction
     //// forward read channel
     READ_FILTER.out.reads
-    | map { meta, reads -> 
+    .map { meta, reads -> 
             [ "forward", meta.fcid, meta.pcr_primers, reads[0] ] }
-    | groupTuple( by: [0,1,2] )
-    | set { ch_error_input_fwd }
+    .groupTuple( by: [0,1,2] )
+    .set { ch_error_input_fwd }
 
     //// reverse read channel
     READ_FILTER.out.reads
-    | map { meta, reads -> 
+    .map { meta, reads -> 
             [ "reverse", meta.fcid, meta.pcr_primers, reads[1] ] }
-    | groupTuple ( by: [0,1,2] )
-    | set { ch_error_input_rev }
+    .groupTuple ( by: [0,1,2] )
+    .set { ch_error_input_rev }
 
 
     //// error model on forward reads
@@ -228,23 +228,23 @@ workflow PIPERLINE {
 
     //// input channel for denoising forward reads
     READ_FILTER.out.reads
-    | map { meta, reads -> 
+    .map { meta, reads -> 
             [ "forward", meta.fcid, meta.pcr_primers, meta, reads[0] ] }
-    | combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2] ) // combine with error model
-    | map { direction, fcid, pcr_primers, meta, reads, errormodel -> // add empty file path for priors
+    .combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2] ) // combine with error model
+    .map { direction, fcid, pcr_primers, meta, reads, errormodel -> // add empty file path for priors
             [ direction, fcid, pcr_primers, meta, reads, errormodel, "$projectDir/assets/NO_FILE" ] }
-    | set { ch_denoise_input_forward }
+    .set { ch_denoise_input_forward }
 
-    // ch_denoise_input_forward | view ()
+    // ch_denoise_input_forward .view ()
 
     //// input channel for denoising reverse reads
     READ_FILTER.out.reads
-    | map { meta, reads -> 
+    .map { meta, reads -> 
             [ "reverse", meta.fcid, meta.pcr_primers, meta, reads[1] ] }
-    | combine ( ERROR_MODEL_R.out.errormodel, by: [0,1,2] ) // combine with error model
-    | map { direction, fcid, pcr_primers, meta, reads, errormodel -> // add empty file path for priors
+    .combine ( ERROR_MODEL_R.out.errormodel, by: [0,1,2] ) // combine with error model
+    .map { direction, fcid, pcr_primers, meta, reads, errormodel -> // add empty file path for priors
             [ direction, fcid, pcr_primers, meta, reads, errormodel, "$projectDir/assets/NO_FILE" ] }
-    | set { ch_denoise_input_reverse }
+    .set { ch_denoise_input_reverse }
 
 
     //// first pass of denoising per flowcell, primer and sample
@@ -258,37 +258,37 @@ workflow PIPERLINE {
         //// group priors for each read file
         /// forward reads
         DENOISE1_F.out.seq
-        | map { direction, fcid, pcr_primers, meta, reads, priors ->
+        .map { direction, fcid, pcr_primers, meta, reads, priors ->
                 [ direction, fcid, pcr_primers, priors ] }
-        | groupTuple ( by: [0,1,2] )
-        | set { ch_priors_f_pre }
+        .groupTuple ( by: [0,1,2] )
+        .set { ch_priors_f_pre }
 
         /// reverse reads
         DENOISE1_R.out.seq
-        | map { direction, fcid, pcr_primers, meta, reads, priors ->
+        .map { direction, fcid, pcr_primers, meta, reads, priors ->
                 [ direction, fcid, pcr_primers, priors ] }
-        | groupTuple ( by: [0,1,2] )
-        | set { ch_priors_r_pre }
+        .groupTuple ( by: [0,1,2] )
+        .set { ch_priors_r_pre }
 
         //// get priors for forward reads
         DADA_PRIORS_F ( ch_priors_f_pre )
         
         /// combine with forward read data channel
         ch_denoise_input_forward
-        | map { direction, fcid, pcr_primers, meta, reads, errormodel, priors -> // remove null priors
+        .map { direction, fcid, pcr_primers, meta, reads, errormodel, priors -> // remove null priors
                 [ direction, fcid, pcr_primers, meta, reads, errormodel ] }
-        | combine ( DADA_PRIORS_F.out.priors, by: [0,1,2] )
-        | set { ch_denoise2_input_forward }
+        .combine ( DADA_PRIORS_F.out.priors, by: [0,1,2] )
+        .set { ch_denoise2_input_forward }
 
         //// get priors for reverse reads
         DADA_PRIORS_R ( ch_priors_r_pre )
 
         /// combine with reverse read data channel
         ch_denoise_input_reverse
-        | map { direction, fcid, pcr_primers, meta, reads, errormodel, priors -> // remove null priors
+        .map { direction, fcid, pcr_primers, meta, reads, errormodel, priors -> // remove null priors
                 [ direction, fcid, pcr_primers, meta, reads, errormodel ] }
-        | combine ( DADA_PRIORS_R.out.priors, by: [0,1,2] )
-        | set { ch_denoise2_input_reverse }
+        .combine ( DADA_PRIORS_R.out.priors, by: [0,1,2] )
+        .set { ch_denoise2_input_reverse }
 
         //// run pseudo-pooled 2nd denoising with priors on forward reads
         DENOISE2_F ( ch_denoise2_input_forward, "second" )
@@ -299,53 +299,53 @@ workflow PIPERLINE {
         /// join F and R denoise2 outputs
         // prepare forward reads
         DENOISE2_F.out.seq
-        | map { direction, fcid, pcr_primers, meta, readsF, seqF ->
+        .map { direction, fcid, pcr_primers, meta, readsF, seqF ->
                 [ meta.sample_id, fcid, pcr_primers, meta, readsF, seqF ] }
-        | set { ch_seq_forward }
+        .set { ch_seq_forward }
 
         // prepare reverse reads
         DENOISE2_R.out.seq
-        | map { direction, fcid, pcr_primers, meta, readsR, seqR ->
+        .map { direction, fcid, pcr_primers, meta, readsR, seqR ->
                 [ meta.sample_id, fcid, pcr_primers, meta, readsR, seqR ] }
-        | set { ch_seq_reverse }
+        .set { ch_seq_reverse }
 
         // join
         ch_seq_forward
-        | combine ( ch_seq_reverse, by: [0,1,2,3] ) // combine by sample_id
-        | map { sample_id, fcid, pcr_primers, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
+        .combine ( ch_seq_reverse, by: [0,1,2,3] ) // combine by sample_id
+        .map { sample_id, fcid, pcr_primers, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
                 [ fcid, pcr_primers, meta.concat_unmerged, meta,
                 file(readsF, checkIfExists: true),
                 file(readsR, checkIfExists: true), 
                 file(seqF, checkIfExists: true),
                 file(seqR, checkIfExists: true) ] } 
-        | groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples
-        | set { ch_seq_combined }
+        .groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples
+        .set { ch_seq_combined }
 
     } else { // don't run second denoising step with priors
         /// join F and R DENOISE1 outputs
         // prepare forward reads
         DENOISE1_F.out.seq
-        | map { direction, fcid, pcr_primers, meta, readsF, seqF ->
+        .map { direction, fcid, pcr_primers, meta, readsF, seqF ->
                 [ meta.sample_id, fcid, pcr_primers, meta, readsF, seqF ] }
-        | set { ch_seq_forward }
+        .set { ch_seq_forward }
 
         // prepare reverse reads
         DENOISE1_R.out.seq
-        | map { direction, fcid, pcr_primers, meta, readsR, seqR ->
+        .map { direction, fcid, pcr_primers, meta, readsR, seqR ->
                 [ meta.sample_id, fcid, pcr_primers, meta, readsR, seqR ] }
-        | set { ch_seq_reverse }
+        .set { ch_seq_reverse }
 
         // join
         ch_seq_forward
-        | combine ( ch_seq_reverse, by: [0,1,2,3] ) // combine by sample_id
-        | map { sample_id, fcid, pcr_primers, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
+        .combine ( ch_seq_reverse, by: [0,1,2,3] ) // combine by sample_id
+        .map { sample_id, fcid, pcr_primers, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
                 [ fcid, pcr_primers, meta.concat_unmerged, meta,
                 file(readsF, checkIfExists: true),
                 file(readsR, checkIfExists: true), 
                 file(seqF, checkIfExists: true),
                 file(seqR, checkIfExists: true) ] } 
-        | groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples
-        | set { ch_seq_combined }
+        .groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples
+        .set { ch_seq_combined }
     }
 
     //// merge paired-end reads per flowcell x locus combo
@@ -380,7 +380,7 @@ workflow PIPERLINE {
         .groupTuple ( by: 0 ) // group into tuples using pcr_primers
         .set { ch_mergetax_input }
 
-    // ch_mergetax_input | view()
+    // ch_mergetax_input .view()
 
     //// merge tax tables across flowcells
     MERGE_TAX ( ch_mergetax_input )
