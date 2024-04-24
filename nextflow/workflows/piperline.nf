@@ -415,14 +415,12 @@ workflow PIPERLINE {
         tuple val(fcid), val(pcr_primers), path("n_ranks.txt")
     */
     TAX_IDTAXA.out.tax // fcid, pcr_primers, meta, "*_idtaxa_tax.rds"
-    | combine ( TAX_IDTAXA.out.ids, by: [0,1,2] ) // + "*_idtaxa_ids.rds"
-    | combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1,2] ) // + target_gene, "*_joint.rds"
-    | combine ( TAX_BLAST.out.n_ranks, by: [0,1] ) // + "n_ranks.txt"
-    | set { ch_tax_summary_input }
+    .combine ( TAX_IDTAXA.out.ids, by: [0,1,2] ) // + "*_idtaxa_ids.rds"
+    .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1,2] ) // + target_gene, "*_joint.rds"
+    .combine ( TAX_BLAST.out.n_ranks, by: [0,1] ) // + "n_ranks.txt"
+    .set { ch_tax_summary_input }
 
     view ( ch_tax_summary_input )
-
-    TAX_IDTAXA.out.tax.combine(TAX_IDTAXA.out.ids, by: [0,1,2]).view()
 
     TAX_SUMMARY ( ch_tax_summary_input )
 
