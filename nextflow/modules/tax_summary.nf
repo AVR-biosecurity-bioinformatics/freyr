@@ -1,6 +1,6 @@
 process TAX_SUMMARY {
     def module_name = "tax_summary"
-    tag "Whole dataset"
+    tag "$pcr_primers"
     // label:  
 
     input:
@@ -19,10 +19,7 @@ process TAX_SUMMARY {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    pcr_primers =           "${pcr_primers}"
-    fcid =                  "${fcid}"
-    meta =                  "${meta}"
-    taxtab =                "${taxtab}"
+    
     
     ## global variables
     projectDir = "$projectDir"

@@ -7,6 +7,9 @@
 
 ### run R code
 
+stop(" *** stopped manually *** ") ##########################################
+
+
 ## manipulate idtaxa objects (ids and tax)
 # idtaxa_ids <- idtaxa$ids # from 'tax_idtaxa'
 # idtaxa_tax <- idtaxa$tax # from 'tax_idtaxa'

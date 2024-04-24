@@ -418,8 +418,12 @@ workflow PIPERLINE {
     | combine ( TAX_IDTAXA.out.ids, by: [0,1,2] ) // + "*_idtaxa_ids.rds"
     | combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1,2] ) // + target_gene, "*_joint.rds"
     | combine ( TAX_BLAST.out.n_ranks, by: [0,1] ) // + "n_ranks.txt"
-    | view () 
-    
+    | set { ch_tax_summary_input }
+
+    view ( ch_tax_summary_input )
+
+    TAX_SUMMARY ( )
+
     //// merge TAX_SUMMARY outputs together across loci using seq hashes as names
 
 
