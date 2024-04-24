@@ -360,22 +360,32 @@ workflow PIPERLINE {
     //// filter sequence table
     FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
     ch_seqtab = FILTER_SEQTAB.out.seqtab
+        .map { fcid, pcr_primers, meta, seqtab ->
+            [ fcid, pcr_primers, seqtab ] }
 
     //// use IDTAXA to assign taxonomy
     TAX_IDTAXA ( FILTER_SEQTAB.out.seqtab )
-    ch_tax_idtaxa = TAX_IDTAXA.out.tax
+    ch_tax_idtaxa_tax = TAX_IDTAXA.out.tax
+        .map { fcid, pcr_primers, meta, tax ->
+            [ fcid, pcr_primers, tax ] }
+    ch_tax_idtaxa_ids = TAX_IDTAXA.out.ids 
+        .map { fcid, pcr_primers, meta, ids ->
+            [ fcid, pcr_primers, ids ] }
 
     //// use blastn to assign taxonomy
     TAX_BLAST ( FILTER_SEQTAB.out.seqtab )
     ch_tax_blast = TAX_BLAST.out.blast
+        .map { fcid, pcr_primers, meta, blast ->
+            [ fcid, pcr_primers, blast ] }
 
     //// merge tax assignment outputs and filtered seqtab (pre-assignment)
     /// remove meta and add in 'ch_loci_info' to replace meta.target_gene for JOINT_TAX input
     // tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_tax.rds")
-    ch_tax_idtaxa
-        .map { fcid, pcr_primers, meta, tax ->
-            [ fcid, pcr_primers, tax ] }
+    ch_tax_idtaxa_tax
         .combine ( ch_loci_info, by: 1 )
+        .map { pcr_primers, fcid, tax, target_gene, idtaxa_db, ref_fasta  ->
+            [ fcid, pcr_primers, target_gene, idtaxa_db, ref_fasta, tax ] }
+        .combine ( ch_tax_blast, by: 1 ) 
         .view () 
 
 //     ch_tax_idtaxa
