@@ -420,30 +420,28 @@ workflow PIPERLINE {
     //// do assignment plot
     ASSIGNMENT_PLOT ( ch_assignment_plot_input )
 
-    // /// generate taxonomic assignment summary per locus (also hash seq)
-    // /* 
-    // input: TAX_IDTAXA.out.ids ('idtaxa_ids' in R code) 
-    //     tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_tax.rds")
-    // input: TAX_IDTAXA.out.tax ('idtaxa' in R code) 
-    //     tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_ids.rds")
-    // input: ASSIGNMENT_PLOT.out.joint
-    //     tuple val(fcid), val(pcr_primers), val(meta), val(target_gene), path("*_joint.rds")
-    // input: TAX_BLAST.out.n_ranks 
-    //     tuple val(fcid), val(pcr_primers), path("n_ranks.txt")
-    // */
-    // TAX_IDTAXA.out.tax // fcid, pcr_primers, meta, "*_idtaxa_tax.rds"
-    //     .combine ( TAX_IDTAXA.out.ids, by: [0,1,2] ) // + "*_idtaxa_ids.rds"
-    //     .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1,2] ) // + target_gene, "*_joint.rds"
-    //     .combine ( TAX_BLAST.out.n_ranks, by: [0,1] ) // + "n_ranks.txt"
-    //     .set { ch_tax_summary_input }
+    /// generate taxonomic assignment summary per locus (also hash seq)
+    /* 
+    input: TAX_IDTAXA.out.ids ('idtaxa_ids' in R code) 
+        tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_tax.rds")
+    input: TAX_IDTAXA.out.tax ('idtaxa' in R code) 
+        tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_ids.rds")
+    input: ASSIGNMENT_PLOT.out.joint
+        tuple val(fcid), val(pcr_primers), val(meta), val(target_gene), path("*_joint.rds")
+    input: TAX_BLAST.out.n_ranks 
+        tuple val(fcid), val(pcr_primers), path("n_ranks.txt")
+    */
+    ch_tax_idtaxa_tax // fcid, pcr_primers, "*_idtaxa_tax.rds"
+        .combine ( ch_tax_idtaxa_ids, by: [0,1] ) // + "*_idtaxa_ids.rds"
+        .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + target_gene, "*_joint.rds"
+        .combine ( TAX_BLAST.out.n_ranks, by: [0,1] ) // + "n_ranks.txt"
+        .set { ch_tax_summary_input }
 
-    // // view ( ch_tax_summary_input )
-
-    // // TAX_IDTAXA.out.tax.combine ( TAX_IDTAXA.out.ids, by: [0,1,2] ).view()
+    view ( ch_tax_summary_input )
 
     // TAX_SUMMARY ( ch_tax_summary_input )
 
-    // //// merge TAX_SUMMARY outputs together across loci using seq hashes as names
+    //// merge TAX_SUMMARY outputs together across loci using seq hashes as names
 
 
 }
