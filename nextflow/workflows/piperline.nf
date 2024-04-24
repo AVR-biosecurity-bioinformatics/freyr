@@ -422,6 +422,8 @@ workflow PIPERLINE {
 
     view ( ch_tax_summary_input )
 
+    TAX_IDTAXA.out.tax.combine(TAX_IDTAXA.out.ids, by: [0,1,2]).view()
+
     TAX_SUMMARY ( ch_tax_summary_input )
 
     //// merge TAX_SUMMARY outputs together across loci using seq hashes as names
