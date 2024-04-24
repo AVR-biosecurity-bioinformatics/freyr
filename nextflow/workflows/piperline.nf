@@ -422,7 +422,7 @@ workflow PIPERLINE {
 
     view ( ch_tax_summary_input )
 
-    TAX_SUMMARY ( )
+    TAX_SUMMARY ( ch_tax_summary_input )
 
     //// merge TAX_SUMMARY outputs together across loci using seq hashes as names
 
