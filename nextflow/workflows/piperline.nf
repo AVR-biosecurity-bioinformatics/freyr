@@ -365,9 +365,9 @@ workflow PIPERLINE {
 
     //// merge tax assignment outputs and filtered seqtab (pre-assignment)
     ch_tax_idtaxa
-    | combine ( ch_tax_blast, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
-    | combine ( ch_seqtab, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
-    | set { ch_joint_tax_input }
+        .combine ( ch_tax_blast, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
+        .combine ( ch_seqtab, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
+        .set { ch_joint_tax_input }
 
     //// aggregate taxonomic assignment
     JOINT_TAX ( ch_joint_tax_input )
@@ -375,10 +375,10 @@ workflow PIPERLINE {
     //// group taxtab across flowcells (per locus)
     /// creates tuple of lists of fcid, meta and taxtab files
     JOINT_TAX.out.taxtab
-    | map { fcid, pcr_primers, meta, taxtab -> // add arbitrary grouping key
-            [ pcr_primers, fcid, meta, taxtab ] }
-    | groupTuple ( by: 0 ) // group into tuples using pcr_primers
-    | set { ch_mergetax_input }
+        .map { fcid, pcr_primers, meta, taxtab -> // add arbitrary grouping key
+                [ pcr_primers, fcid, meta, taxtab ] }
+        .groupTuple ( by: 0 ) // group into tuples using pcr_primers
+        .set { ch_mergetax_input }
 
     // ch_mergetax_input | view()
 
@@ -387,18 +387,18 @@ workflow PIPERLINE {
 
     // create channel linking pcr_primers and databases (from params)
     ch_sample_locus_reads 
-    | map { meta, reads -> 
-            [ meta.target_gene, meta.pcr_primers, meta.idtaxa_db, meta.ref_fasta ] }
-    | unique()
-    | set { ch_loci_info }
+        .map { meta, reads -> 
+                [ meta.target_gene, meta.pcr_primers, meta.idtaxa_db, meta.ref_fasta ] }
+        .unique()
+        .set { ch_loci_info }
 
     //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
     /// channel has one item per fcid x pcr_primer combo
     FILTER_SEQTAB.out.seqtab 
-    | combine ( TAX_BLAST.out.blast_assignment, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
-    | combine ( JOINT_TAX.out.taxtab, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
-    | combine ( ch_loci_info, by: 1 )
-    | set { ch_assignment_plot_input }
+        .combine ( TAX_BLAST.out.blast_assignment, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
+        .combine ( JOINT_TAX.out.taxtab, by: [0,1,2] ) // combine by fcid, pcr_primers and meta
+        .combine ( ch_loci_info, by: 1 )
+        .set { ch_assignment_plot_input }
         
     //// do assignment plot
     ASSIGNMENT_PLOT ( ch_assignment_plot_input )
@@ -415,10 +415,10 @@ workflow PIPERLINE {
         tuple val(fcid), val(pcr_primers), path("n_ranks.txt")
     */
     TAX_IDTAXA.out.tax // fcid, pcr_primers, meta, "*_idtaxa_tax.rds"
-    .combine ( TAX_IDTAXA.out.ids, by: [0,1,2] ) // + "*_idtaxa_ids.rds"
-    .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1,2] ) // + target_gene, "*_joint.rds"
-    .combine ( TAX_BLAST.out.n_ranks, by: [0,1] ) // + "n_ranks.txt"
-    .set { ch_tax_summary_input }
+        .combine ( TAX_IDTAXA.out.ids, by: [0,1,2] ) // + "*_idtaxa_ids.rds"
+        .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1,2] ) // + target_gene, "*_joint.rds"
+        .combine ( TAX_BLAST.out.n_ranks, by: [0,1] ) // + "n_ranks.txt"
+        .set { ch_tax_summary_input }
 
     view ( ch_tax_summary_input )
 
