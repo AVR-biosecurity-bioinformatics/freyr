@@ -1,11 +1,11 @@
 #!/usr/bin/env Rscript
 
 ## check and define variables 
-if(is.na(asv_min_length)){asv_min_length <- NULL}
-if(is.na(asv_max_length)){asv_max_length <- NULL}
-if(is.na(phmm)){phmm <- NULL}
-if(is.na(for_primer_seq)){for_primer_seq <- NULL}
-if(is.na(rev_primer_seq)){rev_primer_seq <- NULL}
+if(is.na(asv_min_length))   {asv_min_length <- NULL}
+if(is.na(asv_max_length))   {asv_max_length <- NULL}
+if(is.na(phmm))             {phmm <- NULL}
+if(is.na(for_primer_seq))   {for_primer_seq <- NULL}
+if(is.na(rev_primer_seq))   {rev_primer_seq <- NULL}
 
 # read seqtab from file 
 if(is.matrix(seqtab) | is.data.frame(seqtab)){

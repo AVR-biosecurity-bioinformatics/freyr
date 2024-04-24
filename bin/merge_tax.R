@@ -27,6 +27,11 @@ tax_merged <- taxtab_list %>%
     dplyr::bind_rows() %>%
     dplyr::distinct() # Remove any exact duplicates from save ASV being in different seqtab
 
+# create hash of OTU sequence that can be used as OTU name
+# 'OTU_hash' column is now the 'name' of the sequence
+OTU_hash <- lapply(tax_merged$OTU, rlang::hash) %>% unlist()
+tax_merged <- cbind(tax_merged, OTU_hash)
+
 # saveRDS(tax_merged, paste0(pcr_primers,"_tax_merged.rds"))
 
 # Check for duplicated ASVs across taxtabs
