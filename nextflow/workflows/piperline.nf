@@ -446,5 +446,4 @@ workflow PIPERLINE {
     // //// merge TAX_SUMMARY outputs together across loci using seq hashes as names
 
 
-    // /// generate phyloseq objects for whole dataset 
 }

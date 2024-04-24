@@ -8,7 +8,7 @@ process ASSIGNMENT_PLOT {
 
     output:
     path("*_taxonomic_assignment_summary.pdf"), emit: plot
-    tuple val(fcid), val(pcr_primers), val(meta), val(target_gene), path("*_joint.rds"), emit: joint
+    tuple val(fcid), val(pcr_primers), val(target_gene), path("*_joint.rds"), emit: joint
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
