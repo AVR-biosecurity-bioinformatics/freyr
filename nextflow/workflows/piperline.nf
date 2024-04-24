@@ -415,10 +415,10 @@ workflow PIPERLINE {
             [ fcid, pcr_primers, seqtab, blast, tax, target_gene, idtaxa_db, ref_fasta ] } 
         .set { ch_assignment_plot_input }
 
-    ch_assignment_plot_input .view()
+    // ch_assignment_plot_input .view()
         
-    // //// do assignment plot
-    // ASSIGNMENT_PLOT ( ch_assignment_plot_input )
+    //// do assignment plot
+    ASSIGNMENT_PLOT ( ch_assignment_plot_input )
 
     // /// generate taxonomic assignment summary per locus (also hash seq)
     // /* 
