@@ -364,7 +364,10 @@ workflow PIPERLINE {
     ch_tax_blast = TAX_BLAST.out.blast
 
     //// merge tax assignment outputs and filtered seqtab (pre-assignment)
-    ch_tax_idtaxa.combine ( ch_tax_blast, by: [0,1,2] ).combine ( ch_seqtab, by: [0,1,2] ).set { ch_joint_tax_input }
+    ch_tax_idtaxa
+        .combine ( ch_tax_blast, by: [0,1,2] )
+        .combine ( ch_seqtab, by: [0,1,2] )
+        .set { ch_joint_tax_input }
 
     //// aggregate taxonomic assignment
     JOINT_TAX ( ch_joint_tax_input )
@@ -419,7 +422,7 @@ workflow PIPERLINE {
 
     view ( ch_tax_summary_input )
 
-    TAX_IDTAXA.out.tax.combine ( TAX_IDTAXA.out.ids, by: [0,1,2] ).view()
+    // TAX_IDTAXA.out.tax.combine ( TAX_IDTAXA.out.ids, by: [0,1,2] ).view()
 
     TAX_SUMMARY ( ch_tax_summary_input )
 
