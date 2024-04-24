@@ -4,7 +4,7 @@ process TAX_SUMMARY {
     // label:  
 
     input:
-
+    tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_tax.rds")
 
     output:
 
