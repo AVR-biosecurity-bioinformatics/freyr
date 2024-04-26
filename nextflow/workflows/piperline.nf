@@ -439,7 +439,7 @@ workflow PIPERLINE {
         // .set { ch_tax_summary_input }
 
     Channel.of('1','2','3')
-        .collectFile(name: 'numbers.txt', storeDir: $projectDir)
+        .collectFile(name: 'numbers.txt', storeDir: '$projectDir')
         .subscribe {
             println "Entries are saved to file: $it"
             println "File content is: ${it.text}"
