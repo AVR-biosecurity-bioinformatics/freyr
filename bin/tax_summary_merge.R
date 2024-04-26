@@ -12,3 +12,6 @@ print(tax_summary_list)
 
 ### run R code
 
+
+stop(" *** stopped manually *** ") ##########################################
+
