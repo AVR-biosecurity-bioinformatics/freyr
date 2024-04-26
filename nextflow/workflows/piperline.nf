@@ -441,6 +441,7 @@ workflow PIPERLINE {
     TAX_SUMMARY ( ch_tax_summary_input )
 
     TAX_SUMMARY.out.rds
+        .groupTuple ( by: [0,1,2] )
         .view()
 
     //// merge TAX_SUMMARY outputs together across loci using seq hashes as names
