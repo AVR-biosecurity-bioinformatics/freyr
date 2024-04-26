@@ -7,7 +7,7 @@ process TAX_SUMMARY_MERGE {
     path(tax_summary_list)
 
     output:
-    path("taxonomic_assignment_summary.csv")
+    // path("taxonomic_assignment_summary.csv")
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
