@@ -438,6 +438,8 @@ workflow PIPERLINE {
         .collectFile(name: 'sample.txt', newLine: true)
         // .set { ch_tax_summary_input }
 
+    ch_tax_idtaxa_tax.collectFile(name: 'ch_tax_idtaxa_tax.txt', newLine: true)
+
     // view ( ch_tax_summary_input )
 
     // TAX_SUMMARY ( ch_tax_summary_input )
