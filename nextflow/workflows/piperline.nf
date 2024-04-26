@@ -439,8 +439,11 @@ workflow PIPERLINE {
         .combine ( ch_tax_idtaxa_ids, by: [0,1] ) // + "*_idtaxa_ids.rds"
         .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + target_gene, "*_joint.rds"
         .combine ( TAX_BLAST.out.n_ranks, by: [0,1] ) // + "n_ranks.txt"
-        .collectFile(name: 'ch_tax_summary_input.txt', newLine: true, storeDir: channelDir)
+        // .collectFile(name: 'ch_tax_summary_input.txt', newLine: true, storeDir: channelDir)
         // .set { ch_tax_summary_input }
+
+    ch_tax_idtaxa_tax
+        .collectFile(name: '1.txt', newLine: true, storeDir: '.')
 
     // view ( ch_tax_summary_input )
 
