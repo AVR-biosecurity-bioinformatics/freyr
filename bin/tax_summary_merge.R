@@ -13,10 +13,10 @@ tax_summary_list <- lapply(tax_summary_list, readRDS) # read in taxtabs and stor
 ### run R code
 summary_full <- tibble()
 for (i in 1:length(tax_summary_list)){
-    bind_rows(tax_summary_list[i], summary_full)
+    summary_full <- bind_rows(summary_full, tax_summary_list[i])
 }
 
-summary_full
+print(summary_full)
 
 stop(" *** stopped manually *** ") ##########################################
 
