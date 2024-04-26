@@ -45,6 +45,10 @@
 
 // Set non-params Variables
 
+// create directory where channel output can be stored for debugging
+channelDir = file('./output/channels')
+channelDir.mkdirs()
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -435,15 +439,8 @@ workflow PIPERLINE {
         .combine ( ch_tax_idtaxa_ids, by: [0,1] ) // + "*_idtaxa_ids.rds"
         .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + target_gene, "*_joint.rds"
         .combine ( TAX_BLAST.out.n_ranks, by: [0,1] ) // + "n_ranks.txt"
-        .view()
+        .collectFile(name: 'ch_tax_idtaxa_tax.txt', storeDir: channelDir)
         // .set { ch_tax_summary_input }
-
-    Channel.of('1','2','3')
-        .collectFile(name: 'numbers.txt', storeDir: '.')
-        .subscribe {
-            println "Entries are saved to file: $it"
-            println "File content is: ${it.text}"
-        }
 
     // view ( ch_tax_summary_input )
 
