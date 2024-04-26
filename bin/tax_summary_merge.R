@@ -18,5 +18,8 @@ for (i in 1:length(tax_summary_list)){
 
 print(summary_full)
 
+summary_full %>%
+    distinct()
+
 stop(" *** stopped manually *** ") ##########################################
 
