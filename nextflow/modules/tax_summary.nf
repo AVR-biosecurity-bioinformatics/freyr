@@ -19,7 +19,13 @@ process TAX_SUMMARY {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    
+    fcid =                  "${fcid}"   
+    pcr_primers =           "${pcr_primers}"
+    tax =                   "${tax}"
+    ids =                   "${ids}"
+    target_gene =           "${target_gene}"
+    joint_file =            "${joint}"
+    n_ranks =               "${n_ranks}"
     
     ## global variables
     projectDir = "$projectDir"

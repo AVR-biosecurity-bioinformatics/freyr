@@ -2,13 +2,35 @@
 
 
 ## check and define variables
+idtaxa <-       readRDS(tax)
+idtaxa_ids <-   readRDS(ids)
+joint <-        readRDS(joint_file)
+n_ranks <-      readLines(n_ranks)
 
 
 
 ### run R code
-quit(status=0)
 
 stop(" *** stopped manually *** ") ##########################################
+
+summary <- idtaxa_ids %>%
+    .x %>%
+                purrr::map_dfr(function(x){
+                    taxa <- paste0(x$taxon,"_", x$confidence)
+                    taxa[startsWith(taxa, "unclassified_")] <- NA
+                    data.frame(t(taxa)) %>%
+                        magrittr::set_colnames(c("Root","Kingdom", "Phylum","Class", "Order", "Family", "Genus","Species")[1:ncol(.)])
+                }) %>%
+                mutate_all(function(y){
+                    name <- y %>% str_remove("_[0-9].*$")
+                    conf <- y %>% str_remove("^.*_") %>%
+                        str_trunc(width=6, side="right", ellipsis = "")
+                    paste0(name, "_", conf, "%") 
+                }) %>%
+        mutate_all(~ na_if(., "NA_NA%"))  %>%
+        mutate(OTU = rownames(idtaxa))
+
+
 
 
 ## manipulate idtaxa objects (ids and tax)

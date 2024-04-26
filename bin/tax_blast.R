@@ -40,7 +40,7 @@ if ( n_ranks == 8 ) {
     stop ("*** BLAST database contains more than 8 ranks--please set ranks explicitly using 'params.tax_ranks'! ***")
 }
 
-write(n_ranks, file = "n_ranks.txt")
+write(n_ranks, file = paste0(fcid, "_", pcr_primers,"_n_ranks.txt"))
 
 run_blast <-            as.logical(run_blast)
 database <-             normalizePath(ref_fasta)

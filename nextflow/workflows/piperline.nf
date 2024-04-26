@@ -441,11 +441,10 @@ workflow PIPERLINE {
         .combine ( TAX_BLAST.out.n_ranks, by: [0,1] ) // + "n_ranks.txt"
         .set { ch_tax_summary_input }
 
-    view ( ch_tax_summary_input )
-
-    // TAX_SUMMARY ( ch_tax_summary_input )
+    TAX_SUMMARY ( ch_tax_summary_input )
 
     //// merge TAX_SUMMARY outputs together across loci using seq hashes as names
 
+    // TAX_SUMMARY_MERGE (  )
 
 }
