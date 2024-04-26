@@ -6,6 +6,7 @@
 
 
 ### run R code
+quit(status=0)
 
 stop(" *** stopped manually *** ") ##########################################
 
