@@ -432,16 +432,16 @@ workflow PIPERLINE {
         tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_ids.rds")
     input: ASSIGNMENT_PLOT.out.joint
         tuple val(fcid), val(pcr_primers), val(meta), val(target_gene), path("*_joint.rds")
-    input: TAX_BLAST.out.n_ranks 
-        tuple val(fcid), val(pcr_primers), path("n_ranks.txt")
     */
     ch_tax_idtaxa_tax // fcid, pcr_primers, "*_idtaxa_tax.rds"
         .combine ( ch_tax_idtaxa_ids, by: [0,1] ) // + "*_idtaxa_ids.rds"
         .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + target_gene, "*_joint.rds"
-        .combine ( TAX_BLAST.out.n_ranks, by: [0,1] ) // + "n_ranks.txt"
         .set { ch_tax_summary_input }
 
     TAX_SUMMARY ( ch_tax_summary_input )
+
+    TAX_SUMMARY.out.rds
+        .view()
 
     //// merge TAX_SUMMARY outputs together across loci using seq hashes as names
 

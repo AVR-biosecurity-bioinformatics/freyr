@@ -5,76 +5,49 @@
 idtaxa <-       readRDS(tax)
 idtaxa_ids <-   readRDS(ids)
 joint <-        readRDS(joint_file)
-n_ranks <-      readLines(n_ranks)
+# TODO: deal with case where 'joint' does not exist due to BLAST not being performed
+# in these cases, set 'joint' to NULL
 
-
+# TODO: use explicitly defined ranks from IDTAXA database instead of guess
+ranks <- c("Root","Kingdom", "Phylum","Class", "Order", "Family", "Genus","Species")
 
 ### run R code
+OTU_seq <- rownames(idtaxa) # get OTU sequences as vector
+OTU_hash <- lapply(OTU_seq, rlang::hash) %>% unlist() # get unique hash for each OTU sequence
 
-stop(" *** stopped manually *** ") ##########################################
-
-summary <- idtaxa_ids %>%
-    .x %>%
-                purrr::map_dfr(function(x){
-                    taxa <- paste0(x$taxon,"_", x$confidence)
-                    taxa[startsWith(taxa, "unclassified_")] <- NA
-                    data.frame(t(taxa)) %>%
-                        magrittr::set_colnames(c("Root","Kingdom", "Phylum","Class", "Order", "Family", "Genus","Species")[1:ncol(.)])
-                }) %>%
-                mutate_all(function(y){
-                    name <- y %>% str_remove("_[0-9].*$")
-                    conf <- y %>% str_remove("^.*_") %>%
-                        str_trunc(width=6, side="right", ellipsis = "")
-                    paste0(name, "_", conf, "%") 
-                }) %>%
-        mutate_all(~ na_if(., "NA_NA%"))  %>%
-        mutate(OTU = rownames(idtaxa))
-
-
-
-
-## manipulate idtaxa objects (ids and tax)
-# idtaxa_ids <- idtaxa$ids # from 'tax_idtaxa'
-# idtaxa_tax <- idtaxa$tax # from 'tax_idtaxa'
-
-### NOTE for Alex: 
-
-
-#### from tar_target(tax_summary)
-idtaxa_summary <- tax_idtaxa %>%
-    ungroup() %>%
+idtaxa_summary <- idtaxa_ids %>%
+    purrr::map_dfr(function(x){
+        taxa <- paste0(x$taxon,"_", x$confidence) # add assignment confidence to taxon name
+        taxa[startsWith(taxa, "unclassified_")] <- NA # set unclassified ranks to NA
+        data.frame(t(taxa)) %>% # create data frame setting ranks to column names
+            magrittr::set_colnames(ranks[1:ncol(.)])
+    }) %>%
+    mutate_all(function(y){
+        name <- y %>% str_remove("_[0-9].*$") # get name of taxon
+        conf <- y %>% str_remove("^.*_") %>% # get confidence of taxon, truncated to 5 digits (5 + '.')
+            str_trunc(width=6, side="right", ellipsis = "")
+        paste0(name, "_", conf, "%") # create new taxon name with confidence in % form
+    }) %>%
+    mutate_all(~ na_if(., "NA_NA%")) %>% # convert 'NA_NA%' into true NAs
     mutate(
-        summary = purrr::map2(idtaxa_ids, idtaxa, ~{
-            .x %>%
-                purrr::map_dfr(function(x){
-                    taxa <- paste0(x$taxon,"_", x$confidence)
-                    taxa[startsWith(taxa, "unclassified_")] <- NA
-                    data.frame(t(taxa)) %>%
-                        magrittr::set_colnames(c("Root","Kingdom", "Phylum","Class", "Order", "Family", "Genus","Species")[1:ncol(.)])
-                }) %>%
-                mutate_all(function(y){
-                    name <- y %>% str_remove("_[0-9].*$")
-                    conf <- y %>% str_remove("^.*_") %>%
-                        str_trunc(width=6, side="right", ellipsis = "")
-                    paste0(name, "_", conf, "%") 
-                }) %>%
-        mutate_all(~ na_if(., "NA_NA%"))  %>%
-        mutate(OTU = rownames(.y))
-    })) %>%
-    dplyr::select(pcr_primers,idtaxa_db, summary)%>%
-    unnest(summary) %>%
-    distinct()
+        OTU_seq = OTU_seq, # add OTU sequence as column
+        OTU_hash = OTU_hash # add OTU sequence hash as column
+    )
 
-if(!any(sapply(assignment_plot$joint, is.null))){
-    blast_summary <- assignment_plot %>%
-        dplyr::select(pcr_primers, target_gene, idtaxa_db, ref_fasta, joint)%>% 
-        unnest(joint)  %>%
+if(!is.null(joint)){
+    blast_summary <- joint %>% 
+        mutate(
+            pcr_primers = pcr_primers,
+            target_gene = target_gene,
+            idtaxa_db = idtaxa_db,
+            ref_fasta = ref_fasta,
+        ) %>% 
         dplyr::select(
             pcr_primers, 
             target_gene, 
             idtaxa_db, 
             ref_fasta, 
-            OTU, 
+            OTU_seq = OTU, 
             acc,  
             blast_top_hit = blastspp, 
             blast_identity = pident,
@@ -83,35 +56,61 @@ if(!any(sapply(assignment_plot$joint, is.null))){
             blast_max_score = max_score, 
             blast_qcov = qcovs
         )
+    
+    summary_table <- idtaxa_summary %>%
+        left_join(blast_summary) %>%
+        dplyr::select(any_of(c(
+            "OTU_hash",
+            "OTU_seq", 
+            "pcr_primers", 
+            "target_gene", 
+            "idtaxa_db", 
+            "ref_fasta", 
+            "Root",
+            "Kingdom", 
+            "Phylum",
+            "Class", 
+            "Order", 
+            "Family",
+            "Genus",
+            "Species",
+            "blast_top_hit",
+            "blast_identity",
+            "blast_qcov",
+            "blast_evalue",
+            "acc"
+            )
+        ))
+
 } else {
-    blast_summary <- assignment_plot %>%
-        dplyr::select(pcr_primers, target_gene, idtaxa_db, ref_fasta, joint)%>% 
-        unnest(joint)
+    summary_table <- idtaxa_summary %>%
+        dplyr::select(any_of(c(
+            "OTU_hash",
+            "OTU_seq", 
+            "pcr_primers", 
+            "target_gene", 
+            "idtaxa_db", 
+            "ref_fasta", 
+            "Root",
+            "Kingdom", 
+            "Phylum",
+            "Class", 
+            "Order", 
+            "Family",
+            "Genus",
+            "Species",
+            "blast_top_hit",
+            "blast_identity",
+            "blast_qcov",
+            "blast_evalue",
+            "acc"
+            )
+        ))
 }
 
-summary_table <- idtaxa_summary %>%
-    left_join(blast_summary) %>%
-    dplyr::select(any_of(
-        c("OTU", 
-        "pcr_primers", 
-        "target_gene", 
-        "idtaxa_db", 
-        "ref_fasta", 
-        "Root",
-        "Kingdom", 
-        "Phylum",
-        "Class", 
-        "Order", 
-        "Family",
-        "Genus",
-        "Species",
-        "blast_top_hit",
-        "blast_identity",
-        "blast_qcov",
-        "blast_evalue"
-        )
-    ))
-
-out <- paste0("output/logs/taxonomic_assignment_summary.csv")
+out <- paste0(fcid,"_",pcr_primers,"_taxonomic_assignment_summary.csv")
 write_csv(summary_table, out)
-return(out)
+
+saveRDS(summary_table, paste0(fcid,"_",pcr_primers,"_taxonomic_assignment_summary.rds"))
+
+# stop(" *** stopped manually *** ") ##########################################

@@ -4,9 +4,11 @@ process TAX_SUMMARY {
     // label:  
 
     input:
-    tuple val(fcid), val(pcr_primers), path(tax), path(ids), val(target_gene), path(joint), path(n_ranks)
+    tuple val(fcid), val(pcr_primers), path(tax), path(ids), val(target_gene), path(joint), path(idtaxa_db), path(ref_fasta)
 
     output:
+    tuple val(fcid), val(pcr_primers), val(target_gene), path("*_taxonomic_assignment_summary.rds"), emit: rds
+    path("*_taxonomic_assignment_summary.csv"), emit: csv
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -25,7 +27,8 @@ process TAX_SUMMARY {
     ids =                   "${ids}"
     target_gene =           "${target_gene}"
     joint_file =            "${joint}"
-    n_ranks =               "${n_ranks}"
+    idtaxa_db =             "${idtaxa_db}"
+    ref_fasta =             "${ref_fasta}"
     
     ## global variables
     projectDir = "$projectDir"
