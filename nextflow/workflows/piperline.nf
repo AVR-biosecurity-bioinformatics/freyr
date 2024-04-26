@@ -438,7 +438,7 @@ workflow PIPERLINE {
         .view()
         // .set { ch_tax_summary_input }
 
-    Channel.of(1,2,3)
+    Channel.of('1','2','3')
         .collectFile(name: 'numbers.txt')
 
     // view ( ch_tax_summary_input )
