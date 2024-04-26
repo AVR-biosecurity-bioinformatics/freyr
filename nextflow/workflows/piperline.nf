@@ -79,6 +79,7 @@ include { JOINT_TAX                                 } from '../modules/joint_tax
 include { MERGE_TAX                                 } from '../modules/merge_tax'
 include { ASSIGNMENT_PLOT                           } from '../modules/assignment_plot'
 include { TAX_SUMMARY                               } from '../modules/tax_summary'
+include { TAX_SUMMARY_MERGE                         } from '../modules/tax_summary_merge'
 // include { MERGE_SEQTAB                              } from '../modules/merge_seqtab'
 // include { PHYLOSEQ_CREATE                           } from '../modules/phyloseq_create'
 // include { PHYLOSEQ_SUMMARY                          } from '../modules/phyloseq_summary'
@@ -441,13 +442,12 @@ workflow PIPERLINE {
     TAX_SUMMARY ( ch_tax_summary_input )
 
     TAX_SUMMARY.out.rds
-        .map { fcid, pcr_primers, target_gene, rds ->
-            [ rds ] } 
+        .map { fcid, pcr_primers, target_gene, tax_summary ->
+            [ tax_summary ] } 
         .collect()
-        .view()
+        .set { ch_tax_summaries }
 
-    //// merge TAX_SUMMARY outputs together across loci using seq hashes as names
-
-    // TAX_SUMMARY_MERGE (  )
+    //// merge TAX_SUMMARY outputs together across loci and flow cells
+    TAX_SUMMARY_MERGE ( ch_tax_summaries )
 
 }

@@ -1,14 +1,13 @@
-process TAX_SUMMARY {
-    def module_name = "tax_summary"
-    tag "$fcid; $pcr_primers"
+process TAX_SUMMARY_MERGE {
+    def module_name = "tax_summary_merge"
+    tag "Whole dataset"
     // label:  
 
     input:
-    tuple val(fcid), val(pcr_primers), path(tax), path(ids), val(target_gene), path(joint), path(idtaxa_db), path(ref_fasta)
+    path(tax_summary_list)
 
     output:
-    tuple val(fcid), val(pcr_primers), val(target_gene), path("*_taxonomic_assignment_summary.rds"), emit: rds
-    path("*_taxonomic_assignment_summary.csv"), emit: csv
+    path("taxonomic_assignment_summary.csv")
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -21,14 +20,7 @@ process TAX_SUMMARY {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    fcid =                  "${fcid}"   
-    pcr_primers =           "${pcr_primers}"
-    tax =                   "${tax}"
-    ids =                   "${ids}"
-    target_gene =           "${target_gene}"
-    joint_file =            "${joint}"
-    idtaxa_db =             "${idtaxa_db}"
-    ref_fasta =             "${ref_fasta}"
+    tax_summary_list =      "${tax_summary_list}"
     
     ## global variables
     projectDir = "$projectDir"
