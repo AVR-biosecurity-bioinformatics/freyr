@@ -433,8 +433,8 @@ workflow PIPERLINE {
     */
     ch_tax_idtaxa_tax // fcid, pcr_primers, "*_idtaxa_tax.rds"
         .combine ( ch_tax_idtaxa_ids, by: [0,1] ) // + "*_idtaxa_ids.rds"
+        .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + target_gene, "*_joint.rds"
         .view()
-    //     .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + target_gene, "*_joint.rds"
     //     .combine ( TAX_BLAST.out.n_ranks, by: [0,1] ) // + "n_ranks.txt"
     //     .set { ch_tax_summary_input }
 
