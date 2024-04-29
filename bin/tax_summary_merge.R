@@ -16,7 +16,7 @@ for (i in 1:length(tax_summary_list)){
     summary_full <- bind_rows(summary_full, tax_summary_list[i])
 }
 
-print(summary_full)
+#print(summary_full)
 
 summary_full %>%
     distinct()
