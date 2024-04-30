@@ -386,9 +386,9 @@ workflow PIPERLINE {
 
     //// merge tax assignment outputs and filtered seqtab (pre-assignment)
     /// remove meta and add in 'ch_loci_info' to replace meta.target_gene for JOINT_TAX input
-    // tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_tax.rds")
+    // tuple val(pcr_primers), val(fcid), val(meta), path("*_idtaxa_tax.rds")
     ch_tax_idtaxa_tax
-        .combine ( ch_loci_info, by: 1 )
+        .combine ( ch_loci_info, by: 0 ) // (TODO: use ch_loci_params [stripped down] instead)
         .map { pcr_primers, fcid, tax, target_gene, idtaxa_db, ref_fasta  ->
             [ pcr_primers, fcid, target_gene, idtaxa_db, ref_fasta, tax ] }
         .combine ( ch_tax_blast, by: [0,1] ) 

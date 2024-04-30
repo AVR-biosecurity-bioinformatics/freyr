@@ -1,11 +1,9 @@
 process SPLIT_LOCI {
     def module_name = "split_loci"
-    tag "$meta.sample_id; $meta.target_gene"
+    tag "$meta.pcr_primers; $meta.sample_id"
     // label:  
-    errorStrategy "retry"
 
     input:
-    // input read pairs, primer seqs and locus name (to use in output file names)
     tuple val(meta), path(reads)
 
     output:   
