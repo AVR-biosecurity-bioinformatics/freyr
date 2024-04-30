@@ -397,12 +397,12 @@ workflow PIPERLINE {
         .combine ( ch_tax_blast, by: [0,1] ) 
         .combine ( ch_seqtab, by: [0,1] )
         .combine ( ch_loci_params, by: 0 ) // adds map of loci_params
-        .set { ch_joint_tax_input } // pcr_primers, fcid, target_gene, idtaxa_db, ref_fasta, tax, blast, seqtab
+        .set { ch_joint_tax_input } // pcr_primers, fcid, tax, blast, seqtab, loci_params
 
-    ch_joint_tax_input.view()
+    // ch_joint_tax_input.view()
 
-    // //// aggregate taxonomic assignment
-    // JOINT_TAX ( ch_joint_tax_input )
+    //// aggregate taxonomic assignment
+    JOINT_TAX ( ch_joint_tax_input )
 
     // //// group taxtab across flowcells (per locus)
     // /// creates tuple of lists of fcid, meta and taxtab files

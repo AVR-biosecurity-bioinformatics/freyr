@@ -4,7 +4,7 @@ process JOINT_TAX {
     // label:  
 
     input:
-    tuple val(pcr_primers), val(fcid), val(target_gene), path(idtaxa_db), path(ref_fasta), path(tax), path(blast), path(seqtab)
+    tuple val(pcr_primers), val(fcid), path(tax), path(blast), path(seqtab), val(loci_params)
     
     output:
     tuple val(pcr_primers), val(fcid), path("*_taxblast.rds"), emit: taxtab
@@ -22,7 +22,7 @@ process JOINT_TAX {
     ## input channel variables
     fcid =                  "${fcid}"
     pcr_primers =           "${pcr_primers}"
-    target_gene =           "${target_gene}"
+    target_gene =           "${loci_params.target_gene}"
     idtaxa_output =         "${tax}"
     blast_output =          "${blast}"
     seqtab =                "${seqtab}"
