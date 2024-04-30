@@ -439,15 +439,15 @@ workflow PIPERLINE {
     //// merge TAX_SUMMARY outputs together across loci and flow cells
     TAX_SUMMARY_MERGE ( ch_tax_summaries )
 
-    // //// create channel of loci parameters
-    // PARAMETER_SETUP.out.loci_params // loci_params.csv file with one row per primer pair
-    //     .splitCsv ( header: true )
-    //     .map { row -> 
-    //             [ row.pcr_primers, row ] }
-    //     .combine ( TAX_SUMMARY.out.rds.map{ a,b,c,d -> [a,c,d] }, by: 0 )
-    //     .set { ch_loci_params }
+    //// create channel of loci parameters
+    PARAMETER_SETUP.out.loci_params // loci_params.csv file with one row per primer pair
+        .splitCsv ( header: true )
+        .map { row -> 
+                [ row.pcr_primers, row ] }
+        .combine ( TAX_SUMMARY.out.rds.map{ a,b,c,d -> [a,c,d] }, by: 0 )
+        .set { ch_loci_params }
 
-    // ch_loci_params.view()
+    ch_loci_params.view()
 
     //// inputs for PHYLOSEQ
     /*
