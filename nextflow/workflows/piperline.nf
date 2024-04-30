@@ -445,6 +445,8 @@ workflow PIPERLINE {
     //// create channel of loci parameters
     PARAMETER_SETUP.out.loci_params // loci_params.csv file with one row per primer pair
         .splitCsv ( header: true )
+        .map { it -> 
+                [ it.pcr_primers, it ] }
         .view()
 
 
