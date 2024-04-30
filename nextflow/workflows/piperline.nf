@@ -434,7 +434,7 @@ workflow PIPERLINE {
 
     // create channel containing a single list of all TAX_SUMMARY outputs
     TAX_SUMMARY.out.rds
-        .map { pcr_primers, fcid, map(loci_params), tax_summary ->
+        .map { pcr_primers, fcid, loci_params, tax_summary ->
             [ tax_summary ] } 
         .collect()
         .set { ch_tax_summaries } 
