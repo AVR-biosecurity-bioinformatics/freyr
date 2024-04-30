@@ -446,7 +446,7 @@ workflow PIPERLINE {
     PARAMETER_SETUP.out.loci_params // loci_params.csv file with one row per primer pair
         .splitCsv ( header: true )
         .map { row -> 
-                [ row.fcid, row.pcr_primers, row ] }
+                [ row.pcr_primers, row ] }
         .combine ( TAX_SUMMARY.out.rds.map{ a,b,c,d -> [b,c,d] }, by: 0 )
         .view()
 
