@@ -404,24 +404,23 @@ workflow PIPERLINE {
     //// aggregate taxonomic assignment
     JOINT_TAX ( ch_joint_tax_input )
 
-    // //// group taxtab across flowcells (per locus)
-    // /// creates tuple of lists of fcid, meta and taxtab files
-    // JOINT_TAX.out.taxtab
-    //     .groupTuple ( by: 0 ) // group into tuples using pcr_primers
-    //     .set { ch_mergetax_input }
+    //// group taxtab across flowcells (per locus)
+    JOINT_TAX.out.taxtab
+        .groupTuple ( by: 0 ) // group into tuples using pcr_primers
+        .set { ch_mergetax_input }
 
-    // //// merge tax tables across flowcells
-    // MERGE_TAX ( ch_mergetax_input )
+    //// merge tax tables across flowcells
+    MERGE_TAX ( ch_mergetax_input )
 
-    // //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
-    // /// channel has one item per fcid x pcr_primer combo
-    // ch_seqtab
-    //     .combine ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by pcr_primers, fcid 
-    //     .combine ( JOINT_TAX.out.taxtab, by: [0,1] ) // combine by pcr_primers, fcid
-    //     .combine ( ch_loci_info, by: 0 ) // add loci info (TODO: use ch_loci_params [stripped down] instead)
-    //     .set { ch_assignment_plot_input }
+    //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
+    /// channel has one item per fcid x pcr_primer combo
+    ch_seqtab
+        .combine ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by pcr_primers, fcid 
+        .combine ( JOINT_TAX.out.taxtab, by: [0,1] ) // combine by pcr_primers, fcid
+        .combine ( ch_loci_params, by: 0 ) // add loci info (TODO: use ch_loci_params [stripped down] instead)
+        .set { ch_assignment_plot_input }
 
-    // // ch_assignment_plot_input .view()
+    ch_assignment_plot_input .view()
         
     // //// do assignment plot
     // ASSIGNMENT_PLOT ( ch_assignment_plot_input )
