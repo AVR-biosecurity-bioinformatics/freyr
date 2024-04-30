@@ -4,11 +4,11 @@ process ASSIGNMENT_PLOT {
     // label:  
 
     input:
-    tuple val(pcr_primers), val(fcid), path(seqtab), path(blast), path(tax), val(target_gene), path(idtaxa_db), path(ref_fasta)
+    tuple val(pcr_primers), val(fcid), path(seqtab), path(blast), path(tax), val(loci_params)
 
     output:
     path("*_taxonomic_assignment_summary.pdf"), emit: plot
-    tuple val(pcr_primers), val(fcid), val(target_gene), path("*_joint.rds"), path(idtaxa_db), path(ref_fasta), emit: joint
+    tuple val(pcr_primers), val(fcid), path("*_joint.rds"), val(loci_params), emit: joint
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -26,9 +26,9 @@ process ASSIGNMENT_PLOT {
     seqtab =                "${seqtab}"
     blast =                 "${blast}"
     tax =                   "${tax}"
-    target_gene =           "${target_gene}"
-    idtaxa_db =             "${idtaxa_db}"
-    ref_fasta =             "${ref_fasta}"
+    target_gene =           "${loci_params.target_gene}"
+    idtaxa_db =             "${loci_params.idtaxa_db}"
+    ref_fasta =             "${loci_params.ref_fasta}"
     
     ## global variables
     projectDir = "$projectDir"

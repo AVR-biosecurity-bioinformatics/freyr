@@ -419,17 +419,17 @@ workflow PIPERLINE {
         .combine ( JOINT_TAX.out.taxtab, by: [0,1] ) // combine by pcr_primers, fcid
         .combine ( ch_loci_params, by: 0 ) // add loci info (TODO: use ch_loci_params [stripped down] instead)
         .set { ch_assignment_plot_input }
-
-    ch_assignment_plot_input .view()
         
-    // //// do assignment plot
-    // ASSIGNMENT_PLOT ( ch_assignment_plot_input )
+    //// do assignment plot
+    ASSIGNMENT_PLOT ( ch_assignment_plot_input )
 
-    // /// generate taxonomic assignment summary per locus (also hash seq)
-    // ch_tax_idtaxa_tax // pcr_primers, fcid, "*_idtaxa_tax.rds"
-    //     .combine ( ch_tax_idtaxa_ids, by: [0,1] ) // + "*_idtaxa_ids.rds"
-    //     .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + target_gene, "*_joint.rds"
-    //     .set { ch_tax_summary_input }
+    /// generate taxonomic assignment summary per locus (also hash seq)
+    ch_tax_idtaxa_tax // pcr_primers, fcid, "*_idtaxa_tax.rds"
+        .combine ( ch_tax_idtaxa_ids, by: [0,1] ) // + "*_idtaxa_ids.rds"
+        .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + "*_joint.rds", map(loci_params)
+        .set { ch_tax_summary_input }
+
+    ch_tax_summary_input .view()
 
     // //// create taxonomic assignment summaries per locus x flowcell
     // TAX_SUMMARY ( ch_tax_summary_input )
