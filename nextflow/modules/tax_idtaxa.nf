@@ -1,6 +1,6 @@
 process TAX_IDTAXA {
     def module_name = "tax_idtaxa"
-    tag "$fcid; $pcr_primers"
+    tag "$pcr_primers; $fcid"
     // label:  
 
     input:

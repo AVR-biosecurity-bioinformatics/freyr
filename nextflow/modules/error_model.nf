@@ -1,6 +1,6 @@
 process ERROR_MODEL {
     def module_name = "error_model"
-    tag "$fcid; $pcr_primers"
+    tag "$pcr_primers; $fcid"
     // label:  
 
     input:

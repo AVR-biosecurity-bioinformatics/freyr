@@ -1,6 +1,6 @@
 process ASSIGNMENT_PLOT {
     def module_name = "assignment_plot"
-    tag "$pcr_primers"
+    tag "$pcr_primers; $fcid"
     // label:  
 
     input:

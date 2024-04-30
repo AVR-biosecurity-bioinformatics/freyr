@@ -1,6 +1,6 @@
 process JOINT_TAX {
     def module_name = "joint_tax"
-    tag "$fcid; $pcr_primers"
+    tag "$pcr_primers; $fcid"
     // label:  
 
     input:

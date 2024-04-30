@@ -1,6 +1,6 @@
 process READ_FILTER {
     def module_name = "read_filter"
-    tag "$meta.sample_id; $meta.target_gene"
+    tag "$meta.pcr_primers; $meta.sample_id"
     // label:  
 
     input:

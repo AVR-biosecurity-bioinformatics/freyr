@@ -1,15 +1,14 @@
 process SEQ_QC {
     def module_name = "seq_qc"
-    tag "Flowcell: $flowcell_id"
+    tag "$fcid"
     // label: 
 
     input:
-    // val data_loc
-    val flowcell_id 
+    val(fcid) 
 
     output:
-    path "${flowcell_id}_flowcell_qc.pdf"
-    path "${flowcell_id}_index_switching.pdf" 
+    path "${fcid}_flowcell_qc.pdf"
+    path "${fcid}_index_switching.pdf" 
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -22,7 +21,7 @@ process SEQ_QC {
     
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    flowcell_id = "$flowcell_id"
+    fcid = "$fcid"
     
     ## global variables
     projectDir = "$projectDir"

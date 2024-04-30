@@ -1,6 +1,6 @@
 process TAX_SUMMARY {
     def module_name = "tax_summary"
-    tag "$fcid; $pcr_primers"
+    tag "$pcr_primers; $fcid"
     // label:  
 
     input:

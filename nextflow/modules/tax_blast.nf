@@ -1,6 +1,6 @@
 process TAX_BLAST {
     def module_name = "tax_blast"
-    tag "$fcid; $pcr_primers"
+    tag "$pcr_primers; $fcid"
     // label:  
 
     input:

@@ -1,6 +1,6 @@
 process FILTER_SEQTAB {
     def module_name = "filter_seqtab"
-    tag "$fcid; $pcr_primers"
+    tag "$pcr_primers; $fcid"
     // label:  
 
     input:

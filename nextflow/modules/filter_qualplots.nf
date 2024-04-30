@@ -1,6 +1,6 @@
 process FILTER_QUALPLOTS {
     def module_name = "filter_qualplots"
-    tag "$meta.sample_id; $meta.target_gene"
+    tag "$meta.fcid; $meta.sample_id"
     // label:  
 
     input:

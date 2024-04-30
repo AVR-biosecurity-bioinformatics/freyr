@@ -1,6 +1,6 @@
 process PRIMER_TRIM {
     def module_name = "primer_trim"
-    tag "$meta.sample_id; $meta.target_gene"
+    tag "$meta.pcr_primers; $meta.sample_id"
     // label:  
 
     input:
