@@ -1,13 +1,11 @@
-process MERGE_TAX {
-    def module_name = "merge_tax"
-    tag "$pcr_primers"
+process PHYLOSEQ {
+    def module_name = "PHYLOSEQ"
+    tag "Whole dataset"
     // label:  
 
     input:
-    tuple val(pcr_primers), val(fcid), path(taxtab)
 
     output:
-    tuple val(fcid), val(pcr_primers), path("*_merged_tax.rds"), emit: merged_tax
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -20,9 +18,7 @@ process MERGE_TAX {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    pcr_primers =           "${pcr_primers}"
-    fcid =                  "${fcid}"
-    taxtab =                "${taxtab}"
+    tax_summary_list =      "${tax_summary_list}"
     
     ## global variables
     projectDir = "$projectDir"

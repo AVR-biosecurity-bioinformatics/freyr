@@ -81,7 +81,7 @@ include { ASSIGNMENT_PLOT                           } from '../modules/assignmen
 include { TAX_SUMMARY                               } from '../modules/tax_summary'
 include { TAX_SUMMARY_MERGE                         } from '../modules/tax_summary_merge'
 // include { MERGE_SEQTAB                              } from '../modules/merge_seqtab'
-// include { PHYLOSEQ_CREATE                           } from '../modules/phyloseq_create'
+include { PHYLOSEQ                                  } from '../modules/phyloseq'
 // include { PHYLOSEQ_SUMMARY                          } from '../modules/phyloseq_summary'
 // include { ACCUMULATION_CURVE                        } from '../modules/accumulation_curve'
 // include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_filter'
@@ -426,14 +426,6 @@ workflow PIPERLINE {
     ASSIGNMENT_PLOT ( ch_assignment_plot_input )
 
     /// generate taxonomic assignment summary per locus (also hash seq)
-    /* 
-    input: TAX_IDTAXA.out.ids ('idtaxa_ids' in R code) 
-        tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_tax.rds")
-    input: TAX_IDTAXA.out.tax ('idtaxa' in R code) 
-        tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_ids.rds")
-    input: ASSIGNMENT_PLOT.out.joint
-        tuple val(fcid), val(pcr_primers), val(meta), val(target_gene), path("*_joint.rds")
-    */
     ch_tax_idtaxa_tax // fcid, pcr_primers, "*_idtaxa_tax.rds"
         .combine ( ch_tax_idtaxa_ids, by: [0,1] ) // + "*_idtaxa_ids.rds"
         .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + target_gene, "*_joint.rds"
@@ -450,4 +442,29 @@ workflow PIPERLINE {
     //// merge TAX_SUMMARY outputs together across loci and flow cells
     TAX_SUMMARY_MERGE ( ch_tax_summaries )
 
+    //// create channel of loci parameters
+    PARAMETER_SETUP.out.loci_params // loci_params.csv file with one row per primer pair
+        .splitCsv ( header: true )
+        .view()
+
+
+    //// inputs for PHYLOSEQ
+    /*
+    - MERGE_TAX output (tax tables per locus)
+        - MERGE_TAX.out.merged_tax == fcid, pcr_primers, "*_merged_tax.rds"
+    - FILTER_SEQTAB output (ch_seqtab; sequence tables per locus x flowcell)
+        - ch_seqtab == fcid, pcr_primers, "*_seqtab.cleaned.rds"
+    - samplesheet (in .rds format I think)
+    
+    - per locus parameters: target_kingdom, target_phylum, target_class,
+    target_order, target_family, target_genus, target_species, 
+    min_sample_reads, min_taxa_reads, min_taxa_ra
+
+    - NOTE: Need to include hashes! 
+    */
+
+    // ch_phyloseq_input = 
+
+    //// create phyloseq objects, filter  
+    // PHYLOSEQ ( ch_phyloseq_input )
 }

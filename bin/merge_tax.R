@@ -3,22 +3,10 @@
 
 ## check and define variables
 
-## this isn't needed as fcid and meta aren't used in the code
-# fcid_list <- # convert Groovy to R list format
-#     stringr::str_extract_all(fcid, pattern = "[^\\s,\\[\\]]+") %>% unlist()
-
-# meta_list <-  # convert Groovy to R list format
-#     stringr::str_extract_all(meta, pattern = "[^\\[\\]]+") %>% 
-#     unlist() %>% str_subset(pattern = "^[^,]") # remove elements that start with ","
-# meta_list2 <- meta_list %>% stringr::str_split(pattern = ", ") # nested list; elements are samples x pcr_primers
-
-
 taxtab_list <- # convert Groovy to R list format
     stringr::str_extract_all(taxtab, pattern = "[^\\s,\\[\\]]+") %>% unlist()
 
 taxtab_list <- lapply(taxtab_list, readRDS) # read in taxtabs and store as list of tibbles
-
-# saveRDS(taxtab_list, paste0(pcr_primers,"_taxtab_list.rds"))
 
 ### run R code
 
