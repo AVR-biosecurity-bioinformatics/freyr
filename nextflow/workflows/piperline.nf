@@ -189,7 +189,7 @@ workflow PIPERLINE {
     // create channel linking pcr_primers and databases (from params)
     ch_sample_locus_reads 
         .map { meta, reads -> 
-                [ meta.target_gene, meta.pcr_primers, meta.idtaxa_db, meta.ref_fasta ] }
+                [ meta.pcr_primers, meta.target_gene, meta.idtaxa_db, meta.ref_fasta ] }
         .unique()
         .set { ch_loci_info }
 
