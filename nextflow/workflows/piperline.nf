@@ -396,7 +396,7 @@ workflow PIPERLINE {
     ch_tax_idtaxa_tax
         .combine ( ch_tax_blast, by: [0,1] ) 
         .combine ( ch_seqtab, by: [0,1] )
-        // .combine ( ch_loci_params, by: 0 ) // adds map of loci_params
+        .combine ( ch_loci_params, by: 0 ) // adds map of loci_params
         .set { ch_joint_tax_input } // pcr_primers, fcid, target_gene, idtaxa_db, ref_fasta, tax, blast, seqtab
 
     ch_joint_tax_input.view()
