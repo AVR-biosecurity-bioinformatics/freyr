@@ -444,7 +444,7 @@ workflow PIPERLINE {
         .splitCsv ( header: true )
         // .map { row -> 
         //         [ row.pcr_primers, row ] }
-        // .combine ( ch_loci_info, by: 0 )
+        .join ( ch_loci_info, by: 0 )
         .set { ch_loci_params }
 
     ch_loci_params.view()
