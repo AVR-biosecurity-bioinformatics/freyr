@@ -449,7 +449,7 @@ workflow PIPERLINE {
 
     ch_loci_params.view()
     
-    ch_loci_info.view()
+    // ch_loci_info.view()
 
     //// inputs for PHYLOSEQ
     /*
