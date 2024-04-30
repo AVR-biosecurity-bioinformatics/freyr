@@ -4,11 +4,11 @@ process ERROR_MODEL {
     // label:  
 
     input:
-    tuple val(direction), val(fcid), val(pcr_primers), path(reads)
+    tuple val(direction), val(pcr_primers), val(fcid), path(reads)
 
 
     output:   
-    tuple val(direction), val(fcid), val(pcr_primers), path("*_errormodel{F,R}.rds"),   emit: errormodel
+    tuple val(direction), val(pcr_primers), val(fcid), path("*_errormodel{F,R}.rds"),   emit: errormodel
     path("*_errormodel.pdf"),                                           emit: plot
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'

@@ -4,10 +4,10 @@ process DADA_PRIORS {
     // label:  
 
     input:
-    tuple val(direction), val(fcid), val(pcr_primers), path(priors)
+    tuple val(direction), val(pcr_primers), val(fcid), path(priors)
 
     output:   
-    tuple val(direction), val(fcid), val(pcr_primers), path("*_priors{F,R}.rds"),              emit: priors
+    tuple val(direction), val(pcr_primers), val(fcid), path("*_priors{F,R}.rds"),              emit: priors
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

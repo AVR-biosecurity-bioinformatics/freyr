@@ -4,12 +4,12 @@ process FILTER_SEQTAB {
     // label:  
 
     input:
-    tuple val(fcid), val(pcr_primers), val(meta), path(seqtab)
+    tuple val(pcr_primers), val(fcid), val(meta), path(seqtab)
 
     output:
-    tuple val(fcid), val(pcr_primers), val(meta), path("*_seqtab.cleaned.rds"), emit: seqtab
-    tuple val(fcid), val(pcr_primers), val(meta), path("*_ASV_cleanup_summary.csv"), emit: csv
-    tuple val(fcid), val(pcr_primers), val(meta), path("*_ASV_cleanup_summary.pdf"), emit: plot
+    tuple val(pcr_primers), val(fcid), val(meta), path("*_seqtab.cleaned.rds"), emit: seqtab
+    tuple val(pcr_primers), val(fcid), val(meta), path("*_ASV_cleanup_summary.csv"), emit: csv
+    tuple val(pcr_primers), val(fcid), val(meta), path("*_ASV_cleanup_summary.pdf"), emit: plot
 
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'

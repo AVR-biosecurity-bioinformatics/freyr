@@ -4,12 +4,12 @@ process TAX_BLAST {
     // label:  
 
     input:
-    tuple val(fcid), val(pcr_primers), val(meta), path(seqtab)
+    tuple val(pcr_primers), val(fcid), val(meta), path(seqtab)
 
     output:
-    tuple val(fcid), val(pcr_primers), val(meta), path("*_blast.rds"), emit: blast
-    tuple val(fcid), val(pcr_primers), path("*_blast_spp_low.rds"), emit: blast_assignment
-    tuple val(fcid), val(pcr_primers), path("*_n_ranks.txt"), emit: n_ranks
+    tuple val(pcr_primers), val(fcid), val(meta), path("*_blast.rds"), emit: blast
+    tuple val(pcr_primers), val(fcid), path("*_blast_spp_low.rds"), emit: blast_assignment
+    tuple val(pcr_primers), val(fcid), path("*_n_ranks.txt"), emit: n_ranks
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

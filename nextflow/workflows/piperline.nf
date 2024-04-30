@@ -180,8 +180,9 @@ workflow PIPERLINE {
             return tuple(fcid, reads) } 
         .groupTuple() 
         .set { ch_sample_reads_fcid }
-        // extract flow cell IDs as channel
-        ch_sample_reads_fcid 
+    
+    // extract flow cell IDs as channel
+    ch_sample_reads_fcid 
         .map { group -> group[0] }
         .set { ch_fcid }
 
@@ -219,14 +220,14 @@ workflow PIPERLINE {
     //// forward read channel
     READ_FILTER.out.reads
         .map { meta, reads -> 
-                [ "forward", meta.fcid, meta.pcr_primers, reads[0] ] }
+                [ "forward", meta.pcr_primers, meta.fcid, reads[0] ] }
         .groupTuple( by: [0,1,2] )
         .set { ch_error_input_fwd }
 
     //// reverse read channel
     READ_FILTER.out.reads
         .map { meta, reads -> 
-                [ "reverse", meta.fcid, meta.pcr_primers, reads[1] ] }
+                [ "reverse", meta.pcr_primers, meta.fcid, reads[1] ] }
         .groupTuple ( by: [0,1,2] )
         .set { ch_error_input_rev }
 
@@ -240,7 +241,7 @@ workflow PIPERLINE {
     //// input channel for denoising forward reads
     READ_FILTER.out.reads
         .map { meta, reads -> 
-                [ "forward", meta.fcid, meta.pcr_primers, meta, reads[0] ] }
+                [ "forward", meta.pcr_primers, meta.fcid, meta, reads[0] ] }
         .combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2] ) // combine with error model
         .map { direction, fcid, pcr_primers, meta, reads, errormodel -> // add empty file path for priors
                 [ direction, fcid, pcr_primers, meta, reads, errormodel, "$projectDir/assets/NO_FILE" ] }
@@ -251,10 +252,10 @@ workflow PIPERLINE {
     //// input channel for denoising reverse reads
     READ_FILTER.out.reads
         .map { meta, reads -> 
-                [ "reverse", meta.fcid, meta.pcr_primers, meta, reads[1] ] }
+                [ "reverse", meta.pcr_primers, meta.fcid, meta, reads[1] ] }
         .combine ( ERROR_MODEL_R.out.errormodel, by: [0,1,2] ) // combine with error model
-        .map { direction, fcid, pcr_primers, meta, reads, errormodel -> // add empty file path for priors
-                [ direction, fcid, pcr_primers, meta, reads, errormodel, "$projectDir/assets/NO_FILE" ] }
+        .map { direction, pcr_primers, fcid, meta, reads, errormodel -> // add empty file path for priors
+                [ direction, pcr_primers, fcid, meta, reads, errormodel, "$projectDir/assets/NO_FILE" ] }
         .set { ch_denoise_input_reverse }
 
 
@@ -269,15 +270,15 @@ workflow PIPERLINE {
         //// group priors for each read file
         /// forward reads
         DENOISE1_F.out.seq
-            .map { direction, fcid, pcr_primers, meta, reads, priors ->
-                    [ direction, fcid, pcr_primers, priors ] }
+            .map { direction, pcr_primers, fcid, meta, reads, priors ->
+                    [ direction, pcr_primers, fcid, priors ] }
             .groupTuple ( by: [0,1,2] )
             .set { ch_priors_f_pre }
 
         /// reverse reads
         DENOISE1_R.out.seq
-            .map { direction, fcid, pcr_primers, meta, reads, priors ->
-                    [ direction, fcid, pcr_primers, priors ] }
+            .map { direction, pcr_primers, fcid, meta, reads, priors ->
+                    [ direction, pcr_primers, fcid, priors ] }
             .groupTuple ( by: [0,1,2] )
             .set { ch_priors_r_pre }
 
@@ -286,8 +287,8 @@ workflow PIPERLINE {
         
         /// combine with forward read data channel
         ch_denoise_input_forward
-            .map { direction, fcid, pcr_primers, meta, reads, errormodel, priors -> // remove null priors
-                    [ direction, fcid, pcr_primers, meta, reads, errormodel ] }
+            .map { direction, pcr_primers, fcid, meta, reads, errormodel, priors -> // remove null priors
+                    [ direction, pcr_primers, fcid, meta, reads, errormodel ] }
             .combine ( DADA_PRIORS_F.out.priors, by: [0,1,2] )
             .set { ch_denoise2_input_forward }
 
@@ -296,8 +297,8 @@ workflow PIPERLINE {
 
         /// combine with reverse read data channel
         ch_denoise_input_reverse
-            .map { direction, fcid, pcr_primers, meta, reads, errormodel, priors -> // remove null priors
-                    [ direction, fcid, pcr_primers, meta, reads, errormodel ] }
+            .map { direction, pcr_primers, fcid, meta, reads, errormodel, priors -> // remove null priors
+                    [ direction, pcr_primers, fcid, meta, reads, errormodel ] }
             .combine ( DADA_PRIORS_R.out.priors, by: [0,1,2] )
             .set { ch_denoise2_input_reverse }
 
@@ -310,47 +311,47 @@ workflow PIPERLINE {
         /// join F and R denoise2 outputs
         // prepare forward reads
         DENOISE2_F.out.seq
-            .map { direction, fcid, pcr_primers, meta, readsF, seqF ->
-                    [ meta.sample_id, fcid, pcr_primers, meta, readsF, seqF ] }
+            .map { direction, pcr_primers, fcid, meta, readsF, seqF ->
+                    [ meta.sample_id, pcr_primers, fcid, meta, readsF, seqF ] }
             .set { ch_seq_forward }
 
         // prepare reverse reads
         DENOISE2_R.out.seq
-            .map { direction, fcid, pcr_primers, meta, readsR, seqR ->
-                    [ meta.sample_id, fcid, pcr_primers, meta, readsR, seqR ] }
+            .map { direction, pcr_primers, fcid, meta, readsR, seqR ->
+                    [ meta.sample_id, pcr_primers, fcid, meta, readsR, seqR ] }
             .set { ch_seq_reverse }
 
         // join
         ch_seq_forward
             .combine ( ch_seq_reverse, by: [0,1,2,3] ) // combine by sample_id
-            .map { sample_id, fcid, pcr_primers, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
-                    [ fcid, pcr_primers, meta.concat_unmerged, meta,
+            .map { sample_id, pcr_primers, fcid, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
+                    [ pcr_primers, fcid, meta.concat_unmerged, meta,
                     file(readsF, checkIfExists: true),
                     file(readsR, checkIfExists: true), 
                     file(seqF, checkIfExists: true),
                     file(seqR, checkIfExists: true) ] } 
-            .groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples
+            .groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples, which it should be
             .set { ch_seq_combined }
 
     } else { // don't run second denoising step with priors
         /// join F and R DENOISE1 outputs
         // prepare forward reads
         DENOISE1_F.out.seq
-            .map { direction, fcid, pcr_primers, meta, readsF, seqF ->
-                    [ meta.sample_id, fcid, pcr_primers, meta, readsF, seqF ] }
+            .map { direction, pcr_primers, fcid, meta, readsF, seqF ->
+                    [ meta.sample_id, pcr_primers, fcid, meta, readsF, seqF ] }
             .set { ch_seq_forward }
 
         // prepare reverse reads
         DENOISE1_R.out.seq
-            .map { direction, fcid, pcr_primers, meta, readsR, seqR ->
-                    [ meta.sample_id, fcid, pcr_primers, meta, readsR, seqR ] }
+            .map { direction, pcr_primers, fcid, meta, readsR, seqR ->
+                    [ meta.sample_id, pcr_primers, fcid, meta, readsR, seqR ] }
             .set { ch_seq_reverse }
 
         // join
         ch_seq_forward
             .combine ( ch_seq_reverse, by: [0,1,2,3] ) // combine by sample_id
-            .map { sample_id, fcid, pcr_primers, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
-                    [ fcid, pcr_primers, meta.concat_unmerged, meta,
+            .map { sample_id, pcr_primers, fcid, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
+                    [ pcr_primers, fcid, meta.concat_unmerged, meta,
                     file(readsF, checkIfExists: true),
                     file(readsR, checkIfExists: true), 
                     file(seqF, checkIfExists: true),
@@ -365,23 +366,23 @@ workflow PIPERLINE {
     //// filter sequence table
     FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
     ch_seqtab = FILTER_SEQTAB.out.seqtab
-        .map { fcid, pcr_primers, meta, seqtab ->
-            [ fcid, pcr_primers, seqtab ] }
+        .map { pcr_primers, fcid, meta, seqtab -> // remove meta
+            [ pcr_primers, fcid, seqtab ] }
 
     //// use IDTAXA to assign taxonomy
     TAX_IDTAXA ( FILTER_SEQTAB.out.seqtab )
     ch_tax_idtaxa_tax = TAX_IDTAXA.out.tax
-        .map { fcid, pcr_primers, meta, tax ->
-            [ fcid, pcr_primers, tax ] }
+        .map { pcr_primers, fcid, meta, tax -> // remove meta
+            [ pcr_primers, fcid, tax ] }
     ch_tax_idtaxa_ids = TAX_IDTAXA.out.ids 
-        .map { fcid, pcr_primers, meta, ids ->
-            [ fcid, pcr_primers, ids ] }
+        .map { pcr_primers, fcid, meta, ids -> // remove meta
+            [ pcr_primers, fcid, ids ] }
 
     //// use blastn to assign taxonomy
     TAX_BLAST ( FILTER_SEQTAB.out.seqtab )
     ch_tax_blast = TAX_BLAST.out.blast
-        .map { fcid, pcr_primers, meta, blast ->
-            [ fcid, pcr_primers, blast ] }
+        .map { pcr_primers, fcid, meta, blast -> // remove meta
+            [ pcr_primers, fcid, blast ] }
 
     //// merge tax assignment outputs and filtered seqtab (pre-assignment)
     /// remove meta and add in 'ch_loci_info' to replace meta.target_gene for JOINT_TAX input
@@ -389,10 +390,10 @@ workflow PIPERLINE {
     ch_tax_idtaxa_tax
         .combine ( ch_loci_info, by: 1 )
         .map { pcr_primers, fcid, tax, target_gene, idtaxa_db, ref_fasta  ->
-            [ fcid, pcr_primers, target_gene, idtaxa_db, ref_fasta, tax ] }
+            [ pcr_primers, fcid, target_gene, idtaxa_db, ref_fasta, tax ] }
         .combine ( ch_tax_blast, by: [0,1] ) 
         .combine ( ch_seqtab, by: [0,1] )
-        .set { ch_joint_tax_input } // fcid, pcr_primers, target_gene, idtaxa_db, ref_fasta, tax, blast, seqtab
+        .set { ch_joint_tax_input } // pcr_primers, fcid, target_gene, idtaxa_db, ref_fasta, tax, blast, seqtab
 
     //// aggregate taxonomic assignment
     JOINT_TAX ( ch_joint_tax_input )
@@ -400,12 +401,8 @@ workflow PIPERLINE {
     //// group taxtab across flowcells (per locus)
     /// creates tuple of lists of fcid, meta and taxtab files
     JOINT_TAX.out.taxtab
-        .map { fcid, pcr_primers, taxtab -> // add arbitrary grouping key
-                [ pcr_primers, fcid, taxtab ] }
         .groupTuple ( by: 0 ) // group into tuples using pcr_primers
         .set { ch_mergetax_input }
-
-    // ch_mergetax_input .view()
 
     //// merge tax tables across flowcells
     MERGE_TAX ( ch_mergetax_input )
@@ -413,11 +410,9 @@ workflow PIPERLINE {
     //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
     /// channel has one item per fcid x pcr_primer combo
     ch_seqtab
-        .combine ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by fcid, pcr_primers 
-        .combine ( JOINT_TAX.out.taxtab, by: [0,1] ) // combine by fcid, pcr_primers
-        .combine ( ch_loci_info, by: 1 )
-        .map { pcr_primers, fcid, seqtab, blast, tax, target_gene, idtaxa_db, ref_fasta ->
-            [ fcid, pcr_primers, seqtab, blast, tax, target_gene, idtaxa_db, ref_fasta ] } 
+        .combine ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by pcr_primers, fcid 
+        .combine ( JOINT_TAX.out.taxtab, by: [0,1] ) // combine by pcr_primers, fcid
+        .combine ( ch_loci_info, by: 0 ) // add loci info (TODO: use ch_loci_params [stripped down] instead)
         .set { ch_assignment_plot_input }
 
     // ch_assignment_plot_input .view()
@@ -426,37 +421,40 @@ workflow PIPERLINE {
     ASSIGNMENT_PLOT ( ch_assignment_plot_input )
 
     /// generate taxonomic assignment summary per locus (also hash seq)
-    ch_tax_idtaxa_tax // fcid, pcr_primers, "*_idtaxa_tax.rds"
+    ch_tax_idtaxa_tax // pcr_primers, fcid, "*_idtaxa_tax.rds"
         .combine ( ch_tax_idtaxa_ids, by: [0,1] ) // + "*_idtaxa_ids.rds"
         .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + target_gene, "*_joint.rds"
         .set { ch_tax_summary_input }
 
+    //// create taxonomic assignment summaries per locus x flowcell
     TAX_SUMMARY ( ch_tax_summary_input )
 
+    // create channel containing a single list of all TAX_SUMMARY outputs
     TAX_SUMMARY.out.rds
-        .map { fcid, pcr_primers, target_gene, tax_summary ->
+        .map { pcr_primers, fcid, target_gene, tax_summary ->
             [ tax_summary ] } 
         .collect()
-        .set { ch_tax_summaries }
+        .set { ch_tax_summaries } 
 
     //// merge TAX_SUMMARY outputs together across loci and flow cells
     TAX_SUMMARY_MERGE ( ch_tax_summaries )
 
-    //// create channel of loci parameters
-    PARAMETER_SETUP.out.loci_params // loci_params.csv file with one row per primer pair
-        .splitCsv ( header: true )
-        .map { row -> 
-                [ row.pcr_primers, row ] }
-        .combine ( TAX_SUMMARY.out.rds.map{ a,b,c,d -> [b,c,d] }, by: 0 )
-        .view()
+    // //// create channel of loci parameters
+    // PARAMETER_SETUP.out.loci_params // loci_params.csv file with one row per primer pair
+    //     .splitCsv ( header: true )
+    //     .map { row -> 
+    //             [ row.pcr_primers, row ] }
+    //     .combine ( TAX_SUMMARY.out.rds.map{ a,b,c,d -> [b,c,d] }, by: 0 )
+    //     .set { ch_loci_params }
 
+    // ch_loci_params.view()
 
     //// inputs for PHYLOSEQ
     /*
     - MERGE_TAX output (tax tables per locus)
-        - MERGE_TAX.out.merged_tax == fcid, pcr_primers, "*_merged_tax.rds"
+        - MERGE_TAX.out.merged_tax == pcr_primers, fcid, "*_merged_tax.rds"
     - FILTER_SEQTAB output (ch_seqtab; sequence tables per locus x flowcell)
-        - ch_seqtab == fcid, pcr_primers, "*_seqtab.cleaned.rds"
+        - ch_seqtab == pcr_primers, fcid, "*_seqtab.cleaned.rds"
     - samplesheet (in .rds format I think)
     
     - per locus parameters: target_kingdom, target_phylum, target_class,

@@ -4,11 +4,11 @@ process TAX_IDTAXA {
     // label:  
 
     input:
-    tuple val(fcid), val(pcr_primers), val(meta), path(seqtab)
+    tuple val(pcr_primers), val(fcid), val(meta), path(seqtab)
 
     output:
-    tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_tax.rds"), emit: tax
-    tuple val(fcid), val(pcr_primers), val(meta), path("*_idtaxa_ids.rds"), emit: ids
+    tuple val(pcr_primers), val(fcid), val(meta), path("*_idtaxa_tax.rds"), emit: tax
+    tuple val(pcr_primers), val(fcid), val(meta), path("*_idtaxa_ids.rds"), emit: ids
 
 
 

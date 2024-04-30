@@ -4,10 +4,10 @@ process JOINT_TAX {
     // label:  
 
     input:
-    tuple val(fcid), val(pcr_primers), val(target_gene), path(idtaxa_db), path(ref_fasta), path(tax), path(blast), path(seqtab)
+    tuple val(pcr_primers), val(fcid), val(target_gene), path(idtaxa_db), path(ref_fasta), path(tax), path(blast), path(seqtab)
     
     output:
-    tuple val(fcid), val(pcr_primers), path("*_taxblast.rds"), emit: taxtab
+    tuple val(pcr_primers), val(fcid), path("*_taxblast.rds"), emit: taxtab
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
