@@ -442,9 +442,9 @@ workflow PIPERLINE {
     //// create channel of loci parameters
     PARAMETER_SETUP.out.loci_params // loci_params.csv file with one row per primer pair
         .splitCsv ( header: true )
-        // .map { row -> 
-        //         [ row.pcr_primers, row ] }
-        .combine ( ch_loci_info )
+        .map { row -> 
+                [ row.pcr_primers, row ] }
+        .combine ( ch_loci_info, by: 0 )
         .set { ch_loci_params }
 
     ch_loci_params.view()
