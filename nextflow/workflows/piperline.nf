@@ -439,10 +439,8 @@ workflow PIPERLINE {
         .collect()
         .set { ch_tax_summaries } 
 
-    ch_tax_summaries .view()
-
-    // //// merge TAX_SUMMARY outputs together across loci and flow cells
-    // TAX_SUMMARY_MERGE ( ch_tax_summaries )
+    //// merge TAX_SUMMARY outputs together across loci and flow cells
+    TAX_SUMMARY_MERGE ( ch_tax_summaries )
     
     //// inputs for PHYLOSEQ
     /*
