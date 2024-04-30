@@ -444,7 +444,7 @@ workflow PIPERLINE {
         .splitCsv ( header: true )
         // .map { row -> 
         //         [ row.pcr_primers, row ] }
-        .combine ( TAX_SUMMARY.out.rds.map{ a,b,c,d -> [a,c,d] }, by: 0 )
+        // .combine ( TAX_SUMMARY.out.rds.map{ a,b,c,d -> [a,c,d] }, by: 0 )
         .set { ch_loci_params }
 
     ch_loci_params.view()
