@@ -193,6 +193,14 @@ workflow PIPERLINE {
         .unique()
         .set { ch_loci_info }
 
+    //// create channel of loci parameters
+    PARAMETER_SETUP.out.loci_params // loci_params.csv file with one row per primer pair
+        .splitCsv ( header: true )
+        .map { row -> 
+                [ row.pcr_primers, row ] }
+        .set { ch_loci_params } // cardinality: pcr_primers, map(all params, incl. pcr_primers)
+
+
     // run SEQ_QC per flow cell 
     // SEQ_QC ( ch_fcid ) // optional step for testing
 
@@ -385,72 +393,60 @@ workflow PIPERLINE {
             [ pcr_primers, fcid, blast ] }
 
     //// merge tax assignment outputs and filtered seqtab (pre-assignment)
-    /// remove meta and add in 'ch_loci_info' to replace meta.target_gene for JOINT_TAX input
-    // tuple val(pcr_primers), val(fcid), val(meta), path("*_idtaxa_tax.rds")
     ch_tax_idtaxa_tax
-        .combine ( ch_loci_info, by: 0 ) // (TODO: use ch_loci_params [stripped down] instead)
-        .map { pcr_primers, fcid, tax, target_gene, idtaxa_db, ref_fasta  ->
-            [ pcr_primers, fcid, target_gene, idtaxa_db, ref_fasta, tax ] }
-        .combine ( ch_tax_blast, by: [0,1] ) 
-        .combine ( ch_seqtab, by: [0,1] )
+        .combine ( ch_loci_params, by: 0 ) // adds map of loci_params
+        // .map { pcr_primers, fcid, tax, target_gene, idtaxa_db, ref_fasta  ->
+        //     [ pcr_primers, fcid, target_gene, idtaxa_db, ref_fasta, tax ] }
+        // .combine ( ch_tax_blast, by: [0,1] ) 
+        // .combine ( ch_seqtab, by: [0,1] )
         .set { ch_joint_tax_input } // pcr_primers, fcid, target_gene, idtaxa_db, ref_fasta, tax, blast, seqtab
 
-    //// aggregate taxonomic assignment
-    JOINT_TAX ( ch_joint_tax_input )
+    ch_joint_tax_input.view()
 
-    //// group taxtab across flowcells (per locus)
-    /// creates tuple of lists of fcid, meta and taxtab files
-    JOINT_TAX.out.taxtab
-        .groupTuple ( by: 0 ) // group into tuples using pcr_primers
-        .set { ch_mergetax_input }
+    // //// aggregate taxonomic assignment
+    // JOINT_TAX ( ch_joint_tax_input )
 
-    //// merge tax tables across flowcells
-    MERGE_TAX ( ch_mergetax_input )
+    // //// group taxtab across flowcells (per locus)
+    // /// creates tuple of lists of fcid, meta and taxtab files
+    // JOINT_TAX.out.taxtab
+    //     .groupTuple ( by: 0 ) // group into tuples using pcr_primers
+    //     .set { ch_mergetax_input }
 
-    //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
-    /// channel has one item per fcid x pcr_primer combo
-    ch_seqtab
-        .combine ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by pcr_primers, fcid 
-        .combine ( JOINT_TAX.out.taxtab, by: [0,1] ) // combine by pcr_primers, fcid
-        .combine ( ch_loci_info, by: 0 ) // add loci info (TODO: use ch_loci_params [stripped down] instead)
-        .set { ch_assignment_plot_input }
+    // //// merge tax tables across flowcells
+    // MERGE_TAX ( ch_mergetax_input )
 
-    // ch_assignment_plot_input .view()
+    // //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
+    // /// channel has one item per fcid x pcr_primer combo
+    // ch_seqtab
+    //     .combine ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by pcr_primers, fcid 
+    //     .combine ( JOINT_TAX.out.taxtab, by: [0,1] ) // combine by pcr_primers, fcid
+    //     .combine ( ch_loci_info, by: 0 ) // add loci info (TODO: use ch_loci_params [stripped down] instead)
+    //     .set { ch_assignment_plot_input }
+
+    // // ch_assignment_plot_input .view()
         
-    //// do assignment plot
-    ASSIGNMENT_PLOT ( ch_assignment_plot_input )
+    // //// do assignment plot
+    // ASSIGNMENT_PLOT ( ch_assignment_plot_input )
 
-    /// generate taxonomic assignment summary per locus (also hash seq)
-    ch_tax_idtaxa_tax // pcr_primers, fcid, "*_idtaxa_tax.rds"
-        .combine ( ch_tax_idtaxa_ids, by: [0,1] ) // + "*_idtaxa_ids.rds"
-        .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + target_gene, "*_joint.rds"
-        .set { ch_tax_summary_input }
+    // /// generate taxonomic assignment summary per locus (also hash seq)
+    // ch_tax_idtaxa_tax // pcr_primers, fcid, "*_idtaxa_tax.rds"
+    //     .combine ( ch_tax_idtaxa_ids, by: [0,1] ) // + "*_idtaxa_ids.rds"
+    //     .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + target_gene, "*_joint.rds"
+    //     .set { ch_tax_summary_input }
 
-    //// create taxonomic assignment summaries per locus x flowcell
-    TAX_SUMMARY ( ch_tax_summary_input )
+    // //// create taxonomic assignment summaries per locus x flowcell
+    // TAX_SUMMARY ( ch_tax_summary_input )
 
-    // create channel containing a single list of all TAX_SUMMARY outputs
-    TAX_SUMMARY.out.rds
-        .map { pcr_primers, fcid, target_gene, tax_summary ->
-            [ tax_summary ] } 
-        .collect()
-        .set { ch_tax_summaries } 
+    // // create channel containing a single list of all TAX_SUMMARY outputs
+    // TAX_SUMMARY.out.rds
+    //     .map { pcr_primers, fcid, target_gene, tax_summary ->
+    //         [ tax_summary ] } 
+    //     .collect()
+    //     .set { ch_tax_summaries } 
 
-    //// merge TAX_SUMMARY outputs together across loci and flow cells
-    TAX_SUMMARY_MERGE ( ch_tax_summaries )
-
-    //// create channel of loci parameters
-    PARAMETER_SETUP.out.loci_params // loci_params.csv file with one row per primer pair
-        .splitCsv ( header: true )
-        .map { row -> 
-                [ row.pcr_primers, row ] }
-        .combine ( ch_loci_info, by: 0 )
-        .set { ch_loci_params }
-
-    ch_loci_params.view()
+    // //// merge TAX_SUMMARY outputs together across loci and flow cells
+    // TAX_SUMMARY_MERGE ( ch_tax_summaries )
     
-    // ch_loci_info.view()
-
     //// inputs for PHYLOSEQ
     /*
     - MERGE_TAX output (tax tables per locus)
