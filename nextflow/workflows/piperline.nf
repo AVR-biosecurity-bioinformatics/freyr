@@ -243,8 +243,8 @@ workflow PIPERLINE {
         .map { meta, reads -> 
                 [ "forward", meta.pcr_primers, meta.fcid, meta, reads[0] ] }
         .combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2] ) // combine with error model
-        .map { direction, fcid, pcr_primers, meta, reads, errormodel -> // add empty file path for priors
-                [ direction, fcid, pcr_primers, meta, reads, errormodel, "$projectDir/assets/NO_FILE" ] }
+        .map { direction, pcr_primers, fcid, meta, reads, errormodel -> // add empty file path for priors
+                [ direction, pcr_primers, fcid, meta, reads, errormodel, "$projectDir/assets/NO_FILE" ] }
         .set { ch_denoise_input_forward }
 
     // ch_denoise_input_forward .view ()
@@ -444,7 +444,7 @@ workflow PIPERLINE {
     //     .splitCsv ( header: true )
     //     .map { row -> 
     //             [ row.pcr_primers, row ] }
-    //     .combine ( TAX_SUMMARY.out.rds.map{ a,b,c,d -> [b,c,d] }, by: 0 )
+    //     .combine ( TAX_SUMMARY.out.rds.map{ a,b,c,d -> [a,c,d] }, by: 0 )
     //     .set { ch_loci_params }
 
     // ch_loci_params.view()
