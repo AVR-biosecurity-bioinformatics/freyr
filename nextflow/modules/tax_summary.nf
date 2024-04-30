@@ -4,10 +4,10 @@ process TAX_SUMMARY {
     // label:  
 
     input:
-    tuple val(pcr_primers), val(fcid), path(tax), path(ids), val(target_gene), path(joint), path(idtaxa_db), path(ref_fasta)
+    tuple val(pcr_primers), val(fcid), path(tax), path(ids), path(joint), val(loci_params)
 
     output:
-    tuple val(pcr_primers), val(fcid), val(target_gene), path("*_taxonomic_assignment_summary.rds"), emit: rds
+    tuple val(pcr_primers), val(fcid), val(loci_params), path("*_taxonomic_assignment_summary.rds"), emit: rds
     path("*_taxonomic_assignment_summary.csv"), emit: csv
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
@@ -21,14 +21,14 @@ process TAX_SUMMARY {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    fcid =                  "${fcid}"   
     pcr_primers =           "${pcr_primers}"
+    fcid =                  "${fcid}"   
     tax =                   "${tax}"
     ids =                   "${ids}"
-    target_gene =           "${target_gene}"
     joint_file =            "${joint}"
-    idtaxa_db =             "${idtaxa_db}"
-    ref_fasta =             "${ref_fasta}"
+    target_gene =           "${loci_params.target_gene}"
+    idtaxa_db =             "${loci_params.idtaxa_db}"
+    ref_fasta =             "${loci_params.ref_fasta}"
     
     ## global variables
     projectDir = "$projectDir"

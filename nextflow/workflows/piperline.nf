@@ -429,17 +429,17 @@ workflow PIPERLINE {
         .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + "*_joint.rds", map(loci_params)
         .set { ch_tax_summary_input }
 
-    ch_tax_summary_input .view()
+    //// create taxonomic assignment summaries per locus x flowcell
+    TAX_SUMMARY ( ch_tax_summary_input )
 
-    // //// create taxonomic assignment summaries per locus x flowcell
-    // TAX_SUMMARY ( ch_tax_summary_input )
+    // create channel containing a single list of all TAX_SUMMARY outputs
+    TAX_SUMMARY.out.rds
+        .map { pcr_primers, fcid, map(loci_params), tax_summary ->
+            [ tax_summary ] } 
+        .collect()
+        .set { ch_tax_summaries } 
 
-    // // create channel containing a single list of all TAX_SUMMARY outputs
-    // TAX_SUMMARY.out.rds
-    //     .map { pcr_primers, fcid, target_gene, tax_summary ->
-    //         [ tax_summary ] } 
-    //     .collect()
-    //     .set { ch_tax_summaries } 
+    ch_tax_summaries .view()
 
     // //// merge TAX_SUMMARY outputs together across loci and flow cells
     // TAX_SUMMARY_MERGE ( ch_tax_summaries )
