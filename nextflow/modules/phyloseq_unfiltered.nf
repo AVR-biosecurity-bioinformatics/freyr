@@ -1,5 +1,5 @@
 process PHYLOSEQ_UNFILTERED {
-    def module_name = "PHYLOSEQ_UNFILTERED"
+    def module_name = "phyloseq_unfiltered"
     tag "Whole dataset"
     // label:  
 
