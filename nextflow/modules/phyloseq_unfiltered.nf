@@ -4,10 +4,11 @@ process PHYLOSEQ_UNFILTERED {
     // label:  
 
     input:
-    tuple val()
+    path(merged_tax)
     path(samdf_original)
 
     output:
+    path("*.csv")
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -20,6 +21,7 @@ process PHYLOSEQ_UNFILTERED {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
+    merged_tax =            "${merged_tax}"
     samdf =                 "${samdf_original}"
     
     ## global variables

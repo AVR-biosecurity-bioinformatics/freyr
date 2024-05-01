@@ -13,7 +13,7 @@ taxtab_list <- lapply(taxtab_list, readRDS) # read in taxtabs and store as list 
 tax_merged <- taxtab_list %>% 
     purrr::map(~{ .x %>% tibble::as_tibble(rownames = "OTU") }) %>%
     dplyr::bind_rows() %>%
-    dplyr::distinct() # Remove any exact duplicates from save ASV being in different seqtab
+    dplyr::distinct() # Remove any exact duplicates being in different seqtab
 
 # create hash of OTU sequence that can be used as OTU name
 # 'OTU_hash' column is now the 'name' of the sequence
