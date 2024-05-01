@@ -459,12 +459,16 @@ workflow PIPERLINE {
     - NOTE: Need to include hashes! 
     */
 
-    ch_phyloseq_input = MERGE_TAX.out.merged_tax
+    ch_taxtables = MERGE_TAX.out.merged_tax
         .map { pcr_primers, merged_tax -> [ merged_tax ] }
         .collect()
 
+    ch_seqtab_collected = ch_seqtab
+        .map { pcr_primers, fcid, seqtab -> [ seqtab ] }
+        .collect()
+
     //// create phyloseq objects across all flowcells and loci; output unfiltered summary tables and accumulation curve plot
-    PHYLOSEQ_UNFILTERED ( ch_phyloseq_input, PARAMETER_SETUP.out.samdf )
+    PHYLOSEQ_UNFILTERED ( ch_taxtables, ch_seqtab_collected, PARAMETER_SETUP.out.samdf )
 
     //// apply taxonomic and minimum abundance filtering per locus (from loci_params), then combine to output filtered summary tables
     // PHYLOSEQ_FILTER ( , ch_loci_params )

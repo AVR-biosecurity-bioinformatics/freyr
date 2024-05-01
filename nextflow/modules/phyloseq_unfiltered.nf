@@ -4,7 +4,8 @@ process PHYLOSEQ_UNFILTERED {
     // label:  
 
     input:
-    path(merged_tax)
+    path(taxtab_list)
+    path(seqtab_list)
     path(samdf_original)
 
     output:
@@ -21,7 +22,8 @@ process PHYLOSEQ_UNFILTERED {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    merged_tax =            "${merged_tax}"
+    taxtab_list =           "${taxtab_list}"
+    seqtab_list =           "${seqtab_list}"
     samdf =                 "${samdf_original}"
     
     ## global variables
