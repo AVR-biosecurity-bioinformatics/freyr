@@ -7,18 +7,10 @@ process PARAMETER_SETUP {
 
 
     output:  
-    path("params.csv") ,                emit: loci_params
-    path("samdf_*.csv") ,               emit: samdf_locus
-    // path("fastq_paths_all.csv"),        emit: fastq_paths_all
-    // path("fastq_paths_samples.csv"),    emit: fastq_paths_samples
-    // path("fastq_paths_ud.csv"),         emit: fastq_paths_ud
-    // path("params_primer.csv"),          emit: params_primer
-    // path("params_readfilter.csv"),      emit: params_readfilter
-    // path("params_dada.csv"),            emit: params_dada
-    // path("params_asvfilter.csv"),       emit: params_asvfilter
-    // path("params_database.csv"),        emit: params_database
-    // path("params_ps.csv"),              emit: params_ps
-
+    path("params.csv"),                emit: loci_params
+    path("samdf_original.csv"),        emit: samdf  
+    path("samdf_*.csv"),               emit: samdf_locus
+    path("samdf_params.csv")           emit: samdf_params
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

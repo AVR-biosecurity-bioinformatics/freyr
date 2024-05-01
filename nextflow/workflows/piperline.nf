@@ -28,6 +28,7 @@
 // ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
 
 // TODO: What channels do I need for config? This could be used to define custom visualisation or output summary formats
+// TODO: Set maximum number of cores/cpus at the total number of read pairs/samples
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -442,13 +443,14 @@ workflow PIPERLINE {
     //// merge TAX_SUMMARY outputs together across loci and flow cells
     TAX_SUMMARY_MERGE ( ch_tax_summaries )
     
-    //// inputs for PHYLOSEQ
+    //// inputs for PHYLOSEQ_UNFILTERED
     /*
     - MERGE_TAX output (tax tables per locus)
         - MERGE_TAX.out.merged_tax == pcr_primers, fcid, "*_merged_tax.rds"
     - FILTER_SEQTAB output (ch_seqtab; sequence tables per locus x flowcell)
         - ch_seqtab == pcr_primers, fcid, "*_seqtab.cleaned.rds"
-    - samplesheet (in .rds format I think)
+    - samplesheet (PARAMETER_SETUP.out.samdf_params; a .csv file)
+    - 
     
     - per locus parameters: target_kingdom, target_phylum, target_class,
     target_order, target_family, target_genus, target_species, 
@@ -459,6 +461,6 @@ workflow PIPERLINE {
 
     // ch_phyloseq_input = 
 
-    //// create phyloseq objects, filter  
-    // PHYLOSEQ ( ch_phyloseq_input )
+    //// create phyloseq objects, 
+    // PHYLOSEQ_UNFILTERED ( ch_phyloseq_input, PARAMETER_SETUP.out.samdf )
 }

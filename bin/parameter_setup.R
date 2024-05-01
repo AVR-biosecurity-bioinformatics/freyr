@@ -406,6 +406,10 @@ samdf_params <- # split samdf loci-relevant columns across new rows, then join s
     separate_longer_delim(c(pcr_primers, for_primer_seq, rev_primer_seq, target_gene), delim = ";") %>% 
     left_join(., params, by = c("pcr_primers", "target_gene"))
 
+write_csv(samdf, "samdf_original.csv") # save csv
+
+write_csv(samdf_params, "samdf_params.csv") # save csv
+
 split_samdf <- split(samdf_params, samdf_params$target_gene) # split dfs by target gene
 
 for ( I in 1:length(split_samdf)) { # assign new dfs to new variables

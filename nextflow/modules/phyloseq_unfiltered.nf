@@ -1,9 +1,11 @@
-process PHYLOSEQ {
-    def module_name = "PHYLOSEQ"
+process PHYLOSEQ_UNFILTERED {
+    def module_name = "PHYLOSEQ_UNFILTERED"
     tag "Whole dataset"
     // label:  
 
     input:
+    tuple val()
+    path(samdf_original)
 
     output:
 
@@ -18,7 +20,7 @@ process PHYLOSEQ {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    tax_summary_list =      "${tax_summary_list}"
+    samdf =                 "${samdf_original}"
     
     ## global variables
     projectDir = "$projectDir"
