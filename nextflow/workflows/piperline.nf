@@ -460,8 +460,8 @@ workflow PIPERLINE {
     */
 
     ch_phyloseq_input = MERGE_TAX.out.merged_tax
-        .map{ pcr_primers, merged_tax -> [ merged_tax ] }
-        .collect
+        .map { pcr_primers, merged_tax -> [ merged_tax ] }
+        .collect()
 
     //// create phyloseq objects across all flowcells and loci; output unfiltered summary tables and accumulation curve plot
     PHYLOSEQ_UNFILTERED ( ch_phyloseq_input, PARAMETER_SETUP.out.samdf )
