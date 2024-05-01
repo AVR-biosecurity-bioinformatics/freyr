@@ -82,7 +82,7 @@ include { ASSIGNMENT_PLOT                           } from '../modules/assignmen
 include { TAX_SUMMARY                               } from '../modules/tax_summary'
 include { TAX_SUMMARY_MERGE                         } from '../modules/tax_summary_merge'
 // include { MERGE_SEQTAB                              } from '../modules/merge_seqtab'
-include { PHYLOSEQ                                  } from '../modules/phyloseq'
+include { PHYLOSEQ_UNFILTERED                       } from '../modules/phyloseq_unfiltered'
 // include { PHYLOSEQ_SUMMARY                          } from '../modules/phyloseq_summary'
 // include { ACCUMULATION_CURVE                        } from '../modules/accumulation_curve'
 // include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_filter'
