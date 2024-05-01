@@ -10,7 +10,7 @@ process PARAMETER_SETUP {
     path("params.csv"),                emit: loci_params
     path("samdf_original.csv"),        emit: samdf  
     path("samdf_*.csv"),               emit: samdf_locus
-    path("samdf_params.csv")           emit: samdf_params
+    path("samdf_params.csv"),           emit: samdf_params
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
