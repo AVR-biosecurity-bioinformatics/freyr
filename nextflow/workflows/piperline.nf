@@ -477,7 +477,7 @@ workflow PIPERLINE {
         .map { csv -> 
             def csv_name = csv.getFileName().toString()
             ( pcr_primers, rest ) = csv_name.tokenize("_")
-            // [ pcr_primers, csv ]
+            [ pcr_primers, csv ]
             }
         .view()
 
