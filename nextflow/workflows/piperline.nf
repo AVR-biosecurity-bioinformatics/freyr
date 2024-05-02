@@ -460,7 +460,7 @@ workflow PIPERLINE {
     */
 
     ch_taxtables_locus = MERGE_TAX.out.merged_tax // pcr_primers, path("*_merged_tax.rds")
-    
+
     ch_seqtables_locus = ch_seqtab
         .map { pcr_primers, fcid, seqtab -> [ pcr_primers, seqtab ] } // remove fcid field
         .groupTuple ( by: 0 ) 
@@ -468,7 +468,7 @@ workflow PIPERLINE {
     // combine taxtables, seqtables and parameters
     ch_taxtables_locus
         .combine ( ch_seqtables_locus, by: 0 )
-        .view
+        .view()
 
     //// create phyloseq objects across all flowcells and loci; output unfiltered summary tables and accumulation curve plot
     // PHYLOSEQ_UNFILTERED ( ch_taxtables_locus, ch_seqtables_locus, PARAMETER_SETUP.out.samdf )
