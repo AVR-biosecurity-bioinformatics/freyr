@@ -55,13 +55,10 @@ ps <-   step_phyloseq(
         )
 
 ## name OTUs using hash
-taxa_names(ps) <- tax_table(ps)[,ncol(tax_table(ps))]
-tax_table(ps) <- tax_table(ps)[,1:ncol(tax_table(ps))-1] # remove hash 'rank' from taxtab
+taxa_names(ps) <- tax_table(ps)[,ncol(tax_table(ps))] # use final column of tax_table (hash) to name OTUs
+tax_table(ps) <- tax_table(ps)[,1:ncol(tax_table(ps))-1] # remove hash 'rank' from tax_table
 
-
-saveRDS(ps, paste0("ps_",pcr_primers,".rds"))
-
-## output summaries from step_output_summary
+## output summaries; from step_output_summary()
 # Export raw csv
 phyloseq::psmelt(ps) %>% 
     filter(Abundance > 0) %>%
@@ -83,13 +80,44 @@ phyloseq::psmelt(ps) %>%
 
 # Output fasta of all ASVs
 seqs <- Biostrings::DNAStringSet(as.vector(phyloseq::refseq(ps)))
-Biostrings::writeXStringSet(seqs, filepath = paste0("asvs_unfiltered_",pcr_primers,".fasta")), width = 100) 
+Biostrings::writeXStringSet(seqs, filepath = paste0("asvs_unfiltered_",pcr_primers,".fasta"), width = 100) 
 
 # write .nwk file if phylogeny present
 if(!is.null(phy_tree(ps, errorIfNULL = FALSE))){
     #Output newick tree
     write.tree(phy_tree(ps), file = paste0("tree_unfiltered",pcr_primers,".nwk"))
 }
+
+## output phyloseq and component data; from step_output_ps
+
+# save seqtab as wide tibble (rows = sample_id, cols = OTU name (hash), cells = abundance)
+seqtab_out <- phyloseq::otu_table(ps) %>%
+    as("matrix") %>%
+    as_tibble(rownames = "sample_id")
+
+# save taxtab as long tibble (rows = OTU/ASV, cols = tax rankings)
+taxtab_out <- phyloseq::tax_table(ps) %>%
+    as("matrix") %>%
+    as_tibble(rownames = "OTU") %>%
+    seqateurs::unclassified_to_na(rownames = FALSE)
+
+# Check taxonomy table outputs
+### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
+if(!all(colnames(taxtab) == c("OTU", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
+    message("Warning: Taxonomy table columns do not meet expectations for the staging database \n
+            Database requires the columns: OTU, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species ")
+}
+
+# save samplesheet
+samdf_out <- phyloseq::sample_data(ps) %>%
+    as("matrix") %>%
+    as_tibble()
+
+# Write out
+write_csv(seqtab_out, paste0("seqtab_unfiltered_",pcr_primers,".csv"))
+write_csv(taxtab_out, paste0("taxtab_unfiltered_",pcr_primers,".csv"))
+write_csv(samdf_out, paste0("samdf_unfiltered_",pcr_primers,".csv"))
+saveRDS(ps, paste0("ps_unfiltered_",pcr_primers,".rds"))
 
 
 # stop(" *** stopped manually *** ") ##########################################
