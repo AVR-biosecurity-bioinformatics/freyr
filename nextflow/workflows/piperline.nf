@@ -475,7 +475,7 @@ workflow PIPERLINE {
     PARAMETER_SETUP.out.samdf_locus
         .flatten()
         .map { csv -> 
-            csv.getName().toString()    }
+            csv.getFileName().toString()    }
         .view()
 
     //// create phyloseq objects across all flowcells and loci; output unfiltered summary tables and accumulation curve plot
