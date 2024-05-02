@@ -56,7 +56,7 @@ ps <-   step_phyloseq(
 
 saveRDS(ps, paste0("ps_",pcr_primers,".rds"))
 
-stop(" *** stopped manually *** ") ##########################################
+# stop(" *** stopped manually *** ") ##########################################
 
 ## runs step_output_summary() and step_output_ps() on unfiltered data
 
