@@ -1,6 +1,5 @@
 #!/usr/bin/env Rscript
 
-
 ## check and define variables
 taxtab <- readRDS(taxtab)
 
@@ -125,18 +124,5 @@ gg.acc_curve <- rareplot(ps, step="auto", threshold = max(samdf$min_sample_reads
 pdf(file=paste0("accumulation_curve_",pcr_primers,".pdf"), width = 11, height = 8 , paper="a4r")
     print(gg.acc_curve)
 try(dev.off(), silent=TRUE)
-
-# stop(" *** stopped manually *** ") ##########################################
-
-
-## runs step_filter_phyloseq() on each locus independently
-
-## runs merge_phyloseq_new() from functions.R
-
-## runs step_output_summary() and step_output_ps() on filtered data
-
-
-
-
 
 # stop(" *** stopped manually *** ") ##########################################

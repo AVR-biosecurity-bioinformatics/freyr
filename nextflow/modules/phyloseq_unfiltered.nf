@@ -1,17 +1,17 @@
 process PHYLOSEQ_UNFILTERED {
     def module_name = "phyloseq_unfiltered"
-    tag "Whole dataset"
+    tag "$pcr_primers"
     // label:  
 
     input:
     tuple val(pcr_primers), path(taxtab), path(seqtab_list), path(samdf_locus), val(loci_params)
 
     output:
-    path("*.csv"),                  emit: csvs
-    path("ps_unfiltered_*.rds"),    emit: ps 
-    path("*.fasta"),                emit: asv_fasta
-    path("*.pdf"),                  emit: acc_curve
-    path("*.nwk"),                  emit: nwk, optional: true
+    path("*.csv"),                                                          emit: csvs
+    tuple val(pcr_primers), path("ps_unfiltered_*.rds"), val(loci_params),  emit: ps 
+    path("*.fasta"),                                                        emit: asv_fasta
+    path("accumulation_curve_*.pdf"),                                       emit: acc_curve
+    path("*.nwk"),                                                          emit: nwk, optional: true
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

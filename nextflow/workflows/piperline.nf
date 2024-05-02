@@ -486,7 +486,7 @@ workflow PIPERLINE {
     PHYLOSEQ_UNFILTERED ( ch_phyloseq_input )
 
     //// apply taxonomic and minimum abundance filtering per locus (from loci_params), then combine to output filtered summary tables
-    // PHYLOSEQ_FILTER ( , ch_loci_params )
+    PHYLOSEQ_FILTER ( PHYLOSEQ_UNFILTERED.out.ps )
 
 
     //// move final output files to the output report directory
