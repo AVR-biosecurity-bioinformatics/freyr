@@ -158,6 +158,16 @@ workflow PIPERLINE {
             }
         .set { ch_sample_locus_reads }
 
+    //// create channel that links locus-specific samplesheets to pcr_primer key, in the format 'pcr_primers, csv_file'
+    PARAMETER_SETUP.out.samdf_locus
+        .flatten()
+        .map { csv -> 
+            def csv_name = csv.getFileName().toString()
+            ( pcr_primers, rest ) = csv_name.tokenize("_")
+            [ pcr_primers, csv ]
+            }
+        .set { ch_loci_samdf } 
+
     //// get names and count of the multiplexed loci used
     PARAMETER_SETUP.out.samdf_locus
         .flatten ()
@@ -468,21 +478,12 @@ workflow PIPERLINE {
     // combine taxtables, seqtables and parameters
     ch_taxtables_locus
         .combine ( ch_seqtables_locus, by: 0 )
+        .combine ( ch_loci_samdf, by: 0 )
         .combine ( ch_loci_params, by: 0 )
         .set { ch_phyloseq_input }
 
-    /// parsing loci-specific samplesheets
-    PARAMETER_SETUP.out.samdf_locus
-        .flatten()
-        .map { csv -> 
-            def csv_name = csv.getFileName().toString()
-            ( pcr_primers, rest ) = csv_name.tokenize("_")
-            [ pcr_primers, csv ]
-            }
-        .view()
-
     //// create phyloseq objects across all flowcells and loci; output unfiltered summary tables and accumulation curve plot
-    PHYLOSEQ_UNFILTERED ( ch_phyloseq_input, PARAMETER_SETUP.out.samdf )
+    PHYLOSEQ_UNFILTERED ( ch_phyloseq_input )
 
     //// apply taxonomic and minimum abundance filtering per locus (from loci_params), then combine to output filtered summary tables
     // PHYLOSEQ_FILTER ( , ch_loci_params )

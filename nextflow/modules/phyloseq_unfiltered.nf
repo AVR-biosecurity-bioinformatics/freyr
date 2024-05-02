@@ -4,8 +4,7 @@ process PHYLOSEQ_UNFILTERED {
     // label:  
 
     input:
-    tuple val(pcr_primers), path(taxtab), path(seqtab_list), val(loci_params)
-    path(samdf_original)
+    tuple val(pcr_primers), path(taxtab), path(seqtab_list), path(samdf_locus), val(loci_params)
 
     output:
     path("*.csv")
@@ -28,7 +27,7 @@ process PHYLOSEQ_UNFILTERED {
     taxtab =                "${taxtab}"
     seqtab_list =           "${seqtab_list}"
     loci_params =           "${loci_params}"
-    samdf =                 "${samdf_original}"
+    samdf =                 "${samdf_locus}"
     
     ## global variables
     projectDir = "$projectDir"
