@@ -486,7 +486,22 @@ workflow PIPERLINE {
     //// apply taxonomic and minimum abundance filtering per locus (from loci_params), then combine to output filtered summary tables
     PHYLOSEQ_FILTER ( PHYLOSEQ_UNFILTERED.out.ps )
 
+    //// combine phyloseq outputs to merge across loci
+    PHYLOSEQ_UNFILTERED.out.ps // val(pcr_primers), path("ps_unfiltered_*.rds"), val(loci_params)
+        .map { pcr_primers, ps, loci_params ->
+            [ ps ] }
+        .collect()
+        .set { ch_ps_unfiltered }
+
+    PHYLOSEQ_FILTER.out.ps // val(pcr_primers), path("ps_filtered_*.rds"), val(loci_params)
+        .map { pcr_primers, ps, loci_params ->
+            [ ps ] }
+        .collect()
+        .set { ch_ps_filtered }
+
+    PHYLOSEQ_MERGE ( ch_ps_unfiltered, ch_ps_filtered )
 
     //// move final output files to the output report directory
 
+    // make directories for unfiltered and filtered outputs
 }
