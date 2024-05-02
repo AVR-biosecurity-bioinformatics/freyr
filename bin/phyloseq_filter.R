@@ -15,6 +15,8 @@ if(min_sample_reads != "NA"){ min_sample_reads <- as.numeric(min_sample_reads) }
 if(min_taxa_reads != "NA"){ min_taxa_reads <- as.numeric(min_taxa_reads) } else { min_taxa_reads <- NA }
 if(min_taxa_ra != "NA"){ min_taxa_ra <- as.numeric(min_taxa_ra) } else { min_taxa_ra <- NA }
 
+quiet <- FALSE
+
 ### run R code
 
 ## from step_filter_phyloseq()
