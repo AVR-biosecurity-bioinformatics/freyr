@@ -468,6 +468,7 @@ workflow PIPERLINE {
     // combine taxtables, seqtables and parameters
     ch_taxtables_locus
         .combine ( ch_seqtables_locus, by: 0 )
+        .combine ( ch_loci_params, by: 0 )
         .view()
 
     //// create phyloseq objects across all flowcells and loci; output unfiltered summary tables and accumulation curve plot

@@ -4,8 +4,7 @@ process PHYLOSEQ_UNFILTERED {
     // label:  
 
     input:
-    path(taxtab_list)
-    path(seqtab_list)
+    tuple val(pcr_primers), path(taxtab), path(seqtab_list), val(loci_params)
     path(samdf_original)
 
     output:
