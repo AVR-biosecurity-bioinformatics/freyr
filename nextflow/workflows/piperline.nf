@@ -81,11 +81,9 @@ include { MERGE_TAX                                 } from '../modules/merge_tax
 include { ASSIGNMENT_PLOT                           } from '../modules/assignment_plot'
 include { TAX_SUMMARY                               } from '../modules/tax_summary'
 include { TAX_SUMMARY_MERGE                         } from '../modules/tax_summary_merge'
-// include { MERGE_SEQTAB                              } from '../modules/merge_seqtab'
 include { PHYLOSEQ_UNFILTERED                       } from '../modules/phyloseq_unfiltered'
-// include { PHYLOSEQ_SUMMARY                          } from '../modules/phyloseq_summary'
-// include { ACCUMULATION_CURVE                        } from '../modules/accumulation_curve'
-// include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_filter'
+include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_filter'
+// include { PHYLOSEQ_MERGE                         } from '../modules/phyloseq_merge'
 // include { READ_TRACKING                             } from '../modules/read_tracking'
 
 
