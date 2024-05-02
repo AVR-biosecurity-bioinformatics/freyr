@@ -27,7 +27,7 @@ seqtab_list <- lapply(seqtab_list, readRDS) # read in seqtabs and store as list 
 #     dplyr::bind_rows() %>% # bind tibbles into one
 #     dplyr::distinct() # remove any exact duplicate rows (unlikely as different primers used per input tibble)
 
-write_csv(taxtab %>% tibble::as_tibble(rownames = "OTU"), paste0("taxtab_", pcr_primers, ".csv") # write intermediate output table
+write_csv(taxtab %>% tibble::as_tibble(rownames = "OTU"), paste0("taxtab_", pcr_primers, ".csv")) # write intermediate output table
 
 ## merge sequence tables across flowcells and loci
 if ( length(seqtab_list) > 1 ){ # if there is more than one seqtab, merge together
@@ -38,7 +38,7 @@ if ( length(seqtab_list) > 1 ){ # if there is more than one seqtab, merge togeth
 
 seqtab_final %>% # save for debugging
     tibble::as_tibble(rownames = "OTU") %>% 
-    write_csv(., paste0("seqtab_final_", pcr_primers, ".csv")
+    write_csv(., paste0("seqtab_final_", pcr_primers, ".csv"))
 
 
 
