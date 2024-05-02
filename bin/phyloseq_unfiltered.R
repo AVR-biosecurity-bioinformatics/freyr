@@ -36,9 +36,9 @@ taxtab_matrix <- taxtab %>% # convert tibble to matrix format
     as.matrix()
 
 ## merge sequence tables across flowcells and loci
-if ( length(seqtab_list) > 1){ # if there is more than one seqtab, merge together
+if ( length(seqtab_list) > 1 ){ # if there is more than one seqtab, merge together
     seqtab_final <- dada2::mergeSequenceTables(tables=seqtab_list)
-} else if( length(seqtab_list) == 1) { # if there is only one seqtab, keep and unlist
+} else if( length(seqtab_list) == 1 ) { # if there is only one seqtab, keep and unlist
     seqtab_final <- seqtab_list %>% unlist()
 }
 
