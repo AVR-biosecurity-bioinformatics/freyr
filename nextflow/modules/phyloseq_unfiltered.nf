@@ -10,6 +10,8 @@ process PHYLOSEQ_UNFILTERED {
     output:
     path("*.csv")
     path("*.rds")
+    path("*.fasta")
+    path("*.nwk"), optional: true
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

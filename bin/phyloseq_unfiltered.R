@@ -61,7 +61,35 @@ tax_table(ps) <- tax_table(ps)[,1:ncol(tax_table(ps))-1] # remove hash 'rank' fr
 
 saveRDS(ps, paste0("ps_",pcr_primers,".rds"))
 
+## output summaries from step_output_summary
+# Export raw csv
+phyloseq::psmelt(ps) %>% 
+    filter(Abundance > 0) %>%
+    dplyr::select(-Sample) %>%
+    write_csv(., paste0("raw_unfiltered_",pcr_primers,".csv"))
 
+# Export species level summary of filtered results
+phyloseq::psmelt(ps) %>% 
+    filter(Abundance > 0) %>%
+    left_join(
+        refseq(ps) %>% as.character() %>% enframe(name="OTU", value="sequence"),
+        by = "OTU"
+        ) %>%
+    dplyr::select(OTU, sequence, rank_names(ps), sample_id, Abundance ) %>%
+    pivot_wider(names_from = sample_id,
+                values_from = Abundance,
+                values_fill = list(Abundance = 0)) %>%
+    write_csv(., paste0("summary_unfiltered_",pcr_primers,".csv"))
+
+# Output fasta of all ASVs
+seqs <- Biostrings::DNAStringSet(as.vector(phyloseq::refseq(ps)))
+Biostrings::writeXStringSet(seqs, filepath = paste0("asvs_unfiltered_",pcr_primers,".fasta")), width = 100) 
+
+# write .nwk file if phylogeny present
+if(!is.null(phy_tree(ps, errorIfNULL = FALSE))){
+    #Output newick tree
+    write.tree(phy_tree(ps), file = paste0("tree_unfiltered",pcr_primers,".nwk"))
+}
 
 
 # stop(" *** stopped manually *** ") ##########################################
