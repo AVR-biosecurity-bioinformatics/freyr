@@ -83,7 +83,7 @@ include { TAX_SUMMARY                               } from '../modules/tax_summa
 include { TAX_SUMMARY_MERGE                         } from '../modules/tax_summary_merge'
 include { PHYLOSEQ_UNFILTERED                       } from '../modules/phyloseq_unfiltered'
 include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_filter'
-// include { PHYLOSEQ_MERGE                         } from '../modules/phyloseq_merge'
+include { PHYLOSEQ_MERGE                            } from '../modules/phyloseq_merge'
 // include { READ_TRACKING                             } from '../modules/read_tracking'
 
 
