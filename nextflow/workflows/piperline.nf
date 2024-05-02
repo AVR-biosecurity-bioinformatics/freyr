@@ -482,7 +482,7 @@ workflow PIPERLINE {
         .combine ( ch_loci_params, by: 0 )
         .set { ch_phyloseq_input }
 
-    //// create phyloseq objects across all flowcells and loci; output unfiltered summary tables and accumulation curve plot
+    //// create phyloseq objects per locus; output unfiltered summary tables and accumulation curve plot
     PHYLOSEQ_UNFILTERED ( ch_phyloseq_input )
 
     //// apply taxonomic and minimum abundance filtering per locus (from loci_params), then combine to output filtered summary tables

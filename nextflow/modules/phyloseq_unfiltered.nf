@@ -7,10 +7,11 @@ process PHYLOSEQ_UNFILTERED {
     tuple val(pcr_primers), path(taxtab), path(seqtab_list), path(samdf_locus), val(loci_params)
 
     output:
-    path("*.csv")
-    path("*.rds")
-    path("*.fasta")
-    path("*.nwk"), optional: true
+    path("*.csv"),                  emit: csvs
+    path("ps_unfiltered_*.rds"),    emit: ps 
+    path("*.fasta"),                emit: asv_fasta
+    path("*.pdf"),                  emit: acc_curve
+    path("*.nwk"),                  emit: nwk, optional: true
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

@@ -119,12 +119,15 @@ write_csv(taxtab_out, paste0("taxtab_unfiltered_",pcr_primers,".csv"))
 write_csv(samdf_out, paste0("samdf_unfiltered_",pcr_primers,".csv"))
 saveRDS(ps, paste0("ps_unfiltered_",pcr_primers,".rds"))
 
+## creates accumulation curve plots and saves plot
+gg.acc_curve <- rareplot(ps, step="auto", threshold = max(samdf$min_sample_reads))
+
+pdf(file=paste0("accumulation_curve_",pcr_primers,".pdf"), width = 11, height = 8 , paper="a4r")
+    print(gg.acc_curve)
+try(dev.off(), silent=TRUE)
 
 # stop(" *** stopped manually *** ") ##########################################
 
-## runs step_output_summary() and step_output_ps() on unfiltered data
-
-## runs rareplot() and saves plot
 
 ## runs step_filter_phyloseq() on each locus independently
 
