@@ -8,6 +8,7 @@ seqtab_list <- # convert Groovy to R list format
     stringr::str_extract_all(seqtab_list, pattern = "[^\\s,\\[\\]]+") %>% unlist()
 seqtab_list <- lapply(seqtab_list, readRDS) # read in seqtabs and store as list of matrices
 
+samdf <- readr::read_csv(samdf)
 
 ### run R code
 
@@ -27,7 +28,9 @@ seqtab_list <- lapply(seqtab_list, readRDS) # read in seqtabs and store as list 
 #     dplyr::bind_rows() %>% # bind tibbles into one
 #     dplyr::distinct() # remove any exact duplicate rows (unlikely as different primers used per input tibble)
 
-write_csv(taxtab %>% tibble::as_tibble(rownames = "OTU"), paste0("taxtab_", pcr_primers, ".csv")) # write intermediate output table
+taxtab %>% # save for debugging
+    tibble::as_tibble(rownames = "OTU") %>%
+    write_csv(., paste0("taxtab_", pcr_primers, ".csv")) 
 
 ## merge sequence tables across flowcells and loci
 if ( length(seqtab_list) > 1 ){ # if there is more than one seqtab, merge together
@@ -40,19 +43,20 @@ seqtab_final %>% # save for debugging
     tibble::as_tibble(rownames = "OTU") %>% 
     write_csv(., paste0("seqtab_final_", pcr_primers, ".csv"))
 
-
-
-
 ## runs step_phyloseq() on merged seqtabs, taxtabs and samplesheet
 
-# step_phyloseq(
-#     seqtab = seqtab_final,
-#     taxtab = taxtab,
-#     samdf = ,
-#     seqs = NULL,
-#     phylo = NULL,
-#     name_variants = FALSE
-# )
+ps <-   step_phyloseq(
+            seqtab = seqtab_final,
+            taxtab = taxtab,
+            samdf = samdf,
+            seqs = NULL,
+            phylo = NULL,
+            name_variants = FALSE
+        )
+
+class(ps)
+
+stop(" *** stopped manually *** ") ##########################################
 
 ## runs step_output_summary() and step_output_ps() on unfiltered data
 
