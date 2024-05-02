@@ -200,13 +200,13 @@ taxtab_out <- phyloseq::tax_table(ps2) %>%
 
 # Check taxonomy table outputs
 ### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
-if(!all(colnames(taxtab) == c("OTU", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
+if(!all(colnames(taxtab_out) == c("OTU", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
     message("Warning: Taxonomy table columns do not meet expectations for the staging database \n
             Database requires the columns: OTU, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species ")
 }
 
 # save samplesheet
-samdf_out <- phyloseq::sample_data(ps) %>%
+samdf_out <- phyloseq::sample_data(ps2) %>%
     as("matrix") %>%
     as_tibble()
 
@@ -214,7 +214,7 @@ samdf_out <- phyloseq::sample_data(ps) %>%
 write_csv(seqtab_out, paste0("seqtab_filtered_",pcr_primers,".csv"))
 write_csv(taxtab_out, paste0("taxtab_filtered_",pcr_primers,".csv"))
 write_csv(samdf_out, paste0("samdf_filtered_",pcr_primers,".csv"))
-saveRDS(ps, paste0("ps_filtered_",pcr_primers,".rds"))
+saveRDS(ps2, paste0("ps_filtered_",pcr_primers,".rds"))
 
 
 
