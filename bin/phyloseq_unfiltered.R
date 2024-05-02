@@ -54,7 +54,15 @@ ps <-   step_phyloseq(
             name_variants = FALSE
         )
 
+## name OTUs using hash
+taxa_names(ps) <- tax_table(ps)[,ncol(tax_table(ps))]
+tax_table(ps) <- tax_table(ps)[,1:ncol(tax_table(ps))-1] # remove hash 'rank' from taxtab
+
+
 saveRDS(ps, paste0("ps_",pcr_primers,".rds"))
+
+
+
 
 # stop(" *** stopped manually *** ") ##########################################
 
