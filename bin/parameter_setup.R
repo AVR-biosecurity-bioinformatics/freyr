@@ -410,12 +410,12 @@ write_csv(samdf, "samdf_original.csv") # save csv
 
 write_csv(samdf_params, "samdf_params.csv") # save csv
 
-split_samdf <- split(samdf_params, samdf_params$target_gene) # split dfs by target gene
+split_samdf <- split(samdf_params, samdf_params$pcr_primers) # split dfs by pcr_primers
 
 for ( I in 1:length(split_samdf)) { # assign new dfs to new variables
-    new_df_name <- paste0(unique(split_samdf[[I]]$target_gene),"_samdf")
+    new_df_name <- paste0(unique(split_samdf[[I]]$pcr_primers),"_samdf")
     assign(
-        paste0(unique(split_samdf[[I]]$target_gene),"_samdf"),
+        paste0(unique(split_samdf[[I]]$pcr_primers),"_samdf"),
         split_samdf[[I]]
         )
     write_csv( # print dfs inside work dir; maybe publish?
