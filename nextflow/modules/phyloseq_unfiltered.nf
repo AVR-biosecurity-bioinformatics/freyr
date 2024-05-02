@@ -9,6 +9,7 @@ process PHYLOSEQ_UNFILTERED {
 
     output:
     path("*.csv")
+    path("*.rds")
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

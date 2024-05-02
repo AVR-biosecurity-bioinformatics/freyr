@@ -8,7 +8,7 @@ seqtab_list <- # convert Groovy to R list format
     stringr::str_extract_all(seqtab_list, pattern = "[^\\s,\\[\\]]+") %>% unlist()
 seqtab_list <- lapply(seqtab_list, readRDS) # read in seqtabs and store as list of matrices
 
-samdf <- readr::read_csv(samdf)
+samdf <- readr::read_csv(samdf, show_col_types = FALSE)
 
 ### run R code
 
@@ -54,7 +54,7 @@ ps <-   step_phyloseq(
             name_variants = FALSE
         )
 
-class(ps)
+saveRDS(ps, paste0("ps_",pcr_primers,".rds"))
 
 stop(" *** stopped manually *** ") ##########################################
 
