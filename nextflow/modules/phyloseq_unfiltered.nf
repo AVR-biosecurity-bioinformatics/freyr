@@ -21,7 +21,7 @@ process PHYLOSEQ_UNFILTERED {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    taxtab_list =           "${taxtab_list}"
+    taxtab =                "${taxtab}"
     seqtab_list =           "${seqtab_list}"
     samdf =                 "${samdf_original}"
     

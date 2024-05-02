@@ -2,9 +2,7 @@
 
 
 ## check and define variables
-taxtab_list <- # convert Groovy to R list format
-    stringr::str_extract_all(taxtab_list, pattern = "[^\\s,\\[\\]]+") %>% unlist()
-taxtab_list <- lapply(taxtab_list, readRDS) # read in taxtabs and store as list of matrices
+taxtab <- readRDS(taxtab)
 
 seqtab_list <- # convert Groovy to R list format
     stringr::str_extract_all(seqtab_list, pattern = "[^\\s,\\[\\]]+") %>% unlist()
@@ -23,17 +21,13 @@ seqtab_list <- lapply(seqtab_list, readRDS) # read in seqtabs and store as list 
 # tax tables (output of MERGE_TAX) are already per locus (merged across flowcells)
 # sequence tables (output of FILTER_SEQTAB) are per locus x flowcell
 
-## merge taxtables across loci
-taxtab <- taxtab_list %>% 
-    purrr::map(~{ .x %>% tibble::as_tibble(rownames = "OTU") }) %>% # convert each matrix to tibble with rownames to OTU column
-    dplyr::bind_rows() %>% # bind tibbles into one
-    dplyr::distinct() # remove any exact duplicate rows (unlikely as different primers used per input tibble)
+# ## merge list of taxtabs
+# taxtab <- taxtab_list %>% 
+#     purrr::map(~{ .x %>% tibble::as_tibble(rownames = "OTU") }) %>% # convert each matrix to tibble with rownames to OTU column
+#     dplyr::bind_rows() %>% # bind tibbles into one
+#     dplyr::distinct() # remove any exact duplicate rows (unlikely as different primers used per input tibble)
 
-write_csv(taxtab, "taxtab.csv") # write intermediate output table
-
-taxtab_matrix <- taxtab %>% # convert tibble to matrix format
-    tibble::column_to_rownames("OTU") %>%
-    as.matrix()
+write_csv(taxtab %>% tibble::as_tibble(rownames = "OTU"), "taxtab.csv") # write intermediate output table
 
 ## merge sequence tables across flowcells and loci
 if ( length(seqtab_list) > 1 ){ # if there is more than one seqtab, merge together
@@ -53,7 +47,7 @@ seqtab_final %>% # save for debugging
 
 # step_phyloseq(
 #     seqtab = seqtab_final,
-#     taxtab = taxtab_matrix,
+#     taxtab = taxtab,
 #     samdf = ,
 #     seqs = NULL,
 #     phylo = NULL,
