@@ -473,6 +473,7 @@ workflow PIPERLINE {
 
     /// parsing loci-specific samplesheets
     PARAMETER_SETUP.out.samdf_locus
+        .flatten()
         .view()
 
     //// create phyloseq objects across all flowcells and loci; output unfiltered summary tables and accumulation curve plot
