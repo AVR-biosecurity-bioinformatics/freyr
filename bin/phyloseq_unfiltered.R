@@ -38,7 +38,10 @@ if ( length(seqtab_list) > 1 ){ # if there is more than one seqtab, merge togeth
     seqtab_final <- seqtab_list %>% unlist()
 }
 
-### TODO: mutate samdf to add a new sample_id -like column that concats sample_id and pcr_primer
+## mutate samdf to add pcr_primers to sample_id, to make consistent with new seqtab format
+samdf <- samdf %>% 
+    dplyr::mutate(sample_id = paste0(sample_id,"__",pcr_primers))
+
 
 seqtab_final %>% # save for debugging
     tibble::as_tibble(rownames = "OTU") %>% 
