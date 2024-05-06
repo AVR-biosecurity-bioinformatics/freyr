@@ -2,6 +2,9 @@
 
 ## check and define variables
 taxtab <- readRDS(taxtab)
+taxtab %>% # save for debugging
+    tibble::as_tibble(rownames = "OTU") %>%
+    write_csv(., paste0("taxtab_", pcr_primers, ".csv")) 
 
 seqtab_list <- # convert Groovy to R list format
     stringr::str_extract_all(seqtab_list, pattern = "[^\\s,\\[\\]]+") %>% unlist()
@@ -11,48 +14,28 @@ samdf <- readr::read_csv(samdf, show_col_types = FALSE)
 
 ### run R code
 
-# to run classic pipeline code, need:
-# - merged seqtab (all sequences across all flowcells and loci)
-# - merged taxtable (all sequences across all flowcells and loci, identified)
-# - samplesheet (ie. samdf)
-# - loci params csv file (to be used inside this process)
-
-# should input all the files independently, merge within this code, then run filtering etc.
-# tax tables (output of MERGE_TAX) are already per locus (merged across flowcells)
-# sequence tables (output of FILTER_SEQTAB) are per locus x flowcell
-
-# ## merge list of taxtabs
-# taxtab <- taxtab_list %>% 
-#     purrr::map(~{ .x %>% tibble::as_tibble(rownames = "OTU") }) %>% # convert each matrix to tibble with rownames to OTU column
-#     dplyr::bind_rows() %>% # bind tibbles into one
-#     dplyr::distinct() # remove any exact duplicate rows (unlikely as different primers used per input tibble)
-
-taxtab %>% # save for debugging
-    tibble::as_tibble(rownames = "OTU") %>%
-    write_csv(., paste0("taxtab_", pcr_primers, ".csv")) 
-
 ## merge sequence tables across flowcells and loci
 if ( length(seqtab_list) > 1 ){ # if there is more than one seqtab, merge together
     seqtab_final <- dada2::mergeSequenceTables(tables=seqtab_list)
 } else if( length(seqtab_list) == 1 ) { # if there is only one seqtab, keep and unlist
     seqtab_final <- seqtab_list %>% unlist()
 }
-
-## mutate samdf to add pcr_primers to sample_id, to make consistent with new seqtab format
-samdf <- samdf %>% 
-    dplyr::mutate(sample_id = paste0(sample_id,"__",pcr_primers))
-
-
 seqtab_final %>% # save for debugging
     tibble::as_tibble(rownames = "OTU") %>% 
     write_csv(., paste0("seqtab_final_", pcr_primers, ".csv"))
 
-## runs step_phyloseq() on merged seqtabs, taxtabs and samplesheet
+## mutate samdf to add pcr_primers to sample_id, to make consistent with new seqtab format
+samdf_renamed <- samdf %>% 
+    dplyr::mutate(
+        sample_id_orig = sample_id, # save original sample_id as a new column
+        sample_id = paste0(sample_id,"__",pcr_primers) # mutate sample_id to add primer id at the end
+        )
 
+## run step_phyloseq() on merged seqtabs, taxtabs and samplesheet to create phyloseq object
 ps <-   step_phyloseq(
             seqtab = seqtab_final,
             taxtab = taxtab,
-            samdf = samdf,
+            samdf = samdf_renamed,
             seqs = NULL,
             phylo = NULL,
             name_variants = FALSE
