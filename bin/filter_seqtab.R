@@ -157,7 +157,14 @@ if(check_frame & any(reads_phmmfilt > 0)){
     names(reads_framefilt) <- rownames(seqtab)
 }
 
-reads_final <- rowSums(seqtab_final)
+# change sequence names to contain primer names (preceded by double underscore), so merging seqtabs across loci with sample sheets works as intended
+seqtab_final_renamed <- seqtab_final %>% 
+    tibble::as_tibble(rownames = "sample_id") %>%
+    dplyr::mutate(sample_id = paste0(sample_id,"__",pcr_primers)) %>%
+    tibble::column_to_rownames("sample_id") %>% 
+    as.matrix()
+
+reads_final <- rowSums(seqtab_final_renamed)
 
 ## Output a cleanup summary
 cleanup <- seqtab %>%
@@ -259,7 +266,7 @@ ggsave(paste0(fcid,"_",pcr_primers,"_ASV_cleanup_summary.pdf"), out_plot, width 
 bind_rows(unique(cleanup)) %>%
     write_csv(paste0(fcid,"_",pcr_primers,"_ASV_cleanup_summary.csv"))
 # filtered seqtab
-saveRDS(seqtab_final, paste0(fcid,"_",pcr_primers,"_seqtab.cleaned.rds"))
+saveRDS(seqtab_final_renamed, paste0(fcid,"_",pcr_primers,"_seqtab.cleaned.rds"))
 
 # res <- tibble(
 # sample_id = rownames(seqtab) %>% stringr::str_remove(pattern="_S[0-9]+_R[1-2]_.*$"),
