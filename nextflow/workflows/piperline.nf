@@ -452,26 +452,11 @@ workflow PIPERLINE {
     TAX_SUMMARY_MERGE ( ch_tax_summaries )
     
     //// inputs for PHYLOSEQ_UNFILTERED
-    /*
-    - MERGE_TAX output (tax tables per locus)
-        - MERGE_TAX.out.merged_tax == pcr_primers, list("[pcr_primers]_merged_tax.rds")
-    - FILTER_SEQTAB output (ch_seqtab; sequence tables per locus x flowcell)
-        - ch_seqtab == pcr_primers, fcid, "*_seqtab.cleaned.rds"
-    - samplesheet (PARAMETER_SETUP.out.samdf_params; a .csv file)
-    - 
-    
-    - per locus parameters: target_kingdom, target_phylum, target_class,
-    target_order, target_family, target_genus, target_species, 
-    min_sample_reads, min_taxa_reads, min_taxa_ra
-
-    - NOTE: Need to include hashes! 
-    */
-
     ch_taxtables_locus = MERGE_TAX.out.merged_tax // pcr_primers, path("*_merged_tax.rds")
 
     ch_seqtables_locus = ch_seqtab
         .map { pcr_primers, fcid, seqtab -> [ pcr_primers, seqtab ] } // remove fcid field
-        .groupTuple ( by: 0 ) 
+        .groupTuple ( by: 0 ) // group seqtabs into lists per locus
     
     // combine taxtables, seqtables and parameters
     ch_taxtables_locus
@@ -500,6 +485,15 @@ workflow PIPERLINE {
         .set { ch_ps_filtered }
 
     PHYLOSEQ_MERGE ( ch_ps_unfiltered, ch_ps_filtered )
+
+
+    ///// VISUALISATION
+    /*
+    - stacked bar charts of OTU abundance across samples -- filtered vs unfiltered
+    - plots showing proportion of sequences that passed or failed the final filters, per sample/flowcell/locus etc
+    - taxonomy heatmap tree
+    */
+
 
     //// move final output files to the output report directory
 
