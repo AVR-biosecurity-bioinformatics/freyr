@@ -489,6 +489,8 @@ workflow PIPERLINE {
     //// count the number of input read per sample ( fwd and rev sep)
     // cardinality: fcid, sample_id, n_input
     ch_sample_locus_reads
+        .map { meta, reads -> reads }
+        .flatten()
         .countFastq()
         .view()
 
