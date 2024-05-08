@@ -490,7 +490,6 @@ workflow PIPERLINE {
     // cardinality: fcid, sample_id, n_input
     ch_sample_locus_reads
         .map { meta, reads -> reads }
-        .flatten()
         .countFastq()
         .view()
 
