@@ -44,10 +44,28 @@ rcomp=t \
 stats=split_loci_stats_${7}_${6}_${5}.txt \
 lhist=split_loci_lhist_${7}_${6}_${5}.txt
 
-# # count reads in each output file to make sure they are the same
-# touch ${7}_${6}_${5}_count.txt
-# R1=$(zcat ${7}_${6}_${5}_R1.fastq.gz | wc -l)
-# echo $(( $R1 / 4 )) >> ${7}_${6}_${5}_count.txt
-# R2=$(zcat ${7}_${6}_${5}_R2.fastq.gz | wc -l)
-# echo $(( $R2 / 4 )) >> ${7}_${6}_${5}_count.txt
+## count reads in input files
+# forward reads
+if [[ $1 == *.gz ]]; then
+    R1_IN=$(zcat $1 | wc -l)
+else 
+    R1_IN=$(cat $1 | wc -l)
+fi
+echo $(( $R1_IN / 4 )) > R1_input.txt
 
+# reverse reads
+if [[ $2 == *.gz ]]; then
+    R2_IN=$(zcat $2 | wc -l)
+else 
+    R2_IN=$(cat $2 | wc -l)
+fi
+echo $(( $R2_IN / 4 )) > R2_input.txt
+
+## count reads in output files
+# forward reads
+R1_OUT=$(zcat ${7}_${6}_${5}_R1.fastq.gz | wc -l)
+echo $(( $R1_OUT / 4 )) > R1_output.txt
+
+# reverse reads
+R2_OUT=$(zcat ${7}_${6}_${5}_R2.fastq.gz | wc -l)
+echo $(( $R2_OUT / 4 )) > R2_output.txt

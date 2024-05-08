@@ -219,6 +219,10 @@ workflow PIPERLINE {
     //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( ch_sample_locus_reads ) 
 
+    SPLIT_LOCI.out.input_counts .view()
+    SPLIT_LOCI.out.output_counts .view()
+
+
     //// trim primer sequences from the start and end of reads
     PRIMER_TRIM ( SPLIT_LOCI.out.reads )
 
@@ -485,14 +489,6 @@ workflow PIPERLINE {
         .set { ch_ps_filtered }
 
     PHYLOSEQ_MERGE ( ch_ps_unfiltered, ch_ps_filtered )
-
-    //// count the number of input read per sample ( fwd and rev sep)
-    // cardinality: fcid, sample_id, n_input
-    ch_sample_locus_reads
-        .map { meta, reads -> reads }
-        .countFastq()
-        .view()
-
 
     ///// VISUALISATION
     /*
