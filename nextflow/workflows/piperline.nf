@@ -486,6 +486,12 @@ workflow PIPERLINE {
 
     PHYLOSEQ_MERGE ( ch_ps_unfiltered, ch_ps_filtered )
 
+    //// count the number of input read per sample ( fwd and rev sep)
+    // cardinality: fcid, sample_id, n_input
+    ch_sample_locus_reads
+        .countFastq()
+        .view()
+
 
     ///// VISUALISATION
     /*
