@@ -28,7 +28,8 @@ process PRIMER_TRIM {
         ${meta.rev_primer_seq} \
         ${meta.pcr_primers} \
         ${meta.target_gene} \
-        ${meta.sample_id} 
+        ${meta.sample_id} \
+        ${meta.fcid}
 
     """
 
