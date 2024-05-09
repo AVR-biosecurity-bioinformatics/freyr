@@ -124,7 +124,7 @@ sapply(mergers, getN) %>%
         fcid = fcid,
         pcr_primers = pcr_primers
     ) %>%
-    saveRDS(., "pairs_readsout.rds")
+    write_csv(., paste0("dada_",fcid,"_",pcr_primers,"_readsout.csv"))
 
 
 # stop(" *** stopped manually *** ") ##########################################
