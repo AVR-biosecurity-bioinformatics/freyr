@@ -21,4 +21,6 @@ for (i in 1:length(rt_samples)) { # loop through .rds files, adding distinct seq
     samples_tibble <- rbind(samples_tibble, new_csv)
 }
 
+write_csv(samples_tibble, "samples_tibble.csv")
+
 ### run R code
