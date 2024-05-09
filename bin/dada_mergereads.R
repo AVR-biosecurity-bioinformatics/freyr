@@ -113,14 +113,18 @@ seqtab <- dada2::makeSequenceTable(mergers)
 
 saveRDS(seqtab, paste0(fcid,"_",pcr_primers,"_seqtab.rds"))
 
-# # Track reads
-# getN <- function(x) sum(getUniques(x))
-# res <- cbind(sapply(dadaFs, getN), sapply(dadaRs, getN), sapply(mergers, getN)) %>%
-#     magrittr::set_colnames(c("dadaFs", "dadaRs", "merged")) %>%
-#     as.data.frame() %>%
-#     rownames_to_column("sample_id") %>%
-#     dplyr::mutate(sample_id = stringr::str_remove(basename(sample_id), pattern="_S[0-9]+_R[1-2]_.*$")) %>%
-#     as_tibble()
-# return(res)
+# save number of merged reads per sample
+getN <- function(x) sum(dada2::getUniques(x))
+
+sapply(mergers, getN) %>% 
+    as.data.frame() %>% 
+    magrittr::set_colnames("merged") %>%
+    tibble::rownames_to_column(var = "sample_id") %>%
+    mutate(
+        fcid = fcid,
+        pcr_primers = pcr_primers
+    ) %>%
+    saveRDS(., "pairs_readsout.rds")
+
 
 # stop(" *** stopped manually *** ") ##########################################

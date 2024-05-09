@@ -117,9 +117,10 @@ workflow PIPERLINE {
 
     // ch_versions = Channel.empty()
 
-    //
-    // Create input channels
-    //
+    
+    //// Create empty channels
+    ch_read_tracker_samples = Channel.empty()   // read-tracking for sample-level processes
+    ch_read_tracker_fcid = Channel.empty()      // read-tracking for fcid-level processes
 
 
     //// input samplesheet and loci parameters
@@ -215,17 +216,16 @@ workflow PIPERLINE {
 
     //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( ch_sample_locus_reads ) 
-
-    //// create channel that tracks read counts
-    ch_read_tracker = SPLIT_LOCI.out.input_counts.concat( SPLIT_LOCI.out.output_counts )
+    ch_read_tracker_samples = ch_read_tracker_samples.concat( SPLIT_LOCI.out.input_counts )
+    ch_read_tracker_samples = ch_read_tracker_samples.concat( SPLIT_LOCI.out.output_counts )
 
     //// trim primer sequences from the start and end of reads
     PRIMER_TRIM ( SPLIT_LOCI.out.reads )
-    ch_read_tracker = ch_read_tracker.concat( PRIMER_TRIM.out.output_counts )
+    ch_read_tracker_samples = ch_read_tracker_samples.concat( PRIMER_TRIM.out.output_counts )
 
     //// filter reads using dada2 and input parameters
     READ_FILTER ( PRIMER_TRIM.out.reads )
-    ch_read_tracker = ch_read_tracker.concat( PRIMER_TRIM.out.output_counts )
+    ch_read_tracker_samples = ch_read_tracker_samples.concat( PRIMER_TRIM.out.output_counts )
 
     //// create plots of read quality pre- and post-filtering, per flowcell (optional)
     // FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
@@ -381,9 +381,12 @@ workflow PIPERLINE {
 
     //// merge paired-end reads per flowcell x locus combo
     DADA_MERGEREADS ( ch_seq_combined )
+    ch_read_tracker_fcid = ch_read_tracker_fcid.concat(DADA_MERGEREADS.out.output_counts)
 
     //// filter sequence table
     FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
+    // ch_read_tracker_fcid = ch_read_tracker_fcid.concat(FILTER_SEQTAB.out.output_counts)
+
     ch_seqtab = FILTER_SEQTAB.out.seqtab
         .map { pcr_primers, fcid, meta, seqtab -> // remove meta
             [ pcr_primers, fcid, seqtab ] }
@@ -489,7 +492,8 @@ workflow PIPERLINE {
     PHYLOSEQ_MERGE ( ch_ps_unfiltered, ch_ps_filtered )
 
     //// track reads and sequences across the pipeline
-    ch_read_tracker .view()
+    // ch_read_tracker_samples .view()
+
     // READ_TRACKER ( ch_read_tracker )
 
 

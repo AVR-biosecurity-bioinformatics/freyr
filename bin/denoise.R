@@ -50,18 +50,3 @@ if ( n_pass == "first" && priors == "NO_FILE" ) { # first pass condition; no pri
     stop(" 'n_pass' variable must be 'first' or 'second', and priors must be 'NO_FILE' or defined! ")
 }
 
-# alex function
-# step_dada2_single2(
-#     fcid, 
-#     sample_id, 
-#     input_dir,
-#     pcr_primers, 
-#     output, 
-#     qc_dir, 
-#     error_model, 
-#     read="F",
-#     priors = NA, 
-#     quiet=FALSE, 
-#     multithread=FALSE
-# )
-

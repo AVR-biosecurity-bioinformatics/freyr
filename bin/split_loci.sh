@@ -9,6 +9,7 @@ set -u
 # $5 = meta.pcr_primers, aka. name of PCR primer pair
 # $6 = meta.target_gene, aka. name of target gene
 # $7 = meta.sample_id, aka. sample ID
+# $8 = meta.fcid, aka. flowcell ID
 
 # change "I" in primer seq to "N", if present
 FWD_PRIMER=${3/I/N}
@@ -47,33 +48,39 @@ lhist=split_loci_lhist_${7}_${6}_${5}.txt
 ## count reads in input files
 # forward reads
 if [[ $1 == *.gz ]]; then
-    R1_IN=$(zcat $1 | wc -l)
+    R1_IN_LINES=$(zcat $1 | wc -l)
 else 
-    R1_IN=$(cat $1 | wc -l)
+    R1_IN_LINES=$(cat $1 | wc -l)
 fi
-echo $(( $R1_IN / 4 )) > R1_readsin.txt
+R1_IN=$(( $R1_IN_LINES / 4 ))
 
 # reverse reads
 if [[ $2 == *.gz ]]; then
-    R2_IN=$(zcat $2 | wc -l)
+    R2_IN_LINES=$(zcat $2 | wc -l)
 else 
-    R2_IN=$(cat $2 | wc -l)
+    R2_IN_LINES=$(cat $2 | wc -l)
 fi
-echo $(( $R2_IN / 4 )) > R2_readsin.txt
+R2_IN=$(( $R2_IN_LINES / 4 ))
+
+# save as .csv 
+echo "$7,$8,$5,$R1_IN,$R2_IN" > readsin.csv # columns: sample_id; fcid; pcr_primers; fwd_in; rev_in
 
 ## count reads in output files
 # forward reads
 if [ -f ${7}_${6}_${5}_R1.fastq.gz ]; then
-    R1_OUT=$(zcat ${7}_${6}_${5}_R1.fastq.gz | wc -l)
-    echo $(( $R1_OUT / 4 )) > R1_readsout.txt
+    R1_OUT_LINES=$(zcat ${7}_${6}_${5}_R1.fastq.gz | wc -l)
+    R1_OUT=$(( $R1_OUT_LINES / 4 ))
 else 
-    echo "0" > R1_readsout.txt
+    R1_OUT=0
 fi
 
 # reverse reads
 if [ -f ${7}_${6}_${5}_R2.fastq.gz ]; then
-    R2_OUT=$(zcat ${7}_${6}_${5}_R2.fastq.gz | wc -l)
-    echo $(( $R2_OUT / 4 )) > R2_readsout.txt
+    R2_OUT_LINES=$(zcat ${7}_${6}_${5}_R2.fastq.gz | wc -l)
+    R2_OUT=$(( $R2_OUT_LINES / 4 ))
 else 
-    echo "0" > R2_readsout.txt
+    R2_OUT=0
 fi
+
+# save as .csv 
+echo "$7,$8,$5,$R1_OUT,$R2_OUT" > readsout.csv # columns: sample_id; fcid; pcr_primers; fwd_out; fwd_out
