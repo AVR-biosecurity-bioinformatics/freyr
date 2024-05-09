@@ -4,7 +4,7 @@ process READ_TRACKING {
     // label:  
 
     input:
-    tuple val(dummy), path(rt_samples)
+    path(rt_samples)
 
     output:
     
@@ -20,7 +20,7 @@ process READ_TRACKING {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    rt_samples =        ${rt_samples}
+    rt_samples =        "${rt_samples}"
     
     ## global variables
     projectDir = "$projectDir"

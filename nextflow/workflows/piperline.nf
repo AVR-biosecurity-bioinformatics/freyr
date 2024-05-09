@@ -493,10 +493,7 @@ workflow PIPERLINE {
 
     //// track reads and sequences across the pipeline
     // collect channels together
-    ch_read_tracker_samples = ch_read_tracker_samples
-        .collect()
-        .map { csv ->
-            [ "samples", csv ] }
+    ch_read_tracker_samples = ch_read_tracker_samples.collect()
 
     READ_TRACKING ( ch_read_tracker_samples )
 
