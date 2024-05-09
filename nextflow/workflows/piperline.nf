@@ -225,7 +225,7 @@ workflow PIPERLINE {
 
     //// filter reads using dada2 and input parameters
     READ_FILTER ( PRIMER_TRIM.out.reads )
-    ch_read_tracker_samples = ch_read_tracker_samples.concat( PRIMER_TRIM.out.output_counts )
+    ch_read_tracker_samples = ch_read_tracker_samples.concat( READ_FILTER.out.output_counts )
 
     //// create plots of read quality pre- and post-filtering, per flowcell (optional)
     // FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
