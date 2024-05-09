@@ -217,7 +217,7 @@ workflow PIPERLINE {
     SPLIT_LOCI ( ch_sample_locus_reads ) 
 
     //// create channel that tracks read counts
-    ch_read_tracker = ch_read_tracker.concat( SPLIT_LOCI.out.input_counts, SPLIT_LOCI.out.output_counts)
+    ch_read_tracker = SPLIT_LOCI.out.input_counts.concat( SPLIT_LOCI.out.output_counts )
 
     //// trim primer sequences from the start and end of reads
     PRIMER_TRIM ( SPLIT_LOCI.out.reads )
