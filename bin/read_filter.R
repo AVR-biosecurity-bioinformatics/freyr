@@ -8,9 +8,9 @@
 ## using dada2::filterAndTrim directly
 res <- dada2::filterAndTrim(
     fwd = fwd_reads, 
-    filt = paste0(sample_id,"_",target_gene,"_",pcr_primers,"_filter_R1.fastq.gz"),
+    filt = paste0(sample_id,"_",target_gene,"_",pcr_primers,"_filter_R1.fastq.gz"), # gets saved to working dir
     rev = rev_reads, 
-    filt.rev = paste0(sample_id,"_",target_gene,"_",pcr_primers,"_filter_R2.fastq.gz"),
+    filt.rev = paste0(sample_id,"_",target_gene,"_",pcr_primers,"_filter_R2.fastq.gz"), # gets saved to working dir
     minLen = as.numeric(read_min_length), 
     maxLen = as.numeric(read_max_length), 
     maxEE = as.numeric(read_max_ee), 
@@ -23,9 +23,10 @@ res <- dada2::filterAndTrim(
     verbose = FALSE
 )
 
-## extract output read counts
-# res %>%
-#     tibble::as_tibble() %>%
-#     pull(reads.in)
+## extract output read counts and save to file
+res %>%
+    tibble::as_tibble() %>%
+    pull(reads.out) %>%
+    write("pairs_readsout.txt")
 
 # stop(" *** stopped manually *** ") ##########################################

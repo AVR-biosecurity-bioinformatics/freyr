@@ -62,15 +62,15 @@ ${2}
 # forward reads
 if [ -f ${7}_${6}_${5}_trim_R1.fastq.gz ]; then
     R1_OUT=$(zcat ${7}_${6}_${5}_trim_R1.fastq.gz | wc -l)
-    echo $(( $R1_OUT / 4 )) > R1_output.txt
+    echo $(( $R1_OUT / 4 )) > R1_readsout.txt
 else
-    echo "0" > R1_output.txt
+    echo "0" > R1_readsout.txt
 fi
 
 # reverse reads
 if [ -f ${7}_${6}_${5}_trim_R2.fastq.gz ]; then
     R2_OUT=$(zcat ${7}_${6}_${5}_trim_R2.fastq.gz | wc -l)
-    echo $(( $R2_OUT / 4 )) > R2_output.txt
+    echo $(( $R2_OUT / 4 )) > R2_readsout.txt
 else
-    echo "0" > R2_output.txt
+    echo "0" > R2_readsout.txt
 fi
