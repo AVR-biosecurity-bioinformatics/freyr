@@ -30,6 +30,8 @@ reads_out <- res %>%
 
 out_vector <- c("read_filter", sample_id, fcid, pcr_primers, reads_out, reads_out) 
 
-write.csv(matrix(out_vector, nrow = 1), "readsout.csv", row.names = F)
+rbind(out_vector) %>%
+    as_tibble() %>%
+    write_csv("readsout.csv", col_names = F)
 
 # stop(" *** stopped manually *** ") ##########################################

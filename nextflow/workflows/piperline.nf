@@ -84,7 +84,7 @@ include { TAX_SUMMARY_MERGE                         } from '../modules/tax_summa
 include { PHYLOSEQ_UNFILTERED                       } from '../modules/phyloseq_unfiltered'
 include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_filter'
 include { PHYLOSEQ_MERGE                            } from '../modules/phyloseq_merge'
-// include { READ_TRACKING                             } from '../modules/read_tracking'
+include { READ_TRACKING                             } from '../modules/read_tracking'
 
 
 
@@ -492,12 +492,10 @@ workflow PIPERLINE {
     PHYLOSEQ_MERGE ( ch_ps_unfiltered, ch_ps_filtered )
 
     //// track reads and sequences across the pipeline
-    // ch_read_tracker_samples .view()
-    ch_read_tracker_samples
-        .collect()
-        .view()
+    // collect channels together
+    ch_read_tracker_samples = ch_read_tracker_samples.collect()
 
-    // READ_TRACKER ( ch_read_tracker )
+    READ_TRACKING ( ch_read_tracker_samples )
 
 
     ///// VISUALISATION
