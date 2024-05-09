@@ -9,8 +9,8 @@ process SPLIT_LOCI {
     output:   
     tuple val(meta), path("*_R{1,2}.fastq.gz"), emit: reads
     path("split_loci_*.txt")
-    tuple val(meta.pcr_primers), val(meta.fcid), val(meta.sample_id), path("R1_input.txt"), path("R2_input.txt"), emit: input_counts
-    tuple val(meta.pcr_primers), val(meta.fcid), val(meta.sample_id), path("R1_output.txt"), path("R2_output.txt"), emit: output_counts
+    tuple val("split_loci"), val(meta.pcr_primers), val(meta.fcid), val(meta.sample_id), path("R1_input.txt"), path("R2_input.txt"), emit: input_counts
+    tuple val("split_loci"), val(meta.pcr_primers), val(meta.fcid), val(meta.sample_id), path("R1_output.txt"), path("R2_output.txt"), emit: output_counts
 
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'

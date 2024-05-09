@@ -213,15 +213,11 @@ workflow PIPERLINE {
     // run SEQ_QC per flow cell 
     // SEQ_QC ( ch_fcid ) // optional step for testing
 
-    /// TODO: develop method to count reads as they move through the pipeline
-    //      ie. input file, after splitting, after primer trimming, after qual trim etc.
-
     //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( ch_sample_locus_reads ) 
 
-    SPLIT_LOCI.out.input_counts .view()
-    SPLIT_LOCI.out.output_counts .view()
-
+    //// create channel that tracks read counts
+    ch_read_tracker = ch_read_tracker.concat( SPLIT_LOCI.out.input_counts, SPLIT_LOCI.out.output_counts)
 
     //// trim primer sequences from the start and end of reads
     PRIMER_TRIM ( SPLIT_LOCI.out.reads )
@@ -489,6 +485,10 @@ workflow PIPERLINE {
         .set { ch_ps_filtered }
 
     PHYLOSEQ_MERGE ( ch_ps_unfiltered, ch_ps_filtered )
+
+    //// track reads and sequences across the pipeline
+    ch_read_tracker .view()
+
 
     ///// VISUALISATION
     /*
