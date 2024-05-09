@@ -7,7 +7,7 @@ process READ_TRACKING {
     path(rt_samples)
 
     output:
-    
+    path("*.csv")
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
