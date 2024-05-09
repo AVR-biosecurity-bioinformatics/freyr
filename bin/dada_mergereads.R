@@ -118,13 +118,15 @@ getN <- function(x) sum(dada2::getUniques(x))
 
 sapply(mergers, getN) %>% 
     as.data.frame() %>% 
-    magrittr::set_colnames("merged") %>%
+    magrittr::set_colnames("pairs") %>%
     tibble::rownames_to_column(var = "sample_id") %>%
-    mutate(
+    dplyr::mutate(
         fcid = fcid,
-        pcr_primers = pcr_primers
+        pcr_primers = pcr_primers,
+        process = "dada_mergereads"
     ) %>%
-    write_csv(., paste0("dada_",fcid,"_",pcr_primers,"_readsout.csv"))
+    dplyr::select(process, sample_id, fcid, pcr_primers, pairs) %>% 
+    write_csv(., paste0("dada_mergereads_",fcid,"_",pcr_primers,"_readsout.csv"))
 
 
 # stop(" *** stopped manually *** ") ##########################################

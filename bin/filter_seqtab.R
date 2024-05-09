@@ -268,15 +268,18 @@ bind_rows(unique(cleanup)) %>%
 # filtered seqtab
 saveRDS(seqtab_final_renamed, paste0(fcid,"_",pcr_primers,"_seqtab.cleaned.rds"))
 
-# res <- tibble(
-# sample_id = rownames(seqtab) %>% stringr::str_remove(pattern="_S[0-9]+_R[1-2]_.*$"),
-# reads_starting = reads_starting,
-# reads_chimerafilt = reads_chimerafilt,
-# reads_lengthfilt = reads_lengthfilt,
-# reads_phmmfilt = reads_phmmfilt,
-# reads_framefilt = reads_framefilt,
-# reads_final = reads_final
-# )
+res <- tibble(
+    sample_id = rownames(seqtab) %>% stringr::str_remove(pattern="_S[0-9]+_R[1-2]_.*$"),
+    reads_starting = reads_starting,
+    reads_chimerafilt = reads_chimerafilt,
+    reads_lengthfilt = reads_lengthfilt,
+    reads_phmmfilt = reads_phmmfilt,
+    reads_framefilt = reads_framefilt,
+    reads_final = reads_final
+)
+
+write_csv(res, paste0("filter_seqtab_",fcid,"_",pcr_primers,"_readsout.csv"))
+
 # return(list(filtered_seqtab = seqtab_final, 
 #             filtered_asvs = res,
 #             cleanup_summary = cleanup,

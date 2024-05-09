@@ -10,6 +10,7 @@ process FILTER_SEQTAB {
     tuple val(pcr_primers), val(fcid), val(meta), path("*_seqtab.cleaned.rds"), emit: seqtab
     tuple val(pcr_primers), val(fcid), val(meta), path("*_ASV_cleanup_summary.csv"), emit: csv
     tuple val(pcr_primers), val(fcid), val(meta), path("*_ASV_cleanup_summary.pdf"), emit: plot
+    path("*_readsout.csv"), emit: output_counts
 
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
