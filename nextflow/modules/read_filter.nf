@@ -8,6 +8,7 @@ process READ_FILTER {
 
     output:   
     tuple val(meta), path("*_filter_R{1,2}.fastq.gz"),           emit: reads, optional: true
+    // tuple val(module_name), val(meta.pcr_primers), val(meta.fcid), val(meta.sample_id), path("R1_output.txt"), path("R2_output.txt"), emit: output_counts
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

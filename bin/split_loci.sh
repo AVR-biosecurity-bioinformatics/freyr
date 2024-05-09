@@ -63,9 +63,17 @@ echo $(( $R2_IN / 4 )) > R2_input.txt
 
 ## count reads in output files
 # forward reads
-R1_OUT=$(zcat ${7}_${6}_${5}_R1.fastq.gz | wc -l)
-echo $(( $R1_OUT / 4 )) > R1_output.txt
+if [ -f ${7}_${6}_${5}_R1.fastq.gz ]; then
+    R1_OUT=$(zcat ${7}_${6}_${5}_R1.fastq.gz | wc -l)
+    echo $(( $R1_OUT / 4 )) > R1_output.txt
+else 
+    echo "0" > R1_output.txt
+fi
 
 # reverse reads
-R2_OUT=$(zcat ${7}_${6}_${5}_R2.fastq.gz | wc -l)
-echo $(( $R2_OUT / 4 )) > R2_output.txt
+if [ -f ${7}_${6}_${5}_R2.fastq.gz ]; then
+    R2_OUT=$(zcat ${7}_${6}_${5}_R2.fastq.gz | wc -l)
+    echo $(( $R2_OUT / 4 )) > R2_output.txt
+else 
+    echo "0" > R2_output.txt
+fi

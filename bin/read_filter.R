@@ -5,17 +5,8 @@
 
 ### run R code
 
-# # using piperline function
-# step_filter_reads(
-#     sample_id = ,
-#     input_dir = ,
-#     output_dir = ,
-#     min_length = ,
-#     max_length = ,
-# )
-
-# using dada2::filterAndTrim directly
-dada2::filterAndTrim(
+## using dada2::filterAndTrim directly
+res <- dada2::filterAndTrim(
     fwd = fwd_reads, 
     filt = paste0(sample_id,"_",target_gene,"_",pcr_primers,"_filter_R1.fastq.gz"),
     rev = rev_reads, 
@@ -31,3 +22,10 @@ dada2::filterAndTrim(
     compress = TRUE, 
     verbose = FALSE
 )
+
+## extract output read counts
+res %>%
+    tibble::as_tibble() %>%
+    pull(reads.in)
+
+stop(" *** stopped manually *** ") ##########################################

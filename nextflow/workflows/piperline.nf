@@ -221,9 +221,11 @@ workflow PIPERLINE {
 
     //// trim primer sequences from the start and end of reads
     PRIMER_TRIM ( SPLIT_LOCI.out.reads )
+    ch_read_tracker = ch_read_tracker.concat( PRIMER_TRIM.out.output_counts )
 
     //// filter reads using dada2 and input parameters
     READ_FILTER ( PRIMER_TRIM.out.reads )
+    // ch_read_tracker = ch_read_tracker.concat( PRIMER_TRIM.out.output_counts )
 
     //// create plots of read quality pre- and post-filtering, per flowcell (optional)
     // FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
