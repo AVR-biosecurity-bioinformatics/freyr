@@ -77,4 +77,4 @@ else
 fi
 
 # save as .csv 
-echo "primer_trim,$7,$8,$5,$R1_OUT,$R2_OUT" > ${7}_${5}_readsout.csv # columns: process; sample_id; fcid; pcr_primers; fwd_out; fwd_out
+echo "primer_trim,$7,$8,$5,$R1_OUT,$R2_OUT" > ${7}_${5}_primer_trim_readsout.csv # columns: process; sample_id; fcid; pcr_primers; fwd_out; fwd_out

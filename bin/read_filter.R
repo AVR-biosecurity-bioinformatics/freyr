@@ -32,6 +32,6 @@ out_vector <- c("read_filter", sample_id, fcid, pcr_primers, reads_out, reads_ou
 
 rbind(out_vector) %>%
     as_tibble() %>%
-    write_csv(paste0(sample_id,"_",pcr_primers,"_readsout.csv"), col_names = F)
+    write_csv(paste0(sample_id,"_",pcr_primers,"_read_filter_readsout.csv"), col_names = F)
 
 # stop(" *** stopped manually *** ") ##########################################
