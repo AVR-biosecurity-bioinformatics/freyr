@@ -29,6 +29,7 @@ reads_out <- res %>%
     pull(reads.out)
 
 c("read_filter", sample_id, fcid, pcr_primers, reads_out, reads_out) %>% 
-    write_csv("readsout.csv")
+    tibble::as_tibble() %>%
+    write_csv("readsout.csv", col_names = F)
 
 # stop(" *** stopped manually *** ") ##########################################
