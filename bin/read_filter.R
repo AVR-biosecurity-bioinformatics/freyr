@@ -24,8 +24,8 @@ res <- dada2::filterAndTrim(
 )
 
 ## extract output read counts
-res %>%
-    tibble::as_tibble() %>%
-    pull(reads.in)
+# res %>%
+#     tibble::as_tibble() %>%
+#     pull(reads.in)
 
-stop(" *** stopped manually *** ") ##########################################
+# stop(" *** stopped manually *** ") ##########################################
