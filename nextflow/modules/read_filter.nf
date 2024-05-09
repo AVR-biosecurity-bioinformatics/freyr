@@ -8,7 +8,7 @@ process READ_FILTER {
 
     output:   
     tuple val(meta), path("*_filter_R{1,2}.fastq.gz"),           emit: reads, optional: true
-    path("readsout.csv"), emit: output_counts
+    path("*_readsout.csv"), emit: output_counts
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
