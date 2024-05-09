@@ -63,7 +63,7 @@ fi
 R2_IN=$(( $R2_IN_LINES / 4 ))
 
 # save as .csv 
-echo "split_loci,$7,$8,$5,$R1_IN,$R2_IN" > ${7}_${5}_input_readsin.csv # columns: process; sample_id; fcid; pcr_primers; fwd_in; rev_in
+echo "split_loci,$7,$8,$5,$R1_IN,$R2_IN" > input_${7}_${5}_readsin.csv # columns: process; sample_id; fcid; pcr_primers; fwd_in; rev_in
 
 ## count reads in output files
 # forward reads

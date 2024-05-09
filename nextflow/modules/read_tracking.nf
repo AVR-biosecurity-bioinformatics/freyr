@@ -20,7 +20,7 @@ process READ_TRACKING {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    rt_samples =        ${rt_samples}
+    rt_samples =        as.character(${rt_samples})
     
     ## global variables
     projectDir = "$projectDir"
