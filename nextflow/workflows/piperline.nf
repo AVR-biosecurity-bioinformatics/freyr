@@ -493,6 +493,9 @@ workflow PIPERLINE {
 
     //// track reads and sequences across the pipeline
     // ch_read_tracker_samples .view()
+    ch_read_tracker_samples
+        .collect()
+        .view()
 
     // READ_TRACKER ( ch_read_tracker )
 
