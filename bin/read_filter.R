@@ -24,9 +24,11 @@ res <- dada2::filterAndTrim(
 )
 
 ## extract output read counts and save to file
-res %>%
+reads_out <- res %>%
     tibble::as_tibble() %>%
-    pull(reads.out) %>%
-    write("pairs_readsout.txt")
+    pull(reads.out)
+
+c("read_filter", sample_id, fcid, pcr_primers, reads_out, reads_out) %>% 
+    write_csv("readsout.csv")
 
 # stop(" *** stopped manually *** ") ##########################################

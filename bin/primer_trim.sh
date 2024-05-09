@@ -9,6 +9,7 @@ set -u
 # $5 = meta.pcr_primers, aka. name of PCR primer pair
 # $6 = meta.target_gene, aka. name of target gene
 # $7 = meta.sample_id, aka. sample ID
+# $8 = meta.fcid, aka. flowcell ID
 
 # change "I" in primer seq to "N", if present
 FWD_PRIMER=${3/I/N}
@@ -61,16 +62,19 @@ ${2}
 ## count reads in output files
 # forward reads
 if [ -f ${7}_${6}_${5}_trim_R1.fastq.gz ]; then
-    R1_OUT=$(zcat ${7}_${6}_${5}_trim_R1.fastq.gz | wc -l)
-    echo $(( $R1_OUT / 4 )) > R1_readsout.txt
-else
-    echo "0" > R1_readsout.txt
+    R1_OUT_LINES=$(zcat ${7}_${6}_${5}_trim_R1.fastq.gz | wc -l)
+    R1_OUT=$(( $R1_OUT_LINES / 4 ))
+else 
+    R1_OUT=0
 fi
 
 # reverse reads
 if [ -f ${7}_${6}_${5}_trim_R2.fastq.gz ]; then
-    R2_OUT=$(zcat ${7}_${6}_${5}_trim_R2.fastq.gz | wc -l)
-    echo $(( $R2_OUT / 4 )) > R2_readsout.txt
-else
-    echo "0" > R2_readsout.txt
+    R2_OUT_LINES=$(zcat ${7}_${6}_${5}_trim_R2.fastq.gz | wc -l)
+    R2_OUT=$(( $R2_OUT_LINES / 4 ))
+else 
+    R2_OUT=0
 fi
+
+# save as .csv 
+echo "primer_trim,$7,$8,$5,$R1_OUT,$R2_OUT" > readsout.csv # columns: process; sample_id; fcid; pcr_primers; fwd_out; fwd_out

@@ -119,7 +119,7 @@ workflow PIPERLINE {
 
     
     //// Create empty channels
-    ch_read_tracker_samples = Channel.empty()   // read-tracking for sample-level processes
+    ch_read_tracker_samples = Channel.empty()   // read-tracking for sample-level processes; card: val(process_name), path(.csv)
     ch_read_tracker_fcid = Channel.empty()      // read-tracking for fcid-level processes
 
 
