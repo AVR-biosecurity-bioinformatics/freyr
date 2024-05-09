@@ -21,6 +21,8 @@ for (i in 1:length(rt_samples)) { # loop through .csv and add values to tibble
     samples_tibble <- rbind(samples_tibble, new_csv)
 }
 
+### TODO: name columns for 'samples_tibble'
+
 write_csv(samples_tibble, "samples_tibble.csv")
 
 ### run R code
