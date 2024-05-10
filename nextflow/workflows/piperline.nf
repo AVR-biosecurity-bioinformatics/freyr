@@ -120,7 +120,7 @@ workflow PIPERLINE {
     
     //// Create empty channels
     ch_read_tracker_samples = Channel.empty()   // read-tracking for sample-level processes; card: path(.csv)
-    ch_read_tracker_fcid = Channel.empty()      // read-tracking for fcid-level processes
+    ch_read_tracker_grouped = Channel.empty()      // read-tracking for grouped processes
 
 
     //// input samplesheet and loci parameters
@@ -381,11 +381,11 @@ workflow PIPERLINE {
 
     //// merge paired-end reads per flowcell x locus combo
     DADA_MERGEREADS ( ch_seq_combined )
-    ch_read_tracker_fcid = ch_read_tracker_fcid.concat(DADA_MERGEREADS.out.read_tracking)
+    ch_read_tracker_grouped = ch_read_tracker_grouped.concat(DADA_MERGEREADS.out.read_tracking)
 
     //// filter sequence table
     FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
-    ch_read_tracker_fcid = ch_read_tracker_fcid.concat(FILTER_SEQTAB.out.read_tracking)
+    ch_read_tracker_grouped = ch_read_tracker_grouped.concat(FILTER_SEQTAB.out.read_tracking)
 
     ch_seqtab = FILTER_SEQTAB.out.seqtab
         .map { pcr_primers, fcid, meta, seqtab -> // remove meta
@@ -493,15 +493,16 @@ workflow PIPERLINE {
         ch_ps_unfiltered, 
         ch_ps_filtered 
         )
+    ch_read_tracker_grouped = ch_read_tracker_grouped.concat( PHYLOSEQ_MERGE.out.read_tracking.flatten() ) 
 
     //// track reads and sequences across the pipeline
     // collect channel files into lists
     ch_read_tracker_samples = ch_read_tracker_samples.collect()
-    ch_read_tracker_fcid = ch_read_tracker_fcid.collect()
+    ch_read_tracker_grouped = ch_read_tracker_grouped.collect()
 
     READ_TRACKING ( 
         ch_read_tracker_samples, 
-        ch_read_tracker_fcid 
+        ch_read_tracker_grouped 
         )
 
 

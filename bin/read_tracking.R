@@ -15,8 +15,8 @@
 rt_samples <- # convert Groovy to R list format
     stringr::str_extract_all(rt_samples, pattern = "[^\\s,\\[\\]]+") %>% unlist()
 
-rt_fcid <- # convert Groovy to R list format
-    stringr::str_extract_all(rt_fcid, pattern = "[^\\s,\\[\\]]+") %>% unlist()
+rt_group <- # convert Groovy to R list format
+    stringr::str_extract_all(rt_group, pattern = "[^\\s,\\[\\]]+") %>% unlist()
 
 ### run R code
 
@@ -35,16 +35,16 @@ sample_tibble <- sample_tibble %>%
 
 write_csv(sample_tibble, "sample_tibble.csv") # for debugging
 
-## join fcid-level read tracking files into a single tibble
+## join group-level read tracking files into a single tibble
 
-fcid_tibble <- tibble() # new tibble
+group_tibble <- tibble() # new tibble
 for (i in 1:length(rt_fcid)) { # loop through .csv and add values to tibble as new rows
     new_csv <- read_csv(rt_fcid[i], show_col_types = F)
-    fcid_tibble <- rbind(fcid_tibble, new_csv)
+    group_tibble <- rbind(group_tibble, new_csv)
 }
 
-fcid_tibble <- fcid_tibble %>%
+group_tibble <- group_tibble %>%
     mutate(sample_id = paste0(sample_id,"_",pcr_primers)) %>% # make sample_id consistent with "sample_id" + "pcr_primers" format
     dplyr::arrange(sample_id, pcr_primers, desc(pairs))
 
-write_csv(fcid_tibble, "fcid_tibble.csv") # for debugging
+write_csv(group_tibble, "group_tibble.csv") # for debugging
