@@ -385,7 +385,7 @@ workflow PIPERLINE {
 
     //// filter sequence table
     FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
-    // ch_read_tracker_fcid = ch_read_tracker_fcid.concat(FILTER_SEQTAB.out.output_counts)
+    ch_read_tracker_fcid = ch_read_tracker_fcid.concat(FILTER_SEQTAB.out.output_counts)
 
     ch_seqtab = FILTER_SEQTAB.out.seqtab
         .map { pcr_primers, fcid, meta, seqtab -> // remove meta
@@ -494,9 +494,9 @@ workflow PIPERLINE {
     //// track reads and sequences across the pipeline
     // collect channels together
     ch_read_tracker_samples = ch_read_tracker_samples.collect()
-    ch_read_tracker_fcid.view()
+    ch_read_tracker_fcid = ch_read_tracker_fcid.collect()
 
-    READ_TRACKING ( ch_read_tracker_samples )
+    READ_TRACKING ( ch_read_tracker_samples, ch_read_tracker_fcid )
 
 
     ///// VISUALISATION
