@@ -38,8 +38,8 @@ write_csv(sample_tibble, "sample_tibble.csv") # for debugging
 ## join group-level read tracking files into a single tibble
 
 group_tibble <- tibble() # new tibble
-for (i in 1:length(rt_fcid)) { # loop through .csv and add values to tibble as new rows
-    new_csv <- read_csv(rt_fcid[i], show_col_types = F)
+for (i in 1:length(rt_group)) { # loop through .csv and add values to tibble as new rows
+    new_csv <- read_csv(rt_group[i], show_col_types = F)
     group_tibble <- rbind(group_tibble, new_csv)
 }
 
