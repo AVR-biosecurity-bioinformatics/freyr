@@ -81,7 +81,7 @@ write_csv(group_tibble, "group_tibble.csv") # for debugging
 
 ## combine sample and group tibbles together
 steps_vec <- c(
-    "input", 
+    "input_reads", 
     "split_loci", 
     "primer_trim",
     "read_filter",
@@ -106,7 +106,7 @@ read_tracker_long <- sample_tibble_altered %>%
     dplyr::select(-rev, pairs = fwd) %>% ### TODO: check fwd and rev counts are the same; for now assume and just use fwd as read pair count
     rbind(., group_tibble) 
     
-read_tracker_inputcol <- read_tracker_long %>%
+read_tracker_inputcol <- read_tracker_long %>% # pull out 
     dplyr::filter(pcr_primers == "combined") %>% 
     dplyr::select(sample_id_com, input_reads = pairs)
 
@@ -119,7 +119,6 @@ read_tracker_wide <- read_tracker_long %>%
         "sample_id",
         "pcr_primers", 
         "fcid", 
-        "input_reads",
         steps_vec
     )))
 
@@ -127,7 +126,7 @@ write_csv(read_tracker_wide, "read_tracker.csv")
 
 ## plot read tracking
 gg.read_tracker <- read_tracker_long %>% 
-    dplyr::mutate(step = factor(step, levels=steps_vec)) %>% # reorder step factor
+    dplyr::mutate(stage = factor(stage, levels=steps_vec)) %>% # reorder step factor
     ggplot(aes(x = step, y = pairs, fill=pcr_primers))+
     geom_col() +
     scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
