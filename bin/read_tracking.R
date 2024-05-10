@@ -102,29 +102,33 @@ steps_vec <- c(
     "filter_sample_taxon"
     )
 
-read_tracker <- sample_tibble_altered %>%
+read_tracker_long <- sample_tibble_altered %>%
     dplyr::select(-rev, pairs = fwd) %>% ### TODO: check fwd and rev counts are the same; for now assume and just use fwd as read pair count
-    rbind(., group_tibble) %>%
+    rbind(., group_tibble) 
+    
+read_tracker_inputcol <- read_tracker_long %>%
+    dplyr::filter(pcr_primers = "combined") %>% 
+    dplyr::select(sample_id_com, input_reads = input)
+
+read_tracker_wide <- read_tracker_long %>% 
+    dplyr::filter(pcr_primers != "combined") %>% 
+    left_join(., read_tracker_inputcol, by = "sample_id_com") %>% 
     pivot_wider(names_from = stage, values_from = pairs) %>%
     dplyr::select(any_of(c(
         "sample_id_com",
         "sample_id",
         "pcr_primers", 
         "fcid", 
+        "input_reads",
         steps_vec
     )))
 
-write_csv(read_tracker, "read_tracker.csv")
+write_csv(read_tracker_wide, "read_tracker.csv")
 
 ## plot read tracking
-gg.read_tracker <- read_tracker %>%
-    pivot_longer(
-        cols = -c("sample_id_com","sample_id", "fcid", "pcr_primers"),
-        names_to = "step",
-        values_to= "reads"
-        ) %>%
+gg.read_tracker <- read_tracker_long %>% 
     dplyr::mutate(step = factor(step, levels=steps_vec)) %>% # reorder step factor
-    ggplot(aes(x = step, y = reads, fill=pcr_primers))+
+    ggplot(aes(x = step, y = pairs, fill=pcr_primers))+
     geom_col() +
     scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
     facet_grid(fcid~.) +
