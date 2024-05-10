@@ -88,6 +88,7 @@ read_tracker <- sample_tibble %>%
     rbind(., group_tibble) %>%
     pivot_wider(names_from = stage, values_from = pairs) %>%
     dplyr::select(any_of(c(
+        "sample_id_com",
         "sample_id",
         "pcr_primers", 
         "fcid", 
@@ -139,3 +140,5 @@ gg.read_tracker <- read_tracker %>%
     pdf(file="read_tracker.pdf", width = 11, height = 8 , paper="a4r")
     print(gg.read_tracker)
     try(dev.off(), silent=TRUE)
+
+stop(" *** stopped manually *** ") ##########################################
