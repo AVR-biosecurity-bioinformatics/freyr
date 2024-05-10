@@ -32,12 +32,30 @@ colnames(sample_tibble) <- c("stage","sample_id","fcid","pcr_primers","fwd","rev
 sample_tibble <- sample_tibble %>%
     mutate(
         sample_id_com = sample_id, # sample_id before locus split, if done ("com" for "combined")
-        sample_id = paste0(sample_id,"_",pcr_primers)) %>% # make sample_id consistent with "sample_id" + "pcr_primers" format
+        sample_id = paste0(sample_id,"_",pcr_primers) # make sample_id consistent with "sample_id" + "pcr_primers" format
+        ) %>% 
+    dplyr::select(stage, sample_id_com, sample_id, fcid, pcr_primers, fwd, rev) %>% 
     dplyr::arrange(sample_id, pcr_primers, desc(fwd))
 
 sample_id_matching <- sample_tibble %>% dplyr::select(sample_id_com, sample_id) %>% distinct() # get tibble of sample_id and matching sample_id_com
 
-write_csv(sample_tibble, "sample_tibble.csv") # for debugging
+# reduce "input" (pre-split_loci) stage rows to one, changing pcr_primers to "combined" as reads have not been assigned by primer seq
+sample_tibble_noinput <- sample_tibble %>% 
+    dplyr::filter(stage != "input") # remove "input" rows
+
+sample_tibble_input <- sample_tibble %>% 
+    dplyr::filter(stage == "input") %>% 
+    group_by(sample_id_com) %>% 
+    dplyr::slice(1) %>% # keep only one "input" row
+    ungroup() %>% 
+    dplyr::mutate(
+        sample_id = sample_id_com, # change sample_id as pcr_primers not used
+        pcr_primers = "combined" # change pcr_primers as not used yet
+    )
+
+sample_tibble_altered <- rbind(sample_tibble_input, sample_tibble_noinput)
+
+write_csv(sample_tibble_altered, "sample_tibble.csv") # for debugging
 
 ## join group-level read tracking files into a single tibble
 
@@ -56,6 +74,7 @@ group_tibble <- group_tibble %>%
             )
         ) %>% # make sample_id consistent with "sample_id" + "pcr_primers" format
     left_join(., sample_id_matching, by = "sample_id") %>% # add sample_id_com to tibble
+    dplyr::select(stage, sample_id_com, sample_id, fcid, pcr_primers, pairs) %>% 
     dplyr::arrange(sample_id, pcr_primers, desc(pairs))
 
 write_csv(group_tibble, "group_tibble.csv") # for debugging
@@ -83,7 +102,7 @@ steps_vec <- c(
     "filter_sample_taxon"
     )
 
-read_tracker <- sample_tibble %>%
+read_tracker <- sample_tibble_altered %>%
     dplyr::select(-rev, pairs = fwd) %>% ### TODO: check fwd and rev counts are the same; for now assume and just use fwd as read pair count
     rbind(., group_tibble) %>%
     pivot_wider(names_from = stage, values_from = pairs) %>%
@@ -99,30 +118,17 @@ write_csv(read_tracker, "read_tracker.csv")
 
 ## plot read tracking
 gg.read_tracker <- read_tracker %>%
-    pivot_longer(cols = -c("sample_id", "fcid", "pcr_primers"),
-                    names_to = "step",
-                    values_to= "reads") %>%
-    group_by(sample_id) %>%
-    # group_modify(~{ # don't need this step because sample_id should be unique
-    #     # When a sample name shares multiple sample ids, select a single sample to avoid double counting
-    #     if(length(unique(.x$pcr_primers)) >1){
-    #     .x %>%
-    #         dplyr::filter(!step == "input_reads") %>%
-    #         bind_rows(.x %>%
-    #                     dplyr::filter(step == "input_reads") %>%
-    #                     mutate(pcr_primers="Mixed",
-    #                             sample_id=NA_character_) %>%
-    #                     dplyr::slice(1))
-    #     } else {
-    #     .x
-    #     }
-    # }) %>%
+    pivot_longer(
+        cols = -c("sample_id_com","sample_id", "fcid", "pcr_primers"),
+        names_to = "step",
+        values_to= "reads"
+        ) %>%
     dplyr::mutate(step = factor(step, levels=steps_vec)) %>% # reorder step factor
     ggplot(aes(x = step, y = reads, fill=pcr_primers))+
     geom_col() +
-    scale_y_continuous(labels = label_number(scale_cut = cut_short_scale()))+
-    facet_grid(fcid~.)+
-    theme_bw()+
+    scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
+    facet_grid(fcid~.) +
+    theme_bw() +
     theme(
         strip.background = element_rect(colour = "black", fill = "lightgray"),
         strip.text = element_text(size=9, family = ""),
