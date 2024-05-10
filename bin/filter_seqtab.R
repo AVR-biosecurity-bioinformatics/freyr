@@ -157,10 +157,10 @@ if(check_frame & any(reads_phmmfilt > 0)){
     names(reads_framefilt) <- rownames(seqtab)
 }
 
-# change sequence names to contain primer names (preceded by double underscore), so merging seqtabs across loci with sample sheets works as intended
+# change sequence names to contain primer names (preceded by single underscore), so merging seqtabs across loci with sample sheets works as intended
 seqtab_final_renamed <- seqtab_final %>% 
     tibble::as_tibble(rownames = "sample_id") %>%
-    dplyr::mutate(sample_id = paste0(sample_id,"__",pcr_primers)) %>%
+    dplyr::mutate(sample_id = paste0(sample_id,"_",pcr_primers)) %>%
     tibble::column_to_rownames("sample_id") %>% 
     as.matrix()
 
