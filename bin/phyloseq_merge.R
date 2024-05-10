@@ -78,6 +78,25 @@ write_csv(taxtab_out_u, paste0("taxtab_unfiltered.csv"))
 write_csv(samdf_out_u, paste0("samdf_unfiltered.csv"))
 saveRDS(ps_u, paste0("ps_unfiltered.rds"))
 
+## read tracking output from unfiltered phyloseq
+phyloseq::psmelt(ps_u) %>% 
+    dplyr::filter(Abundance > 0) %>%
+    dplyr::select(sample_id, fcid, Abundance, any_of(colnames(phyloseq::tax_table(ps_u)))) %>%
+    pivot_longer(
+        cols=any_of(colnames(phyloseq::tax_table(ps_u))), 
+        names_to = "rank",
+        values_to="name"
+        ) %>%
+    filter(!is.na(name))%>%
+    dplyr::group_by(sample_id, rank) %>%
+    summarise(Abundance = sum(Abundance)) %>%
+    pivot_wider(
+        names_from="rank",
+        values_from="Abundance"
+        )%>%
+    rename_with(~stringr::str_to_lower(.), everything()) %>%
+    rename_with(~stringr::str_c("classified_", .), -sample_id) %>% 
+    write_csv("ps_u_readsout.csv")
 
 
 ### filtered
@@ -143,5 +162,8 @@ write_csv(seqtab_out_f, paste0("seqtab_filtered.csv"))
 write_csv(taxtab_out_f, paste0("taxtab_filtered.csv"))
 write_csv(samdf_out_f, paste0("samdf_filtered.csv"))
 saveRDS(ps_f, paste0("ps_filtered.rds"))
+
+
+
 
 # stop(" *** stopped manually *** ") ##########################################

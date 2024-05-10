@@ -489,14 +489,20 @@ workflow PIPERLINE {
         .collect()
         .set { ch_ps_filtered }
 
-    PHYLOSEQ_MERGE ( ch_ps_unfiltered, ch_ps_filtered )
+    PHYLOSEQ_MERGE ( 
+        ch_ps_unfiltered, 
+        ch_ps_filtered 
+        )
 
     //// track reads and sequences across the pipeline
-    // collect channels together
+    // collect channel files into lists
     ch_read_tracker_samples = ch_read_tracker_samples.collect()
     ch_read_tracker_fcid = ch_read_tracker_fcid.collect()
 
-    READ_TRACKING ( ch_read_tracker_samples, ch_read_tracker_fcid )
+    READ_TRACKING ( 
+        ch_read_tracker_samples, 
+        ch_read_tracker_fcid 
+        )
 
 
     ///// VISUALISATION
