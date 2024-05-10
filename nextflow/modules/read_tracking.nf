@@ -9,6 +9,7 @@ process READ_TRACKING {
 
     output:
     path("*.csv")
+    path("out1.csv"), emit: out1
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

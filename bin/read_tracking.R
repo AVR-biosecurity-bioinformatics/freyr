@@ -48,3 +48,12 @@ group_tibble <- group_tibble %>%
     dplyr::arrange(sample_id, pcr_primers, desc(pairs))
 
 write_csv(group_tibble, "group_tibble.csv") # for debugging
+
+## combine sample and group tibbles together
+
+### TODO: check fwd and rev counts are the same; for now assume and just use fwd as read pair count
+sample_tibble %>%
+    dplyr::select(-rev, pairs = fwd) %>% 
+    rbind(., group_tibble) %>%
+    pivot_wider(names_from = stage, values_from = pairs) %>%
+    write_csv("out1.csv")
