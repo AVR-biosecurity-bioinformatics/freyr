@@ -30,8 +30,12 @@ for (i in 1:length(rt_samples)) { # loop through .csv and add values to tibble a
 colnames(sample_tibble) <- c("stage","sample_id","fcid","pcr_primers","fwd","rev") 
 
 sample_tibble <- sample_tibble %>%
-    mutate(sample_id = paste0(sample_id,"_",pcr_primers)) %>% # make sample_id consistent with "sample_id" + "pcr_primers" format
+    mutate(
+        sample_id_com = sample_id, # sample_id before locus split, if done ("com" for "combined")
+        sample_id = paste0(sample_id,"_",pcr_primers)) %>% # make sample_id consistent with "sample_id" + "pcr_primers" format
     dplyr::arrange(sample_id, pcr_primers, desc(fwd))
+
+sample_id_matching <- sample_tibble %>% dplyr::select(sample_id_com, sample_id) %>% distinct() # get tibble of sample_id and matching sample_id_com
 
 write_csv(sample_tibble, "sample_tibble.csv") # for debugging
 
@@ -51,6 +55,7 @@ group_tibble <- group_tibble %>%
             paste0(sample_id,"_",pcr_primers) # else add pcr_primers to the end of sample_id
             )
         ) %>% # make sample_id consistent with "sample_id" + "pcr_primers" format
+    left_join(., sample_id_matching, by = "sample_id") %>% # add sample_id_com to tibble
     dplyr::arrange(sample_id, pcr_primers, desc(pairs))
 
 write_csv(group_tibble, "group_tibble.csv") # for debugging
