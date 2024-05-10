@@ -108,7 +108,7 @@ read_tracker_long <- sample_tibble_altered %>%
     
 read_tracker_inputcol <- read_tracker_long %>%
     dplyr::filter(pcr_primers == "combined") %>% 
-    dplyr::select(sample_id_com, input_reads = input)
+    dplyr::select(sample_id_com, input_reads = pairs)
 
 read_tracker_wide <- read_tracker_long %>% 
     dplyr::filter(pcr_primers != "combined") %>% 
