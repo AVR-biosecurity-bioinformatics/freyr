@@ -63,7 +63,7 @@ fi
 R2_IN=$(( $R2_IN_LINES / 4 ))
 
 # save as .csv 
-echo "input,$7,$8,$5,$R1_IN,$R2_IN" > input_${7}_${5}_readsin.csv # columns: process; sample_id; fcid; pcr_primers; fwd_in; rev_in
+echo "input,$7,$8,$5,$R1_IN,$R2_IN" > input_${7}_${5}_readsin.csv # columns: stage; sample_id; fcid; pcr_primers; fwd_in; rev_in
 
 ## count reads in output files
 # forward reads
@@ -83,4 +83,4 @@ else
 fi
 
 # save as .csv 
-echo "split_loci,$7,$8,$5,$R1_OUT,$R2_OUT" > split_loci_${7}_${5}_readsout.csv # columns: process; sample_id; fcid; pcr_primers; fwd_out; fwd_out
+echo "split_loci,$7,$8,$5,$R1_OUT,$R2_OUT" > split_loci_${7}_${5}_readsout.csv # columns: stage; sample_id; fcid; pcr_primers; fwd_out; fwd_out

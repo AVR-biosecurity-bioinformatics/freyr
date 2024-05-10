@@ -28,7 +28,7 @@ seqtab_final %>% # save for debugging
 samdf_renamed <- samdf %>% 
     dplyr::mutate(
         sample_id_orig = sample_id, # save original sample_id as a new column
-        sample_id = paste0(sample_id,"__",pcr_primers) # mutate sample_id to add primer id at the end
+        sample_id = paste0(sample_id,"_",pcr_primers) # mutate sample_id to add primer id at the end
         )
 
 ## run step_phyloseq() on merged seqtabs, taxtabs and samplesheet to create phyloseq object

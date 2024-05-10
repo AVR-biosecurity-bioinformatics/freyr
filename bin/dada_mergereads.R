@@ -123,9 +123,9 @@ sapply(mergers, getN) %>%
     dplyr::mutate(
         fcid = fcid,
         pcr_primers = pcr_primers,
-        process = "dada_mergereads"
+        stage = "dada_mergereads"
     ) %>%
-    dplyr::select(process, sample_id, fcid, pcr_primers, pairs) %>% 
+    dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>% 
     write_csv(., paste0("dada_mergereads_",fcid,"_",pcr_primers,"_readsout.csv"))
 
 

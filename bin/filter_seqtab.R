@@ -279,14 +279,14 @@ reads_out <- tibble(
     ) %>%
     pivot_longer(
         cols = filter_chimera:filter_seqtab,
-        names_to = "process",
+        names_to = "stage",
         values_to = "pairs"
         ) %>% 
     dplyr::mutate(
         fcid = fcid, 
         pcr_primers = pcr_primers
     ) %>%
-    dplyr::select(process, sample_id, fcid, pcr_primers, pairs)
+    dplyr::select(stage, sample_id, fcid, pcr_primers, pairs)
 
 write_csv(reads_out, paste0("filter_seqtab_",fcid,"_",pcr_primers,"_readsout.csv"))
 

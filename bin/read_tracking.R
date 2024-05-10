@@ -27,9 +27,10 @@ for (i in 1:length(rt_samples)) { # loop through .csv and add values to tibble a
     sample_tibble <- rbind(sample_tibble, new_csv)
 }
 
-colnames(sample_tibble) <- c("process","sample_id","fcid","pcr_primers","fwd","rev") 
+colnames(sample_tibble) <- c("stage","sample_id","fcid","pcr_primers","fwd","rev") 
 
 sample_tibble <- sample_tibble %>%
+    mutate(sample_id = paste0(sample_id,"_",pcr_primers)) %>% # make sample_id consistent with "sample_id" + "pcr_primers" format
     dplyr::arrange(sample_id, pcr_primers, desc(fwd))
 
 write_csv(sample_tibble, "sample_tibble.csv") # for debugging
@@ -41,5 +42,9 @@ for (i in 1:length(rt_fcid)) { # loop through .csv and add values to tibble as n
     new_csv <- read_csv(rt_fcid[i], show_col_types = F)
     fcid_tibble <- rbind(fcid_tibble, new_csv)
 }
+
+fcid_tibble <- fcid_tibble %>%
+    mutate(sample_id = paste0(sample_id,"_",pcr_primers)) %>% # make sample_id consistent with "sample_id" + "pcr_primers" format
+    dplyr::arrange(sample_id, pcr_primers, desc(pairs))
 
 write_csv(fcid_tibble, "fcid_tibble.csv") # for debugging

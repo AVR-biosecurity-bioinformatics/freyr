@@ -96,6 +96,7 @@ phyloseq::psmelt(ps_u) %>%
         )%>%
     rename_with(~stringr::str_to_lower(.), everything()) %>%
     rename_with(~stringr::str_c("classified_", .), -sample_id) %>% 
+    pivot_longer(cols = !sample_id, names_to = "stage", values_to = "pairs") %>% 
     write_csv("ps_u_readsout.csv")
 
 
