@@ -44,7 +44,13 @@ for (i in 1:length(rt_group)) { # loop through .csv and add values to tibble as 
 }
 
 group_tibble <- group_tibble %>%
-    mutate(sample_id = paste0(sample_id,"_",pcr_primers)) %>% # make sample_id consistent with "sample_id" + "pcr_primers" format
+    mutate(
+        sample_id = ifelse(
+            stringr::str_detect(sample_id, pcr_primers), # if sample_id contains pcr_primers...
+            sample_id, # keep same
+            paste0(sample_id,"_",pcr_primers) # else add pcr_primers to the end of sample_id
+            )
+        ) %>% # make sample_id consistent with "sample_id" + "pcr_primers" format
     dplyr::arrange(sample_id, pcr_primers, desc(pairs))
 
 write_csv(group_tibble, "group_tibble.csv") # for debugging
