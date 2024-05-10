@@ -81,22 +81,22 @@ saveRDS(ps_u, paste0("ps_unfiltered.rds"))
 ## read tracking output from unfiltered phyloseq
 phyloseq::psmelt(ps_u) %>% 
     dplyr::filter(Abundance > 0) %>%
-    dplyr::select(sample_id, fcid, Abundance, any_of(colnames(phyloseq::tax_table(ps_u)))) %>%
+    dplyr::select(sample_id, fcid, pcr_primers, Abundance, any_of(colnames(phyloseq::tax_table(ps_u)))) %>%
     pivot_longer(
         cols=any_of(colnames(phyloseq::tax_table(ps_u))), 
         names_to = "rank",
         values_to="name"
         ) %>%
     filter(!is.na(name))%>%
-    dplyr::group_by(sample_id, rank) %>%
+    dplyr::group_by(sample_id, fcid, pcr_primers, rank) %>%
     summarise(Abundance = sum(Abundance)) %>%
     pivot_wider(
         names_from="rank",
         values_from="Abundance"
         )%>%
     rename_with(~stringr::str_to_lower(.), everything()) %>%
-    rename_with(~stringr::str_c("classified_", .), -sample_id) %>% 
-    pivot_longer(cols = !sample_id, names_to = "stage", values_to = "pairs") %>% 
+    rename_with(~stringr::str_c("classified_", .), -all_of(c("sample_id","fcid","pcr_primers"))) %>% 
+    pivot_longer(cols = starts_with("classified_"), names_to = "stage", values_to = "pairs") %>% 
     write_csv("ps_u_readsout.csv")
 
 
