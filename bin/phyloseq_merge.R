@@ -79,9 +79,12 @@ write_csv(samdf_out_u, paste0("samdf_unfiltered.csv"))
 saveRDS(ps_u, paste0("ps_unfiltered.rds"))
 
 ## read tracking output from unfiltered phyloseq
+rank_cols <- colnames(phyloseq::tax_table(ps_u)) # only retrieve this once
+rank_cols_lower <- stringr::str_to_lower(rank_cols)
+
 phyloseq::psmelt(ps_u) %>% 
     dplyr::filter(Abundance > 0) %>%
-    dplyr::select(sample_id, fcid, pcr_primers, Abundance, any_of(colnames(phyloseq::tax_table(ps_u)))) %>%
+    dplyr::select(sample_id, fcid, pcr_primers, Abundance, any_of(rank_cols)) %>%
     pivot_longer(
         cols=any_of(colnames(phyloseq::tax_table(ps_u))), 
         names_to = "rank",
@@ -94,9 +97,10 @@ phyloseq::psmelt(ps_u) %>%
         names_from="rank",
         values_from="Abundance"
         )%>%
-    rename_with(~stringr::str_to_lower(.), everything()) %>%
-    rename_with(~stringr::str_c("classified_", .), -all_of(c("sample_id","fcid","pcr_primers"))) %>% 
+    rename_with(~stringr::str_to_lower(.), any_of(rank_cols)) %>%
+    rename_with(~stringr::str_c("classified_", .), any_of(rank_cols_lower)) %>% 
     pivot_longer(cols = starts_with("classified_"), names_to = "stage", values_to = "pairs") %>% 
+    dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>% 
     write_csv("ps_u_readsout.csv")
 
 
