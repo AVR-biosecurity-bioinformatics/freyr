@@ -8,7 +8,7 @@ process DADA_MERGEREADS {
 
     output:
     tuple val(pcr_primers), val(fcid), val(meta), path("*_seqtab.rds"), emit: seqtab
-    path("*_readsout.csv"), emit: output_counts
+    path("*_readsout.csv"),                                             emit: read_tracking
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

@@ -7,10 +7,10 @@ process SPLIT_LOCI {
     tuple val(meta), path(reads)
 
     output:   
-    tuple val(meta), path("*_R{1,2}.fastq.gz"), emit: reads
+    tuple val(meta), path("*_R{1,2}.fastq.gz"),     emit: reads
     path("split_loci_*.txt")
-    path("*_readsin.csv"), emit: input_counts
-    path("*_readsout.csv"), emit: output_counts
+    path("*_readsin.csv"),                          emit: input_counts
+    path("*_readsout.csv"),                         emit: read_tracking
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

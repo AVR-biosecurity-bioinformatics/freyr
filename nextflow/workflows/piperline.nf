@@ -217,15 +217,15 @@ workflow PIPERLINE {
     //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( ch_sample_locus_reads ) 
     ch_read_tracker_samples = ch_read_tracker_samples.concat( SPLIT_LOCI.out.input_counts )
-    ch_read_tracker_samples = ch_read_tracker_samples.concat( SPLIT_LOCI.out.output_counts )
+    ch_read_tracker_samples = ch_read_tracker_samples.concat( SPLIT_LOCI.out.read_tracking )
 
     //// trim primer sequences from the start and end of reads
     PRIMER_TRIM ( SPLIT_LOCI.out.reads )
-    ch_read_tracker_samples = ch_read_tracker_samples.concat( PRIMER_TRIM.out.output_counts )
+    ch_read_tracker_samples = ch_read_tracker_samples.concat( PRIMER_TRIM.out.read_tracking )
 
     //// filter reads using dada2 and input parameters
     READ_FILTER ( PRIMER_TRIM.out.reads )
-    ch_read_tracker_samples = ch_read_tracker_samples.concat( READ_FILTER.out.output_counts )
+    ch_read_tracker_samples = ch_read_tracker_samples.concat( READ_FILTER.out.read_tracking )
 
     //// create plots of read quality pre- and post-filtering, per flowcell (optional)
     // FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
@@ -381,11 +381,11 @@ workflow PIPERLINE {
 
     //// merge paired-end reads per flowcell x locus combo
     DADA_MERGEREADS ( ch_seq_combined )
-    ch_read_tracker_fcid = ch_read_tracker_fcid.concat(DADA_MERGEREADS.out.output_counts)
+    ch_read_tracker_fcid = ch_read_tracker_fcid.concat(DADA_MERGEREADS.out.read_tracking)
 
     //// filter sequence table
     FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
-    ch_read_tracker_fcid = ch_read_tracker_fcid.concat(FILTER_SEQTAB.out.output_counts)
+    ch_read_tracker_fcid = ch_read_tracker_fcid.concat(FILTER_SEQTAB.out.read_tracking)
 
     ch_seqtab = FILTER_SEQTAB.out.seqtab
         .map { pcr_primers, fcid, meta, seqtab -> // remove meta

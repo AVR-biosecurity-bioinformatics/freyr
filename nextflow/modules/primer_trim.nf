@@ -8,8 +8,8 @@ process PRIMER_TRIM {
     tuple val(meta), path(reads)
 
     output:   
-    tuple val(meta), path("*_trim_R{1,2}.fastq.gz"), emit: reads
-    path("*_readsout.csv"), emit: output_counts
+    tuple val(meta), path("*_trim_R{1,2}.fastq.gz"),    emit: reads
+    path("*_readsout.csv"),                             emit: read_tracking
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

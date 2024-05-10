@@ -29,6 +29,9 @@ for (i in 1:length(rt_samples)) { # loop through .csv and add values to tibble a
 
 colnames(sample_tibble) <- c("process","sample_id","fcid","pcr_primers","fwd","rev") 
 
+sample_tibble <- sample_tibble %>%
+    dplyr::arrange(sample_id, pcr_primers, desc(fwd))
+
 write_csv(sample_tibble, "sample_tibble.csv") # for debugging
 
 ## join fcid-level read tracking files into a single tibble
