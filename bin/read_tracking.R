@@ -129,7 +129,7 @@ write_csv(read_tracker_long, "read_tracker_long.csv")
 gg.read_tracker <- read_tracker_long %>% 
     dplyr::mutate(stage = factor(stage, levels=steps_vec)) %>% # reorder step factor
     ggplot(aes(x = stage, y = pairs, fill=pcr_primers))+
-    geom_col() +
+    geom_col() + # TODO: Add % retention labels to the top of each bar
     scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
     facet_grid(fcid~.) +
     theme_bw() +
@@ -151,4 +151,9 @@ gg.read_tracker <- read_tracker_long %>%
     print(gg.read_tracker)
     try(dev.off(), silent=TRUE)
 
-stop(" *** stopped manually *** ") ##########################################
+### TODO: add a per-sample line graph output
+
+
+
+
+# stop(" *** stopped manually *** ") ##########################################
