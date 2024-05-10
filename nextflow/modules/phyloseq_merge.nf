@@ -12,6 +12,7 @@ process PHYLOSEQ_MERGE {
     path("*.rds")
     path("*.fasta")
     path("*.nwk"),          optional: true
+    path("*_readsout.csv"), emit: read_tracking
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

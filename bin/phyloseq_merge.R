@@ -168,7 +168,15 @@ write_csv(taxtab_out_f, paste0("taxtab_filtered.csv"))
 write_csv(samdf_out_f, paste0("samdf_filtered.csv"))
 saveRDS(ps_f, paste0("ps_filtered.rds"))
 
-
+## read tracking output from filtered phyloseq
+psmelt(ps_f) %>% 
+    dplyr::filter(Abundance > 0) %>%
+    dplyr::select(sample_id, fcid, pcr_primers, Abundance) %>%
+    dplyr::group_by(sample_id, fcid, pcr_primers) %>%
+    summarise(pairs = sum(Abundance)) %>% 
+    dplyr::mutate(stage = "filter_sample_taxon") %>% 
+    dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>% 
+    write_csv("ps_f_readsout.csv")
 
 
 # stop(" *** stopped manually *** ") ##########################################
