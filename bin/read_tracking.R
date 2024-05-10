@@ -123,6 +123,7 @@ read_tracker_wide <- read_tracker_long %>%
     )))
 
 write_csv(read_tracker_wide, "read_tracker.csv")
+write_csv(read_tracker_long, "read_tracker_long.csv")
 
 ## plot read tracking
 gg.read_tracker <- read_tracker_long %>% 
