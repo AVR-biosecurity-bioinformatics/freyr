@@ -56,10 +56,81 @@ group_tibble <- group_tibble %>%
 write_csv(group_tibble, "group_tibble.csv") # for debugging
 
 ## combine sample and group tibbles together
+steps_vec <- c(
+    "input", 
+    "split_loci", 
+    "primer_trim",
+    "read_filter",
+    "dada_mergereads", 
+    "filter_chimera", 
+    "filter_length", 
+    "filter_phmm", 
+    "filter_frame", 
+    "filter_seqtab",
+    "classified_root", 
+    "classified_kingdom", 
+    "classified_phylum",
+    "classified_class",
+    "classified_order", 
+    "classified_family", 
+    "classified_genus", 
+    "classified_species", 
+    "filter_sample_taxon"
+    )
 
-### TODO: check fwd and rev counts are the same; for now assume and just use fwd as read pair count
-sample_tibble %>%
-    dplyr::select(-rev, pairs = fwd) %>% 
+read_tracker <- sample_tibble %>%
+    dplyr::select(-rev, pairs = fwd) %>% ### TODO: check fwd and rev counts are the same; for now assume and just use fwd as read pair count
     rbind(., group_tibble) %>%
     pivot_wider(names_from = stage, values_from = pairs) %>%
-    write_csv("out1.csv")
+    dplyr::select(any_of(c(
+        "sample_id",
+        "pcr_primers", 
+        "fcid", 
+        steps_vec
+    )))
+
+write_csv(read_tracker, "read_tracker.csv")
+
+## plot read tracking
+gg.read_tracker <- read_tracker %>%
+    pivot_longer(cols = -c("sample_id", "fcid", "pcr_primers"),
+                    names_to = "step",
+                    values_to= "reads") %>%
+    group_by(sample_id) %>%
+    # group_modify(~{ # don't need this step because sample_id should be unique
+    #     # When a sample name shares multiple sample ids, select a single sample to avoid double counting
+    #     if(length(unique(.x$pcr_primers)) >1){
+    #     .x %>%
+    #         dplyr::filter(!step == "input_reads") %>%
+    #         bind_rows(.x %>%
+    #                     dplyr::filter(step == "input_reads") %>%
+    #                     mutate(pcr_primers="Mixed",
+    #                             sample_id=NA_character_) %>%
+    #                     dplyr::slice(1))
+    #     } else {
+    #     .x
+    #     }
+    # }) %>%
+    dplyr::mutate(step = factor(step, levels=steps_vec)) %>% # reorder step factor
+    ggplot(aes(x = step, y = reads, fill=pcr_primers))+
+    geom_col() +
+    scale_y_continuous(labels = label_number(scale_cut = cut_short_scale()))+
+    facet_grid(fcid~.)+
+    theme_bw()+
+    theme(
+        strip.background = element_rect(colour = "black", fill = "lightgray"),
+        strip.text = element_text(size=9, family = ""),
+        axis.text.x =element_text(angle=45, hjust=1, vjust=1),
+        plot.background = element_blank(),
+        text = element_text(size=9, family = ""),
+        axis.text = element_text(size=8, family = ""),
+        legend.position = "right",
+        panel.border = element_rect(colour = "black", fill=NA, linewidth=0.5),
+        panel.grid = element_line(linewidth = rel(0.5)),
+    ) +
+    labs(x = "Pipeline step",
+            y = "Reads retained",
+            fill = "PCR primers")
+    pdf(file="read_tracker.pdf", width = 11, height = 8 , paper="a4r")
+    print(gg.read_tracker)
+    try(dev.off(), silent=TRUE)
