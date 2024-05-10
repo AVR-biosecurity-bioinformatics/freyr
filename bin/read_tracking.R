@@ -127,7 +127,7 @@ write_csv(read_tracker_wide, "read_tracker.csv")
 ## plot read tracking
 gg.read_tracker <- read_tracker_long %>% 
     dplyr::mutate(stage = factor(stage, levels=steps_vec)) %>% # reorder step factor
-    ggplot(aes(x = step, y = pairs, fill=pcr_primers))+
+    ggplot(aes(x = stage, y = pairs, fill=pcr_primers))+
     geom_col() +
     scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
     facet_grid(fcid~.) +
