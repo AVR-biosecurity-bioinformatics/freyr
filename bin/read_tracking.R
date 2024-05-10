@@ -81,7 +81,7 @@ write_csv(group_tibble, "group_tibble.csv") # for debugging
 
 ## combine sample and group tibbles together
 steps_vec <- c(
-    "input_reads", 
+    "input", 
     "split_loci", 
     "primer_trim",
     "read_filter",
