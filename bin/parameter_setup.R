@@ -19,17 +19,17 @@ process_packages <- c(
     # "pingr",
     "purrr",
     "readr",
-    "rlang",
+    # "rlang",
     # "rstudioapi",
     # "savR",
     # "scales",
-    "seqateurs",
+    # "seqateurs",
     # "shiny",
     # "shinybusy",
     # "shinyWidgets",
     # "ShortRead",
     "stringr",
-    "taxreturn",
+    # "taxreturn",
     # "tibble",
     "tidyr",
     # "vegan",
@@ -453,4 +453,4 @@ for (i in seq_along(check_param)) {
     }
 }
 
-stop(" *** stopped manually *** ") ##########################################
+# stop(" *** stopped manually *** ") ##########################################

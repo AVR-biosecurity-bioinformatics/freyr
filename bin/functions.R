@@ -33,13 +33,13 @@ parse_nf_var_repeat <- function(x) {
 step_demux_samdf <- function(samdf){
     out <- samdf %>%
       dplyr::group_by(sample_id) %>%
-      group_split() %>%
+      dyplr::group_split() %>%
       purrr::map(function(x){
         if(any(stringr::str_detect(x$pcr_primers, ";"), na.rm = TRUE)){
           primer_names <- unlist(stringr::str_split(unique(x$pcr_primers), ";")) 
           x <- x %>% 
             dplyr::mutate(count = length(primer_names)) %>% #Replicate the samples
-            uncount(count) %>%
+            tidyr::uncount(count) %>%
             dplyr::mutate(pcr_primers = unlist(stringr::str_split(unique(x$pcr_primers), ";")),
                    for_primer_seq = unlist(stringr::str_split(unique(x$for_primer_seq), ";")),
                    rev_primer_seq = unlist(stringr::str_split(unique(x$rev_primer_seq), ";")),
@@ -196,14 +196,14 @@ step_seq_qc <- function(fcid, quiet=FALSE, write_all=FALSE){
   }
   if(!dir.exists(paste0(seq_dir,"/InterOp"))){
     warning("InterOp folder must be present to run quality checks")
-    out <- tibble(fcid = fcid,
+    out <- tibble::tibble(fcid = fcid,
                   reads_pf = NA_integer_,
                   reads_total = NA_integer_)
     return(out)
   }
   if(!file.exists(paste0(seq_dir,"/RunInfo.xml"))){
     warning("RunInfo.xml must be present to run quality checks")
-    out <- tibble(fcid = fcid,
+    out <- tibble::tibble(fcid = fcid,
                   reads_pf = NA_integer_,
                   reads_total = NA_integer_)
     return(out)
@@ -218,7 +218,7 @@ step_seq_qc <- function(fcid, quiet=FALSE, write_all=FALSE){
   # Ensure indices are present
   if(length(fc@parsedData)==0){
     warning(paste0("Flow cell metrics could not be parsed for", fcid, " skipping seq run qc"))
-    out <- tibble(fcid = fcid,
+    out <- tibble::tibble(fcid = fcid,
                   reads_pf = NA_integer_,
                   reads_total = NA_integer_)
     return(out)
@@ -353,7 +353,7 @@ step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
   # Check if undetermined reads file exists
   if(!any(stringr::str_detect(list.files(seq_dir, pattern="_R1_", full.names = TRUE), "Undetermined"), na.rm = TRUE)){
     warning("Error, an Undetermined reads fastq must be present to calculate index switching")
-    res <- tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_)
+    res <- tibble::tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_)
     return(res)
   }
   # Create qc_dir if it doesnt exist
@@ -373,7 +373,7 @@ step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
   # Ensure indices are present
   if(all(is.na(indices$Freq))){
     warning(paste0("No index sequences present in fastq headers for run", fcid, " no switch rate calculated"))
-    res <- tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_)
+    res <- tibble::tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_)
     return(res)
   }
   
@@ -391,7 +391,7 @@ step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
   applied_indices <- switched %>%
     dplyr::filter(!stringr::str_detect(Sample_Name, "Undetermined")) %>%
     dplyr::group_by(Sample_Name) %>%
-    group_modify(~{
+    dplyr::group_modify(~{
       .x %>%
         dplyr::top_n(n=1, Freq) %>%
         dplyr::slice(1) %>%  # Handle ties
@@ -401,12 +401,12 @@ step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
   # Check if indices are combinatorial
   if(any(duplicated(applied_indices$index)) | any(duplicated(applied_indices$index2))){
     warning(paste0("Combinatorial indexes detected for", fcid, " no switch rate calculated"))
-    res <- tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_, contam_rate=NA_integer_)
+    res <- tibble::tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_, contam_rate=NA_integer_)
     return(res)
   }
   
   # Get other undetermined reads which had completely unapplied indexes
-  other_reads <- anti_join(indices,combos, by=c("index", "index2")) %>%
+  other_reads <- dplyr::anti_join(indices,combos, by=c("index", "index2")) %>%
     dplyr::summarise(sum = sum(Freq, na.rm = TRUE)) %>%
     dplyr::pull(sum)
   
@@ -424,7 +424,7 @@ step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
       dplyr::mutate(switch_rate =  observed / expected ) %>%
       dplyr::mutate(contam_rate =  switch_rate^2 )
   } else {
-    res <- tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_, contam_rate=NA_integer_)
+    res <- tibble::tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_, contam_rate=NA_integer_)
     return(res)
   }
   
@@ -444,15 +444,15 @@ step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
     })) %>%
     dplyr::mutate(index2 = purrr::map(index2, ~{
       index_list <- applied_indices$index2
-      index_dist <- stringdist::stringdist(.x,index_list)
+      index_dist <- stringdist::stringdist(.x,index_list) # stringdist is imported by seqateurs
       # Remove those above barcode_mismatch threshold
       index_list <- index_list[index_dist <= barcode_mismatch]
       index_dist <- index_dist[index_dist <= barcode_mismatch]
       return(index_list[which.min(index_dist)])
     })) %>%
     tidyr::unnest(c(index, index2)) %>%
-    group_by(index, index2, Sample_Name) %>%
-    summarise(Freq = sum(Freq))
+    dplyr::group_by(index, index2, Sample_Name) %>%
+    dplyr::summarise(Freq = sum(Freq))
 
   gg.switch <- switch_plot_dat %>%
     dplyr::group_by(Sample_Name, index, index2) %>%
