@@ -1,4 +1,42 @@
 #!/usr/bin/env Rscript
+process_packages <- c(
+    "Biostrings",
+    # "bs4Dash",
+    # "clustermq",
+    # "dada2",
+    "DECIPHER",
+    "dplyr",
+    # "future",
+    # "ggplot2",
+    # "gridExtra",
+    # "gt",
+    "magrittr",
+    # "markdown",
+    # "ngsReports",
+    # "patchwork",
+    # "phyloseq",
+    # "pingr",
+    "purrr",
+    # "readr",
+    # "rlang",
+    # "rstudioapi",
+    # "savR",
+    # "scales",
+    # "seqateurs",
+    # "shiny",
+    # "shinybusy",
+    # "shinyWidgets",
+    # "ShortRead",
+    "stringr",
+    # "taxreturn",
+    "tibble",
+    # "tidyr",
+    # "vegan",
+    # "visNetwork",
+    NULL
+    )
+
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 ## check and define variables 
 idtaxa_confidence <-    parse_nf_var_repeat(idtaxa_confidence)
@@ -90,8 +128,6 @@ if(!all(rownames(tax) %in% colnames(seqtab))){
 if(!all(colnames(tax) %in% ranks)){
     stop("Number of ranks does not match")
 }
-
-# subset tax object to just tax
 
 # Write out idtaxa objects
 saveRDS(tax, paste0(fcid,"_",pcr_primers,"_",db_name,"_idtaxa_tax.rds"))
