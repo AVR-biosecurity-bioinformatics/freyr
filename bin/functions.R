@@ -1629,7 +1629,7 @@ step_phyloseq <- function(seqtab, taxtab, samdf, seqs=NULL, phylo=NULL, name_var
   # Check if samdf is a path - if so read in
   if(is(samdf, "character")){
     if (file.exists(samdf)){
-      samdf <- read_csv(normalizePath(samdf))
+      samdf <- readr::read_csv(normalizePath(samdf))
     } else {
       stop("samdf does not exist")
     }
@@ -1645,14 +1645,14 @@ step_phyloseq <- function(seqtab, taxtab, samdf, seqs=NULL, phylo=NULL, name_var
   } else if (class(seqs) == "DNAStringSet"){
     seqs <- seqs
   } else {
-    seqs <- DNAStringSet(colnames(seqtab))
+    seqs <- Biostrings::DNAStringSet(colnames(seqtab))
     names(seqs) <- seqs
   }
   
   #Check if phy is a path - if so read in
   if(is(phylo, "character")){
     if (file.exists(phylo)){
-      phy <- read.tree(normalizePath(phylo))
+      phy <- ape::read.tree(normalizePath(phylo))
     } else {
       stop("phy path does not exist")
     }
@@ -1693,12 +1693,12 @@ step_phyloseq <- function(seqtab, taxtab, samdf, seqs=NULL, phylo=NULL, name_var
   }
   
   if(name_variants){
-    taxa_names(ps) <- paste0("SV", seq(ntaxa(ps)),"-",tax_table(ps)[,8])
+    phyloseq::taxa_names(ps) <- paste0("SV", seq(ntaxa(ps)),"-",tax_table(ps)[,8])
   }
   
   if(nrow(seqtab) > nrow(phyloseq::sample_data(ps))){
     message("Warning: the following samples were not included in phyloseq object, check sample names match the sample metadata")
-    message(rownames(seqtab)[!rownames(seqtab) %in% sample_names(ps)])
+    message(rownames(seqtab)[!rownames(seqtab) %in% phyloseq::sample_names(ps)])
   }
   return(ps)
 }

@@ -82,8 +82,8 @@ ps <-   step_phyloseq(
         )
 
 ## name OTUs using hash
-taxa_names(ps) <- tax_table(ps)[,ncol(tax_table(ps))] # use final column of tax_table (hash) to name OTUs
-tax_table(ps) <- tax_table(ps)[,1:ncol(tax_table(ps))-1] # remove hash 'rank' from tax_table
+phyloseq::taxa_names(ps) <- phyloseq::tax_table(ps)[,ncol(phyloseq::tax_table(ps))] # use final column of tax_table (hash) to name OTUs
+phyloseq::tax_table(ps) <- phyloseq::tax_table(ps)[,1:ncol(phyloseq::tax_table(ps))-1] # remove hash 'rank' from tax_table
 
 ## output summaries; from step_output_summary()
 # Export raw csv
