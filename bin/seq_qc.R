@@ -62,4 +62,4 @@ step_seq_qc(fcid)
 # run index switching calculation
 step_switching_calc(fcid)
 
-stop(" *** stopped manually *** ") ##########################################
+# stop(" *** stopped manually *** ") ##########################################
