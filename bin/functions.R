@@ -14,9 +14,9 @@ parse_nf_var_repeat <- function(x) {
       pattern = "[^\\s,\\[\\]]+" # extract all runs of characters that aren't ' ' ',' '[' or ']' 
       ) %>% 
     unlist() %>%
-    as_tibble_col(column_name = "col") %>% 
+    tibble::as_tibble_col(column_name = "col") %>% 
     unique() %>%
-    pull(col)
+    dplyr::pull(col)
   
   if (length(variable) == 1) {
     out <- variable
