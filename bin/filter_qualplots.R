@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 ### load only required packages
 process_packages <- c(
-    "Biostrings",
+    # "Biostrings",
     # "bs4Dash",
     # "clustermq",
     # "dada2",
@@ -27,7 +27,7 @@ process_packages <- c(
     # "shiny",
     # "shinybusy",
     # "shinyWidgets",
-    # "ShortRead",
+    "ShortRead",
     "stringr",
     # "taxreturn",
     # "tibble",
