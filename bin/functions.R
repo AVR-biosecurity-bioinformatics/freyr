@@ -1517,7 +1517,7 @@ coalesce_tax <- function (x, y, suffix = c(".x", ".y"), prefer="left", join = dp
     y <- y %>%
       tibble::as_tibble(rownames = "OTU")
   }
-  joined <- dplyr::join(x, y, by = "OTU", suffix = suffix, ...)
+  joined <- plyr::join(x, y, by = "OTU", suffix = suffix, ...)
   cols <- union(names(x), names(y))
   to_coalesce <- names(joined)[!names(joined) %in% cols]
   suffix_used <- suffix[ifelse(endsWith(to_coalesce, suffix[1]), 1, 2)]
