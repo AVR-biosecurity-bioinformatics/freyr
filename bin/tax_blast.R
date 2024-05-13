@@ -1,6 +1,47 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    # "Biostrings",
+    # "bs4Dash",
+    # "clustermq",
+    "dada2",
+    # "DECIPHER",
+    "dplyr",
+    # "future",
+    # "ggplot2",
+    # "gridExtra",
+    # "gt",
+    # "magrittr",
+    # "markdown",
+    # "ngsReports",
+    # "patchwork",
+    # "phyloseq",
+    # "pingr",
+    # "purrr",
+    "readr",
+    # "rlang",
+    # "rstudioapi",
+    # "savR",
+    # "scales",
+    # "seqateurs",
+    # "shiny",
+    # "shinybusy",
+    # "shinyWidgets",
+    # "ShortRead",
+    "stringr",
+    "taxreturn",
+    "tibble",
+    # "tidyr",
+    # "vegan",
+    # "visNetwork",
+    NULL
+    )
 
-### TODO: Add explicit taxonomic ranks option to parameters 'params.tax_ranks'
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+
+
+
+### TODO: Add explicit taxonomic ranks option to input parameters (per locus)
 
 ### TODO: Do parameter parsing for ranks at an earlier stage, such as the parameter setup module
 
@@ -17,11 +58,11 @@ multithread <-          FALSE # multithreading switched off for now
 
 # extract number of ranks from ref_fasta 
 if ( stringr::str_detect(ref_fasta, "\\.fa\\.gz$|\\.fasta\\.gz$") ) { # if compressed
-    n_ranks <- read_lines(gzfile(ref_fasta), n_max = 1) %>% # pull first line of .fa.gz
+    n_ranks <- readr::read_lines(gzfile(ref_fasta), n_max = 1) %>% # pull first line of .fa.gz
             stringr::str_extract(pattern = ";.*?$") %>% # extract the taxonomic rank information (including first ';')
             stringr::str_count(pattern = "[^;]+") # count the number of ranks between the ';'
 } else if ( stringr::str_detect(ref_fasta, "\\.fa$|\\.fasta$") ) { # if uncompressed
-    n_ranks <- read_lines(ref_fasta, n_max = 1) %>% # pull first line of .fa.gz
+    n_ranks <- readr::read_lines(ref_fasta, n_max = 1) %>% # pull first line of .fa.gz
             stringr::str_extract(pattern = ";.*?$") %>% # extract the taxonomic rank information (including first ';')
             stringr::str_count(pattern = "[^;]+") # count the number of ranks between the ';'
 } else { # if extension is not expected
@@ -54,7 +95,7 @@ seqtab <- readRDS(seqtab) # read in seqtab
 if (isTRUE(run_blast)) { # run BLAST if requested
     
     seqmap <- tibble::enframe(dada2::getSequences(seqtab), name = NULL, value="OTU") %>%
-        mutate(name = paste0("SV", seq(length(dada2::getSequences(seqtab)))))
+        dplyr::mutate(name = paste0("SV", seq(length(dada2::getSequences(seqtab)))))
     
     seqs <- taxreturn::char2DNAbin(seqmap$OTU)
     names(seqs) <- seqmap$name
@@ -113,24 +154,24 @@ if (isTRUE(run_blast)) { # run BLAST if requested
             dplyr::left_join(
                 blast_spp %>%
                     dplyr::select(name = OTU, Genus = blast_genus, Species = blast_spp) %>%
-                    left_join(seqmap, by = "name") %>%
+                    dplyr::left_join(seqmap, by = "name") %>%
                     dplyr::select(-name), 
                 by="OTU"
                 ) %>%
-            column_to_rownames("OTU") %>%
+            tibble::column_to_rownames("OTU") %>%
             as.matrix()
         } else {
             warning(paste0("No Species assigned with BLAST to ", database, " -- have you used the correct database?"))
         out <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") %>%
                 dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
-                column_to_rownames("OTU") %>%
+                tibble::column_to_rownames("OTU") %>%
                 as.matrix()
         }
     } else {
         warning(paste0("No sequences present in seqtab -- BLAST skipped"))
         out <- tibble::enframe(dada2::getSequences(seqtab), name = NULL, value = "OTU") %>%
         dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
-        column_to_rownames("OTU") %>%
+        tibble::column_to_rownames("OTU") %>%
         as.matrix()
     }
     
@@ -146,7 +187,7 @@ if (isTRUE(run_blast)) { # run BLAST if requested
     
     out <- tibble::enframe(dada2::getSequences(seqtab), name = NULL, value = "OTU") %>%
                     dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
-                    column_to_rownames("OTU") %>%
+                    tibble::column_to_rownames("OTU") %>%
                     as.matrix()    
     # save output
     saveRDS(out, paste0(fcid,"_",pcr_primers,"_",db_name,"_blast.rds"))
