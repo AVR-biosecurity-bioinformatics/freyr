@@ -1707,21 +1707,21 @@ step_rareplot <- function(ps, min_reads=1000, plot_dir=NULL){
   #Create rarefaction curve
   rare <- phyloseq::otu_table(ps) %>%
     as("matrix") %>%
-    rarecurve(step=max(sample_sums(ps))/100) %>%
+    vegan::rarecurve(step=max(sample_sums(ps))/100) %>%
     purrr::map(function(x){
       b <- as.data.frame(x)
       b <- data.frame(OTU = b[,1], count = rownames(b))
       b$count <- as.numeric(gsub("N", "",  b$count))
       return(b)
     }) %>%
-    purrr::set_names(sample_names(ps)) %>%
+    purrr::set_names(phyloseq::sample_names(ps)) %>%
     dplyr::bind_rows(.id="sample_id")
   
   gg.rare <- ggplot2::ggplot(data = rare)+
     geom_line(aes(x = count, y = OTU, group=sample_id), alpha=0.5)+
     geom_point(data = rare %>% 
                  dplyr::group_by(sample_id) %>% 
-                 top_n(1, count),
+                 dplyr::top_n(1, count),
                aes(x = count, y = OTU, colour=(count > min_reads))) +
     geom_label(data = rare %>% 
                  dplyr::group_by(sample_id) %>% 

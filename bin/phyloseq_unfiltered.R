@@ -8,7 +8,7 @@ process_packages <- c(
     # "DECIPHER",
     "dplyr",
     # "future",
-    # "ggplot2",
+    "ggplot2",
     # "gridExtra",
     # "gt",
     # "magrittr",
@@ -17,12 +17,12 @@ process_packages <- c(
     # "patchwork",
     "phyloseq",
     # "pingr",
-    # "purrr",
+    "purrr",
     "readr",
     # "rlang",
     # "rstudioapi",
     # "savR",
-    # "scales",
+    "scales",
     # "seqateurs",
     # "shiny",
     # "shinybusy",
@@ -31,8 +31,8 @@ process_packages <- c(
     "stringr",
     # "taxreturn",
     "tibble",
-    # "tidyr",
-    # "vegan",
+    "tidyr",
+    "vegan",
     # "visNetwork",
     NULL
     )
@@ -88,31 +88,31 @@ phyloseq::tax_table(ps) <- phyloseq::tax_table(ps)[,1:ncol(phyloseq::tax_table(p
 ## output summaries; from step_output_summary()
 # Export raw csv
 phyloseq::psmelt(ps) %>% 
-    filter(Abundance > 0) %>%
+    dplyr::filter(Abundance > 0) %>%
     dplyr::select(-Sample) %>%
-    write_csv(., paste0("raw_unfiltered_",pcr_primers,".csv"))
+    readr::write_csv(., paste0("raw_unfiltered_",pcr_primers,".csv"))
 
 # Export species level summary of filtered results
 phyloseq::psmelt(ps) %>% 
-    filter(Abundance > 0) %>%
-    left_join(
+    dplyr::filter(Abundance > 0) %>%
+    dplyr::left_join(
         refseq(ps) %>% as.character() %>% enframe(name="OTU", value="sequence"),
         by = "OTU"
         ) %>%
     dplyr::select(OTU, sequence, rank_names(ps), sample_id, Abundance ) %>%
-    pivot_wider(names_from = sample_id,
+    tidyr::pivot_wider(names_from = sample_id,
                 values_from = Abundance,
                 values_fill = list(Abundance = 0)) %>%
-    write_csv(., paste0("summary_unfiltered_",pcr_primers,".csv"))
+    readr::write_csv(., paste0("summary_unfiltered_",pcr_primers,".csv"))
 
 # Output fasta of all ASVs
 seqs <- Biostrings::DNAStringSet(as.vector(phyloseq::refseq(ps)))
 Biostrings::writeXStringSet(seqs, filepath = paste0("asvs_unfiltered_",pcr_primers,".fasta"), width = 100) 
 
 # write .nwk file if phylogeny present
-if(!is.null(phy_tree(ps, errorIfNULL = FALSE))){
+if(!is.null(ape::phy_tree(ps, errorIfNULL = FALSE))){
     #Output newick tree
-    write.tree(phy_tree(ps), file = paste0("tree_unfiltered",pcr_primers,".nwk"))
+    ape::write.tree(phy_tree(ps), file = paste0("tree_unfiltered",pcr_primers,".nwk"))
 }
 
 ## output phyloseq and component data; from step_output_ps
@@ -120,12 +120,12 @@ if(!is.null(phy_tree(ps, errorIfNULL = FALSE))){
 # save seqtab as wide tibble (rows = sample_id, cols = OTU name (hash), cells = abundance)
 seqtab_out <- phyloseq::otu_table(ps) %>%
     as("matrix") %>%
-    as_tibble(rownames = "sample_id")
+    tibble::as_tibble(rownames = "sample_id")
 
 # save taxtab as long tibble (rows = OTU/ASV, cols = tax rankings)
 taxtab_out <- phyloseq::tax_table(ps) %>%
     as("matrix") %>%
-    as_tibble(rownames = "OTU") %>%
+    tibble::as_tibble(rownames = "OTU") %>%
     seqateurs::unclassified_to_na(rownames = FALSE)
 
 # Check taxonomy table outputs
@@ -141,9 +141,9 @@ samdf_out <- phyloseq::sample_data(ps) %>%
     as_tibble()
 
 # Write out
-write_csv(seqtab_out, paste0("seqtab_unfiltered_",pcr_primers,".csv"))
-write_csv(taxtab_out, paste0("taxtab_unfiltered_",pcr_primers,".csv"))
-write_csv(samdf_out, paste0("samdf_unfiltered_",pcr_primers,".csv"))
+readr::write_csv(seqtab_out, paste0("seqtab_unfiltered_",pcr_primers,".csv"))
+readr::write_csv(taxtab_out, paste0("taxtab_unfiltered_",pcr_primers,".csv"))
+readr::write_csv(samdf_out, paste0("samdf_unfiltered_",pcr_primers,".csv"))
 saveRDS(ps, paste0("ps_unfiltered_",pcr_primers,".rds"))
 
 ## creates accumulation curve plots and saves plot
