@@ -14,7 +14,7 @@ process_packages <- c(
     # "magrittr",
     # "markdown",
     # "ngsReports",
-    # "patchwork",
+    "patchwork",
     # "phyloseq",
     # "pingr",
     # "purrr",
