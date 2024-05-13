@@ -4,11 +4,11 @@ process_packages <- c(
     # "Biostrings",
     # "bs4Dash",
     # "clustermq",
-    # "dada2",
+    "dada2",
     # "DECIPHER",
     # "dplyr",
     # "future",
-    # "ggplot2",
+    "ggplot2",
     # "gridExtra",
     # "gt",
     # "magrittr",
@@ -18,7 +18,7 @@ process_packages <- c(
     # "phyloseq",
     # "pingr",
     # "purrr",
-    # "readr",
+    "readr",
     # "rlang",
     # "rstudioapi",
     # "savR",
@@ -28,7 +28,7 @@ process_packages <- c(
     # "shinybusy",
     # "shinyWidgets",
     # "ShortRead",
-    # "stringr",
+    "stringr",
     # "taxreturn",
     # "tibble",
     # "tidyr",
@@ -92,8 +92,8 @@ err <- dada2::learnErrors(
 saveRDS(err, paste0(fcid,"_",pcr_primers,"_errormodel",direction_short,".rds"))
 
 ## write out errors for diagnostics
-write_csv(as.data.frame(err$trans), paste0(fcid,"_",pcr_primers,"_err",direction_short,"_observed_transitions.csv"))
-write_csv(as.data.frame(err$err_out), paste0(fcid,"_",pcr_primers,"_err",direction_short,"_inferred_errors.csv"))
+readr::write_csv(as.data.frame(err$trans), paste0(fcid,"_",pcr_primers,"_err",direction_short,"_observed_transitions.csv"))
+readr::write_csv(as.data.frame(err$err_out), paste0(fcid,"_",pcr_primers,"_err",direction_short,"_inferred_errors.csv"))
 
 ## output error plots to see how well the algorithm modelled the errors in the different runs
 p1 <- dada2::plotErrors(err, nominalQ = TRUE) + ggtitle(paste0(pcr_primers, " ", fcid," ",direction," Reads"))
