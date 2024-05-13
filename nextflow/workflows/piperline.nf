@@ -212,7 +212,7 @@ workflow PIPERLINE {
 
 
     // run SEQ_QC per flow cell 
-    // SEQ_QC ( ch_fcid ) // optional step for testing
+    SEQ_QC ( ch_fcid ) // optional step for testing
 
     //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( ch_sample_locus_reads ) 
