@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+### load only required packages
 process_packages <- c(
     "Biostrings",
     # "bs4Dash",

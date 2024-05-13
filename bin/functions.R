@@ -1511,13 +1511,13 @@ coalesce_tax <- function (x, y, suffix = c(".x", ".y"), prefer="left", join = dp
                           ...) {
   if(!"OTU" %in% colnames(x)){
     x <- x %>%
-      as_tibble(rownames = "OTU")
+      tibble::as_tibble(rownames = "OTU")
   }
   if(!"OTU" %in% colnames(y)){
     y <- y %>%
-      as_tibble(rownames = "OTU")
+      tibble::as_tibble(rownames = "OTU")
   }
-  joined <- join(x, y, by = "OTU", suffix = suffix, ...)
+  joined <- dplyr::join(x, y, by = "OTU", suffix = suffix, ...)
   cols <- union(names(x), names(y))
   to_coalesce <- names(joined)[!names(joined) %in% cols]
   suffix_used <- suffix[ifelse(endsWith(to_coalesce, suffix[1]), 1, 2)]
@@ -1540,7 +1540,7 @@ coalesce_tax <- function (x, y, suffix = c(".x", ".y"), prefer="left", join = dp
   })
   names(coalesced) <- to_coalesce
   out <- dplyr::bind_cols(joined, coalesced)[cols] %>%
-    column_to_rownames("OTU")
+    tibble::column_to_rownames("OTU")
   return(out)
 }
 
