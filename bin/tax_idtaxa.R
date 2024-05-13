@@ -3,7 +3,7 @@ process_packages <- c(
     "Biostrings",
     # "bs4Dash",
     # "clustermq",
-    # "dada2",
+    "dada2",
     "DECIPHER",
     "dplyr",
     # "future",
@@ -60,7 +60,7 @@ seqtab <- readRDS(seqtab) # read in seqtab
 trainingSet <- readRDS(normalizePath(database)) # read in training database for IDTAXA
 
 # get the sequences from the seqtab
-seqs <- Biostrings::DNAStringSet(getSequences(seqtab)) # Create a DNAStringSet from the ASVs
+seqs <- Biostrings::DNAStringSet(dada2::getSequences(seqtab)) # Create a DNAStringSet from the ASVs
 
 if ( length(seqs) > 0 ) { # Stop if seqs are 0
 
@@ -99,24 +99,24 @@ if ( length(seqs) > 0 ) { # Stop if seqs are 0
             magrittr::set_colnames(ranks[1:ncol(.)])
         }) %>%
         mutate_all(stringr::str_replace,pattern="(?:.(?!_))+$", replacement="") %>%
-        magrittr::set_rownames(getSequences(seqtab))
+        magrittr::set_rownames(dada2::getSequences(seqtab))
         # add empty ranks if none were assigned to lower ranks
         tax <- new_bind(tibble::tibble(!!!ranks, .rows = 0, .name_repair = ~ ranks), tax)
     } else {
         warning(paste0("No sequences assigned with IDTAXA to ", database, " have you used the correct database?"))
-        tax <- tibble::enframe(getSequences(seqtab), name=NULL, value="OTU") 
+        tax <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") 
         tax[ranks[1]] <- ranks[1]
         tax[ranks[2:length(ranks)]] <- NA_character_
         tax <- tax %>%
-        magrittr::set_rownames(getSequences(seqtab)) 
+        magrittr::set_rownames(dada2::getSequences(seqtab)) 
     }
 } else {
     warning(paste0("No sequences present in seqtab - IDTAXA skipped"))
-    tax <- tibble::enframe(getSequences(seqtab), name=NULL, value="OTU") 
+    tax <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") 
     tax[ranks[1]] <- ranks[1]
     tax[ranks[2:length(ranks)]] <- NA_character_
     tax <- tax %>%
-        magrittr::set_rownames(getSequences(seqtab)) 
+        magrittr::set_rownames(dada2::getSequences(seqtab)) 
 }
 
 # Check that output dimensions match input
