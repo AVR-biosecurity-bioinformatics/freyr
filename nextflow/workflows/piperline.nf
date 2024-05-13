@@ -228,9 +228,9 @@ workflow PIPERLINE {
     ch_read_tracker_samples = ch_read_tracker_samples.concat( READ_FILTER.out.read_tracking )
 
     //// create plots of read quality pre- and post-filtering, per flowcell (optional)
-    // FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
+    FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
 
-    // FILTER_QUALPLOTS_POST ( READ_FILTER.out.reads )
+    FILTER_QUALPLOTS_POST ( READ_FILTER.out.reads )
 
     /// TODO: Use FILTER_QUALPLOTS_COMBINE to combine plots by fcid and type into one PDF
 
