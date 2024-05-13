@@ -96,7 +96,7 @@ phyloseq::psmelt(ps) %>%
 phyloseq::psmelt(ps) %>% 
     dplyr::filter(Abundance > 0) %>%
     dplyr::left_join(
-        refseq(ps) %>% as.character() %>% enframe(name="OTU", value="sequence"),
+        phyloseq::refseq(ps) %>% as.character() %>% tibble::enframe(name="OTU", value="sequence"),
         by = "OTU"
         ) %>%
     dplyr::select(OTU, sequence, rank_names(ps), sample_id, Abundance ) %>%
@@ -110,9 +110,9 @@ seqs <- Biostrings::DNAStringSet(as.vector(phyloseq::refseq(ps)))
 Biostrings::writeXStringSet(seqs, filepath = paste0("asvs_unfiltered_",pcr_primers,".fasta"), width = 100) 
 
 # write .nwk file if phylogeny present
-if(!is.null(ape::phy_tree(ps, errorIfNULL = FALSE))){
+if(!is.null(phyloseq::phy_tree(ps, errorIfNULL = FALSE))){
     #Output newick tree
-    ape::write.tree(phy_tree(ps), file = paste0("tree_unfiltered",pcr_primers,".nwk"))
+    ape::write.tree(phyloseq::phy_tree(ps), file = paste0("tree_unfiltered",pcr_primers,".nwk"))
 }
 
 ## output phyloseq and component data; from step_output_ps
@@ -138,7 +138,7 @@ if(!all(colnames(taxtab) == c("OTU", "Root", "Kingdom", "Phylum", "Class", "Orde
 # save samplesheet
 samdf_out <- phyloseq::sample_data(ps) %>%
     as("matrix") %>%
-    as_tibble()
+    tibble::as_tibble()
 
 # Write out
 readr::write_csv(seqtab_out, paste0("seqtab_unfiltered_",pcr_primers,".csv"))
