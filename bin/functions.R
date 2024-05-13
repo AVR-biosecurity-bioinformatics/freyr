@@ -1667,7 +1667,7 @@ step_phyloseq <- function(seqtab, taxtab, samdf, seqs=NULL, phylo=NULL, name_var
   
   #Load sample information
   samdf <- samdf %>%
-    filter(!duplicated(sample_id)) %>%
+    dplyr::filter(!duplicated(sample_id)) %>%
     as.data.frame()%>%
     magrittr::set_rownames(.$sample_id)
   
