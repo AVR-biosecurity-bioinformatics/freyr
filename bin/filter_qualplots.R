@@ -159,10 +159,6 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
     
     Qualplots <- (gg.Fqual + gg.Rqual) / (gg.Fee + gg.Ree)
 
-    Qualplots
-
-    # stop(" *** stopped manually *** ") ##########################################
-
     ggsave(paste0(sample_id,"_",target_gene,"_",pcr_primers,"_",file_suffix,"_qualplots.pdf"), Qualplots, width = 11, height = 8)
 
     return(Qualplots)
@@ -182,4 +178,4 @@ plot_read_quals2(
 
 ### TODO: Increase "n" to 10000 in final pipeline
 
-stop(" *** stopped manually *** ") ##########################################
+# stop(" *** stopped manually *** ") ##########################################
