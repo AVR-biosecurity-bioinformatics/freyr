@@ -316,7 +316,7 @@ reads_out <- tibble::tibble(
     filter_frame = reads_framefilt,
     filter_seqtab = reads_final
     ) %>%
-    dplyr::pivot_longer(
+    tidyr::pivot_longer(
         cols = filter_chimera:filter_seqtab,
         names_to = "stage",
         values_to = "pairs"
