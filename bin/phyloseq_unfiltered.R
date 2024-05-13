@@ -6,7 +6,7 @@ process_packages <- c(
     # "clustermq",
     "dada2",
     # "DECIPHER",
-    # "dplyr",
+    "dplyr",
     # "future",
     # "ggplot2",
     # "gridExtra",
