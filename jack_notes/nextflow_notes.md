@@ -39,6 +39,8 @@ Need to source copy of `.Rprofile` that contains new default library location an
     # run pipeline
     git pull && nextflow run . --data_folder test_data/full_teph
 
+    # development of branch
+    git pull origin direct_package_loading && nextflow run . -resume --data_folder test_data/dual
 
     R
 

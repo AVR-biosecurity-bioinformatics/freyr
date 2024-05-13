@@ -33,10 +33,11 @@ process_packages <- c(
     # "tibble",
     "tidyr",
     # "vegan",
-    # "visNetwork"
+    # "visNetwork",
+    NULL
     )
 
-invisible(lapply(process_packages, library, character.only = TRUE))
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE))
 
 
 # Find all directories within data folder
