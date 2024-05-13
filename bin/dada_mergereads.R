@@ -1,4 +1,43 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    # "Biostrings",
+    # "bs4Dash",
+    # "clustermq",
+    "dada2",
+    # "DECIPHER",
+    "dplyr",
+    # "future",
+    # "ggplot2",
+    # "gridExtra",
+    # "gt",
+    "magrittr",
+    # "markdown",
+    # "ngsReports",
+    # "patchwork",
+    # "phyloseq",
+    # "pingr",
+    # "purrr",
+    "readr",
+    # "rlang",
+    # "rstudioapi",
+    # "savR",
+    # "scales",
+    # "seqateurs",
+    # "shiny",
+    # "shinybusy",
+    # "shinyWidgets",
+    # "ShortRead",
+    "stringr",
+    # "taxreturn",
+    "tibble",
+    # "tidyr",
+    # "vegan",
+    # "visNetwork",
+    NULL
+    )
+
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 # check variables defined
 if ( !concat_unmerged %in% c(TRUE, FALSE) ) {
@@ -126,7 +165,7 @@ sapply(mergers, getN) %>%
         stage = "dada_mergereads"
     ) %>%
     dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>% 
-    write_csv(., paste0("dada_mergereads_",fcid,"_",pcr_primers,"_readsout.csv"))
+    readr::write_csv(., paste0("dada_mergereads_",fcid,"_",pcr_primers,"_readsout.csv"))
 
 
 # stop(" *** stopped manually *** ") ##########################################
