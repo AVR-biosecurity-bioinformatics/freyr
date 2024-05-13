@@ -74,4 +74,4 @@ rbind(out_vector) %>%
     tibble::as_tibble() %>%
     readr::write_csv(paste0("read_filter_",sample_id,"_",pcr_primers,"_readsout.csv"), col_names = F)
 
-stop(" *** stopped manually *** ") ##########################################
+# stop(" *** stopped manually *** ") ##########################################

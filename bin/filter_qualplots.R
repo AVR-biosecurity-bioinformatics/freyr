@@ -1,11 +1,50 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    # "Biostrings",
+    # "bs4Dash",
+    # "clustermq",
+    # "dada2",
+    # "DECIPHER",
+    "dplyr",
+    # "future",
+    "ggplot2",
+    # "gridExtra",
+    # "gt",
+    # "magrittr",
+    # "markdown",
+    # "ngsReports",
+    "patchwork",
+    # "phyloseq",
+    # "pingr",
+    # "purrr",
+    # "readr",
+    # "rlang",
+    # "rstudioapi",
+    # "savR",
+    # "scales",
+    "seqateurs",
+    # "shiny",
+    # "shinybusy",
+    # "shinyWidgets",
+    # "ShortRead",
+    "stringr",
+    # "taxreturn",
+    # "tibble",
+    "tidyr",
+    # "vegan",
+    # "visNetwork",
+    NULL
+    )
+
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE))
 
 # check variables defined
 
 
 ### run R code
 
-plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene, pcr_primers, truncLen = NULL, quiet=FALSE, n = 10000){
+plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene, pcr_primers, truncLen = NULL, quiet=FALSE, n_reads = 10000){
     fastqFs <- normalizePath(fwd_reads)
     fastqRs <- normalizePath(rev_reads)
     
@@ -27,8 +66,8 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
         return(NULL)
     }
     
-    Fquals <- get_qual_stats(fastqFs, n=n)
-    Rquals <- get_qual_stats(fastqRs, n=n)
+    Fquals <- seqateurs::get_qual_stats(fastqFs, n=n_reads)
+    Rquals <- seqateurs::get_qual_stats(fastqRs, n=n_reads)
         
     #Plot qualities
     gg.Fqual <- Fquals %>% 
@@ -129,15 +168,6 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
     return(Qualplots)
 }
 
-# print(sample_id) 
-# print(fwd_reads) 
-# print(rev_reads) 
-# print(fcid)
-# print(target_gene)
-# print(pcr_primers)
-
-# stop(" *** stopped manually *** ") ##########################################
-
 plot_read_quals2(
     sample_id =     sample_id, 
     fwd_reads =     fwd_reads, 
@@ -150,4 +180,6 @@ plot_read_quals2(
     n = 1000
 )
 
-### TODO: Increase "n" to 10000
+### TODO: Increase "n" to 10000 in final pipeline
+
+stop(" *** stopped manually *** ") ##########################################
