@@ -37,7 +37,7 @@ process_packages <- c(
     NULL
     )
 
-invisible(lapply(head(process_packages,-1), library, character.only = TRUE))
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 # check variables defined
 
