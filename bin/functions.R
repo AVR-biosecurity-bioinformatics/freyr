@@ -1762,7 +1762,7 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
             rank = "Kingdom",
             value = kingdom
           ) %>%
-          filter_taxa(function(x) mean(x) > 0, TRUE)
+          phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
       } else{
         warning(paste0("No ASVs were assigned to the Kingdom", kingdom," - Check your target_kingdom parameter"))
       }
@@ -1775,7 +1775,7 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
             rank = "Phylum",
             value = phylum
           ) %>%
-          filter_taxa(function(x) mean(x) > 0, TRUE)
+          phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
       } else{
         warning(paste0("No ASVs were assigned to the Phylum", phylum," - Check your target_phylum parameter"))
       }
@@ -1801,7 +1801,7 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
             rank = "Order",
             value = order
           ) %>%
-          filter_taxa(function(x) mean(x) > 0, TRUE)
+          phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
       } else{
         warning(paste0("No ASVs were assigned to the Order", order," - Check your target_phylum parameter"))
       }
@@ -1814,7 +1814,7 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
             rank = "Family",
             value = family
           ) %>%
-          filter_taxa(function(x) mean(x) > 0, TRUE)
+          phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
       } else{
         warning(paste0("No ASVs were assigned to the Family", family," - Check your target_phylum parameter"))
       }
@@ -1827,7 +1827,7 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
             rank = "Genus",
             value = genus
           ) %>%
-          filter_taxa(function(x) mean(x) > 0, TRUE)
+          phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
       } else{
         warning(paste0("No ASVs were assigned to the Genus", genus," - Check your target_phylum parameter"))
       }
@@ -1840,7 +1840,7 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
             rank = "Species",
             value = species
           ) %>%
-          filter_taxa(function(x) mean(x) > 0, TRUE)
+          phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
       } else{
         warning(paste0("No ASVs were assigned to the Species", species," - Check your target_phylum parameter"))
       }
@@ -1870,13 +1870,13 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
   #Remove all samples under the minimum read threshold 
   if(min_sample_reads > 0){
     ps2 <- ps1 %>%
-      prune_samples(sample_sums(.)>=min_sample_reads, .) %>% 
-      filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
+      phyloseq::prune_samples(sample_sums(.)>=min_sample_reads, .) %>% 
+      phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
   } else {
     if (!quiet){message(paste0("No minimum sample reads filter set - skipping this filter"))}
     ps2 <- ps1 %>%
-      prune_samples(sample_sums(.)>=0,.) %>%
-      filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
+      phyloseq::prune_samples(sample_sums(.)>=0,.) %>%
+      phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
   }
   
   #Message how many were removed
@@ -1888,9 +1888,9 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
 step_output_summary <- function(ps, out_dir, type="unfiltered"){
   #Export raw csv
   phyloseq::psmelt(ps) %>%
-    filter(Abundance > 0) %>%
+    dplyr::filter(Abundance > 0) %>%
     dplyr::select(-Sample) %>%
-    write_csv(normalizePath(paste0(out_dir,"/raw_", type,".csv")))
+    readr::write_csv(normalizePath(paste0(out_dir,"/raw_", type,".csv")))
   
   # Export species level summary of filtered results
   ps %>%

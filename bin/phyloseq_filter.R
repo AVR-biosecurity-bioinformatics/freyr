@@ -1,4 +1,43 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    # "Biostrings",
+    # "bs4Dash",
+    # "clustermq",
+    # "dada2",
+    # "DECIPHER",
+    "dplyr",
+    # "future",
+    # "ggplot2",
+    # "gridExtra",
+    # "gt",
+    # "magrittr",
+    # "markdown",
+    # "ngsReports",
+    # "patchwork",
+    "phyloseq",
+    # "pingr",
+    # "purrr",
+    "readr",
+    # "rlang",
+    # "rstudioapi",
+    # "savR",
+    # "scales",
+    "seqateurs",
+    # "shiny",
+    # "shinybusy",
+    # "shinyWidgets",
+    # "ShortRead",
+    "stringr",
+    # "taxreturn",
+    "tibble",
+    "tidyr",
+    # "vegan",
+    # "visNetwork",
+    NULL
+    )
+
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 ## check and define variables
 ps <- readRDS(ps)
@@ -38,7 +77,7 @@ if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, targ
                 rank = "Kingdom",
                 value = target_kingdom
             ) %>%
-            filter_taxa(function(x) mean(x) > 0, TRUE)
+            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
         } else{
         warning(paste0("No ASVs were assigned to the Kingdom", target_kingdom," - Check your target_kingdom parameter"))
         }
@@ -51,7 +90,7 @@ if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, targ
                 rank = "Phylum",
                 value = target_phylum
             ) %>%
-            filter_taxa(function(x) mean(x) > 0, TRUE)
+            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
         } else{
         warning(paste0("No ASVs were assigned to the Phylum", target_phylum," - Check your target_phylum parameter"))
         }
@@ -64,7 +103,7 @@ if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, targ
                 rank = "Class",
                 value = target_class
             ) %>%
-            filter_taxa(function(x) mean(x) > 0, TRUE)
+            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
         } else{
         warning(paste0("No ASVs were assigned to the Class", target_class," - Check your target_class parameter"))
         }
@@ -77,7 +116,7 @@ if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, targ
                 rank = "Order",
                 value = target_order
             ) %>%
-            filter_taxa(function(x) mean(x) > 0, TRUE)
+            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
         } else{
         warning(paste0("No ASVs were assigned to the Order", target_order," - Check your target_order parameter"))
         }
@@ -90,7 +129,7 @@ if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, targ
                 rank = "Family",
                 value = target_family
             ) %>%
-            filter_taxa(function(x) mean(x) > 0, TRUE)
+            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
         } else{
         warning(paste0("No ASVs were assigned to the Family", target_family," - Check your target_family parameter"))
         }
@@ -103,7 +142,7 @@ if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, targ
                 rank = "Genus",
                 value = target_genus
             ) %>%
-            filter_taxa(function(x) mean(x) > 0, TRUE)
+            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
         } else{
         warning(paste0("No ASVs were assigned to the Genus", target_genus," - Check your target_genus parameter"))
         }
@@ -116,7 +155,7 @@ if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, targ
                 rank = "Species",
                 value = target_species
             ) %>%
-            filter_taxa(function(x) mean(x) > 0, TRUE)
+            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
         } else{
         warning(paste0("No ASVs were assigned to the Species", target_species," - Check your target_species parameter"))
         }
@@ -143,13 +182,13 @@ if(!is.na(min_taxa_reads) & is.na(min_taxa_ra)){
 #Remove all samples under the minimum read threshold 
 if(min_sample_reads > 0){
     ps2 <- ps1 %>%
-        prune_samples(sample_sums(.)>=min_sample_reads, .) %>% 
-        filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
+        phyloseq::prune_samples(sample_sums(.)>=min_sample_reads, .) %>% 
+        phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
 } else {
     if (!quiet){message(paste0("No minimum sample reads filter set - skipping this filter"))}
     ps2 <- ps1 %>%
-        prune_samples(sample_sums(.)>=0,.) %>%
-        filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
+        phyloseq::prune_samples(sample_sums(.)>=0,.) %>%
+        phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
 }
 
 # Message how many were removed
@@ -158,31 +197,31 @@ if(!quiet){message(nsamples(ps) - nsamples(ps2), " Samples and ", ntaxa(ps) - nt
 ### output filtered results per locus; from step_output_summary()
 # Export raw csv
 phyloseq::psmelt(ps2) %>% 
-    filter(Abundance > 0) %>%
+    dplyr::filter(Abundance > 0) %>%
     dplyr::select(-Sample) %>%
-    write_csv(., paste0("raw_filtered_",pcr_primers,".csv"))
+    readr::write_csv(., paste0("raw_filtered_",pcr_primers,".csv"))
 
 # Export species level summary of filtered results
 phyloseq::psmelt(ps2) %>% 
-    filter(Abundance > 0) %>%
-    left_join(
-        refseq(ps2) %>% as.character() %>% enframe(name="OTU", value="sequence"),
+    dplyr::filter(Abundance > 0) %>%
+    dplyr::left_join(
+        phyloseq::refseq(ps2) %>% as.character() %>% tibble::enframe(name="OTU", value="sequence"),
         by = "OTU"
         ) %>%
     dplyr::select(OTU, sequence, rank_names(ps2), sample_id, Abundance ) %>%
-    pivot_wider(names_from = sample_id,
+    tidyr::pivot_wider(names_from = sample_id,
                 values_from = Abundance,
                 values_fill = list(Abundance = 0)) %>%
-    write_csv(., paste0("summary_filtered_",pcr_primers,".csv"))
+    readr::write_csv(., paste0("summary_filtered_",pcr_primers,".csv"))
 
 # Output fasta of all ASVs
 seqs <- Biostrings::DNAStringSet(as.vector(phyloseq::refseq(ps2)))
 Biostrings::writeXStringSet(seqs, filepath = paste0("asvs_filtered_",pcr_primers,".fasta"), width = 100) 
 
 # write .nwk file if phylogeny present
-if(!is.null(phy_tree(ps2, errorIfNULL = FALSE))){
+if(!is.null(phyloseq::phy_tree(ps2, errorIfNULL = FALSE))){
     #Output newick tree
-    write.tree(phy_tree(ps2), file = paste0("tree_filtered",pcr_primers,".nwk"))
+    ape::write.tree(phyloseq::phy_tree(ps2), file = paste0("tree_filtered",pcr_primers,".nwk"))
 }
 
 ## output phyloseq and component data; from step_output_ps
@@ -190,12 +229,12 @@ if(!is.null(phy_tree(ps2, errorIfNULL = FALSE))){
 # save seqtab as wide tibble (rows = sample_id, cols = OTU name (hash), cells = abundance)
 seqtab_out <- phyloseq::otu_table(ps2) %>%
     as("matrix") %>%
-    as_tibble(rownames = "sample_id")
+    tibble::as_tibble(rownames = "sample_id")
 
 # save taxtab as long tibble (rows = OTU/ASV, cols = tax rankings)
 taxtab_out <- phyloseq::tax_table(ps2) %>%
     as("matrix") %>%
-    as_tibble(rownames = "OTU") %>%
+    tibble::as_tibble(rownames = "OTU") %>%
     seqateurs::unclassified_to_na(rownames = FALSE)
 
 # Check taxonomy table outputs
@@ -208,12 +247,12 @@ if(!all(colnames(taxtab_out) == c("OTU", "Root", "Kingdom", "Phylum", "Class", "
 # save samplesheet
 samdf_out <- phyloseq::sample_data(ps2) %>%
     as("matrix") %>%
-    as_tibble()
+    tibble::as_tibble()
 
 # Write out
-write_csv(seqtab_out, paste0("seqtab_filtered_",pcr_primers,".csv"))
-write_csv(taxtab_out, paste0("taxtab_filtered_",pcr_primers,".csv"))
-write_csv(samdf_out, paste0("samdf_filtered_",pcr_primers,".csv"))
+readr::write_csv(seqtab_out, paste0("seqtab_filtered_",pcr_primers,".csv"))
+readr::write_csv(taxtab_out, paste0("taxtab_filtered_",pcr_primers,".csv"))
+readr::write_csv(samdf_out, paste0("samdf_filtered_",pcr_primers,".csv"))
 saveRDS(ps2, paste0("ps_filtered_",pcr_primers,".rds"))
 
 
