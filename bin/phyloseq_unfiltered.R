@@ -1,10 +1,50 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    "Biostrings",
+    # "bs4Dash",
+    # "clustermq",
+    "dada2",
+    # "DECIPHER",
+    # "dplyr",
+    # "future",
+    # "ggplot2",
+    # "gridExtra",
+    # "gt",
+    # "magrittr",
+    # "markdown",
+    # "ngsReports",
+    # "patchwork",
+    "phyloseq",
+    # "pingr",
+    # "purrr",
+    "readr",
+    # "rlang",
+    # "rstudioapi",
+    # "savR",
+    # "scales",
+    # "seqateurs",
+    # "shiny",
+    # "shinybusy",
+    # "shinyWidgets",
+    # "ShortRead",
+    "stringr",
+    # "taxreturn",
+    "tibble",
+    # "tidyr",
+    # "vegan",
+    # "visNetwork",
+    NULL
+    )
+
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+
 
 ## check and define variables
 taxtab <- readRDS(taxtab)
 taxtab %>% # save for debugging
     tibble::as_tibble(rownames = "OTU") %>%
-    write_csv(., paste0("taxtab_", pcr_primers, ".csv")) 
+    readr::write_csv(., paste0("taxtab_", pcr_primers, ".csv")) 
 
 seqtab_list <- # convert Groovy to R list format
     stringr::str_extract_all(seqtab_list, pattern = "[^\\s,\\[\\]]+") %>% unlist()
@@ -22,7 +62,7 @@ if ( length(seqtab_list) > 1 ){ # if there is more than one seqtab, merge togeth
 }
 seqtab_final %>% # save for debugging
     tibble::as_tibble(rownames = "OTU") %>% 
-    write_csv(., paste0("seqtab_final_", pcr_primers, ".csv"))
+    readr::write_csv(., paste0("seqtab_final_", pcr_primers, ".csv"))
 
 ## mutate samdf to add pcr_primers to sample_id, to make consistent with new seqtab format
 samdf_renamed <- samdf %>% 
