@@ -1,50 +1,20 @@
 #!/usr/bin/env Rscript
 ### load only required packages
 process_packages <- c(
-    # "Biostrings",
-    # "bs4Dash",
-    # "clustermq",
     "dada2",
-    # "DECIPHER",
     "dplyr",
-    # "future",
-    # "ggplot2",
-    # "gridExtra",
-    # "gt",
-    # "magrittr",
-    # "markdown",
-    # "ngsReports",
-    # "patchwork",
-    # "phyloseq",
-    # "pingr",
-    # "purrr",
     "readr",
-    # "rlang",
-    # "rstudioapi",
-    # "savR",
-    # "scales",
-    # "seqateurs",
-    # "shiny",
-    # "shinybusy",
-    # "shinyWidgets",
-    # "ShortRead",
     "stringr",
     "taxreturn",
     "tibble",
-    # "tidyr",
-    # "vegan",
-    # "visNetwork",
     NULL
     )
 
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
-
-
-### TODO: Add explicit taxonomic ranks option to input parameters (per locus)
+### TODO: Add explicit taxonomic ranks option to loci parameters
 
 ### TODO: Do parameter parsing for ranks at an earlier stage, such as the parameter setup module
-
 
 ## check and define variables 
 target_gene <-          parse_nf_var_repeat(target_gene)

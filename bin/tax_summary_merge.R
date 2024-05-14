@@ -1,39 +1,10 @@
 #!/usr/bin/env Rscript
 ### load only required packages
 process_packages <- c(
-    # "Biostrings",
-    # "bs4Dash",
-    # "clustermq",
-    # "dada2",
-    # "DECIPHER",
     "dplyr",
-    # "future",
-    # "ggplot2",
-    # "gridExtra",
-    # "gt",
-    # "magrittr",
-    # "markdown",
-    # "ngsReports",
-    # "patchwork",
-    # "phyloseq",
-    # "pingr",
-    # "purrr",
     "readr",
-    # "rlang",
-    # "rstudioapi",
-    # "savR",
-    # "scales",
-    # "seqateurs",
-    # "shiny",
-    # "shinybusy",
-    # "shinyWidgets",
-    # "ShortRead",
     "stringr",
-    # "taxreturn",
     "tibble",
-    # "tidyr",
-    # "vegan",
-    # "visNetwork",
     NULL
     )
 
@@ -45,7 +16,6 @@ tax_summary_list <- # convert Groovy to R list format
     stringr::str_extract_all(tax_summary_list, pattern = "[^\\s,\\[\\]]+") %>% unlist()
 
 tax_summary_list <- lapply(tax_summary_list, readRDS) # read in taxtabs and store as list of tibbles
-
 
 
 ### run R code
@@ -61,4 +31,3 @@ summary_full <- summary_full %>%
 readr::write_csv(summary_full,"taxonomic_assignment_summary.csv") # write to .csv
 
 # stop(" *** stopped manually *** ") ##########################################
-

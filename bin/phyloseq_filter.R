@@ -2,38 +2,13 @@
 ### load only required packages
 process_packages <- c(
     "Biostrings",
-    # "bs4Dash",
-    # "clustermq",
-    # "dada2",
-    # "DECIPHER",
     "dplyr",
-    # "future",
-    # "ggplot2",
-    # "gridExtra",
-    # "gt",
-    # "magrittr",
-    # "markdown",
-    # "ngsReports",
-    # "patchwork",
     "phyloseq",
-    # "pingr",
-    # "purrr",
     "readr",
-    # "rlang",
-    # "rstudioapi",
-    # "savR",
-    # "scales",
     "seqateurs",
-    # "shiny",
-    # "shinybusy",
-    # "shinyWidgets",
-    # "ShortRead",
     "stringr",
-    # "taxreturn",
     "tibble",
     "tidyr",
-    # "vegan",
-    # "visNetwork",
     NULL
     )
 
@@ -41,6 +16,7 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 
 ## check and define variables
 ps <- readRDS(ps)
+
 # convert "NA" strings to true NA
 if(target_kingdom == "NA"){ target_kingdom <- NA }
 if(target_phylum == "NA"){ target_phylum <- NA }
@@ -49,6 +25,7 @@ if(target_order == "NA"){ target_order <- NA }
 if(target_family == "NA"){ target_family <- NA }
 if(target_genus == "NA"){ target_genus <- NA }
 if(target_species == "NA"){ target_species <- NA }
+
 # convert "NA" strings to true NA, or convert number strings to numeric
 if(min_sample_reads != "NA"){ min_sample_reads <- as.numeric(min_sample_reads) } else { min_sample_reads <- NA }
 if(min_taxa_reads != "NA"){ min_taxa_reads <- as.numeric(min_taxa_reads) } else { min_taxa_reads <- NA }
@@ -182,17 +159,17 @@ if(!is.na(min_taxa_reads) & is.na(min_taxa_ra)){
 #Remove all samples under the minimum read threshold 
 if(min_sample_reads > 0){
     ps2 <- ps1 %>%
-        phyloseq::prune_samples(sample_sums(.)>=min_sample_reads, .) %>% 
+        phyloseq::prune_samples(phyloseq::sample_sums(.)>=min_sample_reads, .) %>% 
         phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
 } else {
     if (!quiet){message(paste0("No minimum sample reads filter set - skipping this filter"))}
     ps2 <- ps1 %>%
-        phyloseq::prune_samples(sample_sums(.)>=0,.) %>%
+        phyloseq::prune_samples(phyloseq::sample_sums(.)>=0,.) %>%
         phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
 }
 
 # Message how many were removed
-if(!quiet){message(nsamples(ps) - nsamples(ps2), " Samples and ", ntaxa(ps) - ntaxa(ps2), " ASVs dropped")}
+if(!quiet){message(phyloseq::nsamples(ps) - phyloseq::nsamples(ps2), " Samples and ", phyloseq::ntaxa(ps) - phyloseq::ntaxa(ps2), " ASVs dropped")}
 
 ### output filtered results per locus; from step_output_summary()
 # Export raw csv

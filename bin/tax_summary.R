@@ -1,39 +1,12 @@
 #!/usr/bin/env Rscript
 ### load only required packages
 process_packages <- c(
-    # "Biostrings",
-    # "bs4Dash",
-    # "clustermq",
-    # "dada2",
-    # "DECIPHER",
     "dplyr",
-    # "future",
-    # "ggplot2",
-    # "gridExtra",
-    # "gt",
     "magrittr",
-    # "markdown",
-    # "ngsReports",
-    # "patchwork",
-    # "phyloseq",
-    # "pingr",
     "purrr",
     "readr",
     "rlang",
-    # "rstudioapi",
-    # "savR",
-    # "scales",
-    # "seqateurs",
-    # "shiny",
-    # "shinybusy",
-    # "shinyWidgets",
-    # "ShortRead",
     "stringr",
-    # "taxreturn",
-    # "tibble",
-    # "tidyr",
-    # "vegan",
-    # "visNetwork",
     NULL
     )
 
@@ -97,7 +70,7 @@ if(!is.null(joint)){
     
     summary_table <- idtaxa_summary %>%
         dplyr::left_join(blast_summary) %>%
-        dplyr::select(any_of(c(
+        dplyr::select(tidyselect::any_of(c(
             "OTU_hash",
             "OTU_seq", 
             "pcr_primers", 

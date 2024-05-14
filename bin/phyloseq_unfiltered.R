@@ -2,38 +2,17 @@
 ### load only required packages
 process_packages <- c(
     "Biostrings",
-    # "bs4Dash",
-    # "clustermq",
     "dada2",
-    # "DECIPHER",
     "dplyr",
-    # "future",
     "ggplot2",
-    # "gridExtra",
-    # "gt",
-    # "magrittr",
-    # "markdown",
-    # "ngsReports",
-    # "patchwork",
     "phyloseq",
-    # "pingr",
     "purrr",
     "readr",
-    # "rlang",
-    # "rstudioapi",
-    # "savR",
     "scales",
-    # "seqateurs",
-    # "shiny",
-    # "shinybusy",
-    # "shinyWidgets",
-    # "ShortRead",
     "stringr",
-    # "taxreturn",
     "tibble",
     "tidyr",
     "vegan",
-    # "visNetwork",
     NULL
     )
 
@@ -99,7 +78,7 @@ phyloseq::psmelt(ps) %>%
         phyloseq::refseq(ps) %>% as.character() %>% tibble::enframe(name="OTU", value="sequence"),
         by = "OTU"
         ) %>%
-    dplyr::select(OTU, sequence, rank_names(ps), sample_id, Abundance ) %>%
+    dplyr::select(OTU, sequence, phyloseq::rank_names(ps), sample_id, Abundance ) %>%
     tidyr::pivot_wider(names_from = sample_id,
                 values_from = Abundance,
                 values_fill = list(Abundance = 0)) %>%

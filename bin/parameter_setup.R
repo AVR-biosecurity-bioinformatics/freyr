@@ -1,39 +1,12 @@
 #!/usr/bin/env Rscript
 ### load only required packages
 process_packages <- c(
-    # "Biostrings",
-    # "bs4Dash",
-    # "clustermq",
-    # "dada2",
-    # "DECIPHER",
     "dplyr",
-    # "future",
-    # "ggplot2",
-    # "gridExtra",
-    # "gt",
     "magrittr",
-    # "markdown",
-    # "ngsReports",
-    # "patchwork",
-    # "phyloseq",
-    # "pingr",
     "purrr",
     "readr",
-    # "rlang",
-    # "rstudioapi",
-    # "savR",
-    # "scales",
-    # "seqateurs",
-    # "shiny",
-    # "shinybusy",
-    # "shinyWidgets",
-    # "ShortRead",
     "stringr",
-    # "taxreturn",
-    # "tibble",
     "tidyr",
-    # "vegan",
-    # "visNetwork",
     NULL
     )
 
@@ -59,7 +32,7 @@ distinct()
 # Check that sample_ids contain fcid, if not; attach
 samdf <- samdf %>%
     dplyr::mutate(sample_id = case_when(
-        !str_detect(sample_id, fcid) ~ paste0(fcid,"_",sample_id),
+        !stringr::str_detect(sample_id, fcid) ~ paste0(fcid,"_",sample_id),
         TRUE ~ sample_id
         )
     )
@@ -198,7 +171,7 @@ if (stringr::str_detect(params.data_folder, "single$")) {
         threads = 1
     )
 } else { if (stringr::str_detect(params.data_folder, "dual$|full_teph$")) {
-    params <- tibble(
+    params <- tibble::tibble(
         # Primer parameters
         pcr_primers = c("fwhF2-fwhR2nDac", "EIF3LminiF4-EIF3lminiR4"),
         target_gene=c("COI", "EIF3L"),
@@ -428,7 +401,7 @@ for ( I in 1:length(split_samdf)) { # assign new dfs to new variables
 
 
 ## BLAST database ranks
-## TODO: ignore this check if 'params.tax_ranks' is set explicitly
+## TODO: ignore this check if 'tax_ranks' is set explicitly in loci parameters
 check_param <- params_df$ref_fasta[!is.na(params_df$ref_fasta)] %>% 
     stringr::str_split(pattern=";", n=Inf) %>% 
     unlist()

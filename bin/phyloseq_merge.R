@@ -2,38 +2,13 @@
 ### load only required packages
 process_packages <- c(
     "Biostrings",
-    # "bs4Dash",
-    # "clustermq",
-    # "dada2",
-    # "DECIPHER",
     "dplyr",
-    # "future",
-    # "ggplot2",
-    # "gridExtra",
-    # "gt",
-    # "magrittr",
-    # "markdown",
-    # "ngsReports",
-    # "patchwork",
     "phyloseq",
-    # "pingr",
-    # "purrr",
     "readr",
-    # "rlang",
-    # "rstudioapi",
-    # "savR",
-    # "scales",
     "seqateurs",
-    # "shiny",
-    # "shinybusy",
-    # "shinyWidgets",
-    # "ShortRead",
     "stringr",
-    # "taxreturn",
     "tibble",
     "tidyr",
-    # "vegan",
-    # "visNetwork",
     NULL
     )
 
@@ -70,7 +45,7 @@ phyloseq::psmelt(ps_u) %>%
         phyloseq::refseq(ps_u) %>% as.character() %>% tibble::enframe(name="OTU", value="sequence"),
         by = "OTU"
         ) %>%
-    dplyr::select(OTU, sequence, rank_names(ps_u), sample_id, Abundance ) %>%
+    dplyr::select(OTU, sequence, phyloseq::rank_names(ps_u), sample_id, Abundance ) %>%
     tidyr::pivot_wider(names_from = sample_id,
                 values_from = Abundance,
                 values_fill = list(Abundance = 0)) %>%
@@ -83,7 +58,7 @@ Biostrings::writeXStringSet(seqs, filepath = paste0("asvs_unfiltered.fasta"), wi
 # write .nwk file if phylogeny present
 if(!is.null(phy_tree(ps_u, errorIfNULL = FALSE))){
     #Output newick tree
-    write.tree(phy_tree(ps_u), file = paste0("tree_unfiltered.nwk"))
+    ape::write.tree(phyloseq::phy_tree(ps_u), file = paste0("tree_unfiltered.nwk"))
 }
 
 ## output phyloseq and component data; from step_output_ps
@@ -91,12 +66,12 @@ if(!is.null(phy_tree(ps_u, errorIfNULL = FALSE))){
 # save seqtab as wide tibble (rows = sample_id, cols = OTU name (hash), cells = abundance)
 seqtab_out_u <- phyloseq::otu_table(ps_u) %>%
     as("matrix") %>%
-    as_tibble(rownames = "sample_id")
+    tibble::as_tibble(rownames = "sample_id")
 
 # save taxtab as long tibble (rows = OTU/ASV, cols = tax rankings)
 taxtab_out_u <- phyloseq::tax_table(ps_u) %>%
     as("matrix") %>%
-    as_tibble(rownames = "OTU") %>%
+    tibble::as_tibble(rownames = "OTU") %>%
     seqateurs::unclassified_to_na(rownames = FALSE)
 
 # Check taxonomy table outputs
@@ -109,12 +84,12 @@ if(!all(colnames(taxtab_out_u) == c("OTU", "Root", "Kingdom", "Phylum", "Class",
 # save samplesheet
 samdf_out_u <- phyloseq::sample_data(ps_u) %>%
     as("matrix") %>%
-    as_tibble()
+    tibble::as_tibble()
 
 # Write out
-write_csv(seqtab_out_u, paste0("seqtab_unfiltered.csv"))
-write_csv(taxtab_out_u, paste0("taxtab_unfiltered.csv"))
-write_csv(samdf_out_u, paste0("samdf_unfiltered.csv"))
+readr::write_csv(seqtab_out_u, paste0("seqtab_unfiltered.csv"))
+readr::write_csv(taxtab_out_u, paste0("taxtab_unfiltered.csv"))
+readr::write_csv(samdf_out_u, paste0("samdf_unfiltered.csv"))
 saveRDS(ps_u, paste0("ps_unfiltered.rds"))
 
 ## read tracking output from unfiltered phyloseq
