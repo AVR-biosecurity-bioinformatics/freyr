@@ -22,7 +22,7 @@ process_packages <- c(
     # "rlang",
     # "rstudioapi",
     # "savR",
-    # "scales",
+    "scales",
     # "seqateurs",
     # "shiny",
     # "shinybusy",
@@ -156,9 +156,9 @@ readr::write_csv(read_tracker_long, "read_tracker_long.csv")
 ## plot read tracking
 gg.read_tracker <- read_tracker_long %>% 
     dplyr::mutate(stage = factor(stage, levels=steps_vec)) %>% # reorder step factor
-    ggplot2::ggplot(aes(x = stage, y = pairs, fill=pcr_primers))+
+    ggplot2::ggplot(aes(x = stage, y = pairs, fill=pcr_primers)) +
     geom_col() + # TODO: Add % retention labels to the top of each bar
-    scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
+    scale_y_continuous(labels = scales::label_number(scale_cut = scales::cut_short_scale())) +
     facet_grid(fcid~.) +
     theme_bw() +
     theme(
