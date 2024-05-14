@@ -1,4 +1,17 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    "dplyr",
+    "magrittr",
+    "purrr",
+    "readr",
+    "stringr",
+    "tidyr",
+    NULL
+    )
+
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+
 
 # Find all directories within data folder
 if (!exists("params.data_folder")) { # if data_loc not defined, use "data"
@@ -18,34 +31,35 @@ distinct()
 
 # Check that sample_ids contain fcid, if not; attach
 samdf <- samdf %>%
-mutate(sample_id = case_when(
-    !str_detect(sample_id, fcid) ~ paste0(fcid,"_",sample_id),
-    TRUE ~ sample_id
-))
+    dplyr::mutate(sample_id = case_when(
+        !stringr::str_detect(sample_id, fcid) ~ paste0(fcid,"_",sample_id),
+        TRUE ~ sample_id
+        )
+    )
 
 # Check that samples match samplesheet
 fastqFs <- 
     purrr::map(list.dirs(data_loc_abs, recursive=FALSE),
                 list.files, pattern="_R1_", full.names = TRUE) %>%
     unlist() %>%
-    str_remove(pattern = "^(.*)\\/") %>%
-    str_remove(pattern = "(?:.(?!_S))+$")
+    stringr::str_remove(pattern = "^(.*)\\/") %>%
+    stringr::str_remove(pattern = "(?:.(?!_S))+$")
 
 # Filter undetermined reads from sample sheet
-fastqFs <- fastqFs[!str_detect(fastqFs, "Undetermined")]
-
-# write_csv(as.data.frame(fastqFs), "fastqFs.csv")
+fastqFs <- fastqFs[!stringr::str_detect(fastqFs, "Undetermined")]
 
 # Check for fastq files that are missing from samplesheet
-if (length(setdiff(fastqFs, samdf$sample_id)) > 0) {warning("The fastq file/s: ", setdiff(fastqFs, samdf$sample_id), " are not in the sample sheet") }
+if (length(setdiff(fastqFs, samdf$sample_id)) > 0) {
+    warning("The fastq file/s: ", setdiff(fastqFs, samdf$sample_id), " are not in the sample sheet") 
+    }
 
 # Check for sample_ids that dont have a corresponding fastq file
 if (length(setdiff(samdf$sample_id, fastqFs)) > 0) {
-warning(paste0("The fastq file: ",
-                setdiff(samdf$sample_id, fastqFs),
-                " is missing, dropping from samplesheet \n")) 
-samdf <- samdf %>%
-    filter(!sample_id %in% setdiff(samdf$sample_id, fastqFs))
+    warning(paste0("The fastq file: ",
+                    setdiff(samdf$sample_id, fastqFs),
+                    " is missing, dropping from samplesheet \n")) 
+    samdf <- samdf %>%
+        filter(!sample_id %in% setdiff(samdf$sample_id, fastqFs))
 }
 
 ### Add .fastq paths to the sample sheet in additional fwd and rev columns
@@ -69,23 +83,23 @@ fastq_paths.df <- # create data frame of read path info
         fcid = fastq_paths.fcid
         ) 
 
-write_csv(file = "fastq_paths_all.csv", x = fastq_paths.df) # write csv of all read paths with metadata
+readr::write_csv(file = "fastq_paths_all.csv", x = fastq_paths.df) # write csv of all read paths with metadata
 
 fastq_paths.df %>% # data frame of sample paths
     dplyr::filter(!grepl("Undetermined",sample_id)) %>% 
-    write_csv(file = "fastq_paths_samples.csv", x = .)
+    readr::write_csv(file = "fastq_paths_samples.csv", x = .)
 
 fastq_paths.df %>% # data frame of only Undetermined paths
     dplyr::filter(grepl("Undetermined",sample_id)) %>% 
-    write_csv(file = "fastq_paths_ud.csv", x = .)
+    readr::write_csv(file = "fastq_paths_ud.csv", x = .)
 
 # join paths df to samplesheet (drops Undetermined reads)
-samdf <- left_join(samdf, fastq_paths.df, by = c("sample_id", "fcid"))
+samdf <- dplyr::left_join(samdf, fastq_paths.df, by = c("sample_id", "fcid"))
 
 # Add primers and target gene to sample sheet
 if (stringr::str_detect(params.data_folder, "single$")) { # this is a temp fix for two datasets
     samdf <- samdf %>%
-        mutate(
+        dplyr::mutate(
             target_gene = "COI",
             pcr_primers = "fwhF2-fwhR2n",
             for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC",
@@ -94,7 +108,7 @@ if (stringr::str_detect(params.data_folder, "single$")) { # this is a temp fix f
 } else {
     if (stringr::str_detect(params.data_folder, "dual$|full_teph$")) {
         samdf <- samdf %>%
-            mutate(
+            dplyr::mutate(
                 target_gene = "COI;EIF3L",
                 pcr_primers = "fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4",
                 for_primer_seq = "GGDACWGGWTGAACWGTWTAYCCHCC;GATGCGYCGTTATGCYGATGC",
@@ -106,10 +120,6 @@ if (stringr::str_detect(params.data_folder, "single$")) { # this is a temp fix f
 
 #### TODO: Import parameters from external .csv or Excel spreadsheet
 #### then mutate so make sure paths are updated to absolute
-
-# write_csv(file = "samdf.csv", x = samdf)
-
-
 
 
 # Params to add in step_add_parameters
@@ -161,7 +171,7 @@ if (stringr::str_detect(params.data_folder, "single$")) {
         threads = 1
     )
 } else { if (stringr::str_detect(params.data_folder, "dual$|full_teph$")) {
-    params <- tibble(
+    params <- tibble::tibble(
         # Primer parameters
         pcr_primers = c("fwhF2-fwhR2nDac", "EIF3LminiF4-EIF3lminiR4"),
         target_gene=c("COI", "EIF3L"),
@@ -308,7 +318,7 @@ default_params <- tibble::tibble(
 # Make sure all columns are present and same type using a special bind operation
 params_df <- new_bind(default_params %>% filter(FALSE), params) 
 
-write_csv(file = "params.csv", x = params_df)
+readr::write_csv(file = "params.csv", x = params_df)
 
 # Check columns arent NA
 for(i in 1:ncol(default_params)){
@@ -356,44 +366,6 @@ for(i in 1:ncol(default_params)){
 # }
 
 
-
-################ Creating temp files needed during targets but not now
-
-# Create params_primer file for later
-params_df %>% 
-    dplyr::select(pcr_primers, target_gene, max_primer_mismatch) %>%
-    write_csv("params_primer.csv")
-
-# Create params_readfilter file for later
-params_df %>% 
-    dplyr::select(pcr_primers, target_gene, read_min_length, read_max_length, read_max_ee, 
-                read_trunc_length, read_trim_left, read_trim_right) %>%
-    write_csv("params_readfilter.csv")
-
-# Create params_dada file for later
-params_df %>% 
-    dplyr::select(pcr_primers, target_gene, concat_unmerged, high_sensitivity) %>%
-    write_csv("params_dada.csv")
-
-# Create params_asvfilter file for later
-params_df %>% 
-    dplyr::select(pcr_primers, target_gene, asv_min_length, asv_max_length,
-                phmm, coding, genetic_code) %>%
-    write_csv("params_asvfilter.csv")
-
-# Create temporary params_database file for tracking
-params_df %>% 
-    dplyr::select(pcr_primers, target_gene, idtaxa_db, idtaxa_confidence, 
-                ref_fasta, blast_min_identity, blast_min_coverage, run_blast) %>%
-    write_csv("params_database.csv")
-
-# Create temporary params_ps file for tracking
-params_df %>% 
-    dplyr::select(pcr_primers, target_gene, target_kingdom, target_phylum, target_class,
-                    target_order, target_family, target_genus, target_species, 
-                    min_sample_reads, min_taxa_reads, min_taxa_ra) %>%
-    write_csv("params_ps.csv")
-
 # need a way to check sequencing read inputs
 
 ## save .rds outputs
@@ -401,14 +373,13 @@ params_df %>%
 # saveRDS(object = params_df, file = "params.rds")
 
 ## split samplesheet by primer and join to params by primer
-samdf_params <- # split samdf loci-relevant columns across new rows, then join samdf and params  
-    samdf %>% 
-    separate_longer_delim(c(pcr_primers, for_primer_seq, rev_primer_seq, target_gene), delim = ";") %>% 
-    left_join(., params, by = c("pcr_primers", "target_gene"))
+samdf_params <- samdf %>%  # split samdf loci-relevant columns across new rows, then join samdf and params  
+    tidyr::separate_longer_delim(c(pcr_primers, for_primer_seq, rev_primer_seq, target_gene), delim = ";") %>% 
+    dplyr::left_join(., params, by = c("pcr_primers", "target_gene"))
 
-write_csv(samdf, "samdf_original.csv") # save csv
+readr::write_csv(samdf, "samdf_original.csv") # save csv
 
-write_csv(samdf_params, "samdf_params.csv") # save csv
+readr::write_csv(samdf_params, "samdf_params.csv") # save csv
 
 split_samdf <- split(samdf_params, samdf_params$pcr_primers) # split dfs by pcr_primers
 
@@ -418,7 +389,7 @@ for ( I in 1:length(split_samdf)) { # assign new dfs to new variables
         paste0(unique(split_samdf[[I]]$pcr_primers),"_samdf"),
         split_samdf[[I]]
         )
-    write_csv( # print dfs inside work dir; maybe publish?
+    readr::write_csv( # print dfs inside work dir; maybe publish?
         x = get(new_df_name), 
         file = sprintf("%s.csv",new_df_name)
         )
@@ -430,7 +401,7 @@ for ( I in 1:length(split_samdf)) { # assign new dfs to new variables
 
 
 ## BLAST database ranks
-## TODO: ignore this check if 'params.tax_ranks' is set explicitly
+## TODO: ignore this check if 'tax_ranks' is set explicitly in loci parameters
 check_param <- params_df$ref_fasta[!is.na(params_df$ref_fasta)] %>% 
     stringr::str_split(pattern=";", n=Inf) %>% 
     unlist()

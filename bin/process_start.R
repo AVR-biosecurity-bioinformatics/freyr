@@ -4,13 +4,15 @@ if (!exists("projectDir")) { projectDir <- "." } # if not running in Nextflow, u
 source(file.path(projectDir, "jack_notes/.Rprofile"))
 source(file.path(projectDir, "bin/functions.R"))
 source(file.path(projectDir, "bin/themes.R"))
-source(file.path(projectDir, "bin/_targets_packages.R"))
+# source(file.path(projectDir, "bin/_targets_packages.R")) ### TODO: remove this once all R scripts directly load required packages
 
 ### parse Nextflow params dictionary (aka. "params" in Nextflow) directly into R variables
 ## NOTE: this works only as long as no parameter value contains ", " (but it can handle spaces)
 if (!exists("params_dict")) {
     stop("'params_dict' not found; check it is defined in process .nf file!")
 }
+
+invisible(library(stringr)) # load stringr for parsing
 
 params_list <- params_dict %>% # convert Groovy list format into R nested list
                 stringr::str_remove_all("\\[|\\]") %>% 

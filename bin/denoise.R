@@ -1,4 +1,11 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    "dada2",
+    NULL
+    )
+
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 # check variables defined
 

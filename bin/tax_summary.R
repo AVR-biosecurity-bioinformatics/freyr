@@ -1,5 +1,16 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    "dplyr",
+    "magrittr",
+    "purrr",
+    "readr",
+    "rlang",
+    "stringr",
+    NULL
+    )
 
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 ## check and define variables
 idtaxa <-       readRDS(tax)
@@ -22,21 +33,21 @@ idtaxa_summary <- idtaxa_ids %>%
         data.frame(t(taxa)) %>% # create data frame setting ranks to column names
             magrittr::set_colnames(ranks[1:ncol(.)])
     }) %>%
-    mutate_all(function(y){
-        name <- y %>% str_remove("_[0-9].*$") # get name of taxon
-        conf <- y %>% str_remove("^.*_") %>% # get confidence of taxon, truncated to 5 digits (5 + '.')
-            str_trunc(width=6, side="right", ellipsis = "")
+    dplyr::mutate_all(function(y){
+        name <- y %>% stringr::str_remove("_[0-9].*$") # get name of taxon
+        conf <- y %>% stringr::str_remove("^.*_") %>% # get confidence of taxon, truncated to 5 digits (5 + '.')
+            stringr::str_trunc(width=6, side="right", ellipsis = "")
         paste0(name, "_", conf, "%") # create new taxon name with confidence in % form
     }) %>%
-    mutate_all(~ na_if(., "NA_NA%")) %>% # convert 'NA_NA%' into true NAs
-    mutate(
+    dplyr::mutate_all(~ na_if(., "NA_NA%")) %>% # convert 'NA_NA%' into true NAs
+    dplyr::mutate(
         OTU_seq = OTU_seq, # add OTU sequence as column
         OTU_hash = OTU_hash # add OTU sequence hash as column
     )
 
 if(!is.null(joint)){
     blast_summary <- joint %>% 
-        mutate(
+        dplyr::mutate(
             pcr_primers = pcr_primers,
             target_gene = target_gene,
             idtaxa_db = idtaxa_db,
@@ -58,8 +69,8 @@ if(!is.null(joint)){
         )
     
     summary_table <- idtaxa_summary %>%
-        left_join(blast_summary) %>%
-        dplyr::select(any_of(c(
+        dplyr::left_join(blast_summary) %>%
+        dplyr::select(tidyselect::any_of(c(
             "OTU_hash",
             "OTU_seq", 
             "pcr_primers", 
@@ -84,7 +95,7 @@ if(!is.null(joint)){
 
 } else {
     summary_table <- idtaxa_summary %>%
-        dplyr::select(any_of(c(
+        dplyr::select(tidyselect::any_of(c(
             "OTU_hash",
             "OTU_seq", 
             "pcr_primers", 
@@ -109,7 +120,7 @@ if(!is.null(joint)){
 }
 
 out <- paste0(fcid,"_",pcr_primers,"_taxonomic_assignment_summary.csv")
-write_csv(summary_table, out)
+readr::write_csv(summary_table, out)
 
 saveRDS(summary_table, paste0(fcid,"_",pcr_primers,"_taxonomic_assignment_summary.rds"))
 

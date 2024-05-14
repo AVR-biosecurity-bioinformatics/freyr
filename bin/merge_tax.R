@@ -1,5 +1,15 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    "dplyr",
+    "purrr",
+    "rlang",
+    "stringr",
+    "tibble",
+    NULL
+    )
 
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 ## check and define variables
 

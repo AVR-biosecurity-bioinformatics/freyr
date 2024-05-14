@@ -14,9 +14,9 @@ parse_nf_var_repeat <- function(x) {
       pattern = "[^\\s,\\[\\]]+" # extract all runs of characters that aren't ' ' ',' '[' or ']' 
       ) %>% 
     unlist() %>%
-    as_tibble_col(column_name = "col") %>% 
+    tibble::as_tibble_col(column_name = "col") %>% 
     unique() %>%
-    pull(col)
+    dplyr::pull(col)
   
   if (length(variable) == 1) {
     out <- variable
@@ -33,13 +33,13 @@ parse_nf_var_repeat <- function(x) {
 step_demux_samdf <- function(samdf){
     out <- samdf %>%
       dplyr::group_by(sample_id) %>%
-      group_split() %>%
+      dyplr::group_split() %>%
       purrr::map(function(x){
         if(any(stringr::str_detect(x$pcr_primers, ";"), na.rm = TRUE)){
           primer_names <- unlist(stringr::str_split(unique(x$pcr_primers), ";")) 
           x <- x %>% 
             dplyr::mutate(count = length(primer_names)) %>% #Replicate the samples
-            uncount(count) %>%
+            tidyr::uncount(count) %>%
             dplyr::mutate(pcr_primers = unlist(stringr::str_split(unique(x$pcr_primers), ";")),
                    for_primer_seq = unlist(stringr::str_split(unique(x$for_primer_seq), ";")),
                    rev_primer_seq = unlist(stringr::str_split(unique(x$rev_primer_seq), ";")),
@@ -196,14 +196,14 @@ step_seq_qc <- function(fcid, quiet=FALSE, write_all=FALSE){
   }
   if(!dir.exists(paste0(seq_dir,"/InterOp"))){
     warning("InterOp folder must be present to run quality checks")
-    out <- tibble(fcid = fcid,
+    out <- tibble::tibble(fcid = fcid,
                   reads_pf = NA_integer_,
                   reads_total = NA_integer_)
     return(out)
   }
   if(!file.exists(paste0(seq_dir,"/RunInfo.xml"))){
     warning("RunInfo.xml must be present to run quality checks")
-    out <- tibble(fcid = fcid,
+    out <- tibble::tibble(fcid = fcid,
                   reads_pf = NA_integer_,
                   reads_total = NA_integer_)
     return(out)
@@ -218,7 +218,7 @@ step_seq_qc <- function(fcid, quiet=FALSE, write_all=FALSE){
   # Ensure indices are present
   if(length(fc@parsedData)==0){
     warning(paste0("Flow cell metrics could not be parsed for", fcid, " skipping seq run qc"))
-    out <- tibble(fcid = fcid,
+    out <- tibble::tibble(fcid = fcid,
                   reads_pf = NA_integer_,
                   reads_total = NA_integer_)
     return(out)
@@ -353,7 +353,7 @@ step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
   # Check if undetermined reads file exists
   if(!any(stringr::str_detect(list.files(seq_dir, pattern="_R1_", full.names = TRUE), "Undetermined"), na.rm = TRUE)){
     warning("Error, an Undetermined reads fastq must be present to calculate index switching")
-    res <- tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_)
+    res <- tibble::tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_)
     return(res)
   }
   # Create qc_dir if it doesnt exist
@@ -373,7 +373,7 @@ step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
   # Ensure indices are present
   if(all(is.na(indices$Freq))){
     warning(paste0("No index sequences present in fastq headers for run", fcid, " no switch rate calculated"))
-    res <- tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_)
+    res <- tibble::tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_)
     return(res)
   }
   
@@ -391,7 +391,7 @@ step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
   applied_indices <- switched %>%
     dplyr::filter(!stringr::str_detect(Sample_Name, "Undetermined")) %>%
     dplyr::group_by(Sample_Name) %>%
-    group_modify(~{
+    dplyr::group_modify(~{
       .x %>%
         dplyr::top_n(n=1, Freq) %>%
         dplyr::slice(1) %>%  # Handle ties
@@ -401,12 +401,12 @@ step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
   # Check if indices are combinatorial
   if(any(duplicated(applied_indices$index)) | any(duplicated(applied_indices$index2))){
     warning(paste0("Combinatorial indexes detected for", fcid, " no switch rate calculated"))
-    res <- tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_, contam_rate=NA_integer_)
+    res <- tibble::tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_, contam_rate=NA_integer_)
     return(res)
   }
   
   # Get other undetermined reads which had completely unapplied indexes
-  other_reads <- anti_join(indices,combos, by=c("index", "index2")) %>%
+  other_reads <- dplyr::anti_join(indices,combos, by=c("index", "index2")) %>%
     dplyr::summarise(sum = sum(Freq, na.rm = TRUE)) %>%
     dplyr::pull(sum)
   
@@ -424,7 +424,7 @@ step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
       dplyr::mutate(switch_rate =  observed / expected ) %>%
       dplyr::mutate(contam_rate =  switch_rate^2 )
   } else {
-    res <- tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_, contam_rate=NA_integer_)
+    res <- tibble::tibble(expected = NA_integer_, observed=NA_integer_, switch_rate=NA_integer_, contam_rate=NA_integer_)
     return(res)
   }
   
@@ -444,15 +444,15 @@ step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
     })) %>%
     dplyr::mutate(index2 = purrr::map(index2, ~{
       index_list <- applied_indices$index2
-      index_dist <- stringdist::stringdist(.x,index_list)
+      index_dist <- stringdist::stringdist(.x,index_list) # stringdist is imported by seqateurs
       # Remove those above barcode_mismatch threshold
       index_list <- index_list[index_dist <= barcode_mismatch]
       index_dist <- index_dist[index_dist <= barcode_mismatch]
       return(index_list[which.min(index_dist)])
     })) %>%
     tidyr::unnest(c(index, index2)) %>%
-    group_by(index, index2, Sample_Name) %>%
-    summarise(Freq = sum(Freq))
+    dplyr::group_by(index, index2, Sample_Name) %>%
+    dplyr::summarise(Freq = sum(Freq))
 
   gg.switch <- switch_plot_dat %>%
     dplyr::group_by(Sample_Name, index, index2) %>%
@@ -1511,11 +1511,11 @@ coalesce_tax <- function (x, y, suffix = c(".x", ".y"), prefer="left", join = dp
                           ...) {
   if(!"OTU" %in% colnames(x)){
     x <- x %>%
-      as_tibble(rownames = "OTU")
+      tibble::as_tibble(rownames = "OTU")
   }
   if(!"OTU" %in% colnames(y)){
     y <- y %>%
-      as_tibble(rownames = "OTU")
+      tibble::as_tibble(rownames = "OTU")
   }
   joined <- join(x, y, by = "OTU", suffix = suffix, ...)
   cols <- union(names(x), names(y))
@@ -1540,7 +1540,7 @@ coalesce_tax <- function (x, y, suffix = c(".x", ".y"), prefer="left", join = dp
   })
   names(coalesced) <- to_coalesce
   out <- dplyr::bind_cols(joined, coalesced)[cols] %>%
-    column_to_rownames("OTU")
+    tibble::column_to_rownames("OTU")
   return(out)
 }
 
@@ -1629,7 +1629,7 @@ step_phyloseq <- function(seqtab, taxtab, samdf, seqs=NULL, phylo=NULL, name_var
   # Check if samdf is a path - if so read in
   if(is(samdf, "character")){
     if (file.exists(samdf)){
-      samdf <- read_csv(normalizePath(samdf))
+      samdf <- readr::read_csv(normalizePath(samdf))
     } else {
       stop("samdf does not exist")
     }
@@ -1645,14 +1645,14 @@ step_phyloseq <- function(seqtab, taxtab, samdf, seqs=NULL, phylo=NULL, name_var
   } else if (class(seqs) == "DNAStringSet"){
     seqs <- seqs
   } else {
-    seqs <- DNAStringSet(colnames(seqtab))
+    seqs <- Biostrings::DNAStringSet(colnames(seqtab))
     names(seqs) <- seqs
   }
   
   #Check if phy is a path - if so read in
   if(is(phylo, "character")){
     if (file.exists(phylo)){
-      phy <- read.tree(normalizePath(phylo))
+      phy <- ape::read.tree(normalizePath(phylo))
     } else {
       stop("phy path does not exist")
     }
@@ -1667,7 +1667,7 @@ step_phyloseq <- function(seqtab, taxtab, samdf, seqs=NULL, phylo=NULL, name_var
   
   #Load sample information
   samdf <- samdf %>%
-    filter(!duplicated(sample_id)) %>%
+    dplyr::filter(!duplicated(sample_id)) %>%
     as.data.frame()%>%
     magrittr::set_rownames(.$sample_id)
   
@@ -1693,12 +1693,12 @@ step_phyloseq <- function(seqtab, taxtab, samdf, seqs=NULL, phylo=NULL, name_var
   }
   
   if(name_variants){
-    taxa_names(ps) <- paste0("SV", seq(ntaxa(ps)),"-",tax_table(ps)[,8])
+    phyloseq::taxa_names(ps) <- paste0("SV", seq(ntaxa(ps)),"-",tax_table(ps)[,8])
   }
   
   if(nrow(seqtab) > nrow(phyloseq::sample_data(ps))){
     message("Warning: the following samples were not included in phyloseq object, check sample names match the sample metadata")
-    message(rownames(seqtab)[!rownames(seqtab) %in% sample_names(ps)])
+    message(rownames(seqtab)[!rownames(seqtab) %in% phyloseq::sample_names(ps)])
   }
   return(ps)
 }
@@ -1707,21 +1707,21 @@ step_rareplot <- function(ps, min_reads=1000, plot_dir=NULL){
   #Create rarefaction curve
   rare <- phyloseq::otu_table(ps) %>%
     as("matrix") %>%
-    rarecurve(step=max(sample_sums(ps))/100) %>%
+    vegan::rarecurve(step=max(sample_sums(ps))/100) %>%
     purrr::map(function(x){
       b <- as.data.frame(x)
       b <- data.frame(OTU = b[,1], count = rownames(b))
       b$count <- as.numeric(gsub("N", "",  b$count))
       return(b)
     }) %>%
-    purrr::set_names(sample_names(ps)) %>%
+    purrr::set_names(phyloseq::sample_names(ps)) %>%
     dplyr::bind_rows(.id="sample_id")
   
   gg.rare <- ggplot2::ggplot(data = rare)+
     geom_line(aes(x = count, y = OTU, group=sample_id), alpha=0.5)+
     geom_point(data = rare %>% 
                  dplyr::group_by(sample_id) %>% 
-                 top_n(1, count),
+                 dplyr::top_n(1, count),
                aes(x = count, y = OTU, colour=(count > min_reads))) +
     geom_label(data = rare %>% 
                  dplyr::group_by(sample_id) %>% 
@@ -1762,7 +1762,7 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
             rank = "Kingdom",
             value = kingdom
           ) %>%
-          filter_taxa(function(x) mean(x) > 0, TRUE)
+          phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
       } else{
         warning(paste0("No ASVs were assigned to the Kingdom", kingdom," - Check your target_kingdom parameter"))
       }
@@ -1775,7 +1775,7 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
             rank = "Phylum",
             value = phylum
           ) %>%
-          filter_taxa(function(x) mean(x) > 0, TRUE)
+          phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
       } else{
         warning(paste0("No ASVs were assigned to the Phylum", phylum," - Check your target_phylum parameter"))
       }
@@ -1801,7 +1801,7 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
             rank = "Order",
             value = order
           ) %>%
-          filter_taxa(function(x) mean(x) > 0, TRUE)
+          phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
       } else{
         warning(paste0("No ASVs were assigned to the Order", order," - Check your target_phylum parameter"))
       }
@@ -1814,7 +1814,7 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
             rank = "Family",
             value = family
           ) %>%
-          filter_taxa(function(x) mean(x) > 0, TRUE)
+          phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
       } else{
         warning(paste0("No ASVs were assigned to the Family", family," - Check your target_phylum parameter"))
       }
@@ -1827,7 +1827,7 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
             rank = "Genus",
             value = genus
           ) %>%
-          filter_taxa(function(x) mean(x) > 0, TRUE)
+          phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
       } else{
         warning(paste0("No ASVs were assigned to the Genus", genus," - Check your target_phylum parameter"))
       }
@@ -1840,7 +1840,7 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
             rank = "Species",
             value = species
           ) %>%
-          filter_taxa(function(x) mean(x) > 0, TRUE)
+          phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
       } else{
         warning(paste0("No ASVs were assigned to the Species", species," - Check your target_phylum parameter"))
       }
@@ -1870,13 +1870,13 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
   #Remove all samples under the minimum read threshold 
   if(min_sample_reads > 0){
     ps2 <- ps1 %>%
-      prune_samples(sample_sums(.)>=min_sample_reads, .) %>% 
-      filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
+      phyloseq::prune_samples(sample_sums(.)>=min_sample_reads, .) %>% 
+      phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
   } else {
     if (!quiet){message(paste0("No minimum sample reads filter set - skipping this filter"))}
     ps2 <- ps1 %>%
-      prune_samples(sample_sums(.)>=0,.) %>%
-      filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
+      phyloseq::prune_samples(sample_sums(.)>=0,.) %>%
+      phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
   }
   
   #Message how many were removed
@@ -1888,9 +1888,9 @@ step_filter_phyloseq <- function(ps, kingdom = NA, phylum = NA, class = NA,
 step_output_summary <- function(ps, out_dir, type="unfiltered"){
   #Export raw csv
   phyloseq::psmelt(ps) %>%
-    filter(Abundance > 0) %>%
+    dplyr::filter(Abundance > 0) %>%
     dplyr::select(-Sample) %>%
-    write_csv(normalizePath(paste0(out_dir,"/raw_", type,".csv")))
+    readr::write_csv(normalizePath(paste0(out_dir,"/raw_", type,".csv")))
   
   # Export species level summary of filtered results
   ps %>%

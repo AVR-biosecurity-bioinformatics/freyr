@@ -1,4 +1,19 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    "Biostrings",
+    "dada2",
+    "dplyr",
+    "ggplot2",
+    "patchwork",
+    "readr",
+    "stringr",
+    "taxreturn",
+    "tibble",
+    NULL
+    )
+
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 ## check and define variables 
 if(is.na(asv_min_length))   {asv_min_length <- NULL}
@@ -52,8 +67,8 @@ if(is.character(phmm) && stringr::str_detect(phmm, ".rds")){
 ## subset PHMM if primers were provided
 if (is(phmm_model, "PHMM") && !is.null(primers)){
     # Check that one of the two primers can bind
-    Fbind <- get_binding_position(primers[1], model = phmm_model, tryRC = TRUE, min_score = 10)
-    Rbind <- get_binding_position(primers[2], model = phmm_model, tryRC = TRUE, min_score = 10)
+    Fbind <- taxreturn::get_binding_position(primers[1], model = phmm_model, tryRC = TRUE, min_score = 10)
+    Rbind <- taxreturn::get_binding_position(primers[2], model = phmm_model, tryRC = TRUE, min_score = 10)
     if(!is.na(Fbind$start) & !is.na(Rbind$start)){
         phmm_model <- taxreturn::subset_model(phmm_model, primers = primers)
     } else if(!is.na(Fbind$start) & is.na(Rbind$start)){
@@ -66,7 +81,7 @@ if (is(phmm_model, "PHMM") && !is.null(primers)){
                 min_score = 10
                 )
             if (!is.na(Rbind$start)) {
-                primers[2] <- str_remove(primers[2], paste0("^.{1,",r,"}"))
+                primers[2] <- stringr::str_remove(primers[2], paste0("^.{1,",r,"}"))
                 break
             }
         }
@@ -76,7 +91,7 @@ if (is(phmm_model, "PHMM") && !is.null(primers)){
         for(r in seq(1, nchar(primers[1])-10, 1)){ #Minimum length of 10 as this has to match minscore
         Rbind <- taxreturn::get_binding_position(stringr::str_remove(primers[1], paste0("^.{1,",r,"}")), model = phmm_model, tryRC = TRUE, min_score = 10)
         if (!is.na(Rbind$start)) {
-            primers[1] <- str_remove(primers[1], paste0("^.{1,",r,"}"))
+            primers[1] <- stringr::str_remove(primers[1], paste0("^.{1,",r,"}"))
             break
         }
         }
@@ -116,7 +131,7 @@ if(any(!is.null(c(asv_min_length, asv_max_length)), na.rm = TRUE) & any(reads_ch
 
 ## Align ASVs against phmm
 if (is(phmm_model, "PHMM") & any(reads_lengthfilt > 0)){
-    seqs <- DNAStringSet(colnames(seqtab_cut))
+    seqs <- Biostrings::DNAStringSet(colnames(seqtab_cut))
     names(seqs) <- colnames(seqtab_cut)
     phmm_filt <- taxreturn::map_to_model(
         seqs, model = phmm_model, min_score = 100, min_length = 100,
@@ -169,17 +184,17 @@ reads_final <- rowSums(seqtab_final_renamed)
 ## Output a cleanup summary
 cleanup <- seqtab %>%
     as.data.frame() %>%
-    pivot_longer( everything(),
+    tidyr::pivot_longer( tidyselect::everything(),
                     names_to = "OTU",
                     values_to = "Abundance") %>%
     dplyr::group_by(OTU) %>%
-    summarise(Abundance = sum(Abundance)) %>%
+    dplyr::summarise(Abundance = sum(Abundance)) %>%
     dplyr::mutate(length  = nchar(OTU)) %>%
-    dplyr::mutate(type = case_when(
-        !OTU %in% getSequences(seqtab_nochim) ~ "Chimera",
-        !OTU %in% getSequences(seqtab_cut) ~ "Incorrect size",
-        !OTU %in% getSequences(seqtab_phmm) ~ "PHMM",
-        !OTU %in% getSequences(seqtab_final) ~ "Stop codons",
+    dplyr::mutate(type = dplyr::case_when(
+        !OTU %in% dada2::getSequences(seqtab_nochim) ~ "Chimera",
+        !OTU %in% dada2::getSequences(seqtab_cut) ~ "Incorrect size",
+        !OTU %in% dada2::getSequences(seqtab_phmm) ~ "PHMM",
+        !OTU %in% dada2::getSequences(seqtab_final) ~ "Stop codons",
         TRUE ~ "Retained"
     )) %>%
     dplyr::mutate(concat = str_detect(OTU, "NNNNNNNNNN")) %>%
@@ -263,13 +278,13 @@ out_plot <- gg.abundance / gg.unique
 # plot
 ggsave(paste0(fcid,"_",pcr_primers,"_ASV_cleanup_summary.pdf"), out_plot, width = 11, height = 8)
 # summary table
-bind_rows(unique(cleanup)) %>%
-    write_csv(paste0(fcid,"_",pcr_primers,"_ASV_cleanup_summary.csv"))
+dplyr::bind_rows(unique(cleanup)) %>%
+    readr::write_csv(paste0(fcid,"_",pcr_primers,"_ASV_cleanup_summary.csv"))
 # filtered seqtab
 saveRDS(seqtab_final_renamed, paste0(fcid,"_",pcr_primers,"_seqtab.cleaned.rds"))
 
 # for read-tracking
-reads_out <- tibble(
+reads_out <- tibble::tibble(
     sample_id = rownames(seqtab) %>% stringr::str_remove(pattern="_S[0-9]+_R[1-2]_.*$"),
     filter_chimera = reads_chimerafilt,
     filter_length = reads_lengthfilt,
@@ -277,7 +292,7 @@ reads_out <- tibble(
     filter_frame = reads_framefilt,
     filter_seqtab = reads_final
     ) %>%
-    pivot_longer(
+    tidyr::pivot_longer(
         cols = filter_chimera:filter_seqtab,
         names_to = "stage",
         values_to = "pairs"
@@ -288,13 +303,7 @@ reads_out <- tibble(
     ) %>%
     dplyr::select(stage, sample_id, fcid, pcr_primers, pairs)
 
-write_csv(reads_out, paste0("filter_seqtab_",fcid,"_",pcr_primers,"_readsout.csv"))
-
-# return(list(filtered_seqtab = seqtab_final, 
-#             filtered_asvs = res,
-#             cleanup_summary = cleanup,
-#             plot = list(out_plot)))
-
+readr::write_csv(reads_out, paste0("filter_seqtab_",fcid,"_",pcr_primers,"_readsout.csv"))
 
 # stop(" *** stopped manually *** ") ##########################################
 

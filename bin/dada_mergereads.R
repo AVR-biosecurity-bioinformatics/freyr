@@ -1,4 +1,16 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    "dada2",
+    "dplyr",
+    "magrittr",
+    "readr",
+    "stringr",
+    "tibble",
+    NULL
+    )
+
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 # check variables defined
 if ( !concat_unmerged %in% c(TRUE, FALSE) ) {
@@ -126,7 +138,7 @@ sapply(mergers, getN) %>%
         stage = "dada_mergereads"
     ) %>%
     dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>% 
-    write_csv(., paste0("dada_mergereads_",fcid,"_",pcr_primers,"_readsout.csv"))
+    readr::write_csv(., paste0("dada_mergereads_",fcid,"_",pcr_primers,"_readsout.csv"))
 
 
 # stop(" *** stopped manually *** ") ##########################################

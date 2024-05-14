@@ -1,11 +1,24 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    "dplyr",
+    "ggplot2",
+    "patchwork",
+    "seqateurs",
+    "ShortRead",
+    "stringr",
+    "tidyr",
+    NULL
+    )
+
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 # check variables defined
 
 
 ### run R code
 
-plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene, pcr_primers, truncLen = NULL, quiet=FALSE, n = 10000){
+plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene, pcr_primers, truncLen = NULL, quiet=FALSE, n_reads = 10000){
     fastqFs <- normalizePath(fwd_reads)
     fastqRs <- normalizePath(rev_reads)
     
@@ -27,8 +40,8 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
         return(NULL)
     }
     
-    Fquals <- get_qual_stats(fastqFs, n=n)
-    Rquals <- get_qual_stats(fastqRs, n=n)
+    Fquals <- seqateurs::get_qual_stats(fastqFs, n=n_reads)
+    Rquals <- seqateurs::get_qual_stats(fastqRs, n=n_reads)
         
     #Plot qualities
     gg.Fqual <- Fquals %>% 
@@ -120,23 +133,10 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
     
     Qualplots <- (gg.Fqual + gg.Rqual) / (gg.Fee + gg.Ree)
 
-    Qualplots
-
-    # stop(" *** stopped manually *** ") ##########################################
-
     ggsave(paste0(sample_id,"_",target_gene,"_",pcr_primers,"_",file_suffix,"_qualplots.pdf"), Qualplots, width = 11, height = 8)
 
     return(Qualplots)
 }
-
-# print(sample_id) 
-# print(fwd_reads) 
-# print(rev_reads) 
-# print(fcid)
-# print(target_gene)
-# print(pcr_primers)
-
-# stop(" *** stopped manually *** ") ##########################################
 
 plot_read_quals2(
     sample_id =     sample_id, 
@@ -150,4 +150,6 @@ plot_read_quals2(
     n = 1000
 )
 
-### TODO: Increase "n" to 10000
+### TODO: Increase "n" to 10000 in final pipeline
+
+# stop(" *** stopped manually *** ") ##########################################

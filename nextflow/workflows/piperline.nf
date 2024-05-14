@@ -212,7 +212,7 @@ workflow PIPERLINE {
 
 
     // run SEQ_QC per flow cell 
-    // SEQ_QC ( ch_fcid ) // optional step for testing
+    SEQ_QC ( ch_fcid ) // optional step for testing
 
     //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( ch_sample_locus_reads ) 
@@ -228,9 +228,9 @@ workflow PIPERLINE {
     ch_read_tracker_samples = ch_read_tracker_samples.concat( READ_FILTER.out.read_tracking )
 
     //// create plots of read quality pre- and post-filtering, per flowcell (optional)
-    // FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
+    FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
 
-    // FILTER_QUALPLOTS_POST ( READ_FILTER.out.reads )
+    FILTER_QUALPLOTS_POST ( READ_FILTER.out.reads )
 
     /// TODO: Use FILTER_QUALPLOTS_COMBINE to combine plots by fcid and type into one PDF
 

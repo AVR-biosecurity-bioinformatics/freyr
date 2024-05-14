@@ -1,4 +1,13 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    "dplyr",
+    "stringr",
+    "tibble",
+    NULL
+    )
+
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 # check variables defined
 
@@ -18,24 +27,18 @@ priors_list <- # convert input priors .rds file list from Groovy format to R for
         ) %>% 
     unlist()
 
-# print(priors_list)
-
-priors_tibble <- tibble() # new tibble
+priors_tibble <- tibble::tibble() # new tibble
 for (i in 1:length(priors_list)) { # loop through .rds files, adding distinct sequences to tibble
-    seq <- readRDS(priors_list[i])$sequence %>% as_tibble_col(column_name = "sequence") %>% distinct()
+    seq <- readRDS(priors_list[i])$sequence %>% tibble::as_tibble_col(column_name = "sequence") %>% dplyr::distinct()
     priors_tibble <- rbind(priors_tibble, seq)
 }
 
-# print(priors_tibble)
-
 # keep only sequences that appear more than once (ie. are in more than one sample)
 priors <- priors_tibble %>% 
-            group_by(sequence) %>% 
-            summarise(n = n()) %>% 
-            filter(n>1) %>%
-            pull(sequence)
-
-print(priors)
+            dplyr::group_by(sequence) %>% 
+            dplyr::summarise(n = n()) %>% 
+            dplyr::filter(n>1) %>%
+            dplyr::pull(sequence)
 
 saveRDS(priors, paste0(fcid,"_",pcr_primers,"_priors",direction_short,".rds"))
 

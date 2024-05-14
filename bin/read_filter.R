@@ -1,4 +1,14 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    "dada2",
+    "dplyr",
+    "readr",
+    "tibble",
+    NULL
+    )
+
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 # check variables defined
 
@@ -26,12 +36,12 @@ res <- dada2::filterAndTrim(
 ## extract output read counts and save to file
 reads_out <- res %>%
     tibble::as_tibble() %>%
-    pull(reads.out)
+    dplyr::pull(reads.out)
 
 out_vector <- c("read_filter", sample_id, fcid, pcr_primers, reads_out, reads_out) 
 
 rbind(out_vector) %>%
-    as_tibble() %>%
-    write_csv(paste0("read_filter_",sample_id,"_",pcr_primers,"_readsout.csv"), col_names = F)
+    tibble::as_tibble() %>%
+    readr::write_csv(paste0("read_filter_",sample_id,"_",pcr_primers,"_readsout.csv"), col_names = F)
 
 # stop(" *** stopped manually *** ") ##########################################

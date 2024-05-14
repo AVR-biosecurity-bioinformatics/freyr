@@ -1,4 +1,14 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    "dada2",
+    "ggplot2",
+    "readr",
+    "stringr",
+    NULL
+    )
+
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 # check variables defined
 
@@ -53,8 +63,8 @@ err <- dada2::learnErrors(
 saveRDS(err, paste0(fcid,"_",pcr_primers,"_errormodel",direction_short,".rds"))
 
 ## write out errors for diagnostics
-write_csv(as.data.frame(err$trans), paste0(fcid,"_",pcr_primers,"_err",direction_short,"_observed_transitions.csv"))
-write_csv(as.data.frame(err$err_out), paste0(fcid,"_",pcr_primers,"_err",direction_short,"_inferred_errors.csv"))
+readr::write_csv(as.data.frame(err$trans), paste0(fcid,"_",pcr_primers,"_err",direction_short,"_observed_transitions.csv"))
+readr::write_csv(as.data.frame(err$err_out), paste0(fcid,"_",pcr_primers,"_err",direction_short,"_inferred_errors.csv"))
 
 ## output error plots to see how well the algorithm modelled the errors in the different runs
 p1 <- dada2::plotErrors(err, nominalQ = TRUE) + ggtitle(paste0(pcr_primers, " ", fcid," ",direction," Reads"))

@@ -1,5 +1,16 @@
 #!/usr/bin/env Rscript
+### load only required packages
+process_packages <- c(
+    "dada2",
+    "dplyr",
+    "ggplot2",
+    "seqateurs",
+    "taxreturn",
+    "tibble",
+    NULL
+    )
 
+invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 ## check and define variables
 seqtab <-   readRDS(seqtab)
@@ -23,17 +34,17 @@ tax <- tax %>%
     ### TODO: resolve above warning message
 
 # make seqmap 
-seqmap <- tibble::enframe(getSequences(seqtab), name = NULL, value="OTU") %>%
-            mutate(name = paste0("SV", seq(length(getSequences(seqtab)))))
+seqmap <- tibble::enframe(dada2::getSequences(seqtab), name = NULL, value="OTU") %>%
+    dplyr::mutate(name = paste0("SV", seq(length(dada2::getSequences(seqtab)))))
 # get ASV sequences
 seqs <- taxreturn::char2DNAbin(seqmap$OTU)
 names(seqs) <- seqmap$name
 
 # add sequences to blast output and rename columns
 blast <- blast %>% 
-    mutate(blastspp = paste0(Genus, " ", Species)) %>%
+    dplyr::mutate(blastspp = paste0(Genus, " ", Species)) %>%
     dplyr::select(name = qseqid, acc, blastspp, pident, total_score, max_score, evalue, qcovs) %>%
-    left_join(seqmap) %>%
+    dplyr::left_join(seqmap) %>%
     dplyr::select(-name)
 
 # combine blast output and tax table
