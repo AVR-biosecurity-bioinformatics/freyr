@@ -95,7 +95,7 @@ if(!is.null(joint)){
 
 } else {
     summary_table <- idtaxa_summary %>%
-        dplyr::select(any_of(c(
+        dplyr::select(tidyselect::any_of(c(
             "OTU_hash",
             "OTU_seq", 
             "pcr_primers", 
