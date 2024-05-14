@@ -51,3 +51,39 @@ Add above code to the "R sourcing" code block at the start of every R script (co
 
 TODO: check for all files previously checked in the `parameters_setup.R` script, which no longer checks because Nextflow breaks the relative paths
 
+
+### setting up `/home/js7t/personal/dev/piperline`, home of development for local code testing pre-commit 
+
+    # make dir
+    mkdir -p /home/js7t/personal/dev/piperline && cd /home/js7t/personal/dev/piperline
+
+    # clone repo
+    git clone https://github.com/jackscanlan/piperline.git .
+
+    # copy reference databases
+    cp -r /home/js7t/personal/nextflow_tests/piperline_nextflow/reference/* /home/js7t/personal/dev/piperline/reference
+
+    # copy full_teph dataset
+    cp -r /home/js7t/personal/nextflow_tests/piperline_nextflow/test_data/full_teph /home/js7t/personal/dev/piperline/test_data
+
+Running code:
+
+    # go to folder 
+    cd /home/js7t/personal/dev/piperline
+    
+    # interactive session
+    sinteractive -c16
+    
+    # load modules
+    module load git/2.21.0-GCCcore-8.2.0-nodocs && module load Nextflow R/4.2.0-foss-2021b pkgconfig/1.5.1-GCCcore-9.3.0-Python-3.8.2 GDAL/3.3.0-foss-2021a BLAST+/2.11.0-gompi-2020a Pandoc/2.5 ZeroMQ/4.3.2-GCCcore-9.3.0
+
+    # remove old outputs
+    rm -rf work/* output/modules/*
+
+    # run tests_data/dual
+    nextflow run . -resume --data_folder test_data/dual
+
+
+
+
+
