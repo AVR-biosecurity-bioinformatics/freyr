@@ -2,3 +2,10 @@
 .Rhistory
 .RData
 .Ruserdata
+data/
+reference/
+work/
+output/modules/
+test_data/full_teph/
+*.log
+.nextflow/
