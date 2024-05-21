@@ -2,6 +2,7 @@ process READ_TRACKING {
     def module_name = "read_tracking"
     tag "Whole dataset"
     // label:  
+    // cache false 
 
     input:
     path(rt_samples)
@@ -11,6 +12,7 @@ process READ_TRACKING {
     path("*.csv")
     path("read_tracker.csv"),           emit: csv
     path("read_tracker.pdf"),           emit: plot
+    path("*.pdf")
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

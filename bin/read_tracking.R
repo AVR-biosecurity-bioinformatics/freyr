@@ -2,7 +2,9 @@
 ### load only required packages
 process_packages <- c(
     "dplyr",
+    "forcats",
     "ggplot2",
+    "Hmisc",
     "readr",
     "scales",
     "stringr",
@@ -82,7 +84,7 @@ group_tibble <- group_tibble %>%
 readr::write_csv(group_tibble, "group_tibble.csv") # for debugging
 
 ## combine sample and group tibbles together
-steps_vec <- c(
+stage_vec <- c(
     "input", 
     "split_loci", 
     "primer_trim",
@@ -110,7 +112,7 @@ read_tracker_long <- sample_tibble_altered %>%
     
 read_tracker_inputcol <- read_tracker_long %>% # pull out 
     dplyr::filter(pcr_primers == "combined") %>% 
-    dplyr::select(sample_id_com, input_reads = pairs)
+    dplyr::select(sample_id_com, input = pairs)
 
 read_tracker_wide <- read_tracker_long %>% 
     dplyr::filter(pcr_primers != "combined") %>% 
@@ -121,18 +123,34 @@ read_tracker_wide <- read_tracker_long %>%
         "sample_id",
         "pcr_primers", 
         "fcid", 
-        steps_vec
+        stage_vec
     )))
 
 readr::write_csv(read_tracker_wide, "read_tracker.csv")
 readr::write_csv(read_tracker_long, "read_tracker_long.csv")
 
-## plot read tracking
+# create colour vector for pcr_primers
+wong_pal <- c(
+    "grey40", # grey
+    "#E69F00", # orange
+    "#56B4E9", # light blue
+    "#009E73", # green
+    "#F0E442", # yellow
+    "#0072B2", # dark blue
+    "#D55E00", # red-orange
+    "#CC79A7" # pink
+    )
+
+## plot read tracking by locus
 gg.read_tracker <- read_tracker_long %>% 
-    dplyr::mutate(stage = factor(stage, levels=steps_vec)) %>% # reorder step factor
+    dplyr::mutate( 
+        stage = forcats::fct_relevel(stage, stage_vec), # reorder x-axis
+        pcr_primers = forcats::fct_relevel(pcr_primers, "combined") # make sure "combined" is always first
+        ) %>% 
     ggplot2::ggplot(aes(x = stage, y = pairs, fill=pcr_primers)) +
     geom_col() + # TODO: Add % retention labels to the top of each bar
     scale_y_continuous(labels = scales::label_number(scale_cut = scales::cut_short_scale())) +
+    scale_fill_manual(values = wong_pal) +
     facet_grid(fcid~.) +
     theme_bw() +
     theme(
@@ -146,17 +164,58 @@ gg.read_tracker <- read_tracker_long %>%
         panel.border = element_rect(colour = "black", fill=NA, linewidth=0.5),
         panel.grid = element_line(linewidth = rel(0.5)),
     ) +
-    labs(x = "Pipeline step",
-            y = "Reads retained",
-            fill = "PCR primers")
+    labs(
+        x = "Pipeline step",
+        y = "Reads retained",
+        fill = "PCR primers"
+        )
 
 pdf(file="read_tracker.pdf", width = 11, height = 8 , paper="a4r")
     print(gg.read_tracker)
 try(dev.off(), silent=TRUE)
 
 ### TODO: add a per-sample line graph output
+gg.read_tracker_sample <- read_tracker_wide %>% 
+    tidyr::pivot_longer(
+        cols = input:filter_sample_taxon,
+        names_to = "stage",
+        values_to = "pairs"
+    ) %>% 
+    dplyr::mutate( 
+            stage = forcats::fct_relevel(stage, stage_vec), # reorder x-axis
+            alpha = case_when( ### TODO: Use the locus parameter min reads as a filter here
+                pairs < 1000 ~ 0.8,
+                pairs >= 1000 ~ 1
+                )
+            ) %>% 
+    ggplot2::ggplot(aes(x = stage, y = pairs, colour = pcr_primers)) +
+    geom_line(aes(group = sample_id_com, alpha = alpha)) +
+    scale_colour_manual(values = wong_pal[-1]) +
+    facet_grid(fcid~pcr_primers) +
+    theme_bw() +
+    theme(
+        strip.background = element_rect(colour = "black", fill = "lightgray"),
+        strip.text = element_text(size=9, family = ""),
+        axis.text.x =element_text(angle=45, hjust=1, vjust=1),
+        plot.background = element_blank(),
+        text = element_text(size=9, family = ""),
+        axis.text = element_text(size=8, family = ""),
+        legend.position = "right",
+        panel.border = element_rect(colour = "black", fill=NA, linewidth=0.5),
+        panel.grid = element_line(linewidth = rel(0.5)),
+    ) +
+    labs(
+        x = "Pipeline step",
+        y = "Reads retained",
+        fill = "PCR primers"
+        )
 
+pdf(file="read_tracker_sample.pdf", width = 11, height = 8 , paper="a4r")
+    print(gg.read_tracker_sample)
+try(dev.off(), silent=TRUE)
 
+### TODO: Make variant of per-sample line graph that is normalised by % of input reads per sample 
+## and add average across flow cell and locus
 
 
 # stop(" *** stopped manually *** ") ##########################################
