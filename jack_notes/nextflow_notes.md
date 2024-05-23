@@ -19,7 +19,7 @@ Need to source copy of `.Rprofile` that contains new default library location an
     module load Nextflow R/4.2.0-foss-2021b pkgconfig/1.5.1-GCCcore-9.3.0-Python-3.8.2 GDAL/3.3.0-foss-2021a BLAST+/2.11.0-gompi-2020a Pandoc/2.5 ZeroMQ/4.3.2-GCCcore-9.3.0 cutadapt/3.4-GCCcore-10.3.0
 
     ##this includes git for interactive jobs (one-line)
-    module load git/2.21.0-GCCcore-8.2.0-nodocs && module load Nextflow R/4.2.0-foss-2021b pkgconfig/1.5.1-GCCcore-9.3.0-Python-3.8.2 GDAL/3.3.0-foss-2021a BLAST+/2.11.0-gompi-2020a Pandoc/2.5 ZeroMQ/4.3.2-GCCcore-9.3.0 
+    module load git/2.21.0-GCCcore-8.2.0-nodocs && module load Nextflow/24.04.1 R/4.2.0-foss-2021b pkgconfig/1.5.1-GCCcore-9.3.0-Python-3.8.2 GDAL/3.3.0-foss-2021a BLAST+/2.11.0-gompi-2020a Pandoc/2.5 ZeroMQ/4.3.2-GCCcore-9.3.0 
     
     # pull and run latest pipeline (from project directory)
     git pull && nextflow run .
@@ -51,7 +51,6 @@ Add above code to the "R sourcing" code block at the start of every R script (co
 
 TODO: check for all files previously checked in the `parameters_setup.R` script, which no longer checks because Nextflow breaks the relative paths
 
-
 ### setting up `/home/js7t/personal/dev/piperline`, home of development for local code testing pre-commit 
 
     # make dir
@@ -81,6 +80,22 @@ Running code:
     rm -rf work/* output/modules/*
 
     # run tests_data/dual
+    nextflow run . -resume --data_folder test_data/dual
+
+
+### installing Nextflow for personal use in BASC
+
+    cd ~
+    module load Java/17.0.6                     # need Java v11+ to use Nextflow
+    curl -s https://get.nextflow.io | bash      # install nextflow in currect dir
+    chmod 777 nextflow                          # make executable
+    # mkdir -p /home/js7t/bin                   # make local bin
+    mv nextflow /home/js7t/bin                  # move into executable path
+
+Running Nextflow with local version:
+
+    module load Java/17.0.6 R/4.2.0-foss-2021b pkgconfig/1.5.1-GCCcore-9.3.0-Python-3.8.2 GDAL/3.3.0-foss-2021a BLAST+/2.11.0-gompi-2020a Pandoc/2.5 ZeroMQ/4.3.2-GCCcore-9.3.0
+
     nextflow run . -resume --data_folder test_data/dual
 
 

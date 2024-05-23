@@ -4,17 +4,21 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// include { paramsSummaryLog; paramsSummaryMap; fromSamplesheet } from 'plugin/nf-validation'
-// this allows 'fromSamplesheet' command to pull data from samplesheet file
+// include functions from nf-schema
+include { validateParameters; paramsHelp; paramsSummaryLog; samplesheetToList } from 'plugin/nf-schema' 
 
-// def logo = NfcoreTemplate.logo(workflow, params.monochrome_logs)
-// def citation = '\n' + WorkflowMain.citation(workflow) + '\n'
-// def summary_params = paramsSummaryMap(workflow)
+// Print help message, supply typical command line usage for the pipeline
+if (params.help) {
+   log.info paramsHelp("nextflow run main.nf --samplesheet samplesheet.csv --loci_params loci_params.csv") // TODO: add typical commands for pipeline
+   exit 0
+}
 
-// // Print parameter summary log to screen
-// log.info logo + paramsSummaryLog(workflow) + citation
+// Validate input parameters using schema
+// validateParameters( parameters_schema: 'nextflow_schema.json' )
 
-// WorkflowAmpliseq.initialise(params, log)
+// Print summary of supplied parameters (that differ from defaults)
+// log.info paramsSummaryLog(workflow)
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -36,19 +40,10 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+//// Inputs
 
-// Input
 
-// directory in projectDir where data files are stored; "test_data" for test data
-// def data_loc = "test_data" // not needed as parameters are parsed in R script
 
-// report sources
-
-// Set non-params Variables
-
-// // create directory where channel output can be stored for debugging
-// channelDir = file('./output/channels')
-// channelDir.mkdirs()
 
 
 /*
@@ -86,6 +81,8 @@ include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_
 include { PHYLOSEQ_MERGE                            } from '../modules/phyloseq_merge'
 include { READ_TRACKING                             } from '../modules/read_tracking'
 
+// utility processes for development and debugging
+include { STOP                                      } from '../modules/stop'
 
 
 //
@@ -114,6 +111,13 @@ include { READ_TRACKING                             } from '../modules/read_trac
 */
 
 workflow PIPERLINE {
+
+    // Create a new channel of metadata from a sample sheet passed to the pipeline through the --input parameter
+    ch_samplesheet = Channel.fromList(samplesheetToList(params.samplesheet, "assets/schema_samplesheet.json"))
+
+    ch_samplesheet.view()
+
+    STOP () // stop pipeline
 
     // ch_versions = Channel.empty()
 
