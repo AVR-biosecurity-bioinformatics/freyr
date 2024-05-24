@@ -9,15 +9,15 @@ include { validateParameters; paramsHelp; paramsSummaryLog; samplesheetToList } 
 
 // Print help message, supply typical command line usage for the pipeline
 if (params.help) {
-   log.info paramsHelp("nextflow run main.nf --samplesheet samplesheet.csv --loci_params loci_params.csv") // TODO: add typical commands for pipeline
+   log.info paramsHelp("nextflow run . --samplesheet samplesheet.csv --loci_params loci_params.csv") // TODO: add typical commands for pipeline
    exit 0
 }
 
 // Validate input parameters using schema
-// validateParameters( parameters_schema: 'nextflow_schema.json' )
+validateParameters( parameters_schema: 'nextflow_schema.json' )
 
 // Print summary of supplied parameters (that differ from defaults)
-// log.info paramsSummaryLog(workflow)
+log.info paramsSummaryLog(workflow)
 
 
 /*
@@ -112,10 +112,30 @@ include { STOP                                      } from '../modules/stop'
 
 workflow PIPERLINE {
 
-    // Create a new channel of metadata from a sample sheet passed to the pipeline through the --input parameter
-    ch_samplesheet = Channel.fromList(samplesheetToList(params.samplesheet, "assets/schema_samplesheet.json"))
+    //// Create a new channel of metadata from a sample sheet passed to the pipeline through the --input parameter
+    if ( params.data_folder == "test_data/dual" ) { // use supplied samplesheet for 'dual' test data
+        ch_samplesheet = Channel.fromList(
+            samplesheetToList(
+                "test_data/dual/samplesheet.csv", 
+                "assets/schema_samplesheet.json"
+                )
+            )
+    } else if ( params.data_folder == "test_data/single" ) { // use supplied samplesheet for 'single' test data
+        ch_samplesheet = Channel.fromList(
+            samplesheetToList(
+                "test_data/dual/samplesheet.csv", 
+                "assets/schema_samplesheet.json"
+                )
+            )    } else { // otherwise use supplied samplesheet for non-test data
+        ch_samplesheet = Channel.fromList(
+            samplesheetToList(
+                params.samplesheet, 
+                "assets/schema_samplesheet.json"
+                )
+            )    }
+    
 
-    ch_samplesheet.view()
+    // ch_samplesheet.view()
 
     STOP () // stop pipeline
 

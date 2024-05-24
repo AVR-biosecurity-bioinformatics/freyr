@@ -1,32 +1,246 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://raw.githubusercontent.com/nf-schema/example/master/assets/schema_input.json",
-    "title": "nf-schema example - params.input schema",
-    "description": "Schema for the file provided with params.input",
+    "title": "nf-schema - params.samplesheet schema",
+    "description": "Schema for the file provided with params.samplesheet",
     "type": "array",
     "items": {
       "type": "object",
+      "required": [
+        "sample_id", 
+        "sample_name", 
+        "target_gene", 
+        "pcr_primers", 
+        "for_primer_seq",
+        "rev_primer_seq", 
+        "i7_index",
+        "i5_index",
+        "fcid",
+        "fwd",
+        "rev"
+        ],
       "properties": {
-        "sample": {
+        "sample_id": {
           "type": "string",
-          "pattern": "^\\S+$",
-          "errorMessage": "Sample name must be provided and cannot contain spaces"
+          "pattern": "^[^\\s,]+$",
+          "errorMessage": "Sample ID must be unique across all samples, and cannot contain spaces or commas."
         },
-        "fastq_1": {
-          "type": "string",
-          "pattern": "^\\S+\\.f(ast)?q\\.gz$",
-          "errorMessage": "FastQ file for reads 1 must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+        "sample_name": {
+            "type": "string",
+            "pattern": "^[^\\s,]+$",
+            "errorMessage": "Sample name must be unique within a flowcell, and cannot contain spaces or commas."
         },
-        "fastq_2": {
-          "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'",
-          "type": "string",
-          "pattern": "^\\S+\\.f(ast)?q\\.gz$"
+        "extraction_rep": {
+            "type": "string",
+            "pattern": "^[^\\s,]+$",
+            "errorMessage": "Extraction replicate cannot contain spaces or commas."
+        },
+        "amp_rep": {
+            "type": "string",
+            "pattern": "^[^\\s,]+$",
+            "errorMessage": "Amplification replicate cannot contain spaces or commas."
+        },
+        "client_name": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Client name cannot contain commas."
+        },
+        "experiment_name": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Experiment name cannot contain commas."
+        },
+        "sample_type": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Sample type cannot contain commas."
+        },
+        "collection_method": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Collection method cannot contain commas."
+        },
+        "collection_location": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Collection location cannot contain commas."
+        },
+        "latitude": {
+            "type": ["string","number"],
+            "pattern": "^[^\\s,]+$",
+            "minimum": -90,
+            "maximum": 90,
+            "errorMessage": "Latitude must be a number between -90 and 90, or the string 'NA'."
+        },
+        "longitude": {
+            "type": ["string","number"],
+            "pattern": "^[^\\s,]+$",
+            "minimum": -180,
+            "maximum": 180,
+            "errorMessage": "Longitude must be a number between -180 and 180, or the string 'NA'."
+        },
+        "environment": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Environment cannot contain commas."
+        },
+        "collection_date": {
+            "anyOf": [
+                {
+                    "type": "string",
+                    "format": "date"
+                },
+                {
+                    "type": "string",
+                    "format": "^NA$"
+                }
+            ],
+            "errorMessage": "Collection date must be in the format 'YYYY-MM-DD', or 'NA' if not specified."
+        },
+        "operator_name": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Collection location cannot contain commas."
+        },
+        "description": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Description cannot contain commas."
+        },
+        "assay": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Assay cannot contain commas."
+        },
+        "extraction_method": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Extraction method cannot contain commas."
+        },
+        "amp_method": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Amplification method cannot contain commas."
+        },
+        "target_gene": {
+            "type": "string",
+            "pattern": "^[^\\s,]+$",
+            "errorMessage": "Target gene cannot contain spaces or commas; it may be a list of two or more items separated by a semi-colon (';')."
+        },
+        "pcr_primers": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "PCR primer name cannot contain spaces or commas; it may be a list of two or more items separated by a semi-colon (';')."
+        },
+        "for_primer_seq": {
+            "type": "string",
+            "pattern": "^[GATCRYMKSWHBVDNIgatcrymkswhbvdni;]+$",
+            "errorMessage": "Forward primer sequence must only contain IUPAC nucleotide characters ('GATCRYMKSWHBVDNI', upper or lower case) without spaces; it may be a list of two or more items separated by a semi-colon (';')."
+        },
+        "rev_primer_seq": {
+            "type": "string",
+            "pattern": "^[GATCRYMKSWHBVDNIgatcrymkswhbvdni;]+$",
+            "errorMessage": "Reverse primer sequence must only contain IUPAC nucleotide characters ('GATCRYMKSWHBVDNI', upper or lower case) without spaces; it may be a list of two or more items separated by a semi-colon (';')."
+        },
+        "index_plate": {
+            "type": ["string","number"],
+            "pattern": "^[^,]+$",
+            "errorMessage": "Index plate cannot contain commas."
+        },
+        "index_well": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Index well cannot contain commas."
+        },
+        "i7_index_id": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "i7 index ID cannot contain commas."
+        },
+        "i7_index": {
+            "type": "string",
+            "pattern": "^[GATCgatc]+$",
+            "errorMessage": "i7 index sequence must only contain unambigous nucleotide characters ('GATC', upper or lower case) without spaces."
+        },
+        "i5_index_id": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "i5 index ID cannot contain commas."
+        },
+        "i5_index": {
+            "type": "string",
+            "pattern": "^[GATCgatc]+$",
+            "errorMessage": "i5 index sequence must only contain unambigous nucleotide characters ('GATC', upper or lower case) without spaces."
+        },
+        "seq_platform": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Sequening platform cannot contain commas."
         },
         "fcid": {
+            "type": "string",
+            "pattern": "^[^\\s,]+$",
+            "errorMessage": "Flowcell ID must be provided, and cannot contain spaces or commas."
+        },
+        "for_read_length": {
+            "type": "integer",
+            "minimum": 1,
+            "errorMessage": "Forward read length must be an integer >0."
+        },
+        "rev_read_length": {
+            "type": "integer",
+            "minimum": 1,
+            "errorMessage": "Reverse read length must be an integer >0."
+        },
+        "seq_run_id": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Sequencing run ID cannot contain commas."
+        },
+        "seq_id": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Sequencer ID cannot contain commas."
+        },
+        "seq_date": {
+            "anyOf": [
+                {
+                    "type": "string",
+                    "format": "date"
+                },
+                {
+                    "type": "string",
+                    "format": "^NA$"
+                }
+            ],
+            "errorMessage": "Sequencing date must be in the format 'YYYY-MM-DD', or 'NA' if not specified."
+        },
+        "analysis_method": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Analysis method cannot contain commas."
+        },
+        "notes": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "Notes cannot contain commas."
+        },
+        "fwd": {
           "type": "string",
-          "errorMessage": "Strandedness must be provided and be one of 'forward', 'reverse' or 'unstranded'"
+          "pattern": "^[^\\s,]+\\.f(ast)?q(\\.gz)?$",
+          "format": "file-path",
+          "exists": "true",
+          "errorMessage": "FastQ file for forward reads must be provided, cannot contain spaces or commas, and must have extension '.fastq', '.fq', '.fastq.gz' or '.fq.gz'."
+        },
+        "rev": {
+          "type": "string",
+          "pattern": "^[^\\s,]+\\.f(ast)?q(\\.gz)?$",
+          "format": "file-path",
+          "exists": "true",
+          "errorMessage": "FastQ file for reverse reads must be provided, cannot contain spaces or commas, and must have extension '.fastq', '.fq', '.fastq.gz' or '.fq.gz'."
         }
-      },
-      "required": ["sample", "fastq_1", "fcid"]
+      }
     }
-  }
+}
+
+

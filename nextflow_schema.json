@@ -1,0 +1,95 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/jackscanlan/piperline",
+    "title": "jackscanlan/piperline pipeline parameters",
+    "description": "Metabarcoding pipeline [IN DEVELOPMENT]",
+    "type": "object",
+    "defs": {
+        "main_arguments": {
+            "title": "Main arguments",
+            "type": "object",
+            "description": "Main arguments for the pipeline.",
+            "required": [ "samplesheet", "loci_params" ],
+            "properties": {
+                "data_folder": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "pattern": "^\\S+$",
+                    "description": "Path to directory/folder containing the input data.",
+                    "errorMessage": "Directory must exist and its name cannot contain spaces.",
+                    "default": "test_data/dual"
+                },
+                "refdir": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "pattern": "^\\S+$",
+                    "description": "Path to directory/folder containing reference databases.",
+                    "errorMessage": "Directory must exist and its name cannot contain spaces.",
+                    "default": "reference"
+                },
+                "samplesheet": {
+                    "type": "string",
+                    "format": "file-path",
+                    "pattern": "^\\S+\\.csv$",
+                    "description": "Path to comma-separated file containing the samplesheet.",
+                    "errorMessage": "File must exist and be a CSV file with the extension '.csv'.",
+                    "schema": "assets/schema_samplesheet.json",
+                    "default": "test_data/dual/samplesheet.csv"
+                },
+                "loci_params": {
+                    "type": "string",
+                    "format": "file-path",
+                    "pattern": "^\\S+\\.csv$",
+                    "description": "Path to comma-separated file containing parameters for each locus or PCR primer pair.",
+                    "errorMessage": "File must exist and be a CSV file with the extension '.csv'.",
+                    "default": "test_data/dual/loci_params.csv"
+                },
+                "illumina": {
+                    "type": "boolean",
+                    "description": "Input is short-read Illumina sequencing data (eg. from MiSeq, NovaSeq).",
+                    "errorMessage": "Must be set to 'true' or 'false'.",
+                    "default": true
+                },
+                "pacbio": {
+                    "type": "boolean",
+                    "description": "Input data is long-read PacBio sequencing data (eg. from REVIO, SEQUEL IIe).",
+                    "errorMessage": "Must be set to 'true' or 'false'.",
+                    "default": false
+                },
+                "nanopore": {
+                    "type": "boolean",
+                    "description": "Input data is long-read Nanopore sequencing data (eg. from MinION, PromethION).",
+                    "errorMessage": "Must be set to 'true' or 'false'.",
+                    "default": false
+                },
+                "paired": {
+                    "type": "boolean",
+                    "description": "Illumina sequencing input data is paired-end.",
+                    "errorMessage": "Must be set to 'true' or 'false'.",
+                    "default": true
+                },
+                "high_sensitivity": {
+                    "type": "boolean",
+                    "description": "Run DADA2 ASV inference in high-sensitivity mode, ie. use pseudo-pooling.",
+                    "errorMessage": "Must be set to 'true' or 'false'.",
+                    "help_text": "Help me!",
+                    "default": true
+                },
+                "threads": {
+                    "type": ["boolean", "integer"],
+                    "minimum": 1,
+                    "description": "Maximum number of threads/cpus to use. Setting to 'null' will use as many as available.",
+                    "errorMessage": "Must be set to an integer >0 or 'null'.",
+                    "default": null
+                },
+                "rdata": {
+                    "type": "boolean",
+                    "description": "Save R environments as an .RData file in each process work directory.",
+                    "errorMessage": "Must be set to 'true' or 'false'.",
+                    "help_text": "For R-based processes, save the R environments as an .RData file in each process work directory at the successful completion of the process script. Useful for development and debugging, but will increase a run's storage footprint. NOTE: .RData files will not be saved if the R environment exits with an error.",
+                    "default": true
+                }
+            }
+        }
+    }
+}

@@ -9,5 +9,6 @@ process STOP {
     echo "***** Pipeline has been manually stopped with the STOP module *****"
     
     exit 1
+    
     """
 }
