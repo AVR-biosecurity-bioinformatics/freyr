@@ -52,6 +52,7 @@ log.info paramsSummaryLog(workflow)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+include { PARSE_INPUTS                              } from '../modules/parse_inputs'
 include { PARAMETER_SETUP                           } from '../modules/parameter_setup'
 include { SEQ_QC                                    } from '../modules/seq_qc'
 include { SPLIT_LOCI                                } from '../modules/split_loci'
@@ -83,13 +84,6 @@ include { READ_TRACKING                             } from '../modules/read_trac
 
 // utility processes for development and debugging
 include { STOP                                      } from '../modules/stop'
-
-
-//
-// SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
-//
-
-// include { PARSE_INPUT                   } from '../subworkflows/local/parse_input'
 
 
 /*
@@ -137,7 +131,9 @@ workflow PIPERLINE {
 
     // ch_samplesheet.view()
 
-    STOP () // stop pipeline
+    PARSE_INPUTS ( params.samplesheet, params.loci_params )
+
+    // STOP () // stop pipeline
 
     // ch_versions = Channel.empty()
 

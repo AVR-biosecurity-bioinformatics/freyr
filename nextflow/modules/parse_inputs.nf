@@ -1,11 +1,13 @@
 process PARSE_INPUTS {
     def module_name = "parse_inputs"
-    tag: "Whole dataset"
+    tag "Whole dataset"
     // label 
 
     input:
+    val(samplesheet)
+    val(loci_params)
 
-    output:   
+    output: 
 
     publishDir "${projectDir}/output/modules/${module_name}"
 
@@ -18,6 +20,8 @@ process PARSE_INPUTS {
     
     ### defining Nextflow environment variables as R variables
     ## input channel variables
+    samplesheet =           "${samplesheet}"
+    loci_params =           "${loci_params}"
 
     ## global variables
     projectDir = "$projectDir"
