@@ -1,0 +1,258 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/nf-schema/example/master/assets/schema_input.json",
+    "title": "nf-schema - params.loci_params schema",
+    "description": "Schema for the file provided with params.loci_params",
+    "type": "array",
+    "items": {
+      "type": "object",
+      "required": [
+        "pcr_primers",
+        "target_gene",
+        "max_primer_mismatch",
+        "read_min_length",
+        "read_max_length",
+        "read_max_ee",
+        "read_trunc_length",
+        "read_trim_left",
+        "read_trim_right",
+        "high_sensitivity",
+        "asv_min_length",
+        "asv_max_length",
+        "concat_unmerged",
+        "genetic_code",
+        "coding",
+        "phmm",
+        "idtaxa_db",
+        "ref_fasta",
+        "idtaxa_confidence",
+        "run_blast",
+        "blast_min_identity",
+        "blast_min_coverage",
+        "target_kingdom",
+        "target_phylum",
+        "target_class",
+        "target_order",
+        "target_family",
+        "target_genus",
+        "target_species",
+        "min_sample_reads",
+        "min_taxa_reads",
+        "min_taxa_ra",
+        "threads"
+        ],
+      "properties": {
+        "pcr_primers": {
+          "type": "string",
+          "pattern": "^[^\\s,;]+$",
+          "description": "Name of the PCR primer pair. Must be unique and match that given in the samplesheet.",
+          "errorMessage": "PCR primer names must not contain spaces, commas or semi-colons."
+        },
+        "target_gene": {
+            "type": "string",
+            "pattern": "^[^\\s,;]+$",
+            "description": "Name of the target gene. Does not have to be unique (if two or more primer pairs were used to amplify the same locus).",
+            "errorMessage": "Target gene names must not contain spaces, commas or semi-colons."
+        },
+        "max_primer_mismatch": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Maximum number of mismatches to allow when detecting primer sequences.",
+            "errorMessage": "Maximum primer mismatches must be an integer >= 0."
+        },
+        "read_min_length": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Minimum allowed length of reads after primer-trimming.",
+            "errorMessage": "Minimum read length must be an integer >= 0."
+        },
+        "read_max_length": {
+            "type": ["integer","string"],
+            "minimum": 1,
+            "pattern": "^Inf$",
+            "description": "Maximum allowed length of reads after primer-trimming.",
+            "errorMessage": "Maximum read length must be an integer >= 1, or 'Inf' for no maximum length."
+        },
+        "read_max_ee": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Maximum expected errors allowed in primer-trimmed reads.",
+            "errorMessage": "Maximum expected errors must be an integer >= 0."
+        },
+        "read_trunc_length": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Length to which all reads will be truncated, if longer.",
+            "errorMessage": "Read truncation length must be an integer >= 1."
+        },
+        "read_trim_left": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Trim this many bases from the left side of primer-trimmed reads.",
+            "errorMessage": "Left-trimming amount must be an integer >= 0."
+        },
+        "read_trim_right": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Trim this many bases from the right side of primer-trimmed reads.",
+            "errorMessage": "Right-trimming amount must be an integer >= 0."
+        },
+        "high_sensitivity": {
+            "type": "string",
+            "pattern": "^(TRUE|T|FALSE|F)$",
+            "description": "Run ASV inference for this locus in high-sensitivity mode, ie. use DADA2 pseudo-pooling.",
+            "errorMessage": "High sensitivity must be enabled with 'TRUE' or 'T', or disabled with 'FALSE' or 'F'."
+        },
+        "asv_min_length": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Minimum allowable length of each ASV.",
+            "errorMessage": "Minimum ASV length must be an integer >= 1."
+        },
+        "asv_max_length": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Maximum allowable length of each ASV.",
+            "errorMessage": "Maximum ASV length must be an integer >= 1."
+        },
+        "concat_unmerged": {
+            "type": "string",
+            "pattern": "^(TRUE|T|FALSE|F)$",
+            "description": "Retain unmerged read pairs by concatenating them together separated by a string of 10 N bases.",
+            "errorMessage": "Concatenate unmerged must be enabled with 'TRUE' or 'T', or disabled with 'FALSE' or 'F'."
+        },
+        "genetic_code": {
+            "type": "string",
+            "pattern": "^[^\\s,]$",
+            "description": "Genetic code for amplicon, if a coding sequence. See Biostrings::GENETIC_CODE_TABLE. Set to 'NA' if amplicon is not derived from a coding sequence.",
+            "errorMessage": "Genetic code must not contain spaces or commas."
+        },
+        "coding": {
+            "type": "string",
+            "pattern": "^(TRUE|T|FALSE|F)$",
+            "description": "Whether the amplicon is derived from a coding sequence or not.",
+            "errorMessage": "Coding sequences must be indicated with 'TRUE' or 'T', and non-coding sequences must be indicated with 'FALSE' or 'F'."
+        },
+        "phmm": {
+            "type": "string",
+            "format": "file-path",
+            "pattern": "^[^\\s,]+$",
+            "exists": true,
+            "description": "Path to a profile Hidden Markov Model (pHMM) of the amplicon.",
+            "errorMessage": "pHMM path cannot contain spaces or commas."
+        },
+        "idtaxa_db ": {
+            "type": "string",
+            "format": "file-path",
+            "pattern": "^[^\\s,]+\\.rds$",
+            "exists": true, 
+            "description": "Path to a trained IDTAXA model.",
+            "errorMessage": "IDTAXA model path cannot contain spaces or commas, and the file must have the .rds extension."
+        },
+        "ref_fasta": {
+            "type": "string",
+            "format": "file-path",
+            "pattern": "^[^\\s,]+\\.(fa|fasta)(\\.gz)?$",
+            "exists": true, 
+            "description": "Path to the reference database file.",
+            "errorMessage": "Reference database path cannot contain spaces or commas, and the file must have a '.fa', '.fasta','.fa.gz' or '.fasta.gz' extension."
+        },
+        "idtaxa_confidence": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Minimum bootstrap confidence for IDTAXA.",
+            "errorMessage": "IDTAXA minimum bootstrap confidence must be an integer between 0-100, inclusive."
+        },
+        "run_blast": {
+            "type": "string",
+            "pattern": "^(TRUE|T|FALSE|F)$",
+            "description": "Whether to run a BLAST search in addition to IDTAXA.",
+            "errorMessage": "BLAST run must be enable with 'TRUE' or 'T', or disabled with 'FALSE' or 'F'."
+        },
+        "blast_min_identity": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Minimum nucleotide identity (in %) for taxonomic assignment using BLAST.",
+            "errorMessage": "BLAST minimum identity must be an integer between 0-100, inclusive."
+        },
+        "blast_min_coverage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Minimum query coverage (in %) for taxonomic assignment using BLAST.",
+            "errorMessage": "BLAST minimum coverage must be an integer between 0-100, inclusive."
+        },
+        "target_kingdom": {
+            "type": "string",
+            "pattern": "^[\\s,]+$",
+            "description": "Filter output ASVs to those within this taxonomic kingdom.",
+            "errorMessage": "Target kingdom must not contain spaces or commas."
+        },
+        "target_phylum": {
+            "type": "string",
+            "pattern": "^[\\s,]+$",
+            "description": "Filter output ASVs to those within this taxonomic phylum.",
+            "errorMessage": "Target phylum must not contain spaces or commas."
+        },
+        "target_class": {
+            "type": "string",
+            "pattern": "^[\\s,]+$",
+            "description": "Filter output ASVs to those within this taxonomic class.",
+            "errorMessage": "Target class must not contain spaces or commas."
+        },
+        "target_order": {
+            "type": "string",
+            "pattern": "^[\\s,]+$",
+            "description": "Filter output ASVs to those within this taxonomic order.",
+            "errorMessage": "Target order must not contain spaces or commas."
+        },
+        "target_family": {
+            "type": "string",
+            "pattern": "^[\\s,]+$",
+            "description": "Filter output ASVs to those within this taxonomic family.",
+            "errorMessage": "Target family must not contain spaces or commas."
+        },
+        "target_genus": {
+            "type": "string",
+            "pattern": "^[\\s,]+$",
+            "description": "Filter output ASVs to those within this taxonomic genus.",
+            "errorMessage": "Target genus must not contain spaces or commas."
+        },
+        "target_species": {
+            "type": "string",
+            "pattern": "^[\\s,]+$",
+            "description": "Filter output ASVs to those within this taxonomic species.",
+            "errorMessage": "Target species must not contain spaces or commas."
+        },
+        "min_sample_reads": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Minimum reads per sample to pass filter.",
+            "errorMessage": "Minimum read per sample must be an integer >= 0."
+        },
+        "min_taxa_reads": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Minimum reads per ASV/taxon to pass filter.",
+            "errorMessage": "Minimum read per ASV must be an integer >= 0."
+        },
+        "min_taxa_ra": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Minimum relative abundance (proportion) per ASV/taxon to pass filter. Note: '0.0001' = '0.01%'",
+            "errorMessage": "Minimum relative abundance must be a number (float) between 0-1, inclusive."
+        },
+        "threads": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of threads/CPUs to run the pipeline across.",
+            "errorMessage": "Threads must be an integer >= 1."
+        }
+      }
+    }
+}
+
+

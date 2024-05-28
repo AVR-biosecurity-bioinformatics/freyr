@@ -138,7 +138,7 @@ for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
 
 # check that read file paths are unique
 ### TODO: make this a more informative error -- say which files are duplicated
-if (!any(duplicated(samplesheet_df$fwd))) {stop ("INPUT ERROR: At least two samples share the same forward read file in the samplesheet!")}
+if (any(duplicated(samplesheet_df$fwd))) {stop ("INPUT ERROR: At least two samples share the same forward read file in the samplesheet!")}
 if (any(duplicated(samplesheet_df$rev))) {stop ("INPUT ERROR: At least two samples share the same reverse read files in the samplesheet!")}
 
 ## write new samplesheet to file
@@ -150,7 +150,17 @@ if (any(duplicated(samplesheet_df$rev))) {stop ("INPUT ERROR: At least two sampl
 
 # check pcr_primers column contains unique values
 
+# check pcr_primers values match those in samplesheet
+
+# check target_gene values match those in samplesheet
+
+# convert high_sensitivity string to logical value
+
 # check phmm, idtaxa_db and ref_fasta are readable files
+
+# validate phmm somehow -- open it and check contents?
+
+# convert phmm, idtaxa_db and ref_fasta paths to absolute paths
 
 
 

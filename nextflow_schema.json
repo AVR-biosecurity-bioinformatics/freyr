@@ -42,6 +42,7 @@
                     "pattern": "^\\S+\\.csv$",
                     "description": "Path to comma-separated file containing parameters for each locus or PCR primer pair.",
                     "errorMessage": "File must exist and be a CSV file with the extension '.csv'.",
+                    "schema": "assets/schema_loci_params.json",
                     "default": "test_data/dual/loci_params.csv"
                 },
                 "extension": {
