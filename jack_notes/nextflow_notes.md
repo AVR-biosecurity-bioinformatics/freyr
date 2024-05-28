@@ -98,6 +98,8 @@ Running Nextflow with local version:
 
     nextflow run . -resume --data_folder test_data/dual
 
+    nextflow run . -resume --samplesheet test_data/dual/sample
+
 
 
 

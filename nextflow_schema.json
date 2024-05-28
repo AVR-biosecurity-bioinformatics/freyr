@@ -44,6 +44,12 @@
                     "errorMessage": "File must exist and be a CSV file with the extension '.csv'.",
                     "default": "test_data/dual/loci_params.csv"
                 },
+                "extension": {
+                    "type": "string",
+                    "pattern": "^[^\\s,]$",
+                    "description": "Extension of the FastQ read files, immediately after the digit indicating forward/reverse identity. Used to help match files to samples when explicit read paths are not provided.",
+                    "errorMessage": "Read extension must not contain spaces or commas."
+                },
                 "illumina": {
                     "type": "boolean",
                     "description": "Input is short-read Illumina sequencing data (eg. from MiSeq, NovaSeq).",
