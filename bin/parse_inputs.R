@@ -31,40 +31,40 @@ loci_params_df <- readr::read_csv(paste0(projectDir,"/",loci_params), show_col_t
 
 for (i in 1:length(samplesheet_df$sample_id)) { # check that sample_name is a subset of sample_id
     if (!stringr::str_detect(samplesheet_df$sample_id[i], samplesheet_df$sample_name[i])) {
-        stop(paste0("INPUT ERROR: 'sample_name' (",samplesheet_df$sample_name[i],") is not a subset of 'sample_id' (", samplesheet_df$sample_id[i],")!\n\t'sample_id' must be a unique combination of 'fcid' and 'sample_name'."))
+        stop(paste0("SAMPLESHEET ERROR: 'sample_name' (",samplesheet_df$sample_name[i],") is not a subset of 'sample_id' (", samplesheet_df$sample_id[i],")!\n\t'sample_id' must be a unique combination of 'fcid' and 'sample_name'."))
     }
 }
 
 for (i in 1:length(samplesheet_df$sample_id)) { # check that sample_id starts with fcid
     if (!stringr::str_starts(samplesheet_df$sample_id[i], samplesheet_df$fcid[i])) {
-        stop(paste0("INPUT ERROR: 'sample_id' (", samplesheet_df$sample_id[i],") does not begin with 'fcid' (",samplesheet_df$fcid[i],")!\n\t'sample_id' must be a unique combination of 'fcid' and 'sample_name'."))
+        stop(paste0("SAMPLESHEET ERROR: 'sample_id' (", samplesheet_df$sample_id[i],") does not begin with 'fcid' (",samplesheet_df$fcid[i],")!\n\t'sample_id' must be a unique combination of 'fcid' and 'sample_name'."))
     }
 }
 
 if (any(duplicated(samplesheet_df$sample_id))) { # check that sample_id contains only unique values
-    stop("INPUT ERROR: All sample IDs in samplesheet must be unique!") 
+    stop("SAMPLESHEET ERROR: Some sample IDs are repeated!\n\tAll 'sample_id' values in samplesheet must be unique.") 
     } 
 
 # check that all primer names and sequences are identical for each sample
-if (!any(duplicated(samplesheet_df$pcr_primers))) { stop("INPUT ERROR: 'pcr_primer' varies between samples!\n\t'pcr_primer' contents must be the same for all samples.") } 
-if (!any(duplicated(samplesheet_df$for_primer_seq))) { stop("INPUT ERROR: 'for_primer_seq' varies between samples!\n\t'for_primer_seq' contents must be the same for all samples.") } 
-if (!any(duplicated(samplesheet_df$rev_primer_seq))) { stop("INPUT ERROR: 'rev_primer_seq' varies between samples!\n\t'rev_primer_seq' contents must be the same for all samples.") } 
+if (!any(duplicated(samplesheet_df$pcr_primers))) { stop("SAMPLESHEET ERROR: 'pcr_primer' varies between samples!\n\t'pcr_primer' contents must be the same for all samples.") } 
+if (!any(duplicated(samplesheet_df$for_primer_seq))) { stop("SAMPLESHEET ERROR: 'for_primer_seq' varies between samples!\n\t'for_primer_seq' contents must be the same for all samples.") } 
+if (!any(duplicated(samplesheet_df$rev_primer_seq))) { stop("SAMPLESHEET ERROR: 'rev_primer_seq' varies between samples!\n\t'rev_primer_seq' contents must be the same for all samples.") } 
 
 # check that same number of target genes and primer names are defined as primer sequences
 if (
     !identical(stringr::str_count(samplesheet_df$target_gene, ";"), stringr::str_count(samplesheet_df$for_primer_seq, ";")) |
     !identical(stringr::str_count(samplesheet_df$target_gene, ";"), stringr::str_count(samplesheet_df$rev_primer_seq, ";"))
-    ) { stop("INPUT ERROR: Mismatch between number of supplied target genes and primer sequences!") }
+    ) { stop("SAMPLESHEET ERROR: Mismatch between number of supplied target genes and primer sequences!") }
 if (
     !identical(stringr::str_count(samplesheet_df$pcr_primers, ";"), stringr::str_count(samplesheet_df$for_primer_seq, ";")) |
     !identical(stringr::str_count(samplesheet_df$pcr_primers, ";"), stringr::str_count(samplesheet_df$rev_primer_seq, ";"))
-    ) { stop("INPUT ERROR: Mismatch between number of supplied primer pair names and primer sequences!") }
+    ) { stop("SAMPLESHEET ERROR: Mismatch between number of supplied primer pair names and primer sequences!") }
 
 ### parse and/or detect read paths
 
 if ( "read_dir" %in% colnames(samplesheet_df) ) { # if "read_dir" column exists in samplesheet
     if ("fwd" %in% colnames(samplesheet_df) | "rev" %in% colnames(samplesheet_df) ) { # if "fwd" or "rev" column exists as well as "read_dir", throw error
-        stop ("INPUT ERROR: 'read_dir' and one or both of 'fwd' and 'rev' should not be specified together.\n\tSpecify read file locations using only one of: the read directory path ('read_dir'), or direct read paths ('fwd' and 'rev').")
+        stop ("SAMPLESHEET ERROR: 'read_dir' and one or both of 'fwd' and 'rev' should not be specified together.\n\tSpecify read file locations using only one of: the read directory path ('read_dir'), or direct read paths ('fwd' and 'rev').")
     } else { # try to find reads
         # convert read directory to absolute path
         samplesheet_df <- samplesheet_df %>% 
@@ -85,13 +85,14 @@ if ( "read_dir" %in% colnames(samplesheet_df) ) { # if "read_dir" column exists 
                 ) %>% unlist()
             # check exactly two read files are found
             if ( length(i_readfiles) != 2 ) { 
-                stop (paste0("ERROR: Found ",length(i_readfiles)," read files matching '",samplesheet_df$sample_id[i],"' in '",samplesheet_df$read_dir[i],"' when 2 were expected.\n\tCheck you have filled out samplesheet correctly."))  
+                stop (paste0("SAMPLESHEET ERROR: Found ",length(i_readfiles)," read files matching '",samplesheet_df$sample_id[i],"' in '",samplesheet_df$read_dir[i],"' when 2 were expected.\n\tCheck you have filled out samplesheet correctly."))  
             }
             if (exists("params.extension")) { # using params.extension if supplied
-                message(paste0("Using 'params.extension (",params.extension,") to find reads in supplied reads directories ('read_dir')."))
+                message(paste0("Using 'params.extension' (",params.extension,") to find read files in supplied directories ('read_dir')."))
                 # check read files match params.extension
-                if (any(stringr::str_detect(i_readfiles, pattern = paste0(params.extension,"$")))) { stop("Error: Found read files do not match provided extension--check samplesheet.")}
+                if (any(stringr::str_detect(i_readfiles, pattern = paste0(params.extension,"$")))) { stop("SAMPLESHEET ERROR: Read files found in 'read_dir' do not match 'params.extension' file extension--check samplesheet and pipeline parameters.")}
                 # sort read files by text after extension
+                ### TODO: do this
             } else { # not using params.extension
                 # sort read files by natural order (ie. 1 before 2; F before R)
                 i_readfiles <- stringr::str_sort(i_readfiles)
@@ -124,7 +125,7 @@ if ( "read_dir" %in% colnames(samplesheet_df) ) { # if "read_dir" column exists 
             )
         
     } else {
-        stop ("INPUT ERROR: one of 'fwd' or 'rev' is not present, with 'read_dir' not present!")
+        stop ("SAMPLESHEET ERROR: one of 'fwd' or 'rev' is not present, with 'read_dir' not present!")
     }
 }
 
@@ -138,8 +139,8 @@ for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
 
 # check that read file paths are unique
 ### TODO: make this a more informative error -- say which files are duplicated
-if (any(duplicated(samplesheet_df$fwd))) {stop ("INPUT ERROR: At least two samples share the same forward read file in the samplesheet!")}
-if (any(duplicated(samplesheet_df$rev))) {stop ("INPUT ERROR: At least two samples share the same reverse read files in the samplesheet!")}
+if (any(duplicated(samplesheet_df$fwd))) {stop ("SAMPLESHEET ERROR: At least two samples share the same forward read file in the samplesheet!")}
+if (any(duplicated(samplesheet_df$rev))) {stop ("SAMPLESHEET ERROR: At least two samples share the same reverse read files in the samplesheet!")}
 
 ## write new samplesheet to file
 
@@ -147,14 +148,26 @@ if (any(duplicated(samplesheet_df$rev))) {stop ("INPUT ERROR: At least two sampl
 ### validate loci_params content
 
 # add missing columns with default values
+### TODO: Check with Alex whether we want all columns to be mandatory, or if some columns can be optional
 
-# check pcr_primers column contains unique values
+# check pcr_primers column contains only unique values
+if (any(duplicated(loci_params_df$pcr_primers))) {stop ("LOCI_PARAMS ERROR: 'pcr_primers' values are not unique!")}
+
+# create split samplesheet for checking against loci_params
+samplesheet_split_check <- samplesheet_df %>% 
+    tidyr::separate_longer_delim(c(pcr_primers, target_gene, for_primer_seq, rev_primer_seq), delim = ";") 
 
 # check pcr_primers values match those in samplesheet
+if (!setequal(samplesheet_split_check$pcr_primers %>% unique(), loci_params_df$pcr_primers)) {
+    stop("LOCI_PARAMS ERROR: Samplesheet and loci_params do not share the same values of 'pcr_primers'!")
+}
 
 # check target_gene values match those in samplesheet
+if (!setequal(samplesheet_split_check$target_gene %>% unique(), loci_params_df$target_gene)) {
+    stop("LOCI_PARAMS ERROR: Samplesheet and loci_params do not share the same values of 'target_gene'!")
+}
 
-# convert high_sensitivity string to logical value
+# convert high_sensitivity, run_blast, coding and concat_unmerged to logical values
 
 # check phmm, idtaxa_db and ref_fasta are readable files
 

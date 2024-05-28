@@ -98,7 +98,7 @@ Running Nextflow with local version:
 
     nextflow run . -resume --data_folder test_data/dual
 
-    nextflow run . -resume --samplesheet test_data/dual/sample
+    nextflow run . -resume --samplesheet test_data/dual/samplesheet_read_dir.csv
 
 
 
