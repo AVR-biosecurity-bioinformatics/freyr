@@ -26,9 +26,56 @@ samplesheet_df <- readr::read_csv(paste0(projectDir,"/",samplesheet), show_col_t
 
 loci_params_df <- readr::read_csv(paste0(projectDir,"/",loci_params), show_col_types = F) # read in loci parameters
 
-
 ### validation of samplesheet content
 
+## add missing columns if not present, with default values
+# make default samplesheet
+samplesheet_default <- tibble::tibble( # create columns with NA values in a single row
+        sample_id = NA_character_,
+        sample_name = NA_character_,
+        extraction_rep = NA_character_,
+        amp_rep = NA_character_,
+        client_name = NA_character_,
+        experiment_name = NA_character_,
+        sample_type = NA_character_,
+        collection_method = NA_character_,
+        collection_location = NA_character_,
+        latitude = NA_integer_,
+        longitude = NA_integer_,
+        environment = NA_character_,
+        collection_date = NA_character_,
+        operator_name = NA_character_,
+        description = NA_character_,
+        assay = NA_character_,
+        extraction_method = NA_character_,
+        amp_method = NA_character_,
+        target_gene = NA_character_,
+        pcr_primers = NA_character_,
+        for_primer_seq = NA_character_,
+        rev_primer_seq = NA_character_,
+        index_plate = NA_character_,
+        index_well = NA_character_,
+        i7_index_id = NA_character_,
+        i7_index = NA_character_,
+        i5_index_id = NA_character_,
+        i5_index = NA_character_,
+        seq_platform = NA_character_,
+        fcid = NA_character_,
+        for_read_length = NA_integer_,
+        rev_read_length = NA_integer_,
+        seq_run_id = NA_character_,
+        seq_id = NA_character_,
+        seq_date = NA_character_,
+        analysis_method = NA_character_,
+        notes = NA_character_
+    ) 
+
+# combine defaults with input samplesheet
+samplesheet_df <- new_bind(samplesheet_default %>% filter(FALSE), samplesheet_df)
+
+# stop(" *** stopped manually *** ") ##########################################
+
+## validate contents of columns
 for (i in 1:length(samplesheet_df$sample_id)) { # check that sample_name is a subset of sample_id
     if (!stringr::str_detect(samplesheet_df$sample_id[i], samplesheet_df$sample_name[i])) {
         stop(paste0("SAMPLESHEET ERROR: 'sample_name' (",samplesheet_df$sample_name[i],") is not a subset of 'sample_id' (", samplesheet_df$sample_id[i],")!\n\t'sample_id' must be a unique combination of 'fcid' and 'sample_name'."))
@@ -119,7 +166,7 @@ if ( "read_dir" %in% colnames(samplesheet_df) ) { # if "read_dir" column exists 
                         stringr::str_starts(., "\\./") ~ stringr::str_replace(., "^\\.", projectDir),  # replace "." with projectDir to produce absolute path
                         .default = stringr::str_replace(., "^", paste0(projectDir,"/")) # else append projectDir to front to produce absolute path
                     )
-                ),
+                )
             )
         
     } else {
@@ -140,6 +187,7 @@ if (any(duplicated(samplesheet_df$rev))) {stop ("SAMPLESHEET ERROR: At least two
 
 ## write parsed samplesheet to file
 readr::write_csv(samplesheet_df, "samplesheet_parsed.csv")
+
 
 ### validate loci_params content
 
@@ -187,12 +235,15 @@ loci_params_df <- loci_params_df %>%
     ) 
 
 # check phmm, idtaxa_db and ref_fasta are readable files
-check_paths <- loci_params_df$phmm %>% unlist() # check fwd paths
+check_paths <- loci_params_df$phmm %>% unlist() # check phmm paths
 for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
-check_paths <- loci_params_df$idtaxa_db %>% unlist() # check rev paths
+check_paths <- loci_params_df$idtaxa_db %>% unlist() # check idtaxa_db paths
 for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
-check_paths <- loci_params_df$ref_fasta %>% unlist() # check rev paths
+check_paths <- loci_params_df$ref_fasta %>% unlist() # check ref_fasta paths
 for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
+
+## write parsed loci_parms to file
+readr::write_csv(loci_params_df, "loci_params_parsed.csv")
 
 
 ### split samplesheet by primer and join to loci_params

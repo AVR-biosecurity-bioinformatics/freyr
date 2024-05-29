@@ -135,7 +135,7 @@ workflow PIPERLINE {
 
     // ch_versions = Channel.empty()
 
-    STOP ( PARSE_INPUTS.out[1] ) // stop pipeline
+    // STOP ( PARSE_INPUTS.out[1] ) // stop pipeline
     
     //// Create empty channels
     ch_read_tracker_samples = Channel.empty()   // read-tracking for sample-level processes; card: path(.csv)
@@ -143,24 +143,24 @@ workflow PIPERLINE {
 
 
     //// input samplesheet and loci parameters
-    PARAMETER_SETUP ( )
+    // PARAMETER_SETUP ( )
 
     //// parse samplesheets that contain locus-specific parameters
-    PARAMETER_SETUP.out.samdf_locus
+    // PARAMETER_SETUP.out.samdf_locus
+    PARSE_INPUTS.out.samplesheet_locus
         .flatten ()
         .splitCsv ( header: true )
         .map { row -> 
             def meta = row.subMap(
                 'sample_id','sample_name','extraction_rep','amp_rep',
                 'client_name','experiment_name','sample_type','collection_method',
-                'collection_location','lat_lon','environment','collection_date',
+                'collection_location','latitude','longitude','environment','collection_date',
                 'operator_name','description','assay','extraction_method',
                 'amp_method','target_gene','pcr_primers','for_primer_seq',
                 'rev_primer_seq','index_plate','index_well','i7_index_id',
                 'i7_index','i5_index_id','i5_index','seq_platform',
                 'fcid','for_read_length','rev_read_length','seq_run_id',
-                'seq_id','seq_date','analysis_method','notes',
-                'base','max_primer_mismatch','read_min_length','read_max_length',
+                'seq_id','seq_date','analysis_method','notes','max_primer_mismatch','read_min_length','read_max_length',
                 'read_max_ee','read_trunc_length','read_trim_left','read_trim_right',
                 'asv_min_length','asv_max_length','high_sensitivity','concat_unmerged','genetic_code','coding',
                 'phmm','idtaxa_db','ref_fasta','idtaxa_confidence',
@@ -169,15 +169,16 @@ workflow PIPERLINE {
                 'target_genus','target_species','min_sample_reads','min_taxa_reads',
                 'min_taxa_ra','threads'
                 )
-                [ meta, [
-                    file(row.fwd, checkIfExists: true),
-                    file(row.rev, checkIfExists: true)
-                ]]  
+            [ meta, [
+                file(row.fwd, checkIfExists: true),
+                file(row.rev, checkIfExists: true)
+            ]]  
             }
         .set { ch_sample_locus_reads }
 
     //// create channel that links locus-specific samplesheets to pcr_primer key, in the format 'pcr_primers, csv_file'
-    PARAMETER_SETUP.out.samdf_locus
+    // PARAMETER_SETUP.out.samdf_locus
+    PARSE_INPUTS.out.samplesheet_locus
         .flatten()
         .map { csv -> 
             def csv_name = csv.getFileName().toString()
@@ -187,7 +188,8 @@ workflow PIPERLINE {
         .set { ch_loci_samdf } 
 
     //// get names and count of the multiplexed loci used
-    PARAMETER_SETUP.out.samdf_locus
+    // PARAMETER_SETUP.out.samdf_locus
+    PARSE_INPUTS.out.samplesheet_locus
         .flatten ()
         .splitCsv ( header: true )
         .map { row -> row.target_gene }
@@ -223,7 +225,8 @@ workflow PIPERLINE {
         .set { ch_loci_info }
 
     //// create channel of loci parameters
-    PARAMETER_SETUP.out.loci_params // loci_params.csv file with one row per primer pair
+    // PARAMETER_SETUP.out.loci_params // loci_params.csv file with one row per primer pair
+    PARSE_INPUTS.out.loci_params_parsed
         .splitCsv ( header: true )
         .map { row -> 
                 [ row.pcr_primers, row ] }
@@ -232,6 +235,13 @@ workflow PIPERLINE {
 
     // run SEQ_QC per flow cell 
     SEQ_QC ( ch_fcid ) // optional step for testing
+    /* 
+    NOTE: SEQ_QC process assumes: 
+        1. data comes from MiSeq
+        2. all read files are in same location
+        3. 'params.data_folder' is specified
+    In future, need to use 'read_dir' info, or get quality from each read file directly as specified in the 
+    */
 
     //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( ch_sample_locus_reads ) 

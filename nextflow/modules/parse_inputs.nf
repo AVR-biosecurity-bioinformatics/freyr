@@ -11,6 +11,7 @@ process PARSE_INPUTS {
     path("samplesheet_parsed.csv"),         emit: samplesheet_parsed
     path("samplesheet_loci_params.csv"),    emit: samplesheet_loci_params
     path("*_samplesheet.csv"),              emit: samplesheet_locus
+    path("loci_params_parsed.csv"),         emit: loci_params_parsed
 
     publishDir "${projectDir}/output/modules/${module_name}",  mode: 'copy'
 
