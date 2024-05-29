@@ -106,6 +106,7 @@ include { STOP                                      } from '../modules/stop'
 
 workflow PIPERLINE {
 
+    //// read-in samplesheet and loci_params .csv files, validate their contents, and produce inputs for rest of pipeline
     PARSE_INPUTS ( params.samplesheet, params.loci_params )
 
     // ch_versions = Channel.empty()
@@ -113,8 +114,10 @@ workflow PIPERLINE {
     // STOP ( PARSE_INPUTS.out[1] ) // stop pipeline
     
     //// Create empty channels
-    ch_read_tracker_samples = Channel.empty()   // read-tracking for sample-level processes; card: path(.csv)
-    ch_read_tracker_grouped = Channel.empty()      // read-tracking for grouped processes
+    ch_read_tracker_samples =   // read-tracking for sample-level processes; card: path(.csv)
+        Channel.empty()  
+    ch_read_tracker_grouped =   // read-tracking for grouped processes
+        Channel.empty()      
 
 
     //// input samplesheet and loci parameters
@@ -179,6 +182,7 @@ workflow PIPERLINE {
 
 
     //// get names of flow cells ('fcid') as channel
+    //// TODO: Move these to outputs of PARSE_INPUTS, to tidy up the pipeline logic
     // extract fcid from metadata
     ch_sample_locus_reads 
         .map { meta, reads ->
@@ -220,16 +224,24 @@ workflow PIPERLINE {
 
     //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( ch_sample_locus_reads ) 
-    ch_read_tracker_samples = ch_read_tracker_samples.concat( SPLIT_LOCI.out.input_counts )
-    ch_read_tracker_samples = ch_read_tracker_samples.concat( SPLIT_LOCI.out.read_tracking )
+
+    ch_read_tracker_samples = 
+        ch_read_tracker_samples.concat( SPLIT_LOCI.out.input_counts )
+    
+    ch_read_tracker_samples = 
+        ch_read_tracker_samples.concat( SPLIT_LOCI.out.read_tracking )
 
     //// trim primer sequences from the start and end of reads
     PRIMER_TRIM ( SPLIT_LOCI.out.reads )
-    ch_read_tracker_samples = ch_read_tracker_samples.concat( PRIMER_TRIM.out.read_tracking )
+    
+    ch_read_tracker_samples = 
+        ch_read_tracker_samples.concat( PRIMER_TRIM.out.read_tracking )
 
     //// filter reads using dada2 and input parameters
     READ_FILTER ( PRIMER_TRIM.out.reads )
-    ch_read_tracker_samples = ch_read_tracker_samples.concat( READ_FILTER.out.read_tracking )
+    
+    ch_read_tracker_samples = 
+        ch_read_tracker_samples.concat( READ_FILTER.out.read_tracking )
 
     //// create plots of read quality pre- and post-filtering, per flowcell (optional)
     FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
@@ -385,28 +397,36 @@ workflow PIPERLINE {
 
     //// merge paired-end reads per flowcell x locus combo
     DADA_MERGEREADS ( ch_seq_combined )
-    ch_read_tracker_grouped = ch_read_tracker_grouped.concat(DADA_MERGEREADS.out.read_tracking)
+    ch_read_tracker_grouped = 
+        ch_read_tracker_grouped.concat(DADA_MERGEREADS.out.read_tracking)
 
     //// filter sequence table
     FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
-    ch_read_tracker_grouped = ch_read_tracker_grouped.concat(FILTER_SEQTAB.out.read_tracking)
+    ch_read_tracker_grouped = 
+        ch_read_tracker_grouped.concat(FILTER_SEQTAB.out.read_tracking)
 
-    ch_seqtab = FILTER_SEQTAB.out.seqtab
+    ch_seqtab = 
+        FILTER_SEQTAB.out.seqtab
         .map { pcr_primers, fcid, meta, seqtab -> // remove meta
             [ pcr_primers, fcid, seqtab ] }
 
     //// use IDTAXA to assign taxonomy
     TAX_IDTAXA ( FILTER_SEQTAB.out.seqtab )
-    ch_tax_idtaxa_tax = TAX_IDTAXA.out.tax
+    ch_tax_idtaxa_tax = 
+        TAX_IDTAXA.out.tax
         .map { pcr_primers, fcid, meta, tax -> // remove meta
             [ pcr_primers, fcid, tax ] }
-    ch_tax_idtaxa_ids = TAX_IDTAXA.out.ids 
+
+    ch_tax_idtaxa_ids = 
+        TAX_IDTAXA.out.ids 
         .map { pcr_primers, fcid, meta, ids -> // remove meta
             [ pcr_primers, fcid, ids ] }
 
     //// use blastn to assign taxonomy
     TAX_BLAST ( FILTER_SEQTAB.out.seqtab )
-    ch_tax_blast = TAX_BLAST.out.blast
+
+    ch_tax_blast = 
+        TAX_BLAST.out.blast
         .map { pcr_primers, fcid, meta, blast -> // remove meta
             [ pcr_primers, fcid, blast ] }
 
@@ -461,9 +481,11 @@ workflow PIPERLINE {
     TAX_SUMMARY_MERGE ( ch_tax_summaries )
     
     //// inputs for PHYLOSEQ_UNFILTERED
-    ch_taxtables_locus = MERGE_TAX.out.merged_tax // pcr_primers, path("*_merged_tax.rds")
+    ch_taxtables_locus = 
+        MERGE_TAX.out.merged_tax // pcr_primers, path("*_merged_tax.rds")
 
-    ch_seqtables_locus = ch_seqtab
+    ch_seqtables_locus = 
+        ch_seqtab
         .map { pcr_primers, fcid, seqtab -> [ pcr_primers, seqtab ] } // remove fcid field
         .groupTuple ( by: 0 ) // group seqtabs into lists per locus
     
@@ -497,12 +519,16 @@ workflow PIPERLINE {
         ch_ps_unfiltered, 
         ch_ps_filtered 
         )
-    ch_read_tracker_grouped = ch_read_tracker_grouped.concat( PHYLOSEQ_MERGE.out.read_tracking.flatten() ) 
+    ch_read_tracker_grouped = 
+        ch_read_tracker_grouped.concat( PHYLOSEQ_MERGE.out.read_tracking.flatten() ) 
 
     //// track reads and sequences across the pipeline
     // collect channel files into lists
-    ch_read_tracker_samples = ch_read_tracker_samples.collect()
-    ch_read_tracker_grouped = ch_read_tracker_grouped.collect()
+    ch_read_tracker_samples = 
+        ch_read_tracker_samples.collect()
+    
+    ch_read_tracker_grouped = 
+        ch_read_tracker_grouped.collect()
 
     READ_TRACKING ( 
         ch_read_tracker_samples, 
@@ -516,6 +542,8 @@ workflow PIPERLINE {
     - plots showing proportion of sequences that passed or failed the final filters, per sample/flowcell/locus etc
     - taxonomy heatmap tree
     */
+
+    /// perhaps a process called "REPORTS()" that generates HTML reports of the pipeline output
 
 
     //// move final output files to the output report directory
