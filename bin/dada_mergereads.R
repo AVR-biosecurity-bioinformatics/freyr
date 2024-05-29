@@ -8,14 +8,22 @@ process_packages <- c(
     "stringr",
     "tibble",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
-# check variables defined
-if ( !concat_unmerged %in% c(TRUE, FALSE) ) {
-    stop("**** 'concat_unmerged' must be TRUE or FALSE ****")
-}
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "fcid",
+    "pcr_primers",
+    "sample_id",
+    "reads_F",
+    "reads_R",
+    "seqs_F",
+    "seqs_R",
+    "concat_unmerged"
+)
+lapply(nf_vars, nf_var_check)
 
 ### run R code
 ## process sample IDs to name the read and seq lists
@@ -23,7 +31,7 @@ if ( !concat_unmerged %in% c(TRUE, FALSE) ) {
 sample_id_list <-
     stringr::str_extract_all(
         sample_id, 
-        pattern = "[^\\s,\\[\\]]+" # extract all runs of characters that aren't ' ' ',' '[' or ']' 
+        pattern = "[^\\s,\\[\\]]+" # extract all runs of characters that aren't spaces, commas or square brackets
         ) %>% 
     unlist()
 
@@ -70,26 +78,26 @@ names(seqs_R_extracted) <- sample_id_list
 ## merge pairs, keeping unmerged reads only if concat_unmerged is FALSE
 if ( concat_unmerged ) {
     mergers <- dada2::mergePairs(
-                        dadaF = seqs_F_extracted,
-                        derepF = reads_F_list,
-                        dadaR = seqs_R_extracted,
-                        derepR= reads_R_list,
-                        verbose = TRUE,
-                        minOverlap = 12,
-                        trimOverhang = TRUE,
-                        returnRejects = TRUE
-                    )
+        dadaF = seqs_F_extracted,
+        derepF = reads_F_list,
+        dadaR = seqs_R_extracted,
+        derepR= reads_R_list,
+        verbose = TRUE,
+        minOverlap = 12,
+        trimOverhang = TRUE,
+        returnRejects = TRUE
+    )
 } else {
     mergers <- dada2::mergePairs(
-                        dadaF = seqs_F_extracted,
-                        derepF = reads_F_list,
-                        dadaR = seqs_R_extracted,
-                        derepR= reads_R_list,
-                        verbose = TRUE,
-                        minOverlap = 12,
-                        trimOverhang = TRUE,
-                        returnRejects = FALSE
-                    )
+        dadaF = seqs_F_extracted,
+        derepF = reads_F_list,
+        dadaR = seqs_R_extracted,
+        derepR= reads_R_list,
+        verbose = TRUE,
+        minOverlap = 12,
+        trimOverhang = TRUE,
+        returnRejects = FALSE
+    )
 }
 
 

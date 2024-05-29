@@ -8,9 +8,22 @@ process_packages <- c(
     "taxreturn",
     "tibble",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "fcid",
+    "pcr_primers",
+    "seqtab",
+    "target_gene",
+    "ref_fasta",
+    "blast_min_identity",
+    "blast_min_coverage",
+    "run_blast"
+)
+lapply(nf_vars, nf_var_check)
 
 ### TODO: Add explicit taxonomic ranks option to loci parameters
 

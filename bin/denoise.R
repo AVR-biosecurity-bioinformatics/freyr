@@ -3,11 +3,22 @@
 process_packages <- c(
     "dada2",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
-# check variables defined
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "direction",
+    "fcid",
+    "pcr_primers",
+    "sample_id",
+    "reads",
+    "errormodel",
+    "n_pass",
+    "priors"
+)
+lapply(nf_vars, nf_var_check)
 
 ### run R code
 errormodel <- readRDS(errormodel) # import error model
@@ -25,14 +36,14 @@ if ( n_pass == "first" && priors == "NO_FILE" ) { # first pass condition; no pri
 
     # run dada2
     dada_output <- dada2::dada(
-                        derep = reads, 
-                        err = errormodel, 
-                        multithread = FALSE, 
-                        priors = priors, 
-                        selfConsist = FALSE, 
-                        pool = FALSE, 
-                        verbose = TRUE
-                    )
+        derep = reads, 
+        err = errormodel, 
+        multithread = FALSE, 
+        priors = priors, 
+        selfConsist = FALSE, 
+        pool = FALSE, 
+        verbose = TRUE
+    )
 
     saveRDS(dada_output, paste0(sample_id,"_",pcr_primers,"_dada1",direction_short,".rds"))
 
@@ -42,14 +53,14 @@ if ( n_pass == "first" && priors == "NO_FILE" ) { # first pass condition; no pri
 
     # run dada2
     dada_output <- dada2::dada(
-                        derep = reads, 
-                        err = errormodel, 
-                        multithread = FALSE, 
-                        priors = priors, 
-                        selfConsist = FALSE, 
-                        pool = FALSE, 
-                        verbose = TRUE
-                    )
+        derep = reads, 
+        err = errormodel, 
+        multithread = FALSE, 
+        priors = priors, 
+        selfConsist = FALSE, 
+        pool = FALSE, 
+        verbose = TRUE
+    )
 
     saveRDS(dada_output, paste0(sample_id,"_",pcr_primers,"_dada2",direction_short,".rds"))
 

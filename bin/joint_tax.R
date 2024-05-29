@@ -6,9 +6,20 @@ process_packages <- c(
     "stringr",
     "tibble",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "fcid",
+    "pcr_primers",
+    "target_gene",
+    "idtaxa_output",
+    "blast_output",
+    "seqtab"
+)
+lapply(nf_vars, nf_var_check)
 
 ## check and define variables 
 target_gene <-          parse_nf_var_repeat(target_gene)

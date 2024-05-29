@@ -8,11 +8,24 @@ process_packages <- c(
     "taxreturn",
     "tibble",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
-## check and define variables
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "fcid",     
+    "pcr_primers",   
+    "seqtab",
+    "blast",  
+    "tax",           
+    "target_gene",
+    "idtaxa_db",  
+    "ref_fasta"  
+)
+lapply(nf_vars, nf_var_check)
+
+## read in files
 seqtab <-   readRDS(seqtab)
 blast <-    readRDS(blast) # blast is the low-stringency blast output from TAX_BLAST
 tax <-      readRDS(tax)
@@ -24,6 +37,7 @@ blast <- blast %>%
     dplyr::top_n(1, row_n) %>% # Break ties by position
     dplyr::select(-row_n) %>%
     dplyr::ungroup()
+
 
 ### run R code
 
@@ -48,12 +62,12 @@ blast <- blast %>%
     dplyr::select(-name)
 
 # combine blast output and tax table
-if ( nrow(blast) > 0 & nrow(tax) > 0 ){
-                joint <- blast %>% 
-                    dplyr::left_join(tax, by="OTU")
-                } else {
-                    NULL
-                }
+if ( nrow(blast) > 0 & nrow(tax) > 0 ) {
+    joint <- blast %>% 
+        dplyr::left_join(tax, by="OTU")
+} else {
+    NULL
+}
 
 # save joint object
 saveRDS(joint, paste0(fcid,"_",pcr_primers,"_joint.rds"))

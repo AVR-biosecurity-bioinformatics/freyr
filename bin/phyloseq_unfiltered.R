@@ -14,10 +14,19 @@ process_packages <- c(
     "tidyr",
     "vegan",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "pcr_primers",
+    "taxtab",
+    "seqtab_list",
+    "loci_params",
+    "samdf"
+)
+lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 taxtab <- readRDS(taxtab)
@@ -51,14 +60,14 @@ samdf_renamed <- samdf %>%
         )
 
 ## run step_phyloseq() on merged seqtabs, taxtabs and samplesheet to create phyloseq object
-ps <-   step_phyloseq(
-            seqtab = seqtab_final,
-            taxtab = taxtab,
-            samdf = samdf_renamed,
-            seqs = NULL,
-            phylo = NULL,
-            name_variants = FALSE
-        )
+ps <- step_phyloseq(
+    seqtab = seqtab_final,
+    taxtab = taxtab,
+    samdf = samdf_renamed,
+    seqs = NULL,
+    phylo = NULL,
+    name_variants = FALSE
+)
 
 ## name OTUs using hash
 phyloseq::taxa_names(ps) <- phyloseq::tax_table(ps)[,ncol(phyloseq::tax_table(ps))] # use final column of tax_table (hash) to name OTUs

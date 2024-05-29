@@ -5,11 +5,18 @@ process_packages <- c(
     "stringr",
     "tibble",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
-# check variables defined
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "direction",
+    "fcid",
+    "pcr_primers",
+    "priors"
+)
+lapply(nf_vars, nf_var_check)
 
 ### run R code
 if (direction == "forward") { # recode read direction as "F" or "R"

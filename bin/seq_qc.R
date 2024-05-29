@@ -12,8 +12,7 @@ process_packages <- c(
     "tibble",
     "tidyr",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 #### TODO: Pull stats from top of index_switching.pdf and print to a final run report
@@ -22,6 +21,12 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 #### TODO: use index_switch_calc.txt in jack_notes to run same process but in bash, which should be much faster
 
 # check variables defined
+nf_vars <- c(
+    "projectDir",
+    "fcid"
+)
+lapply(nf_vars, nf_var_check)
+
 if (!exists("fcid")) {stop("'fcid' not defined!")}
 
 # define data location

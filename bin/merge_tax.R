@@ -7,12 +7,19 @@ process_packages <- c(
     "stringr",
     "tibble",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
-## check and define variables
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "pcr_primers",
+    "fcid",
+    "taxtab"
+)
+lapply(nf_vars, nf_var_check)
 
+## check and define variables
 taxtab_list <- # convert Groovy to R list format
     stringr::str_extract_all(taxtab, pattern = "[^\\s,\\[\\]]+") %>% unlist()
 

@@ -10,6 +10,13 @@ process_packages <- c(
 
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "tax_summary_list"
+)
+lapply(nf_vars, nf_var_check)
+
 ## check and define variables
 
 tax_summary_list <- # convert Groovy to R list format

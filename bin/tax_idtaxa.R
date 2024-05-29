@@ -10,9 +10,19 @@ process_packages <- c(
     "stringr",
     "tibble",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "fcid",
+    "pcr_primers",
+    "seqtab",
+    "idtaxa_confidence",
+    "idtaxa_db"
+)
+lapply(nf_vars, nf_var_check)
 
 ## check and define variables 
 idtaxa_confidence <-    parse_nf_var_repeat(idtaxa_confidence)

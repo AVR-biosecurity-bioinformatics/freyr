@@ -10,9 +10,16 @@ process_packages <- c(
     "tibble",
     "tidyr",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "ps_unfiltered",
+    "ps_filtered"
+)
+lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 ps_unfiltered <- # convert Groovy to R list format
@@ -25,8 +32,6 @@ ps_filtered <- # convert Groovy to R list format
 ps_filtered <- lapply(ps_filtered, readRDS) # read in phyloseq objects and store as list
 
 ### run R code
-
-
 
 ### unfiltered 
 ## merge unfiltered phyloseq objects
@@ -56,7 +61,7 @@ seqs <- Biostrings::DNAStringSet(as.vector(phyloseq::refseq(ps_u)))
 Biostrings::writeXStringSet(seqs, filepath = paste0("asvs_unfiltered.fasta"), width = 100) 
 
 # write .nwk file if phylogeny present
-if(!is.null(phy_tree(ps_u, errorIfNULL = FALSE))){
+if(!is.null(phyloseq::phy_tree(ps_u, errorIfNULL = FALSE))){
     #Output newick tree
     ape::write.tree(phyloseq::phy_tree(ps_u), file = paste0("tree_unfiltered.nwk"))
 }

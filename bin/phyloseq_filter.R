@@ -10,9 +10,26 @@ process_packages <- c(
     "tibble",
     "tidyr",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "pcr_primers",
+    "ps",
+    "target_kingdom",
+    "target_phylum",
+    "target_class",
+    "target_order",
+    "target_family",
+    "target_genus",
+    "target_species",
+    "min_sample_reads",
+    "min_taxa_reads",
+    "min_taxa_ra"
+)
+lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 ps <- readRDS(ps)

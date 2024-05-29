@@ -9,11 +9,20 @@ process_packages <- c(
     "stringr",
     "tidyr",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
-# check variables defined
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "fwd_reads",
+    "rev_reads",
+    "sample_id",
+    "fcid",
+    "target_gene",
+    "pcr_primers"
+)
+lapply(nf_vars, nf_var_check)
 
 
 ### run R code

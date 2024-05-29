@@ -10,8 +10,6 @@ process TAX_IDTAXA {
     tuple val(pcr_primers), val(fcid), val(meta), path("*_idtaxa_tax.rds"), emit: tax
     tuple val(pcr_primers), val(fcid), val(meta), path("*_idtaxa_ids.rds"), emit: ids
 
-
-
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
     // when: 
@@ -29,8 +27,6 @@ process TAX_IDTAXA {
     idtaxa_confidence = "${meta.idtaxa_confidence}"
     idtaxa_db =         "${meta.idtaxa_db}"
 
-
-    
     ## global variables
     projectDir = "$projectDir"
     params_dict = "$params"

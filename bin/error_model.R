@@ -6,12 +6,18 @@ process_packages <- c(
     "readr",
     "stringr",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
-# check variables defined
-
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "direction",
+    "fcid",
+    "pcr_primers",
+    "reads"
+)
+lapply(nf_vars, nf_var_check)
 
 ### run R code (from step_errormodel)
 if (!direction %in% c("forward","reverse")) { 

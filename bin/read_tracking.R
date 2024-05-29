@@ -11,9 +11,16 @@ process_packages <- c(
     "tibble",
     "tidyr",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "rt_samples",    
+    "rt_group"    
+)
+lapply(nf_vars, nf_var_check)
 
 ## check and define variables 
 rt_samples <- # convert Groovy to R list format

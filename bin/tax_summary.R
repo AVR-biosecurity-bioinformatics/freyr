@@ -8,9 +8,22 @@ process_packages <- c(
     "rlang",
     "stringr",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "pcr_primers",
+    "fcid",
+    "tax",
+    "ids",
+    "joint_file",
+    "target_gene",
+    "idtaxa_db",
+    "ref_fasta"
+)
+lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 idtaxa <-       readRDS(tax)

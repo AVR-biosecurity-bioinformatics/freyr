@@ -6,12 +6,26 @@ process_packages <- c(
     "readr",
     "tibble",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
-# check variables defined
-
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "fwd_reads",
+    "rev_reads",
+    "read_min_length",
+    "read_max_length",
+    "read_max_ee",
+    "read_trunc_length",
+    "read_trim_left",
+    "read_trim_right",
+    "sample_id",
+    "target_gene",
+    "pcr_primers",
+    "fcid"
+)
+lapply(nf_vars, nf_var_check)
 
 ### run R code
 

@@ -11,9 +11,24 @@ process_packages <- c(
     "taxreturn",
     "tibble",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+
+### check Nextflow environment variables
+nf_vars <- c(
+    "projectDir",
+    "fcid",
+    "pcr_primers",
+    "seqtab",
+    "asv_min_length",
+    "asv_max_length",
+    "phmm",
+    "coding",
+    "genetic_code",
+    "for_primer_seq",
+    "rev_primer_seq"
+)
+lapply(nf_vars, nf_var_check)
 
 ## check and define variables 
 if(is.na(asv_min_length))   {asv_min_length <- NULL}
