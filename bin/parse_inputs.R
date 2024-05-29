@@ -108,20 +108,18 @@ if ( "read_dir" %in% colnames(samplesheet_df) ) { # if "read_dir" column exists 
             dplyr::left_join(., reads_df, by = "sample_id")
     } 
 } else { # if "read_dir" doesn't exist...
-    if ("fwd" %in% colnames(samplesheet_df) & "rev" %in% colnames(samplesheet_df) ) { # if 'fwd' and 'rev' columns both exist...
+    if ( "fwd" %in% colnames(samplesheet_df) & "rev" %in% colnames(samplesheet_df) ) { # if 'fwd' and 'rev' columns both exist...
         # convert read paths to absolute paths
         samplesheet_df <- samplesheet_df %>% 
             dplyr::mutate(
-                fwd = dplyr::case_when(
-                    stringr::str_starts(fwd, "/") ~ fwd, # if already absolute path, leave it be
-                    stringr::str_starts(fwd, "\\./") ~ stringr::str_replace(fwd, "^\\.", projectDir),  # replace "." with projectDir to produce absolute path
-                    .default = stringr::str_replace(fwd, "^", paste0(projectDir,"/")) # else append projectDir to front to produce absolute path
+                across(
+                    c(fwd, rev),
+                    ~ dplyr::case_when(
+                        stringr::str_starts(., "/") ~ ., # if already absolute path, leave it be
+                        stringr::str_starts(., "\\./") ~ stringr::str_replace(., "^\\.", projectDir),  # replace "." with projectDir to produce absolute path
+                        .default = stringr::str_replace(., "^", paste0(projectDir,"/")) # else append projectDir to front to produce absolute path
+                    )
                 ),
-                rev = dplyr::case_when(
-                    stringr::str_starts(rev, "/") ~ rev, # if already absolute path, leave it be
-                    stringr::str_starts(rev, "\\./") ~ stringr::str_replace(rev, "^\\.", projectDir),  # remove "." and lead with projectDir to produce absolute path
-                    .default = stringr::str_replace(rev, "^", paste0(projectDir,"/")) # else lead with projectDir to produce absolute path
-                )
             )
         
     } else {
@@ -168,13 +166,35 @@ if (!setequal(samplesheet_split_check$target_gene %>% unique(), loci_params_df$t
 }
 
 # convert high_sensitivity, run_blast, coding and concat_unmerged to logical values
-
-# check phmm, idtaxa_db and ref_fasta are readable files
-
-# validate phmm somehow -- open it and check contents?
+loci_params_df <- loci_params_df %>%
+    dplyr::mutate( ### NOTE: this assumes all columns are present in the data frame, but this might not always be true
+        high_sensitivity = as.logical(high_sensitivity),
+        run_blast = as.logical(run_blast),
+        coding = as.logical(coding),
+        concat_unmerged = as.logical(concat_unmerged)
+    )
 
 # convert phmm, idtaxa_db and ref_fasta paths to absolute paths
+loci_params_df <- loci_params_df %>% 
+    dplyr::mutate(
+        across(
+            c(phmm, idtaxa_db, ref_fasta), 
+            ~ dplyr::case_when(
+                is.na(.) ~ ., # keep as NA if NA
+                stringr::str_starts(., "/") ~ ., # if already absolute path, leave it be
+                stringr::str_starts(., "\\./") ~ stringr::str_replace(., "^\\.", projectDir),  # replace "." with projectDir to produce absolute path
+                .default = stringr::str_replace(., "^", paste0(projectDir,"/")) # else lead with projectDir to produce absolute path
+            )
+        )
+    ) 
 
+# check phmm, idtaxa_db and ref_fasta are readable files
+check_paths <- loci_params_df$phmm %>% unlist() # check fwd paths
+for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
+check_paths <- loci_params_df$idtaxa_db %>% unlist() # check rev paths
+for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
+check_paths <- loci_params_df$ref_fasta %>% unlist() # check rev paths
+for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
 
 
 
