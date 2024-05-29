@@ -53,7 +53,7 @@ log.info paramsSummaryLog(workflow)
 */
 
 include { PARSE_INPUTS                              } from '../modules/parse_inputs'
-include { PARAMETER_SETUP                           } from '../modules/parameter_setup'
+// include { PARAMETER_SETUP                           } from '../modules/parameter_setup'
 include { SEQ_QC                                    } from '../modules/seq_qc'
 include { SPLIT_LOCI                                } from '../modules/split_loci'
 include { PRIMER_TRIM                               } from '../modules/primer_trim'
@@ -106,31 +106,6 @@ include { STOP                                      } from '../modules/stop'
 
 workflow PIPERLINE {
 
-    //// Create a new channel of metadata from a sample sheet passed to the pipeline through the --input parameter
-    if ( params.data_folder == "test_data/dual" ) { // use supplied samplesheet for 'dual' test data
-        ch_samplesheet = Channel.fromList(
-            samplesheetToList(
-                "test_data/dual/samplesheet.csv", 
-                "assets/schema_samplesheet.json"
-                )
-            )
-    } else if ( params.data_folder == "test_data/single" ) { // use supplied samplesheet for 'single' test data
-        ch_samplesheet = Channel.fromList(
-            samplesheetToList(
-                "test_data/dual/samplesheet.csv", 
-                "assets/schema_samplesheet.json"
-                )
-            )    } else { // otherwise use supplied samplesheet for non-test data
-        ch_samplesheet = Channel.fromList(
-            samplesheetToList(
-                params.samplesheet, 
-                "assets/schema_samplesheet.json"
-                )
-            )    }
-    
-
-    // ch_samplesheet.view()
-
     PARSE_INPUTS ( params.samplesheet, params.loci_params )
 
     // ch_versions = Channel.empty()
@@ -172,7 +147,7 @@ workflow PIPERLINE {
             [ meta, [
                 file(row.fwd, checkIfExists: true),
                 file(row.rev, checkIfExists: true)
-            ]]  
+            ] ]  
             }
         .set { ch_sample_locus_reads }
 
@@ -546,4 +521,6 @@ workflow PIPERLINE {
     //// move final output files to the output report directory
 
     // make directories for unfiltered and filtered outputs
+
+    //// process called "OUTPUT()" that collates all the relevant output files and copies them into particular directories
 }
