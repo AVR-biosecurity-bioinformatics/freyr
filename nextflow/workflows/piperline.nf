@@ -133,10 +133,9 @@ workflow PIPERLINE {
 
     PARSE_INPUTS ( params.samplesheet, params.loci_params )
 
-    // STOP () // stop pipeline
-
     // ch_versions = Channel.empty()
 
+    STOP ( PARSE_INPUTS.out[1] ) // stop pipeline
     
     //// Create empty channels
     ch_read_tracker_samples = Channel.empty()   // read-tracking for sample-level processes; card: path(.csv)

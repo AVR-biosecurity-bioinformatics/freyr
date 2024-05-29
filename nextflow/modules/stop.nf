@@ -1,5 +1,8 @@
 process STOP {
     
+    input:
+    path(input)
+    
     // this process is used to halt the pipeline early, even if the last process finished successfully
 
     script:

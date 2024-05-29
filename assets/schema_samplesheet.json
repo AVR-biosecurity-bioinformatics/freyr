@@ -228,6 +228,7 @@
             "type": "string",
             "pattern": "^[^\\s,]+$",
             "format": "directory-path",
+            "exists": true,
             "description": "Path to directory/folder containing the FastQ read file(s)--paths without a preceding '/' will be considered relative. The pipeline will match files to samples based on 'sample_id' and the optional 'extension' pipeline parameter. Should not be used in conjunction with 'fwd' and 'rev'.",
             "errorMessage": "Read directory path cannot contain spaces or commas."
         },
@@ -235,7 +236,7 @@
             "type": "string",
             "pattern": "^[^\\s,]+\\.f(ast)?q(\\.gz)?$",
             "format": "file-path",
-            "exists": "true",
+            "exists": true,
             "description": "Path of the forward read FastQ file--paths without a preceding '/' will be considered relative. Should not be used in conjunction with 'read_dir'.",
             "errorMessage": "FastQ file for forward reads cannot contain spaces or commas, and must have extension '.fastq', '.fq', '.fastq.gz' or '.fq.gz'."
         },
@@ -243,7 +244,7 @@
             "type": "string",
             "pattern": "^[^\\s,]+\\.f(ast)?q(\\.gz)?$",
             "format": "file-path",
-            "exists": "true",
+            "exists": true,
             "description": "Path of the reverse read FastQ file--paths without a preceding '/' will be considered relative. Should not be used in conjunction with 'read_dir'.",
             "errorMessage": "FastQ file for reverse reads cannot contain spaces or commas, and must have extension '.fastq', '.fq', '.fastq.gz' or '.fq.gz'."
         }

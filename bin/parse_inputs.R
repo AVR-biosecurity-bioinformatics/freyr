@@ -77,9 +77,9 @@ if ( "read_dir" %in% colnames(samplesheet_df) ) { # if "read_dir" column exists 
             )
         reads_list = list() # create empty list
         for (i in 1:length(samplesheet_df$read_dir)) { # loop through rows of samplesheet
-            i_readfiles <- list.files( # find full paths of the reads matching sample_id
+            i_readfiles <- list.files( # find full paths of files matching sample_id with a fastQ extension
                 path = samplesheet_df$read_dir[i],
-                pattern = samplesheet_df$sample_id[i],
+                pattern = paste0(samplesheet_df$sample_id[i],"[^\\s/]*\\.f(ast)?q(\\.gz)?$"),
                 full.names = T, 
                 recursive = T
                 ) %>% unlist()
@@ -127,8 +127,6 @@ if ( "read_dir" %in% colnames(samplesheet_df) ) { # if "read_dir" column exists 
     }
 }
 
-# glimpse(samplesheet_df)
-
 ## check that read file paths are readable
 check_paths <- samplesheet_df$fwd %>% unlist() # check fwd paths
 for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
@@ -140,8 +138,8 @@ for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
 if (any(duplicated(samplesheet_df$fwd))) {stop ("SAMPLESHEET ERROR: At least two samples share the same forward read file in the samplesheet!")}
 if (any(duplicated(samplesheet_df$rev))) {stop ("SAMPLESHEET ERROR: At least two samples share the same reverse read files in the samplesheet!")}
 
-## write new samplesheet to file
-
+## write parsed samplesheet to file
+readr::write_csv(samplesheet_df, "samplesheet_parsed.csv")
 
 ### validate loci_params content
 
@@ -197,10 +195,26 @@ check_paths <- loci_params_df$ref_fasta %>% unlist() # check rev paths
 for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
 
 
+### split samplesheet by primer and join to loci_params
+samplesheet_loci_params <- samplesheet_df %>%  # split samdf loci-relevant columns across new rows, then join samdf and params  
+    tidyr::separate_longer_delim(c(pcr_primers, for_primer_seq, rev_primer_seq, target_gene), delim = ";") %>% 
+    dplyr::left_join(., loci_params_df, by = c("pcr_primers", "target_gene"))
 
+readr::write_csv(samplesheet_loci_params, "samplesheet_loci_params.csv")
 
+### split joined samplesheet into one per primer pair
+split_slp <- split(samplesheet_loci_params, samplesheet_loci_params$pcr_primers) # split dfs by pcr_primers
 
-### split samplesheets into loci and join to loci_params
+for ( I in 1:length(split_slp)) { # assign new dfs to new variables
+    new_df_name <- paste0(unique(split_slp[[I]]$pcr_primers),"_samplesheet")
+    assign(
+        paste0(unique(split_slp[[I]]$pcr_primers),"_samplesheet"),
+        split_slp[[I]]
+        )
+    readr::write_csv( # print dfs inside work dir; maybe publish?
+        x = get(new_df_name), 
+        file = sprintf("%s.csv",new_df_name)
+        )
+}
 
-
-stop(" *** stopped manually *** ") ##########################################
+# stop(" *** stopped manually *** ") ##########################################
