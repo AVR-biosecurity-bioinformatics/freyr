@@ -8,8 +8,7 @@ process_packages <- c(
     "stringr",
     "tidyr",
     NULL
-    )
-
+)
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
 ### check Nextflow environment variables
@@ -22,9 +21,10 @@ lapply(nf_vars, nf_var_check)
 
 ### run code
 
-samplesheet_df <- readr::read_csv(paste0(projectDir,"/",samplesheet), show_col_types = F) # read in samplesheet
-
-loci_params_df <- readr::read_csv(paste0(projectDir,"/",loci_params), show_col_types = F) # read in loci parameters
+# read in samplesheet
+samplesheet_df <- readr::read_csv(paste0(projectDir,"/",samplesheet), show_col_types = F) 
+# read in loci parameters
+loci_params_df <- readr::read_csv(paste0(projectDir,"/",loci_params), show_col_types = F)
 
 ### validation of samplesheet content
 
