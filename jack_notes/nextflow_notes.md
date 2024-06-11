@@ -100,6 +100,43 @@ Running Nextflow with local version:
 
     nextflow run . -resume --samplesheet test_data/dual/samplesheet_read_dir.csv
 
+Running Nextflow with shifter testing:
+
+    module load Java/17.0.6 shifter/22.02.1
+
+    nextflow run . -resume --samplesheet test_data/dual/samplesheet_read_dir.csv
+
+Running nextflow with charliecloud testing:
+
+    module purge && module load Java/17.0.6 charliecloud/0.37-GCCcore-12.3.0
+
+    nextflow run . -resume --samplesheet test_data/dual/samplesheet_read_dir.csv
+
+Run with shifter testing old versions of Nextflow:
+
+    module load Java/17.0.6 shifter/22.02.1
+
+    # 24.04.2 (current); failed
+    NXF_VER=24.04.2 nextflow run . --samplesheet test_data/dual/samplesheet_read_dir.csv
+    # failed
+    NXF_VER=24.04.1 nextflow run . --samplesheet test_data/dual/samplesheet_read_dir.csv
+    # failed
+    NXF_VER=24.04.0 nextflow run . --samplesheet test_data/dual/samplesheet_read_dir.csv
+    # failed
+    NXF_VER=23.10.2 nextflow run . --samplesheet test_data/dual/samplesheet_read_dir.csv
+    # failed
+    NXF_VER=23.10.1 nextflow run . --samplesheet test_data/dual/samplesheet_read_dir.csv
+    # failed
+    NXF_VER=23.10.0 nextflow run . --samplesheet test_data/dual/samplesheet_read_dir.csv
+    
+
+    ## command works, but currently pipeline fails at SPLIT_LOCI due to lack of BASC modules in container
+    # .command.run no longer has the NXF_TASK_WORKDIR
+    NXF_VER=23.04.5 nextflow run . --samplesheet test_data/dual/samplesheet_read_dir.csv
+
+
+
+
 
 
 
