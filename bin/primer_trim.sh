@@ -36,7 +36,7 @@ REV_PRIMER=${4/I/N}
 # lhist=primer_trim_lhist_${7}_${6}_${5}.txt
 
 ## trying with cutadapt (preferred)
-module load cutadapt/3.4-GCCcore-10.3.0
+# module load cutadapt/3.4-GCCcore-10.3.0
 
 # reverse complement the primer sequences
 FWD_PRIMER_RC=$(echo ${FWD_PRIMER} | \

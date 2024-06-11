@@ -2,6 +2,7 @@ process DADA_PRIORS {
     def module_name = "dada_priors"
     tag "$pcr_primers; $fcid"
     // label:  
+    container "jackscanlan/piperline-multi:0.0.1"
 
     input:
     tuple val(direction), val(pcr_primers), val(fcid), path(priors)

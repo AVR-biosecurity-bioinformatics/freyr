@@ -2,6 +2,7 @@ process TAX_SUMMARY_MERGE {
     def module_name = "tax_summary_merge"
     tag "Whole dataset"
     // label:  
+    container "jackscanlan/piperline-multi:0.0.1"
 
     input:
     path(tax_summary_list)

@@ -2,6 +2,7 @@ process TAX_SUMMARY {
     def module_name = "tax_summary"
     tag "$pcr_primers; $fcid"
     // label:  
+    container "jackscanlan/piperline-multi:0.0.1"
 
     input:
     tuple val(pcr_primers), val(fcid), path(tax), path(ids), path(joint), val(loci_params)

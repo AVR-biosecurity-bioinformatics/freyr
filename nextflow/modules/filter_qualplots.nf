@@ -2,6 +2,7 @@ process FILTER_QUALPLOTS {
     def module_name = "filter_qualplots"
     tag "$meta.fcid; $meta.sample_id"
     // label:  
+    container "jackscanlan/piperline-multi:0.0.1"
 
     input:
     tuple val(meta), path(reads)

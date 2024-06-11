@@ -2,6 +2,7 @@ process DADA_MERGEREADS {
     def module_name = "dada_mergereads"
     tag "$pcr_primers; $fcid"
     // label:  
+    container "jackscanlan/piperline-multi:0.0.1"
 
     input:
     tuple val(pcr_primers), val(fcid), val(concat_unmerged), val(meta), path(readsF), path(readsR), path(seqsF), path(seqsR)

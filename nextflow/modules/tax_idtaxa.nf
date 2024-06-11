@@ -1,7 +1,8 @@
 process TAX_IDTAXA {
     def module_name = "tax_idtaxa"
     tag "$pcr_primers; $fcid"
-    // label:  
+    // label
+    container "jackscanlan/piperline-multi:0.0.1"
 
     input:
     tuple val(pcr_primers), val(fcid), val(meta), path(seqtab)

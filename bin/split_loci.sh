@@ -28,7 +28,7 @@ else
     MINK_LEN=$FWD_LEN
 fi
 
-module load BBMap/38.98-GCC-11.2.0
+# module load BBMap/38.98-GCC-11.2.0
 
 bbduk.sh \
 in=${1} \
