@@ -1,6 +1,6 @@
 # PipeRline
 
-`pipeRline` is a metabarcoding analysis pipeline largely implemented in R. 
+`pipeRline` is a metabarcoding analysis pipeline largely written in R. 
 
 This pipeline is currently being re-written in the **Nextflow** language so it will be completely _containerised_ and _reproducible_. It is also partially inspired by the [nfcore/ampliseq](https://github.com/nf-core/ampliseq) pipeline!
 

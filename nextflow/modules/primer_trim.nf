@@ -2,7 +2,6 @@ process PRIMER_TRIM {
     def module_name = "primer_trim"
     tag "$meta.pcr_primers; $meta.sample_id"
     // label
-    // container "pegi3s/cutadapt:latest"
     container "thatdnaguy/cutadapt:v4.7_02"
 
     input:
