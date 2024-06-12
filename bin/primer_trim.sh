@@ -49,15 +49,15 @@ REV_PRIMER_RC=$(echo ${REV_PRIMER} | \
 # run cutadapt in "linked adapter" mode
 # see here: https://cutadapt.readthedocs.io/en/stable/recipes.html#trimming-amplicon-primers-from-paired-end-reads
 cutadapt \
--a ^${FWD_PRIMER}...${REV_PRIMER_RC} \
--A ^${REV_PRIMER}...${FWD_PRIMER_RC} \
---discard-untrimmed \
---rename="{header}" \
---report=minimal \
--o ${7}_${6}_${5}_trim_R1.fastq.gz \
--p ${7}_${6}_${5}_trim_R2.fastq.gz \
-${1} \
-${2}
+    -a ^${FWD_PRIMER}...${REV_PRIMER_RC} \
+    -A ^${REV_PRIMER}...${FWD_PRIMER_RC} \
+    --discard-untrimmed \
+    --rename="{header}" \
+    --report=minimal \
+    -o ${7}_${6}_${5}_trim_R1.fastq.gz \
+    -p ${7}_${6}_${5}_trim_R2.fastq.gz \
+    ${1} \
+    ${2}
 
 ## count reads in output files
 # forward reads

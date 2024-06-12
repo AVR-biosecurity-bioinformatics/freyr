@@ -132,10 +132,14 @@ Run with shifter testing old versions of Nextflow:
 
     ## command works, but currently pipeline fails at SPLIT_LOCI due to lack of BASC modules in container
     # .command.run no longer has the NXF_TASK_WORKDIR
-    NXF_VER=23.04.5 nextflow run . --samplesheet test_data/dual/samplesheet_read_dir.csv
+    NXF_VER=23.04.5 nextflow run . --samplesheet test_data/dual/samplesheet_read_dir.csv -profile shifter
 
 
+Testing containers with shifter
 
+    module load shifter
+
+    
 
 
 
