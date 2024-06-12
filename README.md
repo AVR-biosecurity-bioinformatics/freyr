@@ -24,6 +24,8 @@ This pipeline is currently being re-written in the **Nextflow** language so it w
         --samplesheet test_data/dual/samplesheet_read_dir.csv \
         -profile shifter
 
+The pipeline may also work with `-profile` set to `apptainer`, `conda`, `docker`, `podman` or `singularity`--when using the respective container platform--but they have not been tested with the current code. 
+
 
 
 #### Important notes:
