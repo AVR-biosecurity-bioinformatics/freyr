@@ -27,7 +27,6 @@ This pipeline is currently being re-written in the **Nextflow** language so it w
 The pipeline may also work with `-profile` set to `apptainer`, `conda`, `docker`, `podman` or `singularity`--when using the respective container platform--but they have not been tested with the current code. 
 
 
-
 #### Important notes:
 
 - This pipeline currently only works with native Shifter support (ie. with `-profile shifter` in the Nextflow run command) if Nextflow is version `23.04.5` (or possibly older). This is due to a bug in how Nextflow (at least versions `23.10.0` to `24.04.2`) sets up the process environment in `.command.run`
@@ -36,6 +35,16 @@ The pipeline may also work with `-profile` set to `apptainer`, `conda`, `docker`
     - It seems like Nextflow (as of version `24.04.2`) fails to handle using Charliecloud with pipelines that use more than one container, as they cannot all get pulled at the same time. Even for pipelines that use only a single container, moving the container contents to each process work directory slows the execution down considerably and increases the project footprint. 
 - When running the pipeline with containers, you must be using a Linux system with AMD64 architecture (such as AgVic's BASC). In the future, we will try to support other architectures by using multi-platform containers. 
 
+
+### Inputs
+
+The pipeline has two main inputs: the **samplesheet**, and the **loci parameters**.  
+
+The samplesheet tells the pipeline what samples are being run, as well as, for each sample: where the sequencing read files are, what primers were used, what flowcell/experiment they were sequenced in, and additional metadata. The samplesheet should be provided to the pipeline as a `.csv` file using the `--samplesheet` flag, where each row is a different sample.
+
+The loci parameters tell the pipeline how to analyse the samples, on a per-locus basis (for multiplexed experiments where multiple loci were pooled per sample). The loci parameters should be provided to the pipeline as a `.csv` file using the `--loci_params` flag, where each row is a different locus/PCR primer pair. 
+
+Both samplesheet and loci parameters `.csv` files are checked by the pipeline before the run starts, to make sure all the values provided are valid and what the pipeline will expect. 
 
 
 

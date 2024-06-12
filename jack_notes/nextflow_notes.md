@@ -110,5 +110,27 @@ Run with shifter:
         --samplesheet test_data/dual/samplesheet_read_dir.csv \
         -profile shifter
 
+Run with shifter and slurm in BASC
 
+    module load Java/17.0.6 shifter/22.02.1
+
+    export NXF_EXECUTOR=slurm
+
+    NXF_VER=23.04.5 \
+        nextflow run . \
+        --samplesheet test_data/dual/samplesheet_read_dir.csv \
+        -profile basc_slurm
+
+The above code runs the pipeline with the BASC slurm system, such that each process queues a new job. 
+- TODO: add better process options (cpu, time, memory) to each module, rather than blanket ones across the whole pipeline
+
+Run with shifter and slurm in BASC, with test data
+
+    module load Java/17.0.6 shifter/22.02.1
+
+    export NXF_EXECUTOR=slurm
+
+    NXF_VER=23.04.5 \
+        nextflow run . \
+        -profile basc_slurm,test
 
