@@ -28,22 +28,22 @@ else
     MINK_LEN=$FWD_LEN
 fi
 
-module load BBMap/38.98-GCC-11.2.0
+# module load BBMap/38.98-GCC-11.2.0
 
 bbduk.sh \
-in=${1} \
-in2=${2} \
-literal=${FWD_PRIMER},${REV_PRIMER} \
-out=reject1.fastq.gz \
-out2=reject2.fastq.gz \
-outm=${7}_${6}_${5}_R1.fastq.gz \
-outm2=${7}_${6}_${5}_R2.fastq.gz \
-restrictleft=${KMER_LEN} \
-copyundefined=true \
-k=${MINK_LEN} \
-rcomp=t \
-stats=split_loci_stats_${7}_${6}_${5}.txt \
-lhist=split_loci_lhist_${7}_${6}_${5}.txt
+    in=${1} \
+    in2=${2} \
+    literal=${FWD_PRIMER},${REV_PRIMER} \
+    out=reject1.fastq.gz \
+    out2=reject2.fastq.gz \
+    outm=${7}_${6}_${5}_R1.fastq.gz \
+    outm2=${7}_${6}_${5}_R2.fastq.gz \
+    restrictleft=${KMER_LEN} \
+    copyundefined=true \
+    k=${MINK_LEN} \
+    rcomp=t \
+    stats=split_loci_stats_${7}_${6}_${5}.txt \
+    lhist=split_loci_lhist_${7}_${6}_${5}.txt
 
 ## count reads in input files
 # forward reads

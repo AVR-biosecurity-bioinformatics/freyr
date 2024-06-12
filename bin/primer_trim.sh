@@ -36,7 +36,7 @@ REV_PRIMER=${4/I/N}
 # lhist=primer_trim_lhist_${7}_${6}_${5}.txt
 
 ## trying with cutadapt (preferred)
-module load cutadapt/3.4-GCCcore-10.3.0
+# module load cutadapt/3.4-GCCcore-10.3.0
 
 # reverse complement the primer sequences
 FWD_PRIMER_RC=$(echo ${FWD_PRIMER} | \
@@ -49,15 +49,15 @@ REV_PRIMER_RC=$(echo ${REV_PRIMER} | \
 # run cutadapt in "linked adapter" mode
 # see here: https://cutadapt.readthedocs.io/en/stable/recipes.html#trimming-amplicon-primers-from-paired-end-reads
 cutadapt \
--a ^${FWD_PRIMER}...${REV_PRIMER_RC} \
--A ^${REV_PRIMER}...${FWD_PRIMER_RC} \
---discard-untrimmed \
---rename="{header}" \
---report=minimal \
--o ${7}_${6}_${5}_trim_R1.fastq.gz \
--p ${7}_${6}_${5}_trim_R2.fastq.gz \
-${1} \
-${2}
+    -a ^${FWD_PRIMER}...${REV_PRIMER_RC} \
+    -A ^${REV_PRIMER}...${FWD_PRIMER_RC} \
+    --discard-untrimmed \
+    --rename="{header}" \
+    --report=minimal \
+    -o ${7}_${6}_${5}_trim_R1.fastq.gz \
+    -p ${7}_${6}_${5}_trim_R2.fastq.gz \
+    ${1} \
+    ${2}
 
 ## count reads in output files
 # forward reads

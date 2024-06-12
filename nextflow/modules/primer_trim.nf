@@ -1,7 +1,9 @@
 process PRIMER_TRIM {
     def module_name = "primer_trim"
     tag "$meta.pcr_primers; $meta.sample_id"
-    // label:  
+    // label
+    // container "pegi3s/cutadapt:latest"
+    container "thatdnaguy/cutadapt:v4.7_02"
 
     input:
     // input read pairs, primer seqs and locus name (to use in output file names)
@@ -18,7 +20,7 @@ process PRIMER_TRIM {
     script:
     def module_script = "${module_name}.sh"
     """
-    #!/usr/bin/bash
+    #!/bin/bash
 
     ### run module code
     bash ${module_name}.sh \

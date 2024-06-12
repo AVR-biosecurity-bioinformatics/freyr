@@ -2,6 +2,7 @@ process FILTER_QUALPLOTS_COMBINE {
     def module_name = "filter_qualplots_combine"
     tag "Whole pipeline" 
     // label:  
+    container "jackscanlan/piperline-multi:0.0.1"
 
     input:
 

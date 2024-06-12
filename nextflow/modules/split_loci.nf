@@ -1,7 +1,8 @@
 process SPLIT_LOCI {
     def module_name = "split_loci"
     tag "$meta.pcr_primers; $meta.sample_id"
-    // label:  
+    // label
+    container "nanozoo/bbmap:38.86--9ebcbfa"
 
     input:
     tuple val(meta), path(reads)
@@ -19,7 +20,7 @@ process SPLIT_LOCI {
     script:
     def module_script = "${module_name}.sh"
     """
-    #!/usr/bin/bash
+    #!/bin/bash
 
     ### run module code
     bash ${module_name}.sh \

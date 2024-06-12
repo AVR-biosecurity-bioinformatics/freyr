@@ -2,6 +2,7 @@ process PRIMER_TRIM_R {
     def module_name = "primer_trim_r"
     // tag: 
     // label: 
+    container "jackscanlan/piperline-multi:0.0.1"
 
     input:
     tuple val(meta), path(reads)

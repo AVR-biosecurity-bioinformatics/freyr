@@ -2,6 +2,7 @@ process DENOISE {
     def module_name = "denoise"
     tag "$pcr_primers; $meta.sample_id"
     // label:  
+    container "jackscanlan/piperline-multi:0.0.1"
 
     input:
     tuple val(direction), val(pcr_primers), val(fcid), val(meta), path(reads), path(errormodel), path(priors)

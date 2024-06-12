@@ -2,6 +2,7 @@ process PHYLOSEQ_UNFILTERED {
     def module_name = "phyloseq_unfiltered"
     tag "$pcr_primers"
     // label:  
+    container "jackscanlan/piperline-multi:0.0.1"
 
     input:
     tuple val(pcr_primers), path(taxtab), path(seqtab_list), path(samdf_locus), val(loci_params)

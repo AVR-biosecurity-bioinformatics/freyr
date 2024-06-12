@@ -2,6 +2,7 @@ process PARSE_INPUTS {
     def module_name = "parse_inputs"
     tag "Whole dataset"
     // label 
+    container "jackscanlan/piperline-multi:0.0.1"
 
     input:
     val(samplesheet)

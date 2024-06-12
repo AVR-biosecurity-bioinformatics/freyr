@@ -2,6 +2,7 @@ process TEMPLATE_RSCRIPT {
     def module_name = "template_rscript"
     // tag: 
     // label:  
+    container "jackscanlan/piperline-multi:0.0.1"
 
     input:
     val input

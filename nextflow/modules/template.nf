@@ -1,7 +1,6 @@
 process TEMPLATE {
     def module_name = "template"
-
-    // tag 
+    tag "Whole dataset"
     // label 
 
     input:

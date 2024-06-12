@@ -2,6 +2,7 @@ process JOINT_TAX {
     def module_name = "joint_tax"
     tag "$pcr_primers; $fcid"
     // label:  
+    container "jackscanlan/piperline-multi:0.0.1"
 
     input:
     tuple val(pcr_primers), val(fcid), path(tax), path(blast), path(seqtab), val(loci_params)
