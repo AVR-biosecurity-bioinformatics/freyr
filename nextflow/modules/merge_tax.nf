@@ -1,7 +1,7 @@
 process MERGE_TAX {
     def module_name = "merge_tax"
     tag "$pcr_primers"
-    // label:  
+    label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:

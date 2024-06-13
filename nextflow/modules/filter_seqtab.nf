@@ -1,7 +1,7 @@
 process FILTER_SEQTAB {
     def module_name = "filter_seqtab"
     tag "$pcr_primers; $fcid"
-    // label:  
+    label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:

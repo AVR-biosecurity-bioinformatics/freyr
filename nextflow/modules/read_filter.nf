@@ -1,7 +1,7 @@
 process READ_FILTER {
     def module_name = "read_filter"
     tag "$meta.pcr_primers; $meta.sample_id"
-    // label:  
+    label "medium"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:

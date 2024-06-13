@@ -1,7 +1,7 @@
 process SPLIT_LOCI {
     def module_name = "split_loci"
     tag "$meta.pcr_primers; $meta.sample_id"
-    // label
+    label "medium"
     container "nanozoo/bbmap:38.86--9ebcbfa"
 
     input:

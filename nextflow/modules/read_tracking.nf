@@ -1,7 +1,7 @@
 process READ_TRACKING {
     def module_name = "read_tracking"
     tag "Whole dataset"
-    // label  
+    label "small"
     // cache false 
     container "jackscanlan/piperline-multi:0.0.1"
 

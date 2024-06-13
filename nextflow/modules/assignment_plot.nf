@@ -1,7 +1,7 @@
 process ASSIGNMENT_PLOT {
     def module_name = "assignment_plot"
     tag "$pcr_primers; $fcid"
-    // label:  
+    label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:

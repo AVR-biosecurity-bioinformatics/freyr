@@ -47,6 +47,17 @@ The loci parameters tell the pipeline how to analyse the samples, on a per-locus
 Both samplesheet and loci parameters `.csv` files are checked by the pipeline before the run starts, to make sure all the values provided are valid and what the pipeline will expect. 
 
 
+### General parameters
+
+#### Resource limits
+
+If your computational environment has hard limits on the resources it can devote to the pipeline (eg. you're running on a personal computer with a set number of CPU cores and memory available), you should manually set `params.max_memory`,`params.max_cpus` and/or `params.max_time`. This will make sure the pipeline as a whole (for local execution), or any particular process (for cluster/SLURM execution), stays within these limits.  
+
+By default these are set to:
+- `params.max_memory = 128.GB`
+- `params.max_cpus = 16`
+- `params.max_time = 240.h`
+
 
 ## old README text
 

@@ -1,7 +1,7 @@
 process PHYLOSEQ_FILTER {
     def module_name = "phyloseq_filter"
     tag "$pcr_primers"
-    // label:  
+    label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:

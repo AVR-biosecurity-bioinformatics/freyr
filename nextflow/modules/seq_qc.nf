@@ -1,7 +1,7 @@
 process SEQ_QC {
     def module_name = "seq_qc"
     tag "$fcid"
-    // label
+    label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:

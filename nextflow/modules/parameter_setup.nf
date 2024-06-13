@@ -1,7 +1,7 @@
 process PARAMETER_SETUP {
     def module_name = "parameter_setup"
     tag "Whole dataset"
-    // label: 
+    label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:

@@ -1,7 +1,7 @@
 process TAX_BLAST {
     def module_name = "tax_blast"
     tag "$pcr_primers; $fcid"
-    // label:  
+    label "medium"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
