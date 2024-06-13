@@ -31,44 +31,44 @@ loci_params_df <- readr::read_csv(paste0(projectDir,"/",loci_params), show_col_t
 ## add missing columns if not present, with default values
 # make default samplesheet
 samplesheet_default <- tibble::tibble( # create columns with NA values in a single row
-        sample_id = NA_character_,
-        sample_name = NA_character_,
-        extraction_rep = NA_character_,
-        amp_rep = NA_character_,
-        client_name = NA_character_,
-        experiment_name = NA_character_,
-        sample_type = NA_character_,
-        collection_method = NA_character_,
-        collection_location = NA_character_,
-        latitude = NA_integer_,
-        longitude = NA_integer_,
-        environment = NA_character_,
-        collection_date = NA_character_,
-        operator_name = NA_character_,
-        description = NA_character_,
-        assay = NA_character_,
-        extraction_method = NA_character_,
-        amp_method = NA_character_,
-        target_gene = NA_character_,
-        pcr_primers = NA_character_,
-        for_primer_seq = NA_character_,
-        rev_primer_seq = NA_character_,
-        index_plate = NA_character_,
-        index_well = NA_character_,
-        i7_index_id = NA_character_,
-        i7_index = NA_character_,
-        i5_index_id = NA_character_,
-        i5_index = NA_character_,
-        seq_platform = NA_character_,
-        fcid = NA_character_,
-        for_read_length = NA_integer_,
-        rev_read_length = NA_integer_,
-        seq_run_id = NA_character_,
-        seq_id = NA_character_,
-        seq_date = NA_character_,
-        analysis_method = NA_character_,
-        notes = NA_character_
-    ) 
+    sample_id = NA_character_,
+    sample_name = NA_character_,
+    extraction_rep = NA_character_,
+    amp_rep = NA_character_,
+    client_name = NA_character_,
+    experiment_name = NA_character_,
+    sample_type = NA_character_,
+    collection_method = NA_character_,
+    collection_location = NA_character_,
+    latitude = NA_integer_,
+    longitude = NA_integer_,
+    environment = NA_character_,
+    collection_date = NA_character_,
+    operator_name = NA_character_,
+    description = NA_character_,
+    assay = NA_character_,
+    extraction_method = NA_character_,
+    amp_method = NA_character_,
+    target_gene = NA_character_,
+    pcr_primers = NA_character_,
+    for_primer_seq = NA_character_,
+    rev_primer_seq = NA_character_,
+    index_plate = NA_character_,
+    index_well = NA_character_,
+    i7_index_id = NA_character_,
+    i7_index = NA_character_,
+    i5_index_id = NA_character_,
+    i5_index = NA_character_,
+    seq_platform = NA_character_,
+    fcid = NA_character_,
+    for_read_length = NA_integer_,
+    rev_read_length = NA_integer_,
+    seq_run_id = NA_character_,
+    seq_id = NA_character_,
+    seq_date = NA_character_,
+    analysis_method = NA_character_,
+    notes = NA_character_
+) 
 
 # combine defaults with input samplesheet
 samplesheet_df <- new_bind(samplesheet_default %>% filter(FALSE), samplesheet_df)
@@ -170,7 +170,7 @@ if ( "read_dir" %in% colnames(samplesheet_df) ) { # if "read_dir" column exists 
             )
         
     } else {
-        stop ("SAMPLESHEET ERROR: one of 'fwd' or 'rev' is not present, with 'read_dir' not present!")
+        stop ("SAMPLESHEET ERROR: One of 'fwd' or 'rev' is not present, with 'read_dir' not present!")
     }
 }
 
@@ -183,7 +183,7 @@ for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
 # check that read file paths are unique
 ### TODO: make this a more informative error -- say which files are duplicated
 if (any(duplicated(samplesheet_df$fwd))) {stop ("SAMPLESHEET ERROR: At least two samples share the same forward read file in the samplesheet!")}
-if (any(duplicated(samplesheet_df$rev))) {stop ("SAMPLESHEET ERROR: At least two samples share the same reverse read files in the samplesheet!")}
+if (any(duplicated(samplesheet_df$rev))) {stop ("SAMPLESHEET ERROR: At least two samples share the same reverse read file in the samplesheet!")}
 
 ## write parsed samplesheet to file
 readr::write_csv(samplesheet_df, "samplesheet_parsed.csv")
@@ -192,7 +192,44 @@ readr::write_csv(samplesheet_df, "samplesheet_parsed.csv")
 ### validate loci_params content
 
 # add missing columns with default values
-### TODO: Check with Alex whether we want all columns to be mandatory, or if some columns can be optional
+default_params <- tibble::tibble(
+    pcr_primers = NA_character_,
+    target_gene = NA_character_,
+    max_primer_mismatch = 0,
+    read_min_length = 20,
+    read_max_length = Inf,
+    read_max_ee = 1,
+    read_trunc_length = 0,
+    read_trim_left = 0,
+    read_trim_right = 0,
+    high_sensitivity = TRUE,
+    asv_min_length = 0,
+    asv_max_length = Inf,
+    concat_unmerged = FALSE,
+    genetic_code = NA_character_,
+    coding = FALSE,
+    phmm = NA_character_,
+    idtaxa_db = NA_character_,
+    ref_fasta = NA_character_,
+    idtaxa_confidence = 60,
+    run_blast = FALSE,
+    blast_min_identity = 97,
+    blast_min_coverage = 90,
+    target_kingdom = NA_character_,
+    target_phylum = NA_character_,
+    target_class = NA_character_,
+    target_order = NA_character_,
+    target_family = NA_character_,
+    target_genus = NA_character_,
+    target_species = NA_character_,
+    min_sample_reads = 0,
+    min_taxa_reads = 0,
+    min_taxa_ra = 0,
+    threads = 1
+)
+
+loci_params_df <- new_bind(default_params %>% filter(FALSE), loci_params_df) 
+
 
 # check pcr_primers column contains only unique values
 if (any(duplicated(loci_params_df$pcr_primers))) {stop ("LOCI_PARAMS ERROR: 'pcr_primers' values are not unique!")}

@@ -123,6 +123,7 @@ Run with shifter and slurm in BASC
 
 The above code runs the pipeline with the BASC slurm system, such that each process queues a new job. 
 - TODO: add better process options (cpu, time, memory) to each module, rather than blanket ones across the whole pipeline
+    - use dynamic directives for this: https://www.nextflow.io/docs/latest/process.html#dynamic-computing-resources
 
 Run with shifter and slurm in BASC, with test data
 
