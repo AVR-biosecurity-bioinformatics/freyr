@@ -58,6 +58,12 @@ By default these are set to:
 - `params.max_cpus = 16`
 - `params.max_time = 240.h`
 
+### Profiles
+
+Nextflow uses 'profiles' to set groups of pipeline parameters all at once. This is useful to configure the pipeline for particular running situations (eg. cluster vs. laptop, real data vs. test data). Profiles are defined on the command line with the `-profile` flag. Multiple profiles can be used at once, separated by commas, but their ordering matters--later profiles override the settings of earlier profiles. 
+
+For example, to use both the `basc_slurm` (for running on BASC with the SLURM executor) and `test` (for running a minimal test dataset included with the pipeline) profiles, you would specify `-profile basc_slurm,test` when running the pipeline. Because it comes second, `test` overrides the max job request parameters (eg. `params.max_memory`) specified by `basc_slurm`, which is useful in this case because it will likely make job allocation through SLURM much faster.
+
 
 ## old README text
 
