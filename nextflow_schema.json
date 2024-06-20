@@ -95,6 +95,12 @@
                     "errorMessage": "Must be set to 'true' or 'false'.",
                     "help_text": "For R-based processes, save the R environments as an .RData file in each process work directory at the successful completion of the process script. Useful for development and debugging, but will increase a run's storage footprint. NOTE: .RData files will not be saved if the R environment exits with an error.",
                     "default": true
+                },
+                "slurm_account": {
+                    "type": "string",
+                    "description": "Account to use when submitting SLURM jobs.",
+                    "help_text": "Account to use when submitting SLURM jobs.",
+                    "default": "default"
                 }
             }
         },
