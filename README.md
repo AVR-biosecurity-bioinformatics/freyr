@@ -1,4 +1,4 @@
-# Freyr: a metabarcoding analysis pipeline for agricultural biosecurity and biosurveillance
+# `freyr`: a metabarcoding analysis pipeline for agricultural biosecurity and biosurveillance
 
 <center><img src="./assets/images/freyr.png" alt="The god Freyr, riding his boar, Gullinbursti: Murray, Alexander (1874). Manual of Mythology : Greek and Roman, Norse, and Old German, Hindoo and Egyptian Mythology. London, Asher and Co. https://commons.wikimedia.org/wiki/File:Freyr_riding_Gullinbursti.jpg" width="400"/></center>
 
