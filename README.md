@@ -1,8 +1,10 @@
-# PipeRline
+# Freyr: a metabarcoding analysis pipeline for agricultural biosecurity
 
-`pipeRline` is a metabarcoding analysis pipeline largely written in R. 
+<img src="./assets/images/freyr.png" alt="The god Freyr, riding his boar, Gullinbursti: Murray, Alexander (1874). Manual of Mythology : Greek and Roman, Norse, and Old German, Hindoo and Egyptian Mythology. London, Asher and Co. https://commons.wikimedia.org/wiki/File:Freyr_riding_Gullinbursti.jpg" width="400"/>
 
-This pipeline is currently being re-written in the **Nextflow** language so it will be completely _containerised_ and _reproducible_. It is also partially inspired by the [nfcore/ampliseq](https://github.com/nf-core/ampliseq) pipeline!
+`freyr` is a Nextflow-based metabarcoding analysis pipeline. It is the successor of the R-based [`pipeRline`](https://github.com/alexpiper/piperline), and is also partially inspired by [`nfcore/ampliseq`](https://github.com/nf-core/ampliseq).
+
+This pipeline is currently **experimental** and is being actively developed! If you need a stable metabarcoding pipeline, we currently recommend [`pipeRline`](https://github.com/alexpiper/piperline).
 
 
 ### Usage
