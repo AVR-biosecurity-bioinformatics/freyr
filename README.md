@@ -1,6 +1,6 @@
 # Freyr: a metabarcoding analysis pipeline for agricultural biosecurity
 
-<img src="./assets/images/freyr.png" alt="The god Freyr, riding his boar, Gullinbursti: Murray, Alexander (1874). Manual of Mythology : Greek and Roman, Norse, and Old German, Hindoo and Egyptian Mythology. London, Asher and Co. https://commons.wikimedia.org/wiki/File:Freyr_riding_Gullinbursti.jpg" width="400"/>
+<center><img src="./assets/images/freyr.png" alt="The god Freyr, riding his boar, Gullinbursti: Murray, Alexander (1874). Manual of Mythology : Greek and Roman, Norse, and Old German, Hindoo and Egyptian Mythology. London, Asher and Co. https://commons.wikimedia.org/wiki/File:Freyr_riding_Gullinbursti.jpg" width="400"/></center>
 
 `freyr` is a Nextflow-based metabarcoding analysis pipeline. It is the successor of the R-based [`pipeRline`](https://github.com/alexpiper/piperline), and is also partially inspired by [`nfcore/ampliseq`](https://github.com/nf-core/ampliseq).
 
