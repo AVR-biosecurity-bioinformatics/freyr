@@ -9,12 +9,11 @@ This pipeline is being developed by a team at [Agriculture Victoria Research](ht
 
 ### Usage
 
->This pipeline is currently **experimental** and is being actively developed! If you need a stable metabarcoding pipeline, we currently recommend [`pipeRline`](https://github.com/alexpiper/piperline).
+> This pipeline is currently **experimental** and being actively developed, with no guarantee that the code is stable! If you need a stable metabarcoding pipeline, we currently recommend [`pipeRline`](https://github.com/alexpiper/piperline).
 
-Typical pipeline command:
+Running `freyr` might look something like this:
 
-    NXF_VER=23.04.5 \
-        nextflow run AVR-biosecurity-bioinformatics/freyr \
+    nextflow run AVR-biosecurity-bioinformatics/freyr \
         --samplesheet samplesheet.csv \
         --loci_params loci_params.csv \
         -profile test
