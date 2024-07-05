@@ -2,9 +2,9 @@
 
 <center><img src="./assets/images/freyr.png" alt="The god Freyr, riding his boar, Gullinbursti: Murray, Alexander (1874). Manual of Mythology : Greek and Roman, Norse, and Old German, Hindoo and Egyptian Mythology. London, Asher and Co. https://commons.wikimedia.org/wiki/File:Freyr_riding_Gullinbursti.jpg" width="400"/></center>
 
-`freyr` is a [Nextflow](https://www.nextflow.io/docs/latest/index.html)-based metabarcoding analysis pipeline, primarily designed for use in biosecurity and biosurveillance in agriculture. It is the successor to [`pipeRline`](https://github.com/alexpiper/piperline) and is also inspired by [`nfcore/ampliseq`](https://github.com/nf-core/ampliseq). `freyr` intends to be highly reproducible, scalable, user-friendly and interpetable, as well as flexible across a wide variety of metabarcoding experiments. 
+`freyr` is a [Nextflow](https://www.nextflow.io/docs/latest/index.html)-based metabarcoding analysis pipeline, primarily designed for use in biosecurity and biosurveillance in agriculture. It is the successor to [`pipeRline`](https://github.com/alexpiper/piperline) and is also inspired by [`nfcore/ampliseq`](https://github.com/nf-core/ampliseq). `freyr` intends to allow highly reproducible, scalable, user-friendly and interpetable analyses, as well as flexibility across a wide variety of metabarcoding experiments. 
 
-This pipeline is being developed by a team at [Agriculture Victoria Research](https://agriculture.vic.gov.au/), as a part of the [National Grain Diagnostic & Surveillance Initiative (NGDSI)](https://grdc.com.au/grdc-investments/investments/investment?code=DEE2305-004RTX). 
+This pipeline is being developed by a team at [Agriculture Victoria Research](https://agriculture.vic.gov.au/), as a part of the [National Grains Diagnostic & Surveillance Initiative (NGDSI)](https://grdc.com.au/grdc-investments/investments/investment?code=DEE2305-004RTX). 
 
 
 ### Usage
