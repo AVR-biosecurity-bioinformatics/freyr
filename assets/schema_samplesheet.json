@@ -13,8 +13,6 @@
         "pcr_primers", 
         "for_primer_seq",
         "rev_primer_seq", 
-        "i7_index",
-        "i5_index",
         "fcid"
         ],
       "properties": {
