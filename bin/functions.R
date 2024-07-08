@@ -194,7 +194,7 @@ step_validate_samdf <- function(samdf, data_dir){
 
 # Quality control ---------------------------------------------------------
 
-step_seq_qc <- function(fcid, quiet=FALSE, write_all=FALSE){
+step_seq_qc <- function(fcid, data_loc, quiet=FALSE, write_all=FALSE){
   
   seq_dir <- paste0(projectDir,"/",data_loc,"/",fcid) # note: uses variables defined in module script
   qc_dir <- paste0(projectDir,"/output/logs/",fcid)
@@ -349,7 +349,7 @@ step_multiqc <- function(fcid, quiet=FALSE){
   
 }
 
-step_switching_calc <- function(fcid, barcode_mismatch=1, quiet=FALSE){
+step_switching_calc <- function(fcid, data_loc, barcode_mismatch=1, quiet=FALSE){
   
   seq_dir <- paste0(projectDir,"/",data_loc,"/",fcid) # note: uses variables defined in module script
   qc_dir <- paste0(projectDir,"/output/logs/",fcid)

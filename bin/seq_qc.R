@@ -39,9 +39,9 @@ if (!exists("params.data_folder")) { # if data_loc not defined, use "data"
 # TODO: Replace this code with non-functions.R code?
 
 # run flow cell QC
-step_seq_qc(fcid)
+step_seq_qc(fcid, data_loc)
 
 # run index switching calculation
-step_switching_calc(fcid)
+step_switching_calc(fcid, data_loc)
 
 # stop(" *** stopped manually *** ") ##########################################
