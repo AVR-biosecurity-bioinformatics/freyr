@@ -8,7 +8,7 @@ process FILTER_QUALPLOTS {
     tuple val(meta), path(reads)
 
     output:   
-    path("*_qualplots.pdf")                 , emit: plots
+    path("*_qualplots.pdf")                 , emit: plots, optional: true
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
