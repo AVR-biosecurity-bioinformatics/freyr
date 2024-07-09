@@ -54,6 +54,7 @@ cutadapt \
     --discard-untrimmed \
     --rename="{header}" \
     --report=minimal \
+    --minimum-length 20 \
     -o ${7}_${6}_${5}_trim_R1.fastq.gz \
     -p ${7}_${6}_${5}_trim_R2.fastq.gz \
     ${1} \
