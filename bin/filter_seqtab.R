@@ -123,10 +123,10 @@ abund_rem <- sum(seqtab_nochim)/sum(seqtab)
 message(paste(round(seqs_rem*100,2), "% of initial sequences and ",round(abund_rem*100,2), "% initial abundance remaining after chimera removal"))
 reads_chimerafilt <- rowSums(seqtab_nochim)
 
-## cut ASVs to expected size
+## subset ASVs to those of expected size
 if(any(!is.null(c(asv_min_length, asv_max_length)), na.rm = TRUE) & any(reads_chimerafilt > 0)){
     if(!is.null(asv_min_length) & !is.null(asv_max_length)){
-        seqtab_cut <- seqtab_nochim[,nchar(colnames(seqtab_nochim)) %in% asv_min_length:asv_max_length]
+        seqtab_cut <- seqtab_nochim[,nchar(colnames(seqtab_nochim)) < asv_max_length & nchar(colnames(seqtab_nochim)) > asv_min_length]
     } else if(is.null(asv_min_length) & !is.null(asv_max_length)){
         seqtab_cut <- seqtab_nochim[,nchar(colnames(seqtab_nochim)) < asv_max_length]
     } else if(!is.null(asv_min_length) & is.null(asv_max_length)){
