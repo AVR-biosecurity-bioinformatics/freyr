@@ -41,6 +41,7 @@ bbduk.sh \
     restrictleft=${KMER_LEN} \
     copyundefined=true \
     k=${MINK_LEN} \
+    hdist=3 \
     rcomp=t \
     stats=split_loci_stats_${7}_${6}_${5}.txt \
     lhist=split_loci_lhist_${7}_${6}_${5}.txt
