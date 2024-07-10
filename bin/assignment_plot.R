@@ -65,12 +65,13 @@ blast <- blast %>%
 if ( nrow(blast) > 0 & nrow(tax) > 0 ) {
     joint <- blast %>% 
         dplyr::left_join(tax, by="OTU")
+    
 } else {
-    NULL
+    joint <- NULL
 }
 
 # save joint object
-saveRDS(joint, paste0(fcid,"_",pcr_primers,"_joint.rds"))
+    saveRDS(joint, paste0(fcid,"_",pcr_primers,"_joint.rds"))
 
 # make assignment plot
 if ( !is.null(joint) ) {
@@ -110,11 +111,11 @@ if ( !is.null(joint) ) {
             panel.border = element_rect(colour = "black", fill=NA, size=0.5),
             panel.grid = element_line(size = rel(0.5))
         ) 
-} else { NULL }
+} else { plot <- NULL }
 
 # write plot
 plot_filename <- paste0(fcid,"_",pcr_primers,"_taxonomic_assignment_summary.pdf")
-if (!is.null(plot) ){
+if ( !is.null(plot) ){
     pdf(file = plot_filename, width = 11, height = 8 , paper="a4r")
     print(plot)
     try(dev.off(), silent=TRUE)

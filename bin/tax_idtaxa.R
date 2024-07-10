@@ -90,19 +90,28 @@ if ( length(seqs) > 0 ) { # Stop if seqs are 0
         tax <- new_bind(tibble::tibble(!!!ranks, .rows = 0, .name_repair = ~ ranks), tax)
     } else {
         warning(paste0("No sequences assigned with IDTAXA to ", database, " have you used the correct database?"))
-        tax <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") 
+        # tax <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") 
+        ## new code from https://github.com/alexpiper/piperline/commit/ce9bbf32c6fcee7b7aff55087a314d9b398f2450
+        tax <- data.frame(matrix(ncol = length(ranks), nrow = length(getSequences(seqtab))))
+        rownames(tax) <- getSequences(seqtab)
+        colnames(tax) <- ranks
+        
         tax[ranks[1]] <- ranks[1]
         tax[ranks[2:length(ranks)]] <- NA_character_
-        tax <- tax %>%
-        magrittr::set_rownames(dada2::getSequences(seqtab)) 
+        # tax <- tax %>%
+        #     magrittr::set_rownames(dada2::getSequences(seqtab)) 
     }
 } else {
     warning(paste0("No sequences present in seqtab - IDTAXA skipped"))
-    tax <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") 
+    # tax <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") 
+    tax <- data.frame(matrix(ncol = length(ranks), nrow = length(getSequences(seqtab))))
+    rownames(tax) <- getSequences(seqtab)
+    colnames(tax) <- ranks
+    
     tax[ranks[1]] <- ranks[1]
     tax[ranks[2:length(ranks)]] <- NA_character_
-    tax <- tax %>%
-        magrittr::set_rownames(dada2::getSequences(seqtab)) 
+    # tax <- tax %>%
+    #     magrittr::set_rownames(dada2::getSequences(seqtab)) 
 }
 
 # Check that output dimensions match input
