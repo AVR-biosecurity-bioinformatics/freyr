@@ -33,7 +33,7 @@ for (i in 1:length(tax_summary_list)){ # loop through list of tibbles
 
 summary_full <- summary_full %>%
     dplyr::distinct() %>%  # remove identical rows, leaving one (ie. duplicate sequences between flow cells)
-    dplyr::arrange(pcr_primers, OTU_hash) # sort final tibble by pcr_primer and OTU_hash
+    dplyr::arrange(OTU_hash) # sort final tibble by OTU_hash
 
 readr::write_csv(summary_full,"taxonomic_assignment_summary.csv") # write to .csv
 

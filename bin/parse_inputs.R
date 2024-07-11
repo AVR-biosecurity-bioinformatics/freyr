@@ -14,6 +14,7 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
+    "params_dict",
     "samplesheet",
     "loci_params"
 )
@@ -23,6 +24,17 @@ lapply(nf_vars, nf_var_check)
 
 # read in samplesheet
 samplesheet_df <- readr::read_csv(paste0(projectDir,"/",samplesheet), show_col_types = F) 
+
+# pseudorandomly subsample samplesheet if params.subsample is defined
+# this is done per pcr_primer x fcid combination so expected combinations are (likely) retained
+set.seed(1)
+if (exists("params.subsample")) {
+    samplesheet_df <- samplesheet_df %>% 
+    dplyr::group_by(pcr_primers, fcid) %>% 
+    dplyr::slice_sample(n = as.numeric(params.subsample), replace = F) %>%
+    dplyr::ungroup()
+}
+
 # read in loci parameters
 loci_params_df <- readr::read_csv(paste0(projectDir,"/",loci_params), show_col_types = F)
 

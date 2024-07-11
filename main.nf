@@ -64,6 +64,10 @@ validateParameters( parameters_schema: 'nextflow_schema.json' )
 
 // Print summary of supplied parameters (that differ from defaults)
 log.info paramsSummaryLog(workflow)
+// make it clear that samples are being subsampled
+if (params.subsample) {
+    log.info "*** NOTE: Input samples are being randomly subsampled to $params.subsample per primer x flowcell combination (params.subsample = $params.subsample) ***"
+}
 
 
 /*
@@ -200,12 +204,6 @@ workflow FREYR {
             }
         .set { ch_sample_locus_reads }
 
-    /// subsample ch_sample_locus_reads if params.subsample is set to a number (not null)
-    if ( params.subsample ){
-        ch_sample_locus_reads
-            .randomSample( params.subsample, 1 )
-            .set { ch_sample_locus_reads }
-    }
 
     //// create channel that links locus-specific samplesheets to pcr_primer key, in the format 'pcr_primers, csv_file'
     // PARAMETER_SETUP.out.samdf_locus
