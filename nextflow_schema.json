@@ -77,8 +77,15 @@
                     "type": "boolean",
                     "description": "Run DADA2 ASV inference in high-sensitivity mode, ie. use pseudo-pooling.",
                     "errorMessage": "Must be set to 'true' or 'false'.",
-                    "help_text": "Help me!",
+                    "help_text": "Run DADA2 ASV inference in high-sensitivity mode, ie. use pseudo-pooling.",
                     "default": true
+                },
+                "primer_n_trim": {
+                    "type": "boolean",
+                    "description": "Recognise ambiguous bases in reads when trimming primers.",
+                    "errorMessage": "Must be set to 'true' or 'false'.",
+                    "help_text": "Use 'cutadapt --match-read-wildcards' to recognise N bases in reads when trimming primers. Recommended only for low-quality data input when trying to retain as much data as possible.",
+                    "default": false
                 },
                 "threads": {
                     "type": ["boolean", "integer"],
@@ -87,18 +94,32 @@
                     "errorMessage": "Must be set to an integer >0 or 'null'.",
                     "default": null
                 },
-                "rdata": {
-                    "type": "boolean",
-                    "description": "Save R environments as an .RData file in each process work directory.",
-                    "errorMessage": "Must be set to 'true' or 'false'.",
-                    "help_text": "For R-based processes, save the R environments as an .RData file in each process work directory at the successful completion of the process script. Useful for development and debugging, but will increase a run's storage footprint. NOTE: .RData files will not be saved if the R environment exits with an error.",
-                    "default": true
-                },
                 "slurm_account": {
                     "type": "string",
                     "description": "Account to use when submitting SLURM jobs.",
                     "help_text": "Account to use when submitting SLURM jobs.",
                     "default": "default"
+                }
+            }
+        },
+        "deugging_options": {
+            "title": "Debugging options",
+            "type": "object",
+            "description": "Arguments that can be used to debug the pipeline; should be used with caution.",
+            "properties": {
+                "rdata": {
+                    "type": "boolean",
+                    "description": "Save R environments as an .RData file in each process work directory.",
+                    "errorMessage": "Must be set to 'true' or 'false'.",
+                    "help_text": "For R-based processes, save the R environments as an .RData file in each process work directory at the successful completion of the process script. Useful for development and debugging, but will increase a run's storage footprint. NOTE: .RData files will not be saved if the R environment exits with an error.",
+                    "default": false
+                },
+                "subsample": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Randomly reduce the number of input samples to this value.",
+                    "errorMessage": "Must be an integer >=1 (or 'null').",
+                    "help_text": "Useful to quickly test how the pipeline behaves with a particular dataset. Subsampling is pseudorandom (seed = 1), so should always reproduce the same subset for the same inputs."
                 }
             }
         },

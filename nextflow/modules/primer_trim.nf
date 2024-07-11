@@ -30,7 +30,8 @@ process PRIMER_TRIM {
         ${meta.pcr_primers} \
         ${meta.target_gene} \
         ${meta.sample_id} \
-        ${meta.fcid}
+        ${meta.fcid} \
+        ${params.primer_n_trim}
 
     """
 

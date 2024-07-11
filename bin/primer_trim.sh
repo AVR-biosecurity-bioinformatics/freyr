@@ -10,33 +10,11 @@ set -u
 # $6 = meta.target_gene, aka. name of target gene
 # $7 = meta.sample_id, aka. sample ID
 # $8 = meta.fcid, aka. flowcell ID
+# $9 = params.primer_n_trim (true or false)
 
 # change "I" in primer seq to "N", if present
 FWD_PRIMER=${3/I/N}
 REV_PRIMER=${4/I/N}
-
-# ## trying with BBMap (BBDuk)
-# module load BBMap/38.98-GCC-11.2.0
-
-# bbduk.sh \
-# in=${1} \
-# in2=${2} \
-# literal=${FWD_PRIMER},${REV_PRIMER} \
-# out=${7}_${6}_${5}_trim_R1.fastq.gz \
-# out2=${7}_${6}_${5}_trim_R2.fastq.gz \
-# outm=reject_R1.fastq.gz \
-# outm2=reject_R2.fastq.gz \
-# ktrim=l \
-# k=10 \
-# copyundefined=true \
-# rcomp=t \
-# tbo=f \
-# minoverlap=10 \
-# stats=primer_trim_stats_${7}_${6}_${5}.txt \
-# lhist=primer_trim_lhist_${7}_${6}_${5}.txt
-
-## trying with cutadapt (preferred)
-# module load cutadapt/3.4-GCCcore-10.3.0
 
 # reverse complement the primer sequences
 FWD_PRIMER_RC=$(echo ${FWD_PRIMER} | \
@@ -45,6 +23,18 @@ FWD_PRIMER_RC=$(echo ${FWD_PRIMER} | \
 REV_PRIMER_RC=$(echo ${REV_PRIMER} | \
     tr GATCRYMKSWHBVDNgatcrymkswhbvdn CTAGYRKMSWDVBHNctagyrkmswdvbhn | \
     rev)
+
+### optional flags
+
+# parse 'params.primer_n_trim' into cutadapt flag
+if [ $9 == "true" ]; then
+    PRIMER_N_TRIM="--match-read-wildcards"
+else 
+    PRIMER_N_TRIM=""
+fi
+
+# combine optional flags
+OPTIONAL_ARGS=$( echo $PRIMER_N_TRIM )
 
 # run cutadapt in "linked adapter" mode
 # see here: https://cutadapt.readthedocs.io/en/stable/recipes.html#trimming-amplicon-primers-from-paired-end-reads
@@ -55,6 +45,8 @@ cutadapt \
     --rename="{header}" \
     --report=minimal \
     --minimum-length 20 \
+    --times 2 \
+    $OPTIONAL_ARGS \
     -o ${7}_${6}_${5}_trim_R1.fastq.gz \
     -p ${7}_${6}_${5}_trim_R2.fastq.gz \
     ${1} \

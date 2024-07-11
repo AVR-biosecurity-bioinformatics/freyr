@@ -200,6 +200,13 @@ workflow FREYR {
             }
         .set { ch_sample_locus_reads }
 
+    /// subsample ch_sample_locus_reads if params.subsample is set to a number (not null)
+    if ( params.subsample ){
+        ch_sample_locus_reads
+            .randomSample( params.subsample, 1 )
+            .set { ch_sample_locus_reads }
+    }
+
     //// create channel that links locus-specific samplesheets to pcr_primer key, in the format 'pcr_primers, csv_file'
     // PARAMETER_SETUP.out.samdf_locus
     PARSE_INPUTS.out.samplesheet_locus
