@@ -214,7 +214,7 @@ workflow FREYR {
             ( pcr_primers, rest ) = csv_name.tokenize("_")
             [ pcr_primers, csv ]
             }
-        .set { ch_loci_samdf } 
+        .set { ch_loci_samdf }  
 
     //// get names and count of the multiplexed loci used
     // PARAMETER_SETUP.out.samdf_locus
