@@ -100,6 +100,11 @@ if ( concat_unmerged ) {
     )
 }
 
+## reformat mergers as a list with one element if there is only one sample
+if ( class(mergers) == "data.frame" ) {
+  mergers <- list(mergers)
+  names(mergers) <- sample_id_list
+}
 
 ## TODO: write out unmerged reads? (pull from functions.R)
 
@@ -135,6 +140,11 @@ saveRDS(seqtab, paste0(fcid,"_",pcr_primers,"_seqtab.rds"))
 
 # save number of merged reads per sample
 getN <- function(x) sum(dada2::getUniques(x))
+
+# handle if only one sample processed (ie. 'mergers' is a data.frame not a list of data.frame)
+if ( class(mergers) == "list") {
+
+}
 
 sapply(mergers, getN) %>% 
     as.data.frame() %>% 

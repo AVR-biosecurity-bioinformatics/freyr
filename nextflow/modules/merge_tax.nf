@@ -29,6 +29,7 @@ process MERGE_TAX {
     projectDir = "$projectDir"
     params_dict = "$params"
     
+    tryCatch({
     ### source functions and themes, load packages, and import Nextflow params
     ### from "bin/process_start.R"
     sys.source("${projectDir}/bin/process_start.R", envir = .GlobalEnv)
@@ -38,13 +39,10 @@ process MERGE_TAX {
         "${projectDir}/bin/$module_script", # run script
         envir = .GlobalEnv # this allows import of existing objects like projectDir
     )
-
-    ### save .RData for debugging
-    if ("${params.rdata}" == "true") {
-        save.image()
-    } else {
-        NULL
-    }
+    }, finally = {
+    ### save R environment for debugging
+    if ("${params.rdata}" == "true") { save.image(file = "${task.process}_${task.index}.rda") } 
+    })
 
     """
 

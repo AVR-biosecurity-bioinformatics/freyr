@@ -129,9 +129,13 @@ Run with shifter and slurm in BASC, with test data
 
     module load Java/17.0.6 shifter/22.02.1
 
-    export NXF_EXECUTOR=slurm
+    NXF_VER=23.04.5 nextflow run . -profile basc_slurm,test
 
-    NXF_VER=23.04.5 \
-        nextflow run . \
-        -profile basc_slurm,test
+Run test data with minimal samples:
+
+    module load Java/17
+
+    NXF_VER=23.04.5 nextflow run . -profile basc_slurm,test,debug --subsample 1
+
+
 
