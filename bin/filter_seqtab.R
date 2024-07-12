@@ -47,15 +47,15 @@ if(is.matrix(seqtab) | is.data.frame(seqtab)){
 }
 
 ## extract variables and deal with repetition
-asv_min_length <-   parse_nf_var_repeat(asv_min_length)
-asv_max_length <-   parse_nf_var_repeat(asv_max_length)
+asv_min_length <-   parse_nf_var_repeat(asv_min_length) %>% as.numeric
+asv_max_length <-   parse_nf_var_repeat(asv_max_length) %>% as.numeric
 phmm <-             parse_nf_var_repeat(phmm)
-coding <-           parse_nf_var_repeat(coding)
+coding <-           parse_nf_var_repeat(coding) %>% as.logical
 genetic_code <-     parse_nf_var_repeat(genetic_code)
 for_primer_seq <-   parse_nf_var_repeat(for_primer_seq)
 rev_primer_seq <-   parse_nf_var_repeat(rev_primer_seq)
 
-check_frame <- as.logical(coding)
+check_frame <- coding
 quiet <- FALSE # switch quiet off for now
 multithread <- FALSE # multithreading switched off for now
 ### TODO: Implement multithreading
@@ -126,11 +126,11 @@ reads_chimerafilt <- rowSums(seqtab_nochim)
 ## subset ASVs to those of expected size
 if(any(!is.null(c(asv_min_length, asv_max_length)), na.rm = TRUE) & any(reads_chimerafilt > 0)){
     if(!is.null(asv_min_length) & !is.null(asv_max_length)){
-        seqtab_cut <- seqtab_nochim[,nchar(colnames(seqtab_nochim)) < asv_max_length & nchar(colnames(seqtab_nochim)) > asv_min_length]
+        seqtab_cut <- seqtab_nochim[,nchar(colnames(seqtab_nochim)) < asv_max_length & nchar(colnames(seqtab_nochim)) > asv_min_length, drop = F]
     } else if(is.null(asv_min_length) & !is.null(asv_max_length)){
-        seqtab_cut <- seqtab_nochim[,nchar(colnames(seqtab_nochim)) < asv_max_length]
+        seqtab_cut <- seqtab_nochim[,nchar(colnames(seqtab_nochim)) < asv_max_length, drop = F]
     } else if(!is.null(asv_min_length) & is.null(asv_max_length)){
-        seqtab_cut <- seqtab_nochim[,nchar(colnames(seqtab_nochim)) > asv_min_length]
+        seqtab_cut <- seqtab_nochim[,nchar(colnames(seqtab_nochim)) > asv_min_length, drop = F]
     }
     if(!quiet){
         seqs_rem <- length(colnames(seqtab_cut))/length(colnames(seqtab))
