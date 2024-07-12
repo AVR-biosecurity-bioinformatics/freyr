@@ -126,11 +126,11 @@ reads_chimerafilt <- rowSums(seqtab_nochim)
 ## subset ASVs to those of expected size
 if(any(!is.null(c(asv_min_length, asv_max_length)), na.rm = TRUE) & any(reads_chimerafilt > 0)){
     if(!is.null(asv_min_length) & !is.null(asv_max_length)){
-        seqtab_cut <- seqtab_nochim[,nchar(colnames(seqtab_nochim)) < asv_max_length & nchar(colnames(seqtab_nochim)) > asv_min_length, drop = F]
+        seqtab_cut <- seqtab_nochim[,nchar(colnames(seqtab_nochim)) < asv_max_length & nchar(colnames(seqtab_nochim)) > asv_min_length, drop = FALSE]
     } else if(is.null(asv_min_length) & !is.null(asv_max_length)){
-        seqtab_cut <- seqtab_nochim[,nchar(colnames(seqtab_nochim)) < asv_max_length, drop = F]
+        seqtab_cut <- seqtab_nochim[,nchar(colnames(seqtab_nochim)) < asv_max_length, drop = FALSE]
     } else if(!is.null(asv_min_length) & is.null(asv_max_length)){
-        seqtab_cut <- seqtab_nochim[,nchar(colnames(seqtab_nochim)) > asv_min_length, drop = F]
+        seqtab_cut <- seqtab_nochim[,nchar(colnames(seqtab_nochim)) > asv_min_length, drop = FALSE]
     }
     if(!quiet){
         seqs_rem <- length(colnames(seqtab_cut))/length(colnames(seqtab))
@@ -151,7 +151,7 @@ if (is(phmm_model, "PHMM") & any(reads_lengthfilt > 0)){
     phmm_filt <- taxreturn::map_to_model(
         seqs, model = phmm_model, min_score = 100, min_length = 100,
         shave = FALSE, check_frame = check_frame, kmer_threshold = 0.5, k=5, extra = "fill")
-    seqtab_phmm <- seqtab_cut[,colnames(seqtab_cut) %in% names(phmm_filt)]
+    seqtab_phmm <- seqtab_cut[,colnames(seqtab_cut) %in% names(phmm_filt), drop = FALSE]
     if(!quiet){
         seqs_rem <- length(colnames(seqtab_phmm))/length(colnames(seqtab))
         abund_rem <- sum(seqtab_phmm)/sum(seqtab)
@@ -174,7 +174,7 @@ if(check_frame & any(reads_phmmfilt > 0)){
     seqs <- Biostrings::DNAStringSet(colnames(seqtab_phmm))
     names(seqs) <- colnames(seqtab_phmm)
     codon_filt <- taxreturn::codon_filter(seqs, genetic_code = genetic_code) 
-    seqtab_final <- seqtab_phmm[,colnames(seqtab_phmm) %in% names(codon_filt)]
+    seqtab_final <- seqtab_phmm[,colnames(seqtab_phmm) %in% names(codon_filt), drop = FALSE]
     if(!quiet){
         seqs_rem <- length(colnames(seqtab_final))/length(colnames(seqtab))
         abund_rem <- sum(seqtab_final)/sum(seqtab)
