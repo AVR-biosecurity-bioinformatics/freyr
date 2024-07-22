@@ -2348,7 +2348,7 @@ rareplot <- function(ps, step="auto", threshold=0){
                  group_by(sample_id) %>% 
                  top_n(1, count),
                aes(x = count, y = OTU, colour=count > threshold)) +
-    scale_x_continuous(labels =  label_number(scale_cut = cut_short_scale())) +
+    scale_x_continuous(label = scales::label_number(scale_cut = append(scales::cut_short_scale(), 1, 1)))+
     scale_colour_manual(values=c("FALSE" = "#F8766D", "TRUE"="#619CFF"))+
     facet_wrap(fcid~., scales="free", ncol=1)+
     theme_bw()+
