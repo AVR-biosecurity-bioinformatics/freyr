@@ -30,7 +30,7 @@ lapply(nf_vars, nf_var_check)
 if (!exists("fcid")) {stop("'fcid' not defined!")}
 
 # define data location
-if (!exists("params.data_folder")) { # if data_loc not defined, use "data"
+if (params.data_folder == "null") { # if data_loc not defined, use "data"
     data_loc="data"
 } else {
     data_loc = params.data_folder

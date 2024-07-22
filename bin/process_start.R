@@ -23,12 +23,12 @@ params_df = data.frame()
 
 for (i in 1:length(params_list)) {
     row <- params_list[[i]]
-    if (row[2] != "null") {
+    # if (row[2] != "null") {
         assign(
             paste0("params.",row[1]),
             paste0(row[2])
         )
-    }
+    # }
 output <- c("parameter" = paste0("params.",row[1]), "value" = row[2])
 params_df <- rbind(params_df, output)
 }

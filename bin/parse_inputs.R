@@ -28,7 +28,7 @@ samplesheet_df <- readr::read_csv(paste0(projectDir,"/",samplesheet), show_col_t
 # pseudorandomly subsample samplesheet if params.subsample is defined
 # this is done per pcr_primer x fcid combination so expected combinations are (likely) retained
 set.seed(1)
-if (exists("params.subsample")) {
+if (params.subsample != "null") {
     samplesheet_df <- samplesheet_df %>% 
     dplyr::group_by(pcr_primers, fcid) %>% 
     dplyr::slice_sample(n = as.numeric(params.subsample), replace = F) %>%
@@ -146,7 +146,7 @@ if ( "read_dir" %in% colnames(samplesheet_df) ) { # if "read_dir" column exists 
             if ( length(i_readfiles) != 2 ) { 
                 stop (paste0("SAMPLESHEET ERROR: Found ",length(i_readfiles)," read files matching '",samplesheet_df$sample_id[i],"' in '",samplesheet_df$read_dir[i],"' when 2 were expected.\n\tCheck you have filled out samplesheet correctly."))  
             }
-            if (exists("params.extension")) { # using params.extension if supplied
+            if (params.extension != "null") { # using params.extension if supplied
                 message(paste0("Using 'params.extension' (",params.extension,") to find read files in supplied directories ('read_dir')."))
                 # check read files match params.extension
                 if (any(stringr::str_detect(i_readfiles, pattern = paste0(params.extension,"$")))) { stop("SAMPLESHEET ERROR: Read files found in 'read_dir' do not match 'params.extension' file extension--check samplesheet and pipeline parameters.")}
@@ -242,6 +242,67 @@ default_params <- tibble::tibble(
 
 loci_params_df <- new_bind(default_params %>% filter(FALSE), loci_params_df) 
 
+### replace parameters from '--loci_params' .csv file with those from the '--lp_*' flags
+# vector of loci parameters
+lp_vec <- c(
+    "max_primer_mismatch",
+    "read_min_length",
+    "read_max_length",
+    "read_max_ee",
+    "read_trunc_length",
+    "read_trim_left",
+    "read_trim_right",
+    "high_sensitivity",
+    "asv_min_length",
+    "asv_max_length",
+    "concat_unmerged",
+    "genetic_code",
+    "coding",
+    "phmm",
+    "idtaxa_db",
+    "ref_fasta",
+    "idtaxa_confidence",
+    "run_blast",
+    "blast_min_identity",
+    "blast_min_coverage",
+    "target_kingdom",
+    "target_phylum",
+    "target_class",
+    "target_order",
+    "target_family",
+    "target_genus",
+    "target_species",
+    "min_sample_reads",
+    "min_taxa_reads",
+    "min_taxa_ra",
+    "threads"
+)
+
+# loop through parameters, changing those with lp_* not set to "null"
+for ( i in 1:length(lp_vec) ) {
+    lp <- lp_vec[i]
+    p <- get(paste0("params.lp_",lp))
+    if ( p == "null" ) { NULL } else {
+        if ( p %>% stringr::str_detect(pattern = ":")) {
+        ## if multi-locus values given
+        # get the loci names
+        p_names <- stringr::str_extract_all(p, pattern = "[^:,]+?(?=:)") %>% unlist
+        # get the new parameter values
+        p_vals <- stringr::str_extract_all(p, pattern = "(?<=:)[^:,]+?") %>% unlist
+        # create a tibble of the new parameter values
+        p_df <- data.frame(p_names, p_vals) %>% 
+            tibble::as_tibble() %>% 
+            dplyr::mutate(across(everything(), as.character)) %>%
+            dplyr::rename("pcr_primers" = p_names, !!lp := p_vals) 
+        # update the original df with the new parameter values per locus
+        loci_params_df <- dplyr::rows_update(loci_params_df, p_df, by = "pcr_primers")
+        } else {
+            ## single value given, replace all old values with new value
+            loci_params_df <- loci_params_df %>%
+                dplyr::mutate_at( vars(lp), function(x) (x = p) )
+        }
+    }
+}
 
 # check pcr_primers column contains only unique values
 if (any(duplicated(loci_params_df$pcr_primers))) {stop ("LOCI_PARAMS ERROR: 'pcr_primers' values are not unique!")}

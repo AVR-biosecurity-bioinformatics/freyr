@@ -173,9 +173,6 @@ if(!is.na(min_taxa_reads) & is.na(min_taxa_ra)){
     ps1 <- ps0
 }
 
-## check if any 
-
-
 #Remove all samples under the minimum read threshold 
 if(min_sample_reads > 0){
     if (all(phyloseq::sample_sums(ps1)>=min_sample_reads) == FALSE) {
