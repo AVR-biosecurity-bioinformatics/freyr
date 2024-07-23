@@ -241,7 +241,8 @@ default_params <- tibble::tibble(
     threads = 1
 )
 
-loci_params_df <- new_bind(default_params %>% filter(FALSE), loci_params_df) 
+loci_params_df <- new_bind(default_params %>% filter(FALSE), loci_params_df) %>%
+    dplyr::mutate(across(everything(), as.character))
 
 ### replace parameters from '--loci_params' .csv file with those from the '--lp_*' flags
 # vector of loci parameters
@@ -284,12 +285,12 @@ for ( i in 1:length(lp_vec) ) {
     lp <- lp_vec[i]
     p <- get(paste0("params.lp_",lp))
     if ( p == "null" ) { NULL } else {
-        if ( p %>% stringr::str_detect(pattern = ":")) {
+        if ( p %>% stringr::str_detect(pattern = "^<.+>.+$")) {
         ## if multi-locus values given
         # get the loci names
-        p_names <- stringr::str_extract_all(p, pattern = "[^:,]+?(?=:)") %>% unlist
+        p_names <- stringr::str_extract_all(p, pattern = "(?<=\\<).+?(?=\\>)") %>% unlist
         # get the new parameter values
-        p_vals <- stringr::str_extract_all(p, pattern = "(?<=:)[^:,]+?") %>% unlist
+        p_vals <- stringr::str_extract_all(p, pattern = "(?<=\\>).+?((?=\\<)|$)") %>% unlist
         # create a tibble of the new parameter values
         p_df <- data.frame(p_names, p_vals) %>% 
             tibble::as_tibble() %>% 
