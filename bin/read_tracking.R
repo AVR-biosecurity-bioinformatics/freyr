@@ -156,7 +156,7 @@ gg.read_tracker <- read_tracker_long %>%
         ) %>% 
     ggplot2::ggplot(aes(x = stage, y = pairs, fill=pcr_primers)) +
     geom_col() + # TODO: Add % retention labels to the top of each bar
-    scale_y_continuous(labels = scales::label_number(scale_cut = scales::cut_short_scale())) +
+    scale_y_continuous(label = scales::label_number(scale_cut = append(scales::cut_short_scale(), 1, 1))) +
     scale_fill_manual(values = wong_pal) +
     facet_grid(fcid~.) +
     theme_bw() +

@@ -10,6 +10,9 @@ set -u
 # $6 = meta.target_gene, aka. name of target gene
 # $7 = meta.sample_id, aka. sample ID
 # $8 = meta.fcid, aka. flowcell ID
+# $9 = params.primer_error_rate
+
+### set up
 
 # change "I" in primer seq to "N", if present
 FWD_PRIMER=${3/I/N}
@@ -28,23 +31,43 @@ else
     MINK_LEN=$FWD_LEN
 fi
 
-# module load BBMap/38.98-GCC-11.2.0
 
-bbduk.sh \
-    in=${1} \
-    in2=${2} \
-    literal=${FWD_PRIMER},${REV_PRIMER} \
-    out=reject1.fastq.gz \
-    out2=reject2.fastq.gz \
-    outm=${7}_${6}_${5}_R1.fastq.gz \
-    outm2=${7}_${6}_${5}_R2.fastq.gz \
-    restrictleft=${KMER_LEN} \
-    copyundefined=true \
-    k=${MINK_LEN} \
-    hdist=3 \
-    rcomp=t \
-    stats=split_loci_stats_${7}_${6}_${5}.txt \
-    lhist=split_loci_lhist_${7}_${6}_${5}.txt
+### using cutadapt
+
+cutadapt \
+    -e $9 \
+    --action=retain \
+    --match-read-wildcards \
+    --report=minimal \
+    --discard-untrimmed \
+    -g ^$FWD_PRIMER \
+    -G ^$REV_PRIMER \
+    -o ${7}_${6}_${5}_R1.fastq.gz \
+    -p ${7}_${6}_${5}_R2.fastq.gz \
+    $1 \
+    $2
+
+
+
+
+
+### using BBDuk
+
+# bbduk.sh \
+#     in=${1} \
+#     in2=${2} \
+#     literal=${FWD_PRIMER},${REV_PRIMER} \
+#     out=reject1.fastq.gz \
+#     out2=reject2.fastq.gz \
+#     outm=${7}_${6}_${5}_R1.fastq.gz \
+#     outm2=${7}_${6}_${5}_R2.fastq.gz \
+#     restrictleft=${KMER_LEN} \
+#     copyundefined=true \
+#     k=${MINK_LEN} \
+#     hdist=3 \
+#     rcomp=t \
+#     stats=split_loci_stats_${7}_${6}_${5}.txt \
+#     lhist=split_loci_lhist_${7}_${6}_${5}.txt
 
 ## count reads in input files
 # forward reads

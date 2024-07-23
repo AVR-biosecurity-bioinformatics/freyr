@@ -170,8 +170,6 @@ workflow FREYR {
     PARSE_INPUTS ( params.samplesheet, params.loci_params )
 
     // ch_versions = Channel.empty()
-
-    // STOP ( PARSE_INPUTS.out[1] ) // stop pipeline
     
     //// Create empty channels
     ch_read_tracker_samples =   // read-tracking for sample-level processes; card: path(.csv)
@@ -274,7 +272,7 @@ workflow FREYR {
 
 
     // run SEQ_QC per flow cell 
-    SEQ_QC ( ch_fcid ) // optional step for testing
+    // SEQ_QC ( ch_fcid ) // optional step for testing
     /* 
     NOTE: SEQ_QC process assumes: 
         1. data comes from MiSeq
@@ -285,6 +283,8 @@ workflow FREYR {
 
     //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( ch_sample_locus_reads ) 
+
+    // STOP ( SPLIT_LOCI.out.reads[1] ) // stop pipeline
 
     ch_read_tracker_samples = 
         ch_read_tracker_samples.concat( SPLIT_LOCI.out.input_counts )

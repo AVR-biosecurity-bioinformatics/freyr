@@ -80,6 +80,14 @@
                     "help_text": "Run DADA2 ASV inference in high-sensitivity mode, ie. use pseudo-pooling.",
                     "default": true
                 },
+                "primer_error_rate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Error rate when identifying and trimming primer sequences ('cutadapt -e').",
+                    "errorMessage": "Must be set to a number >=0.",
+                    "help_text": "Specifies 'cutadapt -e': values between 0 and <1 set an error rate per primer base (not including Ns); values >=1 set the maximum number of allowed errors per primer.",
+                    "default": 1
+                },
                 "primer_n_trim": {
                     "type": "boolean",
                     "description": "Recognise ambiguous bases in reads when trimming primers.",

@@ -11,6 +11,7 @@ set -u
 # $7 = meta.sample_id, aka. sample ID
 # $8 = meta.fcid, aka. flowcell ID
 # $9 = params.primer_n_trim (true or false)
+# $10 = params.primer_error_rate
 
 # change "I" in primer seq to "N", if present
 FWD_PRIMER=${3/I/N}
@@ -46,6 +47,7 @@ cutadapt \
     --report=minimal \
     --minimum-length 20 \
     --times 2 \
+    -e ${10} \
     $OPTIONAL_ARGS \
     -o ${7}_${6}_${5}_trim_R1.fastq.gz \
     -p ${7}_${6}_${5}_trim_R2.fastq.gz \

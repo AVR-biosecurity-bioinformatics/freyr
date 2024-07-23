@@ -31,7 +31,8 @@ process PRIMER_TRIM {
         ${meta.target_gene} \
         ${meta.sample_id} \
         ${meta.fcid} \
-        ${params.primer_n_trim}
+        ${params.primer_n_trim} \
+        ${params.primer_error_rate}
 
     """
 
