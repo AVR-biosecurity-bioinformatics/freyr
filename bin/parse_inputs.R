@@ -105,10 +105,11 @@ if (any(duplicated(samplesheet_df$sample_id))) { # check that sample_id contains
     } 
 
 # check that all primer names and sequences are identical for each sample
-if (!any(duplicated(samplesheet_df$pcr_primers))) { stop("SAMPLESHEET ERROR: 'pcr_primer' varies between samples!\n\t'pcr_primer' contents must be the same for all samples.") } 
-if (!any(duplicated(samplesheet_df$for_primer_seq))) { stop("SAMPLESHEET ERROR: 'for_primer_seq' varies between samples!\n\t'for_primer_seq' contents must be the same for all samples.") } 
-if (!any(duplicated(samplesheet_df$rev_primer_seq))) { stop("SAMPLESHEET ERROR: 'rev_primer_seq' varies between samples!\n\t'rev_primer_seq' contents must be the same for all samples.") } 
-
+if (nrow(samplesheet_df) != 1) { # checks fail if samplesheet only has one row
+    if (!any(duplicated(samplesheet_df$pcr_primers))) { stop("SAMPLESHEET ERROR: 'pcr_primers' varies between samples!\n\t'pcr_primers' contents must be the same for all samples.") } 
+    if (!any(duplicated(samplesheet_df$for_primer_seq))) { stop("SAMPLESHEET ERROR: 'for_primer_seq' varies between samples!\n\t'for_primer_seq' contents must be the same for all samples.") } 
+    if (!any(duplicated(samplesheet_df$rev_primer_seq))) { stop("SAMPLESHEET ERROR: 'rev_primer_seq' varies between samples!\n\t'rev_primer_seq' contents must be the same for all samples.") } 
+}
 # check that same number of target genes and primer names are defined as primer sequences
 if (
     !identical(stringr::str_count(samplesheet_df$target_gene, ";"), stringr::str_count(samplesheet_df$for_primer_seq, ";")) |
