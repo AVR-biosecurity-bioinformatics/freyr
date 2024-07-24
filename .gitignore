@@ -13,3 +13,4 @@
 *.log.[0-9]
 *.slurm
 *.out
+nxf-tmp.*
