@@ -44,9 +44,9 @@
       "properties": {
         "pcr_primers": {
           "type": "string",
-          "pattern": "^[^\\s,;]+$",
+          "pattern": "^((?!__)[^\\s,;])+$",
           "description": "Name of the PCR primer pair. Must be unique and match that given in the samplesheet.",
-          "errorMessage": "PCR primer names must not contain spaces, commas or semi-colons."
+          "errorMessage": "PCR primer names must not contain spaces, commas, semi-colons or two underscores in a row."
         },
         "target_gene": {
             "type": "string",

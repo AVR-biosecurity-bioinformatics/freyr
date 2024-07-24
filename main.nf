@@ -219,9 +219,10 @@ workflow FREYR {
         .flatten()
         .map { csv -> 
             def csv_name = csv.getFileName().toString()
-            ( pcr_primers, rest ) = csv_name.tokenize("_")
+            ( pcr_primers, rest ) = csv_name.split("__")
             [ pcr_primers, csv ]
             }
+        // .dump (tag: 'ch_loci_samdf')
         .set { ch_loci_samdf }  
 
     //// get names and count of the multiplexed loci used
@@ -552,11 +553,16 @@ workflow FREYR {
     
     // combine taxtables, seqtables and parameters
     ch_taxtables_locus
+        // .dump(tag: '1')
         .combine ( ch_seqtables_locus, by: 0 )
+        // .dump(tag: '2')
         .combine ( ch_loci_samdf, by: 0 )
+        // .dump(tag: '3')
         .combine ( ch_loci_params, by: 0 )
+        // .dump(tag: '4')
         .set { ch_phyloseq_input }
 
+    
     //// create phyloseq objects per locus; output unfiltered summary tables and accumulation curve plot
     PHYLOSEQ_UNFILTERED ( ch_phyloseq_input )
 
@@ -581,15 +587,14 @@ workflow FREYR {
         ch_ps_filtered 
         )
     ch_read_tracker_grouped = 
-        ch_read_tracker_grouped.concat( PHYLOSEQ_MERGE.out.read_tracking.flatten() ) 
+        ch_read_tracker_grouped
+        .concat( PHYLOSEQ_MERGE.out.read_tracking.flatten() ) 
+        .collect()
 
     //// track reads and sequences across the pipeline
     // collect channel files into lists
     ch_read_tracker_samples = 
         ch_read_tracker_samples.collect()
-    
-    ch_read_tracker_grouped = 
-        ch_read_tracker_grouped.collect()
 
     READ_TRACKING ( 
         ch_read_tracker_samples, 

@@ -46,7 +46,7 @@ samdf <- readr::read_csv(samdf, show_col_types = FALSE)
 if ( length(seqtab_list) > 1 ){ # if there is more than one seqtab, merge together
     seqtab_final <- dada2::mergeSequenceTables(tables=seqtab_list)
 } else if( length(seqtab_list) == 1 ) { # if there is only one seqtab, keep and unlist
-    seqtab_final <- seqtab_list %>% unlist()
+    seqtab_final <- seqtab_list[[1]]
 }
 seqtab_final %>% # save for debugging
     tibble::as_tibble(rownames = "OTU") %>% 

@@ -371,9 +371,9 @@ readr::write_csv(samplesheet_loci_params, "samplesheet_loci_params.csv")
 split_slp <- split(samplesheet_loci_params, samplesheet_loci_params$pcr_primers) # split dfs by pcr_primers
 
 for ( I in 1:length(split_slp)) { # assign new dfs to new variables
-    new_df_name <- paste0(unique(split_slp[[I]]$pcr_primers),"_samplesheet")
+    new_df_name <- paste0(unique(split_slp[[I]]$pcr_primers),"__samplesheet")
     assign(
-        paste0(unique(split_slp[[I]]$pcr_primers),"_samplesheet"),
+        paste0(unique(split_slp[[I]]$pcr_primers),"__samplesheet"),
         split_slp[[I]]
         )
     readr::write_csv( # print dfs inside work dir; maybe publish?
