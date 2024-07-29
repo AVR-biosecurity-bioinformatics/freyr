@@ -24,7 +24,7 @@ lapply(nf_vars, nf_var_check)
 
 # read in samplesheet
 samplesheet_df <- readr::read_csv(paste0(projectDir,"/",samplesheet), show_col_types = F, skip_empty_rows = TRUE, na = c("", "NA", " ")) %>%
-    dplyr::select(!tidyselect::starts_with("...")) %>% # remove any blank columns that have been named "...X"
+    dplyr::select(!tidyselect::starts_with("...")) # remove any blank columns that have been named "...X"
 
 # pseudorandomly subsample samplesheet if params.subsample is defined
 # this is done per pcr_primer x fcid combination so expected combinations are (likely) retained
