@@ -6,7 +6,6 @@
 /reference/
 /work/
 /output/
-/inputs/
 /test_data/full_teph/
 *.log
 .nextflow/
