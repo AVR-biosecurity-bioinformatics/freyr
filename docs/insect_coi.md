@@ -167,10 +167,12 @@ Once you have been allocated a computational node in the shell, run the commands
 
 SLURM scripts are the best way to run `freyr` for proper, large datasets, as your analysis will run on the server without needing interaction with your personal computer. BASC has a [good guide](http://users.basc.science.depi.vic.gov.au/jobs/slurm/sbatch/) to using `sbatch`, including a very useful [SLURM script generator](http://jsgen.basc.science.depi.vic.gov.au/). 
 
+There is also a template SLURM script for running `freyr` on BASC available at [`./supplementary_scripts/basc_template.slurm`](/supplementary_scripts/basc/basc_template.slurm). 
+
 
 ### Optional: Running a test dataset
 
-`freyr` comes packaged with a small test dataset that can be used to quickly check that the pipeline is working as expected. Typically, this should take only 5-10 minutes if the BASC job queue isn't full, and is most easily done in an interactive shell. To run `freyr` on this dataset, use the following commands:
+`freyr` comes packaged with a small test dataset that can be used to quickly check that the pipeline is working as expected and get you familiar with pipeline outputs. Typically, this should take only 5-10 minutes if the BASC job queue isn't full, and is most easily done in an interactive shell. To run `freyr` on this dataset, use the following commands:
 
 ```
 ## run these inside your cloned directory (ie. $working_dir)
