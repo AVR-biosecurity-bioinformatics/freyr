@@ -109,7 +109,7 @@ You should always run `freyr` on BASC in a computational node, not a login node.
 
 However, the commands to run the pipeline will remain the same for both options.  
 
-#### Pipeline commands and parameters
+#### Main pipeline command
 
 To run `freyr`, you need to change to your analysis directory, load a Java module, then use the `nextflow run` command:
 
@@ -161,7 +161,7 @@ To run the pipeline in an interactive shell, it is recommended to request a dece
 sinteractive -c 1 -t 480 --mem 4G
 ```
 
-Once you have been allocated a computational node in the shell, run the commands as per the '_Pipeline commands and parameters_' section above.
+Once you have been allocated a computational node in the shell, run the commands as per the ['_Main pipeline command_'](/docs/insect_coi.md#main-pipeline-command) section above.
 
 #### Using a SLURM script
 
