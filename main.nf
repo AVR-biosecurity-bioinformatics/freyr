@@ -166,6 +166,22 @@ include { STOP                                      } from './nextflow/modules/s
 
 workflow FREYR {
 
+
+    //// check input option combinations are allowed
+    if ( params.seq_type == "illumina" & params.paired ) {
+        ch_reads_type = "illumina_paired"
+    } else if ( params.seq_type == "nanopore" & !params.paired ) {
+        ch_reads_type = params.seq_type
+    } else if ( params.illumina & !params.paired ) {
+        error ( "Illumina single-end reads are currently not supported: check --seq_type and --paired" )
+    } else if ( params.seq_type == "nanopore" & params.paired ) {
+        error ( "Nanopore reads cannot be paired end: check --seq_type and --paired" )
+    } else if ( params.seq_type == "pacbio" ) {
+        error ( "PacBio reads are currently not supported: check --seq_type" )
+    } else { 
+        error ("Disallowed combination of --seq_type and --paired") 
+    }
+
     //// read-in samplesheet and loci_params .csv files, validate their contents, and produce inputs for rest of pipeline
     PARSE_INPUTS ( params.samplesheet, params.loci_params )
 
