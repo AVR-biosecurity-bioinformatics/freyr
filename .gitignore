@@ -6,11 +6,11 @@
 /reference/
 /work/
 /output/
-/inputs/
 /test_data/full_teph/
 *.log
 .nextflow/
 *.log.[0-9]
 *.slurm
+!/supplementary_scripts/basc/basc_template.slurm
 *.out
 nxf-tmp.*

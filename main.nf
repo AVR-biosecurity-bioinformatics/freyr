@@ -273,14 +273,9 @@ workflow FREYR {
 
 
     // run SEQ_QC per flow cell 
-    SEQ_QC ( ch_fcid ) // optional step for testing
-    /* 
-    NOTE: SEQ_QC process assumes: 
-        1. data comes from MiSeq
-        2. all read files are in same location
-        3. 'params.data_folder' is specified
-    In future, need to use 'read_dir' info, or get quality from each read file directly as specified in the 
-    */
+    if ( params.miseq_internal ) {
+        SEQ_QC ( ch_fcid ) 
+    }
 
     //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( ch_sample_locus_reads ) 
