@@ -113,7 +113,7 @@ if( !nextflow.version.matches('=23.04.5') ) {
 
 //// import subworkflows
 include { PROCESS_READS                             } from './nextflow/subworkflows/process_reads'
-
+include { DADA2                                     } from './nextflow/subworkflows/dada2'
 
 //// import modules
 include { PARSE_INPUTS                              } from './nextflow/modules/parse_inputs'
@@ -127,11 +127,11 @@ include { ERROR_MODEL as ERROR_MODEL_F              } from './nextflow/modules/e
 include { ERROR_MODEL as ERROR_MODEL_R              } from './nextflow/modules/error_model'
 include { DENOISE as DENOISE1_F                     } from './nextflow/modules/denoise'
 include { DENOISE as DENOISE1_R                     } from './nextflow/modules/denoise'
-include { DADA_PRIORS as DADA_PRIORS_F              } from './nextflow/modules/dada_priors'
-include { DADA_PRIORS as DADA_PRIORS_R              } from './nextflow/modules/dada_priors'
+include { PRIORS as PRIORS_F                        } from './nextflow/modules/priors'
+include { PRIORS as PRIORS_R                        } from './nextflow/modules/priors'
 include { DENOISE as DENOISE2_F                     } from './nextflow/modules/denoise'
 include { DENOISE as DENOISE2_R                     } from './nextflow/modules/denoise'
-include { DADA_MERGEREADS                           } from './nextflow/modules/dada_mergereads'
+include { MERGE_READS                               } from './nextflow/modules/merge_reads'
 include { FILTER_SEQTAB                             } from './nextflow/modules/filter_seqtab'
 include { TAX_IDTAXA                                } from './nextflow/modules/tax_idtaxa'
 include { TAX_BLAST                                 } from './nextflow/modules/tax_blast'
@@ -171,13 +171,13 @@ workflow FREYR {
 
 
     //// check input option combinations are allowed
-    if ( params.seq_type == "illumina" & params.paired ) {
+    if ( params.seq_type == "illumina" && params.paired ) {
         ch_reads_type = "illumina_paired"
-    } else if ( params.seq_type == "nanopore" & !params.paired ) {
+    } else if ( params.seq_type == "nanopore" && !params.paired ) {
         ch_reads_type = params.seq_type
-    } else if ( params.illumina & !params.paired ) {
+    } else if ( params.illumina && !params.paired ) {
         error "Illumina single-end reads are currently not supported: check --seq_type and --paired" 
-    } else if ( params.seq_type == "nanopore" & params.paired ) {
+    } else if ( params.seq_type == "nanopore" && params.paired ) {
         error "Nanopore reads cannot be paired-end: check --seq_type and --paired" 
     } else if ( params.seq_type == "pacbio" ) {
         error "PacBio reads are currently not supported: check --seq_type" 
@@ -191,17 +191,9 @@ workflow FREYR {
     // ch_versions = Channel.empty()
     
     //// Create empty channels
-    ch_read_tracker_samples =   // read-tracking for sample-level processes; card: path(.csv)
-        Channel.empty()  
     ch_read_tracker_grouped =   // read-tracking for grouped processes
         Channel.empty()      
-    ch_processed_reads_forward = 
-        Channel.empty()
-    ch_processed_reads_reverse = 
-        Channel.empty()
-    ch_processed_reads_single = 
-        Channel.empty()
-
+    
 
     //// parse samplesheets that contain locus-specific parameters
     PARSE_INPUTS.out.samplesheet_locus
@@ -299,77 +291,11 @@ workflow FREYR {
         )
 
 
-    // // run SEQ_QC per flow cell 
-    // if ( params.miseq_internal ) {
-    //     SEQ_QC ( ch_fcid ) 
-    //     }
-
-    // //// split sample reads by locus (based on primer seq.)
-    // SPLIT_LOCI ( ch_sample_locus_reads ) 
-
-    // // STOP ( SPLIT_LOCI.out.reads[1] ) // stop pipeline
-
-    // ch_read_tracker_samples = 
-    //     ch_read_tracker_samples.concat( SPLIT_LOCI.out.input_counts )
-    
-    // ch_read_tracker_samples = 
-    //     ch_read_tracker_samples.concat( SPLIT_LOCI.out.read_tracking )
-
-    // //// trim primer sequences from the start and end of reads
-    // PRIMER_TRIM ( SPLIT_LOCI.out.reads )
-    
-    // ch_read_tracker_samples = 
-    //     ch_read_tracker_samples.concat( PRIMER_TRIM.out.read_tracking )
-
-    // //// filter reads using dada2 and input parameters
-    // READ_FILTER ( PRIMER_TRIM.out.reads )
-    
-    // ch_read_tracker_samples = 
-    //     ch_read_tracker_samples.concat( READ_FILTER.out.read_tracking )
-
-    // //// create plots of read quality pre- and post-filtering, per flowcell (optional)
-    // FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
-
-    // FILTER_QUALPLOTS_POST ( READ_FILTER.out.reads )
-
-    // /// TODO: Use FILTER_QUALPLOTS_COMBINE to combine plots by fcid and type into one PDF
-
-
-    // ///// split filtered reads into lists of reads per flowcell, primers and direction
-    // //// forward read channel
-    // READ_FILTER.out.reads
-    //     .map { meta, reads -> 
-    //             [ "forward", meta.pcr_primers, meta.fcid, reads[0] ] }
-    //     .groupTuple( by: [0,1,2] )
-    //     .set { ch_error_input_fwd }
-
-    // //// reverse read channel
-    // READ_FILTER.out.reads
-    //     .map { meta, reads -> 
-    //             [ "reverse", meta.pcr_primers, meta.fcid, reads[1] ] }
-    //     .groupTuple ( by: [0,1,2] )
-    //     .set { ch_error_input_rev }
-
-    //// populate processed read channels
-    PROCESS_READS.out.processed_reads
-        .branch { direction, pcr_primers, fcid, reads ->
-            forward: direction == "forward"
-            reverse: direction == "reverse"
-            single: direction == "single"
-            }
-        .set { ch_processed_reads }
-
-    ch_processed_reads_forward
-        .concat ( ch_processed_reads.forward )
-        .set { ch_processed_reads_forward }
-    
-    ch_processed_reads_reverse
-        .concat ( ch_processed_reads.reverse )
-        .set { ch_processed_reads_reverse }
-
-    ch_processed_reads_single
-        .concat ( ch_processed_reads.single )
-        .set { ch_processed_reads_single }
+    //// subworkflow: run DADA2 to infer ASVs
+    DADA2 (
+        PROCESS_READS.out.ch_processed_reads,
+        ch_read_tracker_grouped
+    )
 
 
     // //// error model on forward reads
@@ -630,13 +556,9 @@ workflow FREYR {
     //     .concat( PHYLOSEQ_MERGE.out.read_tracking.flatten() ) 
     //     .collect()
 
-    // //// track reads and sequences across the pipeline
-    // // collect channel files into lists
-    // ch_read_tracker_samples = 
-    //     ch_read_tracker_samples.collect()
-
+    //// track reads and sequences across the pipeline
     // READ_TRACKING ( 
-    //     ch_read_tracker_samples, 
+    //     PROCESS_READS.out.ch_read_tracker_samples.collect(), 
     //     ch_read_tracker_grouped 
     //     )
 

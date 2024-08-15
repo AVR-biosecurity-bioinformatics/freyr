@@ -1,14 +1,15 @@
-process DADA_PRIORS {
-    def module_name = "dada_priors"
+process MERGE_READS {
+    def module_name = "merge_reads"
     tag "$pcr_primers; $fcid"
     label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(direction), val(pcr_primers), val(fcid), path(priors)
+    tuple val(pcr_primers), val(fcid), val(concat_unmerged), val(meta), path(readsF), path(readsR), path(seqsF), path(seqsR)
 
-    output:   
-    tuple val(direction), val(pcr_primers), val(fcid), path("*_priors{F,R}.rds"),              emit: priors
+    output:
+    tuple val(pcr_primers), val(fcid), val(meta), path("*_seqtab.rds"), emit: seqtab
+    path("*_readsout.csv"),                                             emit: read_tracking
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -21,10 +22,14 @@ process DADA_PRIORS {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    direction =         "${direction}"
     fcid =              "${fcid}"
     pcr_primers =       "${pcr_primers}"
-    priors =            "${priors}"
+    sample_id =         "${meta.sample_id}"
+    reads_F =           "${readsF}"
+    reads_R =           "${readsR}"
+    seqs_F =            "${seqsF}"
+    seqs_R =            "${seqsR}"
+    concat_unmerged =   "${concat_unmerged}"
     
     ## global variables
     projectDir = "$projectDir"

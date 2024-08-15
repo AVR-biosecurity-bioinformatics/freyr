@@ -27,11 +27,11 @@ workflow PROCESS_READS {
         Channel.empty()  
     ch_processed_reads = 
         Channel.empty()
-    ch_error_input_fwd =
+    ch_processed_fwd =
         Channel.empty()
-    ch_error_input_rev =
+    ch_processed_rev =
         Channel.empty()
-    ch_error_input_single =
+    ch_processed_single =
         Channel.empty()
 
 
@@ -84,43 +84,45 @@ workflow PROCESS_READS {
         .concat( READ_FILTER.out.read_tracking )
         .set { ch_read_tracker_samples }
 
-    /// split filtered reads into lists of reads per flowcell, primers and direction
-
+    //// split filtered reads into channels per flowcell, primers and direction
     if ( params.paired == true ) {
-        // forward read channel
+        //// forward read channel
         READ_FILTER.out.reads
             .map { meta, reads -> 
-                    [ "forward", meta.pcr_primers, meta.fcid, reads[0] ] }
-            .groupTuple( by: [0,1,2] )
-            .set { ch_error_input_fwd }
+                    [ "forward", meta.pcr_primers, meta.fcid, meta, reads[0] ] }
+            // .groupTuple( by: [0,1,2] )
+            .set { ch_processed_fwd }
 
         //// reverse read channel
         READ_FILTER.out.reads
             .map { meta, reads -> 
-                    [ "reverse", meta.pcr_primers, meta.fcid, reads[1] ] }
-            .groupTuple ( by: [0,1,2] )
-            .set { ch_error_input_rev }
+                    [ "reverse", meta.pcr_primers, meta.fcid, meta, reads[1] ] }
+            // .groupTuple ( by: [0,1,2] )
+            .set { ch_processed_rev }
 
     } else if ( params.paired == false ) {
+        //// single-end read channel
         READ_FILTER.out.reads
             .map { meta, reads -> 
-                    [ "single", meta.pcr_primers, meta.fcid, reads ] }
-            .groupTuple ( by: [0,1,2] )
-            .set { ch_error_input_single }
+                    [ "single", meta.pcr_primers, meta.fcid, meta, reads ] }
+            // .groupTuple ( by: [0,1,2] )
+            .set { ch_processed_single }
+    
     } else {
         error ("Disallowed 'params.paired' value")
     }
 
     ch_processed_reads
-        .concat (ch_error_input_fwd)
-        .concat (ch_error_input_rev)
-        .concat (ch_error_input_single)
-        .set { processed_reads }
+        .concat (ch_processed_fwd)
+        .concat (ch_processed_rev)
+        .concat (ch_processed_single)
+        .set { ch_processed_reads }
 
 
     emit:
 
-    processed_reads
+    ch_processed_reads
+    ch_read_tracker_samples
 
     /*
     Need to emit:
