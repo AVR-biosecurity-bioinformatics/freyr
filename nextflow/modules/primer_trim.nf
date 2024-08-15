@@ -5,8 +5,9 @@ process PRIMER_TRIM {
     container "thatdnaguy/cutadapt:v4.7_02"
 
     input:
-    // input read pairs, primer seqs and locus name (to use in output file names)
     tuple val(meta), path(reads)
+    val(seq_type)
+    val(paired)
 
     output:   
     tuple val(meta), path("*_trim_R{0,1,2}.fastq.gz"),    emit: reads
@@ -25,7 +26,7 @@ process PRIMER_TRIM {
 
     ### run module code
     bash ${module_name}.sh \
-        ${reads_paths} \
+        "${reads_paths}" \
         ${meta.for_primer_seq} \
         ${meta.rev_primer_seq} \
         ${meta.pcr_primers} \
@@ -33,7 +34,9 @@ process PRIMER_TRIM {
         ${meta.sample_id} \
         ${meta.fcid} \
         ${params.primer_n_trim} \
-        ${params.primer_error_rate}
+        ${params.primer_error_rate} \
+        ${seq_type} \
+        ${paired}
 
     """
 

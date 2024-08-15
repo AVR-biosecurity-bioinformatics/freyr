@@ -111,11 +111,13 @@ if( !nextflow.version.matches('=23.04.5') ) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-//// import modules
+//// import subworkflows
+include { PROCESS_READS                             } from './nextflow/subworkflows/process_reads'
 
+
+//// import modules
 include { PARSE_INPUTS                              } from './nextflow/modules/parse_inputs'
-// include { PARAMETER_SETUP                           } from './nextflow/modules/parameter_setup'
-include { SEQ_QC                                    } from './nextflow/modules/seq_qc'
+include { MISEQ_QC                                  } from './nextflow/modules/miseq_qc'
 include { SPLIT_LOCI                                } from './nextflow/modules/split_loci'
 include { PRIMER_TRIM                               } from './nextflow/modules/primer_trim'
 include { READ_FILTER                               } from './nextflow/modules/read_filter' 
@@ -145,10 +147,6 @@ include { READ_TRACKING                             } from './nextflow/modules/r
 
 // utility processes for development and debugging
 include { STOP                                      } from './nextflow/modules/stop'
-
-
-//// import subworkflows
-include { PROCESS_READS                             } from './nextflow/subworkflows/process_reads'
 
 
 /*
@@ -205,11 +203,7 @@ workflow FREYR {
         Channel.empty()
 
 
-    //// input samplesheet and loci parameters
-    // PARAMETER_SETUP ( )
-
     //// parse samplesheets that contain locus-specific parameters
-    // PARAMETER_SETUP.out.samdf_locus
     PARSE_INPUTS.out.samplesheet_locus
         .flatten ()
         .splitCsv ( header: true )
@@ -241,7 +235,6 @@ workflow FREYR {
 
 
     //// create channel that links locus-specific samplesheets to pcr_primer key, in the format 'pcr_primers, csv_file'
-    // PARAMETER_SETUP.out.samdf_locus
     PARSE_INPUTS.out.samplesheet_locus
         .flatten()
         .map { csv -> 
@@ -253,7 +246,6 @@ workflow FREYR {
         .set { ch_loci_samdf }  
 
     //// get names and count of the multiplexed loci used
-    // PARAMETER_SETUP.out.samdf_locus
     PARSE_INPUTS.out.samplesheet_locus
         .flatten ()
         .splitCsv ( header: true )
@@ -291,7 +283,6 @@ workflow FREYR {
         .set { ch_loci_info }
 
     //// create channel of loci parameters
-    // PARAMETER_SETUP.out.loci_params // loci_params.csv file with one row per primer pair
     PARSE_INPUTS.out.loci_params_parsed
         .splitCsv ( header: true )
         .map { row -> 
@@ -304,7 +295,6 @@ workflow FREYR {
         ch_sample_locus_reads,
         params.seq_type,
         params.paired,
-        params.miseq_internal,
         ch_fcid
         )
 
@@ -382,273 +372,273 @@ workflow FREYR {
         .set { ch_processed_reads_single }
 
 
-    //// error model on forward reads
-    ERROR_MODEL_F ( ch_processed_reads_forward )
+    // //// error model on forward reads
+    // ERROR_MODEL_F ( ch_processed_reads_forward )
 
-    //// error model on reverse reads
-    ERROR_MODEL_R ( ch_processed_reads_reverse )
+    // //// error model on reverse reads
+    // ERROR_MODEL_R ( ch_processed_reads_reverse )
 
-    //// input channel for denoising forward reads
-    ch_processed_reads_forward
-        .combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2] ) // combine with error model
-        .map { direction, pcr_primers, fcid, meta, reads, errormodel -> // add empty file path for priors
-                [ direction, pcr_primers, fcid, meta, reads, errormodel, "$projectDir/assets/NO_FILE" ] }
-        .set { ch_denoise_input_forward }
+    // //// input channel for denoising forward reads
+    // ch_processed_reads_forward
+    //     .combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2] ) // combine with error model
+    //     .map { direction, pcr_primers, fcid, meta, reads, errormodel -> // add empty file path for priors
+    //             [ direction, pcr_primers, fcid, meta, reads, errormodel, "$projectDir/assets/NO_FILE" ] }
+    //     .set { ch_denoise_input_forward }
 
-    // ch_denoise_input_forward .view ()
+    // // ch_denoise_input_forward .view ()
 
-    //// input channel for denoising reverse reads
-    ch_processed_reads_reverse
-        .combine ( ERROR_MODEL_R.out.errormodel, by: [0,1,2] ) // combine with error model
-        .map { direction, pcr_primers, fcid, meta, reads, errormodel -> // add empty file path for priors
-                [ direction, pcr_primers, fcid, meta, reads, errormodel, "$projectDir/assets/NO_FILE" ] }
-        .set { ch_denoise_input_reverse }
+    // //// input channel for denoising reverse reads
+    // ch_processed_reads_reverse
+    //     .combine ( ERROR_MODEL_R.out.errormodel, by: [0,1,2] ) // combine with error model
+    //     .map { direction, pcr_primers, fcid, meta, reads, errormodel -> // add empty file path for priors
+    //             [ direction, pcr_primers, fcid, meta, reads, errormodel, "$projectDir/assets/NO_FILE" ] }
+    //     .set { ch_denoise_input_reverse }
 
 
-    //// first pass of denoising per flowcell, primer and sample
-    DENOISE1_F ( ch_denoise_input_forward, "first" )
+    // //// first pass of denoising per flowcell, primer and sample
+    // DENOISE1_F ( ch_denoise_input_forward, "first" )
     
-    //// denoise forward reads per flowcell, primer and sample
-    DENOISE1_R ( ch_denoise_input_reverse, "first" )
+    // //// denoise forward reads per flowcell, primer and sample
+    // DENOISE1_R ( ch_denoise_input_reverse, "first" )
 
-    // high sensitivity mode condition
-    if ( params.high_sensitivity ) { // run prior extraction and second pass denoising
-        //// group priors for each read file
-        /// forward reads
-        DENOISE1_F.out.seq
-            .map { direction, pcr_primers, fcid, meta, reads, priors ->
-                    [ direction, pcr_primers, fcid, priors ] }
-            .groupTuple ( by: [0,1,2] )
-            .set { ch_priors_f_pre }
+    // // high sensitivity mode condition
+    // if ( params.high_sensitivity ) { // run prior extraction and second pass denoising
+    //     //// group priors for each read file
+    //     /// forward reads
+    //     DENOISE1_F.out.seq
+    //         .map { direction, pcr_primers, fcid, meta, reads, priors ->
+    //                 [ direction, pcr_primers, fcid, priors ] }
+    //         .groupTuple ( by: [0,1,2] )
+    //         .set { ch_priors_f_pre }
 
-        /// reverse reads
-        DENOISE1_R.out.seq
-            .map { direction, pcr_primers, fcid, meta, reads, priors ->
-                    [ direction, pcr_primers, fcid, priors ] }
-            .groupTuple ( by: [0,1,2] )
-            .set { ch_priors_r_pre }
+    //     /// reverse reads
+    //     DENOISE1_R.out.seq
+    //         .map { direction, pcr_primers, fcid, meta, reads, priors ->
+    //                 [ direction, pcr_primers, fcid, priors ] }
+    //         .groupTuple ( by: [0,1,2] )
+    //         .set { ch_priors_r_pre }
 
-        //// get priors for forward reads
-        DADA_PRIORS_F ( ch_priors_f_pre )
+    //     //// get priors for forward reads
+    //     DADA_PRIORS_F ( ch_priors_f_pre )
         
-        /// combine with forward read data channel
-        ch_denoise_input_forward
-            .map { direction, pcr_primers, fcid, meta, reads, errormodel, priors -> // remove null priors
-                    [ direction, pcr_primers, fcid, meta, reads, errormodel ] }
-            .combine ( DADA_PRIORS_F.out.priors, by: [0,1,2] )
-            .set { ch_denoise2_input_forward }
+    //     /// combine with forward read data channel
+    //     ch_denoise_input_forward
+    //         .map { direction, pcr_primers, fcid, meta, reads, errormodel, priors -> // remove null priors
+    //                 [ direction, pcr_primers, fcid, meta, reads, errormodel ] }
+    //         .combine ( DADA_PRIORS_F.out.priors, by: [0,1,2] )
+    //         .set { ch_denoise2_input_forward }
 
-        //// get priors for reverse reads
-        DADA_PRIORS_R ( ch_priors_r_pre )
+    //     //// get priors for reverse reads
+    //     DADA_PRIORS_R ( ch_priors_r_pre )
 
-        /// combine with reverse read data channel
-        ch_denoise_input_reverse
-            .map { direction, pcr_primers, fcid, meta, reads, errormodel, priors -> // remove null priors
-                    [ direction, pcr_primers, fcid, meta, reads, errormodel ] }
-            .combine ( DADA_PRIORS_R.out.priors, by: [0,1,2] )
-            .set { ch_denoise2_input_reverse }
+    //     /// combine with reverse read data channel
+    //     ch_denoise_input_reverse
+    //         .map { direction, pcr_primers, fcid, meta, reads, errormodel, priors -> // remove null priors
+    //                 [ direction, pcr_primers, fcid, meta, reads, errormodel ] }
+    //         .combine ( DADA_PRIORS_R.out.priors, by: [0,1,2] )
+    //         .set { ch_denoise2_input_reverse }
 
-        //// run pseudo-pooled 2nd denoising with priors on forward reads
-        DENOISE2_F ( ch_denoise2_input_forward, "second" )
+    //     //// run pseudo-pooled 2nd denoising with priors on forward reads
+    //     DENOISE2_F ( ch_denoise2_input_forward, "second" )
 
-        //// run pseudo-pooled 2nd denoising with priors on reverse reads
-        DENOISE2_R ( ch_denoise2_input_reverse, "second" )
+    //     //// run pseudo-pooled 2nd denoising with priors on reverse reads
+    //     DENOISE2_R ( ch_denoise2_input_reverse, "second" )
 
-        /// join F and R denoise2 outputs
-        // prepare forward reads
-        DENOISE2_F.out.seq
-            .map { direction, pcr_primers, fcid, meta, readsF, seqF ->
-                    [ meta.sample_id, pcr_primers, fcid, meta, readsF, seqF ] }
-            .set { ch_seq_forward }
+    //     /// join F and R denoise2 outputs
+    //     // prepare forward reads
+    //     DENOISE2_F.out.seq
+    //         .map { direction, pcr_primers, fcid, meta, readsF, seqF ->
+    //                 [ meta.sample_id, pcr_primers, fcid, meta, readsF, seqF ] }
+    //         .set { ch_seq_forward }
 
-        // prepare reverse reads
-        DENOISE2_R.out.seq
-            .map { direction, pcr_primers, fcid, meta, readsR, seqR ->
-                    [ meta.sample_id, pcr_primers, fcid, meta, readsR, seqR ] }
-            .set { ch_seq_reverse }
+    //     // prepare reverse reads
+    //     DENOISE2_R.out.seq
+    //         .map { direction, pcr_primers, fcid, meta, readsR, seqR ->
+    //                 [ meta.sample_id, pcr_primers, fcid, meta, readsR, seqR ] }
+    //         .set { ch_seq_reverse }
 
-        // join
-        ch_seq_forward
-            .combine ( ch_seq_reverse, by: [0,1,2,3] ) // combine by sample_id
-            .map { sample_id, pcr_primers, fcid, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
-                    [ pcr_primers, fcid, meta.concat_unmerged, meta,
-                    file(readsF, checkIfExists: true),
-                    file(readsR, checkIfExists: true), 
-                    file(seqF, checkIfExists: true),
-                    file(seqR, checkIfExists: true) ] } 
-            .groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples, which it should be
-            .set { ch_seq_combined }
+    //     // join
+    //     ch_seq_forward
+    //         .combine ( ch_seq_reverse, by: [0,1,2,3] ) // combine by sample_id
+    //         .map { sample_id, pcr_primers, fcid, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
+    //                 [ pcr_primers, fcid, meta.concat_unmerged, meta,
+    //                 file(readsF, checkIfExists: true),
+    //                 file(readsR, checkIfExists: true), 
+    //                 file(seqF, checkIfExists: true),
+    //                 file(seqR, checkIfExists: true) ] } 
+    //         .groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples, which it should be
+    //         .set { ch_seq_combined }
 
-    } else { // don't run second denoising step with priors
-        /// join F and R DENOISE1 outputs
-        // prepare forward reads
-        DENOISE1_F.out.seq
-            .map { direction, pcr_primers, fcid, meta, readsF, seqF ->
-                    [ meta.sample_id, pcr_primers, fcid, meta, readsF, seqF ] }
-            .set { ch_seq_forward }
+    // } else { // don't run second denoising step with priors
+    //     /// join F and R DENOISE1 outputs
+    //     // prepare forward reads
+    //     DENOISE1_F.out.seq
+    //         .map { direction, pcr_primers, fcid, meta, readsF, seqF ->
+    //                 [ meta.sample_id, pcr_primers, fcid, meta, readsF, seqF ] }
+    //         .set { ch_seq_forward }
 
-        // prepare reverse reads
-        DENOISE1_R.out.seq
-            .map { direction, pcr_primers, fcid, meta, readsR, seqR ->
-                    [ meta.sample_id, pcr_primers, fcid, meta, readsR, seqR ] }
-            .set { ch_seq_reverse }
+    //     // prepare reverse reads
+    //     DENOISE1_R.out.seq
+    //         .map { direction, pcr_primers, fcid, meta, readsR, seqR ->
+    //                 [ meta.sample_id, pcr_primers, fcid, meta, readsR, seqR ] }
+    //         .set { ch_seq_reverse }
 
-        // join
-        ch_seq_forward
-            .combine ( ch_seq_reverse, by: [0,1,2,3] ) // combine by sample_id
-            .map { sample_id, pcr_primers, fcid, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
-                    [ pcr_primers, fcid, meta.concat_unmerged, meta,
-                    file(readsF, checkIfExists: true),
-                    file(readsR, checkIfExists: true), 
-                    file(seqF, checkIfExists: true),
-                    file(seqR, checkIfExists: true) ] } 
-            .groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples
-            .set { ch_seq_combined }
-    }
+    //     // join
+    //     ch_seq_forward
+    //         .combine ( ch_seq_reverse, by: [0,1,2,3] ) // combine by sample_id
+    //         .map { sample_id, pcr_primers, fcid, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
+    //                 [ pcr_primers, fcid, meta.concat_unmerged, meta,
+    //                 file(readsF, checkIfExists: true),
+    //                 file(readsR, checkIfExists: true), 
+    //                 file(seqF, checkIfExists: true),
+    //                 file(seqR, checkIfExists: true) ] } 
+    //         .groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples
+    //         .set { ch_seq_combined }
+    // }
 
-    //// merge paired-end reads per flowcell x locus combo
-    DADA_MERGEREADS ( ch_seq_combined )
-    ch_read_tracker_grouped = 
-        ch_read_tracker_grouped.concat(DADA_MERGEREADS.out.read_tracking)
+    // //// merge paired-end reads per flowcell x locus combo
+    // DADA_MERGEREADS ( ch_seq_combined )
+    // ch_read_tracker_grouped = 
+    //     ch_read_tracker_grouped.concat(DADA_MERGEREADS.out.read_tracking)
 
-    //// filter sequence table
-    FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
-    ch_read_tracker_grouped = 
-        ch_read_tracker_grouped.concat(FILTER_SEQTAB.out.read_tracking)
+    // //// filter sequence table
+    // FILTER_SEQTAB ( DADA_MERGEREADS.out.seqtab )
+    // ch_read_tracker_grouped = 
+    //     ch_read_tracker_grouped.concat(FILTER_SEQTAB.out.read_tracking)
 
-    ch_seqtab = 
-        FILTER_SEQTAB.out.seqtab
-        .map { pcr_primers, fcid, meta, seqtab -> // remove meta
-            [ pcr_primers, fcid, seqtab ] }
+    // ch_seqtab = 
+    //     FILTER_SEQTAB.out.seqtab
+    //     .map { pcr_primers, fcid, meta, seqtab -> // remove meta
+    //         [ pcr_primers, fcid, seqtab ] }
 
-    //// use IDTAXA to assign taxonomy
-    TAX_IDTAXA ( FILTER_SEQTAB.out.seqtab )
-    ch_tax_idtaxa_tax = 
-        TAX_IDTAXA.out.tax
-        .map { pcr_primers, fcid, meta, tax -> // remove meta
-            [ pcr_primers, fcid, tax ] }
+    // //// use IDTAXA to assign taxonomy
+    // TAX_IDTAXA ( FILTER_SEQTAB.out.seqtab )
+    // ch_tax_idtaxa_tax = 
+    //     TAX_IDTAXA.out.tax
+    //     .map { pcr_primers, fcid, meta, tax -> // remove meta
+    //         [ pcr_primers, fcid, tax ] }
 
-    ch_tax_idtaxa_ids = 
-        TAX_IDTAXA.out.ids 
-        .map { pcr_primers, fcid, meta, ids -> // remove meta
-            [ pcr_primers, fcid, ids ] }
+    // ch_tax_idtaxa_ids = 
+    //     TAX_IDTAXA.out.ids 
+    //     .map { pcr_primers, fcid, meta, ids -> // remove meta
+    //         [ pcr_primers, fcid, ids ] }
 
-    //// use blastn to assign taxonomy
-    TAX_BLAST ( FILTER_SEQTAB.out.seqtab )
+    // //// use blastn to assign taxonomy
+    // TAX_BLAST ( FILTER_SEQTAB.out.seqtab )
 
-    ch_tax_blast = 
-        TAX_BLAST.out.blast
-        .map { pcr_primers, fcid, meta, blast -> // remove meta
-            [ pcr_primers, fcid, blast ] }
+    // ch_tax_blast = 
+    //     TAX_BLAST.out.blast
+    //     .map { pcr_primers, fcid, meta, blast -> // remove meta
+    //         [ pcr_primers, fcid, blast ] }
 
-    //// merge tax assignment outputs and filtered seqtab (pre-assignment)
-    ch_tax_idtaxa_tax
-        .combine ( ch_tax_blast, by: [0,1] ) 
-        .combine ( ch_seqtab, by: [0,1] )
-        .combine ( ch_loci_params, by: 0 ) // adds map of loci_params
-        .set { ch_joint_tax_input } // pcr_primers, fcid, tax, blast, seqtab, loci_params
+    // //// merge tax assignment outputs and filtered seqtab (pre-assignment)
+    // ch_tax_idtaxa_tax
+    //     .combine ( ch_tax_blast, by: [0,1] ) 
+    //     .combine ( ch_seqtab, by: [0,1] )
+    //     .combine ( ch_loci_params, by: 0 ) // adds map of loci_params
+    //     .set { ch_joint_tax_input } // pcr_primers, fcid, tax, blast, seqtab, loci_params
 
-    // ch_joint_tax_input.view()
+    // // ch_joint_tax_input.view()
 
-    //// aggregate taxonomic assignment
-    JOINT_TAX ( ch_joint_tax_input )
+    // //// aggregate taxonomic assignment
+    // JOINT_TAX ( ch_joint_tax_input )
 
-    //// group taxtab across flowcells (per locus)
-    JOINT_TAX.out.taxtab
-        .groupTuple ( by: 0 ) // group into tuples using pcr_primers
-        .set { ch_mergetax_input }
+    // //// group taxtab across flowcells (per locus)
+    // JOINT_TAX.out.taxtab
+    //     .groupTuple ( by: 0 ) // group into tuples using pcr_primers
+    //     .set { ch_mergetax_input }
 
-    //// merge tax tables across flowcells
-    MERGE_TAX ( ch_mergetax_input )
+    // //// merge tax tables across flowcells
+    // MERGE_TAX ( ch_mergetax_input )
 
-    //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
-    /// channel has one item per fcid x pcr_primer combo
-    ch_seqtab
-        .combine ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by pcr_primers, fcid 
-        .combine ( JOINT_TAX.out.taxtab, by: [0,1] ) // combine by pcr_primers, fcid
-        .combine ( ch_loci_params, by: 0 ) // add loci info (TODO: use ch_loci_params [stripped down] instead)
-        .set { ch_assignment_plot_input }
+    // //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
+    // /// channel has one item per fcid x pcr_primer combo
+    // ch_seqtab
+    //     .combine ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by pcr_primers, fcid 
+    //     .combine ( JOINT_TAX.out.taxtab, by: [0,1] ) // combine by pcr_primers, fcid
+    //     .combine ( ch_loci_params, by: 0 ) // add loci info (TODO: use ch_loci_params [stripped down] instead)
+    //     .set { ch_assignment_plot_input }
         
-    //// do assignment plot
-    ASSIGNMENT_PLOT ( ch_assignment_plot_input )
+    // //// do assignment plot
+    // ASSIGNMENT_PLOT ( ch_assignment_plot_input )
 
-    /// generate taxonomic assignment summary per locus (also hash seq)
-    ch_tax_idtaxa_tax // pcr_primers, fcid, "*_idtaxa_tax.rds"
-        .combine ( ch_tax_idtaxa_ids, by: [0,1] ) // + "*_idtaxa_ids.rds"
-        .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + "*_joint.rds", map(loci_params)
-        .set { ch_tax_summary_input }
+    // /// generate taxonomic assignment summary per locus (also hash seq)
+    // ch_tax_idtaxa_tax // pcr_primers, fcid, "*_idtaxa_tax.rds"
+    //     .combine ( ch_tax_idtaxa_ids, by: [0,1] ) // + "*_idtaxa_ids.rds"
+    //     .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + "*_joint.rds", map(loci_params)
+    //     .set { ch_tax_summary_input }
 
-    //// create taxonomic assignment summaries per locus x flowcell
-    TAX_SUMMARY ( ch_tax_summary_input )
+    // //// create taxonomic assignment summaries per locus x flowcell
+    // TAX_SUMMARY ( ch_tax_summary_input )
 
-    // create channel containing a single list of all TAX_SUMMARY outputs
-    TAX_SUMMARY.out.rds
-        .map { pcr_primers, fcid, loci_params, tax_summary ->
-            [ tax_summary ] } 
-        .collect()
-        .set { ch_tax_summaries } 
+    // // create channel containing a single list of all TAX_SUMMARY outputs
+    // TAX_SUMMARY.out.rds
+    //     .map { pcr_primers, fcid, loci_params, tax_summary ->
+    //         [ tax_summary ] } 
+    //     .collect()
+    //     .set { ch_tax_summaries } 
 
-    //// merge TAX_SUMMARY outputs together across loci and flow cells
-    TAX_SUMMARY_MERGE ( ch_tax_summaries )
+    // //// merge TAX_SUMMARY outputs together across loci and flow cells
+    // TAX_SUMMARY_MERGE ( ch_tax_summaries )
     
-    //// inputs for PHYLOSEQ_UNFILTERED
-    ch_taxtables_locus = 
-        MERGE_TAX.out.merged_tax // pcr_primers, path("*_merged_tax.rds")
+    // //// inputs for PHYLOSEQ_UNFILTERED
+    // ch_taxtables_locus = 
+    //     MERGE_TAX.out.merged_tax // pcr_primers, path("*_merged_tax.rds")
 
-    ch_seqtables_locus = 
-        ch_seqtab
-        .map { pcr_primers, fcid, seqtab -> [ pcr_primers, seqtab ] } // remove fcid field
-        .groupTuple ( by: 0 ) // group seqtabs into lists per locus
+    // ch_seqtables_locus = 
+    //     ch_seqtab
+    //     .map { pcr_primers, fcid, seqtab -> [ pcr_primers, seqtab ] } // remove fcid field
+    //     .groupTuple ( by: 0 ) // group seqtabs into lists per locus
     
-    // combine taxtables, seqtables and parameters
-    ch_taxtables_locus
-        // .dump(tag: '1')
-        .combine ( ch_seqtables_locus, by: 0 )
-        // .dump(tag: '2')
-        .combine ( ch_loci_samdf, by: 0 )
-        // .dump(tag: '3')
-        .combine ( ch_loci_params, by: 0 )
-        // .dump(tag: '4')
-        .set { ch_phyloseq_input }
+    // // combine taxtables, seqtables and parameters
+    // ch_taxtables_locus
+    //     // .dump(tag: '1')
+    //     .combine ( ch_seqtables_locus, by: 0 )
+    //     // .dump(tag: '2')
+    //     .combine ( ch_loci_samdf, by: 0 )
+    //     // .dump(tag: '3')
+    //     .combine ( ch_loci_params, by: 0 )
+    //     // .dump(tag: '4')
+    //     .set { ch_phyloseq_input }
 
     
-    //// create phyloseq objects per locus; output unfiltered summary tables and accumulation curve plot
-    PHYLOSEQ_UNFILTERED ( ch_phyloseq_input )
+    // //// create phyloseq objects per locus; output unfiltered summary tables and accumulation curve plot
+    // PHYLOSEQ_UNFILTERED ( ch_phyloseq_input )
 
-    //// apply taxonomic and minimum abundance filtering per locus (from loci_params), then combine to output filtered summary tables
-    PHYLOSEQ_FILTER ( PHYLOSEQ_UNFILTERED.out.ps )
+    // //// apply taxonomic and minimum abundance filtering per locus (from loci_params), then combine to output filtered summary tables
+    // PHYLOSEQ_FILTER ( PHYLOSEQ_UNFILTERED.out.ps )
 
-    //// combine phyloseq outputs to merge across loci
-    PHYLOSEQ_UNFILTERED.out.ps // val(pcr_primers), path("ps_unfiltered_*.rds"), val(loci_params)
-        .map { pcr_primers, ps, loci_params ->
-            [ ps ] }
-        .collect()
-        .set { ch_ps_unfiltered }
+    // //// combine phyloseq outputs to merge across loci
+    // PHYLOSEQ_UNFILTERED.out.ps // val(pcr_primers), path("ps_unfiltered_*.rds"), val(loci_params)
+    //     .map { pcr_primers, ps, loci_params ->
+    //         [ ps ] }
+    //     .collect()
+    //     .set { ch_ps_unfiltered }
 
-    PHYLOSEQ_FILTER.out.ps // val(pcr_primers), path("ps_filtered_*.rds"), val(loci_params)
-        .map { pcr_primers, ps, loci_params ->
-            [ ps ] }
-        .collect()
-        .set { ch_ps_filtered }
+    // PHYLOSEQ_FILTER.out.ps // val(pcr_primers), path("ps_filtered_*.rds"), val(loci_params)
+    //     .map { pcr_primers, ps, loci_params ->
+    //         [ ps ] }
+    //     .collect()
+    //     .set { ch_ps_filtered }
 
-    PHYLOSEQ_MERGE ( 
-        ch_ps_unfiltered, 
-        ch_ps_filtered 
-        )
-    ch_read_tracker_grouped = 
-        ch_read_tracker_grouped
-        .concat( PHYLOSEQ_MERGE.out.read_tracking.flatten() ) 
-        .collect()
+    // PHYLOSEQ_MERGE ( 
+    //     ch_ps_unfiltered, 
+    //     ch_ps_filtered 
+    //     )
+    // ch_read_tracker_grouped = 
+    //     ch_read_tracker_grouped
+    //     .concat( PHYLOSEQ_MERGE.out.read_tracking.flatten() ) 
+    //     .collect()
 
-    //// track reads and sequences across the pipeline
-    // collect channel files into lists
-    ch_read_tracker_samples = 
-        ch_read_tracker_samples.collect()
+    // //// track reads and sequences across the pipeline
+    // // collect channel files into lists
+    // ch_read_tracker_samples = 
+    //     ch_read_tracker_samples.collect()
 
-    READ_TRACKING ( 
-        ch_read_tracker_samples, 
-        ch_read_tracker_grouped 
-        )
+    // READ_TRACKING ( 
+    //     ch_read_tracker_samples, 
+    //     ch_read_tracker_grouped 
+    //     )
 
 
     ///// VISUALISATION

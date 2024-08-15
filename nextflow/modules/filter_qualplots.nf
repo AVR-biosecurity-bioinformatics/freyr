@@ -6,6 +6,9 @@ process FILTER_QUALPLOTS {
 
     input:
     tuple val(meta), path(reads)
+    val(seq_type)
+    val(paired)
+    val(file_suffix)
 
     output:   
     path("*_qualplots.pdf")                 , emit: plots, optional: true
@@ -16,17 +19,21 @@ process FILTER_QUALPLOTS {
 
     script:
     def module_script = "${module_name}.R"
+
+    def reads_paths = reads.join(";") // concatenate reads into a single string
     """
     #!/usr/bin/env Rscript
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    fwd_reads =         "${reads[0]}"
-    rev_reads =         "${reads[1]}"
+    reads_paths =       "${reads_paths}"
     sample_id =         "${meta.sample_id}"
     fcid =              "${meta.fcid}"
     target_gene =       "${meta.target_gene}"
     pcr_primers =       "${meta.pcr_primers}"
+    seq_type =          "${seq_type}"
+    paired =            "${paired}"
+    file_suffix =       "${file_suffix}"
     
     ## global variables
     projectDir = "$projectDir"

@@ -4,7 +4,7 @@
 
 
 //// modules to import
-include { SEQ_QC                                    } from '../modules/seq_qc'
+include { MISEQ_QC                                  } from '../modules/miseq_qc'
 include { SPLIT_LOCI                                } from '../modules/split_loci'
 include { PRIMER_TRIM                               } from '../modules/primer_trim'
 include { READ_FILTER                               } from '../modules/read_filter' 
@@ -16,8 +16,7 @@ workflow PROCESS_READS {
     take:
     ch_sample_locus_reads
     seq_type 
-    pair_type
-    miseq_internal
+    paired
     ch_fcid
 
 
@@ -26,37 +25,55 @@ workflow PROCESS_READS {
     //// create empty channels
     ch_read_tracker_samples =   // read-tracking for sample-level processes; card: path(.csv)
         Channel.empty()  
+    ch_processed_reads = 
+        Channel.empty()
+    ch_error_input_fwd =
+        Channel.empty()
+    ch_error_input_rev =
+        Channel.empty()
+    ch_error_input_single =
+        Channel.empty()
 
 
     //// run SEQ_QC per flow cell if data is internal MiSeq
-    if ( miseq_internal == "true" ) {
-        SEQ_QC ( ch_fcid ) 
+    if ( params.miseq_internal == true ) {
+        MISEQ_QC ( ch_fcid ) 
         }
 
     //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( 
         ch_sample_locus_reads,
         seq_type,
-        pair_type
+        paired
         ) 
 
     //// trim primer sequences from the start and end of reads
     PRIMER_TRIM ( 
-        SPLIT_LOCI.out.reads 
+        SPLIT_LOCI.out.reads,
+        seq_type,
+        paired 
         )
 
     //// filter reads using dada2 and input parameters
     READ_FILTER ( 
-        PRIMER_TRIM.out.reads 
+        PRIMER_TRIM.out.reads,
+        seq_type,
+        paired
         )
 
     //// create plots of read quality pre- and post-filtering, per flowcell (optional)
     FILTER_QUALPLOTS_PRE ( 
-        PRIMER_TRIM.out.reads 
+        PRIMER_TRIM.out.reads,
+        seq_type,
+        paired,
+        "pre"
         )
 
     FILTER_QUALPLOTS_POST ( 
-        READ_FILTER.out.reads 
+        READ_FILTER.out.reads,
+        seq_type,
+        paired,
+        "post"
         )
 
     //// concat read_tracker outputs
@@ -67,23 +84,38 @@ workflow PROCESS_READS {
         .concat( READ_FILTER.out.read_tracking )
         .set { ch_read_tracker_samples }
 
-    ///// split filtered reads into lists of reads per flowcell, primers and direction
-    //// forward read channel
-    READ_FILTER.out.reads
-        .map { meta, reads -> 
-                [ "forward", meta.pcr_primers, meta.fcid, reads[0] ] }
-        .groupTuple( by: [0,1,2] )
-        .set { ch_error_input_fwd }
+    /// split filtered reads into lists of reads per flowcell, primers and direction
 
-    //// reverse read channel
-    READ_FILTER.out.reads
-        .map { meta, reads -> 
-                [ "reverse", meta.pcr_primers, meta.fcid, reads[1] ] }
-        .groupTuple ( by: [0,1,2] )
-        .set { ch_error_input_rev }
+    if ( params.paired == true ) {
+        // forward read channel
+        READ_FILTER.out.reads
+            .map { meta, reads -> 
+                    [ "forward", meta.pcr_primers, meta.fcid, reads[0] ] }
+            .groupTuple( by: [0,1,2] )
+            .set { ch_error_input_fwd }
 
+        //// reverse read channel
+        READ_FILTER.out.reads
+            .map { meta, reads -> 
+                    [ "reverse", meta.pcr_primers, meta.fcid, reads[1] ] }
+            .groupTuple ( by: [0,1,2] )
+            .set { ch_error_input_rev }
 
-    processed_reads = READ_FILTER.out.reads
+    } else if ( params.paired == false ) {
+        READ_FILTER.out.reads
+            .map { meta, reads -> 
+                    [ "single", meta.pcr_primers, meta.fcid, reads ] }
+            .groupTuple ( by: [0,1,2] )
+            .set { ch_error_input_single }
+    } else {
+        error ("Disallowed 'params.paired' value")
+    }
+
+    ch_processed_reads
+        .concat (ch_error_input_fwd)
+        .concat (ch_error_input_rev)
+        .concat (ch_error_input_single)
+        .set { processed_reads }
 
 
     emit:

@@ -15,30 +15,41 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "fwd_reads",
-    "rev_reads",
+    "reads_paths",
     "sample_id",
     "fcid",
     "target_gene",
-    "pcr_primers"
+    "pcr_primers",
+    "seq_type",
+    "paired",
+    "file_suffix"
 )
 lapply(nf_vars, nf_var_check)
 
+### process variables 
+# split reads_paths into individual file paths (or keep if single reads)
+if ( paired == "true" ) {
+    reads_paths_vec <- reads_paths %>% stringr::str_split_1(";")
+    fwd_reads <- reads_paths_vec[1]
+    rev_reads <- reads_paths_vec[2]
+} else if ( paired == "false" ) {
+   single_reads <- reads_paths
+} else {
+    stop ( "'paired' must be 'true' or 'false'!" )
+}
+
+truncLen <- NULL
+quiet <- FALSE
+n_reads <- 1000
 
 ### run R code
 
-plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene, pcr_primers, truncLen = NULL, quiet=FALSE, n_reads = 10000){
+if ( paired == "true" & seq_type == "illumina" ){
+
+    ### paired-end reads
+    
     fastqFs <- normalizePath(fwd_reads)
     fastqRs <- normalizePath(rev_reads)
-    
-    if (stringr::str_detect(fwd_reads, pattern = "_trim_R")) {
-        file_suffix <- "pre"
-    } else if (stringr::str_detect(fwd_reads, pattern = "_filter_R")) {
-        file_suffix <- "post"
-        } else { 
-            stop("*** File names don't make it clear if reads are pre- or post-filtering! ***") 
-            }
-
 
     if(length(fastqFs) == 0 ){
         message(paste0("Sample ", fwd_reads, " Has no reads"))
@@ -144,21 +155,14 @@ plot_read_quals2 <- function(sample_id, fwd_reads, rev_reads, fcid, target_gene,
 
     ggsave(paste0(sample_id,"_",target_gene,"_",pcr_primers,"_",file_suffix,"_qualplots.pdf"), Qualplots, width = 11, height = 8)
 
-    return(Qualplots)
+} else if ( paired == "false" & seq_type == "nanopore" ) {
+
+    ### single-end Nanopore reads
+
+} else {
+    stop ( "Currently unsupported sequencing type -- check samplesheet" )
 }
 
-plot_read_quals2(
-    sample_id =     sample_id, 
-    fwd_reads =     fwd_reads, 
-    rev_reads =     rev_reads, 
-    fcid =          fcid,
-    target_gene =   target_gene,
-    pcr_primers =   pcr_primers, 
-    truncLen = NULL, 
-    quiet=FALSE, 
-    n = 1000
-)
-
-### TODO: Increase "n" to 10000 in final pipeline
+### TODO: Increase "n_reads" to 10000 in final pipeline
 
 # stop(" *** stopped manually *** ") ##########################################

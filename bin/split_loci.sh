@@ -55,7 +55,7 @@ REV_PRIMER_RC=$(echo ${REV_PRIMER} | \
 
 if [ $PAIRED == "true" ]; then 
 
-    ### paired-end trimming
+    ### paired-end splitting
 
     ## retain reads that contain primer sequence
     cutadapt \
@@ -122,7 +122,7 @@ elif [ $PAIRED == "false" ]; then
         --report=minimal \
         --discard-untrimmed \
         --rename="{header}" \
-        -a ${FWD_PRIMER}..${REV_PRIMER_RC} \
+        -a ${FWD_PRIMER}...${REV_PRIMER_RC} \
         --revcomp \
         -o ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_R0.fastq.gz \
         $SINGLE_READS 
