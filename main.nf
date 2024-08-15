@@ -20,12 +20,6 @@ include { validateParameters; paramsHelp; paramsSummaryLog; samplesheetToList } 
 // 
 // from https://github.com/nextflow-io/nextflow/issues/1129
 
-if( !nextflow.version.matches('=23.04.5') ) {
-    println " "
-    println "*** ERROR ~ This pipeline currently requires Nextflow version 23.04.5 -- You are running version ${nextflow.version}. ***"
-    error "*** You can use version 23.04.5 by appending 'NXF_VER=23.04.5' to the front of the 'nextflow run' command. ***"
-}
-
 def startupMessage() {
     log.info pipelineHeader()
     log.info "~~~ freyr: Metabarcoding analysis for biosecurity and biosurveillance ~~~"
@@ -79,6 +73,11 @@ if (params.subsample) {
     log.info "*** NOTE: Input samples are being randomly subsampled to $params.subsample per primer x flowcell combination (params.subsample = $params.subsample) ***"
 }
 
+if( !nextflow.version.matches('=23.04.5') ) {
+    println " "
+    println "*** ERROR ~ This pipeline currently requires Nextflow version 23.04.5 -- You are running version ${nextflow.version}. ***"
+    error "*** You can use version 23.04.5 by appending 'NXF_VER=23.04.5' to the front of the 'nextflow run' command. ***"
+}
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,6 +110,8 @@ if (params.subsample) {
     IMPORT LOCAL MODULES/SUBWORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+
+//// import modules
 
 include { PARSE_INPUTS                              } from './nextflow/modules/parse_inputs'
 // include { PARAMETER_SETUP                           } from './nextflow/modules/parameter_setup'
@@ -146,6 +147,10 @@ include { READ_TRACKING                             } from './nextflow/modules/r
 include { STOP                                      } from './nextflow/modules/stop'
 
 
+//// import subworkflows
+include { PROCESS_READS                             } from './nextflow/subworkflows/process_reads'
+
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT NF-CORE MODULES/SUBWORKFLOWS
@@ -160,7 +165,7 @@ include { STOP                                      } from './nextflow/modules/s
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    RUN MAIN WORKFLOW
+    DEFINE AND RUN MAIN WORKFLOW
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -173,13 +178,13 @@ workflow FREYR {
     } else if ( params.seq_type == "nanopore" & !params.paired ) {
         ch_reads_type = params.seq_type
     } else if ( params.illumina & !params.paired ) {
-        error ( "Illumina single-end reads are currently not supported: check --seq_type and --paired" )
+        error "Illumina single-end reads are currently not supported: check --seq_type and --paired" 
     } else if ( params.seq_type == "nanopore" & params.paired ) {
-        error ( "Nanopore reads cannot be paired end: check --seq_type and --paired" )
+        error "Nanopore reads cannot be paired-end: check --seq_type and --paired" 
     } else if ( params.seq_type == "pacbio" ) {
-        error ( "PacBio reads are currently not supported: check --seq_type" )
+        error "PacBio reads are currently not supported: check --seq_type" 
     } else { 
-        error ("Disallowed combination of --seq_type and --paired") 
+        error "Disallowed combination of --seq_type and --paired"
     }
 
     //// read-in samplesheet and loci_params .csv files, validate their contents, and produce inputs for rest of pipeline
@@ -192,6 +197,12 @@ workflow FREYR {
         Channel.empty()  
     ch_read_tracker_grouped =   // read-tracking for grouped processes
         Channel.empty()      
+    ch_processed_reads_forward = 
+        Channel.empty()
+    ch_processed_reads_reverse = 
+        Channel.empty()
+    ch_processed_reads_single = 
+        Channel.empty()
 
 
     //// input samplesheet and loci parameters
@@ -288,68 +299,97 @@ workflow FREYR {
         .set { ch_loci_params } // cardinality: pcr_primers, map(all params, incl. pcr_primers)
 
 
-    // run SEQ_QC per flow cell 
-    if ( params.miseq_internal ) {
-        SEQ_QC ( ch_fcid ) 
-    }
+    //// subworkflow: process sequencing reads
+    PROCESS_READS (
+        ch_sample_locus_reads,
+        params.seq_type,
+        params.paired,
+        params.miseq_internal,
+        ch_fcid
+        )
 
-    //// split sample reads by locus (based on primer seq.)
-    SPLIT_LOCI ( ch_sample_locus_reads ) 
 
-    // STOP ( SPLIT_LOCI.out.reads[1] ) // stop pipeline
+    // // run SEQ_QC per flow cell 
+    // if ( params.miseq_internal ) {
+    //     SEQ_QC ( ch_fcid ) 
+    //     }
 
-    ch_read_tracker_samples = 
-        ch_read_tracker_samples.concat( SPLIT_LOCI.out.input_counts )
+    // //// split sample reads by locus (based on primer seq.)
+    // SPLIT_LOCI ( ch_sample_locus_reads ) 
+
+    // // STOP ( SPLIT_LOCI.out.reads[1] ) // stop pipeline
+
+    // ch_read_tracker_samples = 
+    //     ch_read_tracker_samples.concat( SPLIT_LOCI.out.input_counts )
     
-    ch_read_tracker_samples = 
-        ch_read_tracker_samples.concat( SPLIT_LOCI.out.read_tracking )
+    // ch_read_tracker_samples = 
+    //     ch_read_tracker_samples.concat( SPLIT_LOCI.out.read_tracking )
 
-    //// trim primer sequences from the start and end of reads
-    PRIMER_TRIM ( SPLIT_LOCI.out.reads )
+    // //// trim primer sequences from the start and end of reads
+    // PRIMER_TRIM ( SPLIT_LOCI.out.reads )
     
-    ch_read_tracker_samples = 
-        ch_read_tracker_samples.concat( PRIMER_TRIM.out.read_tracking )
+    // ch_read_tracker_samples = 
+    //     ch_read_tracker_samples.concat( PRIMER_TRIM.out.read_tracking )
 
-    //// filter reads using dada2 and input parameters
-    READ_FILTER ( PRIMER_TRIM.out.reads )
+    // //// filter reads using dada2 and input parameters
+    // READ_FILTER ( PRIMER_TRIM.out.reads )
     
-    ch_read_tracker_samples = 
-        ch_read_tracker_samples.concat( READ_FILTER.out.read_tracking )
+    // ch_read_tracker_samples = 
+    //     ch_read_tracker_samples.concat( READ_FILTER.out.read_tracking )
 
-    //// create plots of read quality pre- and post-filtering, per flowcell (optional)
-    FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
+    // //// create plots of read quality pre- and post-filtering, per flowcell (optional)
+    // FILTER_QUALPLOTS_PRE ( PRIMER_TRIM.out.reads )
 
-    FILTER_QUALPLOTS_POST ( READ_FILTER.out.reads )
+    // FILTER_QUALPLOTS_POST ( READ_FILTER.out.reads )
 
-    /// TODO: Use FILTER_QUALPLOTS_COMBINE to combine plots by fcid and type into one PDF
+    // /// TODO: Use FILTER_QUALPLOTS_COMBINE to combine plots by fcid and type into one PDF
 
 
-    ///// split filtered reads into lists of reads per flowcell, primers and direction
-    //// forward read channel
-    READ_FILTER.out.reads
-        .map { meta, reads -> 
-                [ "forward", meta.pcr_primers, meta.fcid, reads[0] ] }
-        .groupTuple( by: [0,1,2] )
-        .set { ch_error_input_fwd }
+    // ///// split filtered reads into lists of reads per flowcell, primers and direction
+    // //// forward read channel
+    // READ_FILTER.out.reads
+    //     .map { meta, reads -> 
+    //             [ "forward", meta.pcr_primers, meta.fcid, reads[0] ] }
+    //     .groupTuple( by: [0,1,2] )
+    //     .set { ch_error_input_fwd }
 
-    //// reverse read channel
-    READ_FILTER.out.reads
-        .map { meta, reads -> 
-                [ "reverse", meta.pcr_primers, meta.fcid, reads[1] ] }
-        .groupTuple ( by: [0,1,2] )
-        .set { ch_error_input_rev }
+    // //// reverse read channel
+    // READ_FILTER.out.reads
+    //     .map { meta, reads -> 
+    //             [ "reverse", meta.pcr_primers, meta.fcid, reads[1] ] }
+    //     .groupTuple ( by: [0,1,2] )
+    //     .set { ch_error_input_rev }
+
+    //// populate processed read channels
+    PROCESS_READS.out.processed_reads
+        .branch { direction, pcr_primers, fcid, reads ->
+            forward: direction == "forward"
+            reverse: direction == "reverse"
+            single: direction == "single"
+            }
+        .set { ch_processed_reads }
+
+    ch_processed_reads_forward
+        .concat ( ch_processed_reads.forward )
+        .set { ch_processed_reads_forward }
+    
+    ch_processed_reads_reverse
+        .concat ( ch_processed_reads.reverse )
+        .set { ch_processed_reads_reverse }
+
+    ch_processed_reads_single
+        .concat ( ch_processed_reads.single )
+        .set { ch_processed_reads_single }
 
 
     //// error model on forward reads
-    ERROR_MODEL_F ( ch_error_input_fwd )
+    ERROR_MODEL_F ( ch_processed_reads_forward )
 
     //// error model on reverse reads
-    ERROR_MODEL_R ( ch_error_input_rev )
+    ERROR_MODEL_R ( ch_processed_reads_reverse )
 
     //// input channel for denoising forward reads
-    READ_FILTER.out.reads
-        .map { meta, reads -> 
-                [ "forward", meta.pcr_primers, meta.fcid, meta, reads[0] ] }
+    ch_processed_reads_forward
         .combine ( ERROR_MODEL_F.out.errormodel, by: [0,1,2] ) // combine with error model
         .map { direction, pcr_primers, fcid, meta, reads, errormodel -> // add empty file path for priors
                 [ direction, pcr_primers, fcid, meta, reads, errormodel, "$projectDir/assets/NO_FILE" ] }
@@ -358,9 +398,7 @@ workflow FREYR {
     // ch_denoise_input_forward .view ()
 
     //// input channel for denoising reverse reads
-    READ_FILTER.out.reads
-        .map { meta, reads -> 
-                [ "reverse", meta.pcr_primers, meta.fcid, meta, reads[1] ] }
+    ch_processed_reads_reverse
         .combine ( ERROR_MODEL_R.out.errormodel, by: [0,1,2] ) // combine with error model
         .map { direction, pcr_primers, fcid, meta, reads, errormodel -> // add empty file path for priors
                 [ direction, pcr_primers, fcid, meta, reads, errormodel, "$projectDir/assets/NO_FILE" ] }

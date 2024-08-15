@@ -9,7 +9,7 @@ process PRIMER_TRIM {
     tuple val(meta), path(reads)
 
     output:   
-    tuple val(meta), path("*_trim_R{1,2}.fastq.gz"),    emit: reads
+    tuple val(meta), path("*_trim_R{0,1,2}.fastq.gz"),    emit: reads
     path("*_readsout.csv"),                             emit: read_tracking
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
@@ -18,13 +18,14 @@ process PRIMER_TRIM {
 
     script:
     def module_script = "${module_name}.sh"
+
+    def reads_paths = reads.join(";") // concatenate reads into a single string
     """
     #!/bin/bash
 
     ### run module code
     bash ${module_name}.sh \
-        ${reads[0]} \
-        ${reads[1]} \
+        ${reads_paths} \
         ${meta.for_primer_seq} \
         ${meta.rev_primer_seq} \
         ${meta.pcr_primers} \
