@@ -68,12 +68,14 @@ workflow TAXONOMY {
     //// merge tax tables across flowcells
     MERGE_TAX ( ch_mergetax_input )
 
+    ch_mergetax_output = MERGE_TAX.out.merged_tax
+
     //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
     /// channel has one item per fcid x pcr_primer combo
     ch_seqtab
         .combine ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by pcr_primers, fcid 
         .combine ( JOINT_TAX.out.taxtab, by: [0,1] ) // combine by pcr_primers, fcid
-        .combine ( ch_loci_params, by: 0 ) // add loci info (TODO: use ch_loci_params [stripped down] instead)
+        .combine ( ch_loci_params, by: 0 ) // add loci info
         .set { ch_assignment_plot_input }
 
     //// do assignment plot
@@ -102,5 +104,7 @@ workflow TAXONOMY {
     emit:
 
     ch_tax_summaries
+    ch_mergetax_output
+    ch_seqtab
 
 }

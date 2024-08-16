@@ -124,14 +124,5 @@ workflow PROCESS_READS {
     ch_processed_reads
     ch_read_tracker_samples
 
-    /*
-    Need to emit:
-    - read tracking channel, concat per module (split, primer, filter)
-    - channel with inputs for ERROR_MODEL, but combined with first list element "forward", "reverse" or "single"
-        depending on `pair_type`; this can be branched later
-    */
-
-
-
 
 }

@@ -62,9 +62,15 @@ if (params.help) {
    exit 0
 }
 
+// check Nextflow version matches 23.04.5, due to incompatibility of higher versions with Shifter
+if( !nextflow.version.matches('=23.04.5') ) {
+    println " "
+    println "*** ERROR ~ This pipeline currently requires Nextflow version 23.04.5 -- You are running version ${nextflow.version}. ***"
+    error "*** You can use version 23.04.5 by appending 'NXF_VER=23.04.5' to the front of the 'nextflow run' command. ***"
+}
+
 // Validate input parameters using schema
 validateParameters( parameters_schema: 'nextflow_schema.json' )
-
 
 // Print summary of supplied parameters (that differ from defaults)
 log.info paramsSummaryLog(workflow)
@@ -73,11 +79,6 @@ if (params.subsample) {
     log.info "*** NOTE: Input samples are being randomly subsampled to $params.subsample per primer x flowcell combination (params.subsample = $params.subsample) ***"
 }
 
-if( !nextflow.version.matches('=23.04.5') ) {
-    println " "
-    println "*** ERROR ~ This pipeline currently requires Nextflow version 23.04.5 -- You are running version ${nextflow.version}. ***"
-    error "*** You can use version 23.04.5 by appending 'NXF_VER=23.04.5' to the front of the 'nextflow run' command. ***"
-}
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -117,35 +118,6 @@ include { DADA2                                     } from './nextflow/subworkfl
 include { TAXONOMY                                  } from './nextflow/subworkflows/taxonomy'
 include { RESULT_SUMMARIES                          } from './nextflow/subworkflows/result_summaries'
 
-//// import modules
-include { PARSE_INPUTS                              } from './nextflow/modules/parse_inputs'
-include { MISEQ_QC                                  } from './nextflow/modules/miseq_qc'
-include { SPLIT_LOCI                                } from './nextflow/modules/split_loci'
-include { PRIMER_TRIM                               } from './nextflow/modules/primer_trim'
-include { READ_FILTER                               } from './nextflow/modules/read_filter' 
-include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_PRE  } from './nextflow/modules/filter_qualplots'
-include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_POST } from './nextflow/modules/filter_qualplots'
-include { ERROR_MODEL as ERROR_MODEL_F              } from './nextflow/modules/error_model'
-include { ERROR_MODEL as ERROR_MODEL_R              } from './nextflow/modules/error_model'
-include { DENOISE as DENOISE1_F                     } from './nextflow/modules/denoise'
-include { DENOISE as DENOISE1_R                     } from './nextflow/modules/denoise'
-include { PRIORS as PRIORS_F                        } from './nextflow/modules/priors'
-include { PRIORS as PRIORS_R                        } from './nextflow/modules/priors'
-include { DENOISE as DENOISE2_F                     } from './nextflow/modules/denoise'
-include { DENOISE as DENOISE2_R                     } from './nextflow/modules/denoise'
-include { MAKE_SEQTAB_PAIRED                        } from './nextflow/modules/make_seqtab_paired'
-include { FILTER_SEQTAB                             } from './nextflow/modules/filter_seqtab'
-include { TAX_IDTAXA                                } from './nextflow/modules/tax_idtaxa'
-include { TAX_BLAST                                 } from './nextflow/modules/tax_blast'
-include { JOINT_TAX                                 } from './nextflow/modules/joint_tax'
-include { MERGE_TAX                                 } from './nextflow/modules/merge_tax'
-include { ASSIGNMENT_PLOT                           } from './nextflow/modules/assignment_plot'
-include { TAX_SUMMARY                               } from './nextflow/modules/tax_summary'
-include { TAX_SUMMARY_MERGE                         } from './nextflow/modules/tax_summary_merge'
-include { PHYLOSEQ_UNFILTERED                       } from './nextflow/modules/phyloseq_unfiltered'
-include { PHYLOSEQ_FILTER                           } from './nextflow/modules/phyloseq_filter'
-include { PHYLOSEQ_MERGE                            } from './nextflow/modules/phyloseq_merge'
-include { READ_TRACKING                             } from './nextflow/modules/read_tracking'
 
 // utility processes for development and debugging
 include { STOP                                      } from './nextflow/modules/stop'
@@ -305,62 +277,19 @@ workflow FREYR {
         DADA2.out.ch_seqtab_meta,
         ch_loci_params
     )
+
+
+    //// subworkflow: create result summaries
+    RESULT_SUMMARIES (
+        TAXONOMY.out.ch_tax_summaries,
+        TAXONOMY.out.ch_mergetax_output,
+        TAXONOMY.out.ch_seqtab,
+        ch_loci_samdf,
+        ch_loci_params,
+        PROCESS_READS.out.ch_read_tracker_samples,
+        DADA2.out.read_tracker_grouped
+    )
     
-    // //// inputs for PHYLOSEQ_UNFILTERED
-    // ch_taxtables_locus = 
-    //     MERGE_TAX.out.merged_tax // pcr_primers, path("*_merged_tax.rds")
-
-    // ch_seqtables_locus = 
-    //     ch_seqtab
-    //     .map { pcr_primers, fcid, seqtab -> [ pcr_primers, seqtab ] } // remove fcid field
-    //     .groupTuple ( by: 0 ) // group seqtabs into lists per locus
-    
-    // // combine taxtables, seqtables and parameters
-    // ch_taxtables_locus
-    //     // .dump(tag: '1')
-    //     .combine ( ch_seqtables_locus, by: 0 )
-    //     // .dump(tag: '2')
-    //     .combine ( ch_loci_samdf, by: 0 )
-    //     // .dump(tag: '3')
-    //     .combine ( ch_loci_params, by: 0 )
-    //     // .dump(tag: '4')
-    //     .set { ch_phyloseq_input }
-
-    
-    // //// create phyloseq objects per locus; output unfiltered summary tables and accumulation curve plot
-    // PHYLOSEQ_UNFILTERED ( ch_phyloseq_input )
-
-    // //// apply taxonomic and minimum abundance filtering per locus (from loci_params), then combine to output filtered summary tables
-    // PHYLOSEQ_FILTER ( PHYLOSEQ_UNFILTERED.out.ps )
-
-    // //// combine phyloseq outputs to merge across loci
-    // PHYLOSEQ_UNFILTERED.out.ps // val(pcr_primers), path("ps_unfiltered_*.rds"), val(loci_params)
-    //     .map { pcr_primers, ps, loci_params ->
-    //         [ ps ] }
-    //     .collect()
-    //     .set { ch_ps_unfiltered }
-
-    // PHYLOSEQ_FILTER.out.ps // val(pcr_primers), path("ps_filtered_*.rds"), val(loci_params)
-    //     .map { pcr_primers, ps, loci_params ->
-    //         [ ps ] }
-    //     .collect()
-    //     .set { ch_ps_filtered }
-
-    // PHYLOSEQ_MERGE ( 
-    //     ch_ps_unfiltered, 
-    //     ch_ps_filtered 
-    //     )
-    // ch_read_tracker_grouped = 
-    //     ch_read_tracker_grouped
-    //     .concat( PHYLOSEQ_MERGE.out.read_tracking.flatten() ) 
-    //     .collect()
-
-    //// track reads and sequences across the pipeline
-    // READ_TRACKING ( 
-    //     PROCESS_READS.out.ch_read_tracker_samples.collect(), 
-    //     ch_read_tracker_grouped 
-    //     )
-
 
     ///// VISUALISATION
     /*
