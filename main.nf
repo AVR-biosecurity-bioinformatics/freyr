@@ -118,8 +118,10 @@ include { DADA2                                     } from './nextflow/subworkfl
 include { TAXONOMY                                  } from './nextflow/subworkflows/taxonomy'
 include { RESULT_SUMMARIES                          } from './nextflow/subworkflows/result_summaries'
 
+//// import modules
+include { PARSE_INPUTS                              } from './nextflow/modules/parse_inputs'
 
-// utility processes for development and debugging
+//// utility processes for development and debugging
 include { STOP                                      } from './nextflow/modules/stop'
 
 
