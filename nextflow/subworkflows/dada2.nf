@@ -213,10 +213,10 @@ workflow DADA2 {
         read_tracker_grouped = 
             read_tracker_grouped.concat(FILTER_SEQTAB.out.read_tracking)
 
-        ch_seqtab = 
+        ch_seqtab_meta = 
             FILTER_SEQTAB.out.seqtab
-            .map { pcr_primers, fcid, meta, seqtab -> // remove meta
-                [ pcr_primers, fcid, seqtab ] }
+
+
 
 
     } else if ( params.paired == false && params.seq_type == "nanopore" )  {
@@ -318,10 +318,9 @@ workflow DADA2 {
         read_tracker_grouped = 
             read_tracker_grouped.concat(FILTER_SEQTAB.out.read_tracking)
 
-        ch_seqtab = 
+        ch_seqtab_meta = 
             FILTER_SEQTAB.out.seqtab
-            .map { pcr_primers, fcid, meta, seqtab -> // remove meta
-                [ pcr_primers, fcid, seqtab ] }
+            
 
 
     } else {
@@ -331,7 +330,7 @@ workflow DADA2 {
 
     emit:
 
-    ch_seqtab
+    ch_seqtab_meta
     read_tracker_grouped
 
 
