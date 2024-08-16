@@ -20,16 +20,18 @@ nf_vars <- c(
 lapply(nf_vars, nf_var_check)
 
 ### run R code (from step_errormodel)
-if (!direction %in% c("forward","reverse")) { 
-    stop(" Input reads direction needs to be 'forward' or 'reverse'! ")
+if (!direction %in% c("forward","reverse","single")) { 
+    stop(" Input reads direction needs to be 'forward', 'reverse' or 'single'! ")
 }
 
 if (direction == "forward") {
     direction_short <- "F"
 } else if (direction == "reverse") {
     direction_short <- "R"
+} else if (direction == "single") {
+    direction_short <- "S"
 } else {
-    stop(" Input reads direction needs to be 'forward' or 'reverse'! ")
+    stop(" Input reads direction needs to be 'forward', 'reverse' or 'single'! ")
 }
 
 reads_list <- # convert input reads list from Groovy format to R format
@@ -44,13 +46,13 @@ reads_list <- # convert input reads list from Groovy format to R format
 # qc_dir <- normalizePath(qc_dir)
 
 if(direction == "forward"){
-    # filts <- list.files(input_dir, pattern= "*R1_001.*", full.names = TRUE)
     message(paste0("Modelling forward read error rates for primers: ", pcr_primers, " and flowcell: ", fcid))
 } else if (direction == "reverse"){
-    # filts <- list.files(input_dir, pattern="R2_001.*", full.names = TRUE)
     message(paste0("Modelling reverse read error rates for primers: ", pcr_primers, " and flowcell: ", fcid))
+} else if (direction == "single"){
+    message(paste0("Modelling single read error rates for primers: ", pcr_primers, " and flowcell: ", fcid))
 } else {
-    stop ("Read direction must be 'forward' or 'reverse'!")
+    stop ("Read direction must be 'forward', 'reverse' or 'single'!")
 }
 
 ## Learn error rates 

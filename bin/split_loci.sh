@@ -2,109 +2,157 @@
 set -e
 set -u
 ## args are the following:
-# $1 = reads[0], aka. fwd read path
-# $2 = reads[1], aka. rev read path
-# $3 = meta.for_primer_seq, aka. fwd primer sequence
-# $4 = meta.rev_primer_seq, aka. rev primer sequence
-# $5 = meta.pcr_primers, aka. name of PCR primer pair
-# $6 = meta.target_gene, aka. name of target gene
-# $7 = meta.sample_id, aka. sample ID
-# $8 = meta.fcid, aka. flowcell ID
-# $9 = params.primer_error_rate
+# $1 = reads_paths, one or two read paths separated by ;
+# $2 = meta.for_primer_seq, aka. fwd primer sequence
+# $3 = meta.rev_primer_seq, aka. rev primer sequence
+# $4 = meta.pcr_primers, aka. name of PCR primer pair
+# $5 = meta.target_gene, aka. name of target gene
+# $6 = meta.sample_id, aka. sample ID
+# $7 = meta.fcid, aka. flowcell ID
+# $8 = params.primer_error_rate
+# $9 = seq_type (illumina, nanopore, pacbio)
+# $10 = paired (true, false)
 
-### set up
+### define variables with better names
+
+READS_PATHS=$1
+FOR_PRIMER_SEQ=$2
+REV_PRIMER_SEQ=$3
+PCR_PRIMERS=$4
+TARGET_GENE=$5
+SAMPLE_ID=$6
+FCID=$7
+PRIMER_ERROR_RATE=$8
+SEQ_TYPE=$9
+PAIRED=${10}
+
+
+### process variables
+
+# convert READS_PATHS into an array, conditional on presence of ; delimiter between paths
+if [[ "$READS_PATHS" == *\;* ]]; then
+    IFS=';' read -r -a READ_ARRAY <<< "$READS_PATHS"
+    FWD_READS="${READ_ARRAY[0]}"
+    REV_READS="${READ_ARRAY[1]}"
+else 
+    SINGLE_READS=$READS_PATHS
+fi
 
 # change "I" in primer seq to "N", if present
-FWD_PRIMER=${3/I/N}
-REV_PRIMER=${4/I/N}
+FWD_PRIMER=${FOR_PRIMER_SEQ/I/N}
+REV_PRIMER=${REV_PRIMER_SEQ/I/N}
 
-# get lengths of primers
-FWD_LEN=${#FWD_PRIMER}
-REV_LEN=${#REV_PRIMER}
-
-# set variables for BBDuk based on relative lengths of primers
-if [ "$FWD_LEN" -ge "$REV_LEN" ]; then
-    KMER_LEN=$FWD_LEN
-    MINK_LEN=$REV_LEN
-else
-    KMER_LEN=$REV_LEN
-    MINK_LEN=$FWD_LEN
-fi
+# reverse complement the primer sequences
+FWD_PRIMER_RC=$(echo ${FWD_PRIMER} | \
+    tr GATCRYMKSWHBVDNgatcrymkswhbvdn CTAGYRKMSWDVBHNctagyrkmswdvbhn | \
+    rev)
+REV_PRIMER_RC=$(echo ${REV_PRIMER} | \
+    tr GATCRYMKSWHBVDNgatcrymkswhbvdn CTAGYRKMSWDVBHNctagyrkmswdvbhn | \
+    rev)
 
 
-### using cutadapt
+### split reads, with conditional code based on single vs paired
 
-cutadapt \
-    -e $9 \
-    --action=retain \
-    --match-read-wildcards \
-    --report=minimal \
-    --discard-untrimmed \
-    -g ^$FWD_PRIMER \
-    -G ^$REV_PRIMER \
-    -o ${7}_${6}_${5}_R1.fastq.gz \
-    -p ${7}_${6}_${5}_R2.fastq.gz \
-    $1 \
-    $2
+if [ $PAIRED == "true" ]; then 
 
+    ### paired-end splitting
 
+    ## retain reads that contain primer sequence
+    cutadapt \
+        -e $PRIMER_ERROR_RATE \
+        --action=retain \
+        --match-read-wildcards \
+        --report=minimal \
+        --discard-untrimmed \
+        --rename="{header}" \
+        -g ^$FWD_PRIMER \
+        -G ^$REV_PRIMER \
+        -o ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_R1.fastq.gz \
+        -p ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_R2.fastq.gz \
+        $FWD_READS \
+        $REV_READS
 
+    ## count reads in input files
+    # forward reads
+    if [[ $FWD_READS == *.gz ]]; then
+        R1_IN_LINES=$(zcat $FWD_READS | wc -l)
+    else 
+        R1_IN_LINES=$(cat $FWD_READS | wc -l)
+    fi
+    R1_IN=$(( $R1_IN_LINES / 4 ))
 
+    # reverse reads
+    if [[ $REV_READS == *.gz ]]; then
+        R2_IN_LINES=$(zcat $REV_READS | wc -l)
+    else 
+        R2_IN_LINES=$(cat $REV_READS | wc -l)
+    fi
+    R2_IN=$(( $R2_IN_LINES / 4 ))
 
-### using BBDuk
+    # save as .csv 
+    echo "input,$SAMPLE_ID,$FCID,$PCR_PRIMERS,$R1_IN,$R2_IN" > input_${SAMPLE_ID}_${PCR_PRIMERS}_readsin.csv # columns: stage; sample_id; fcid; pcr_primers; fwd_in; rev_in
 
-# bbduk.sh \
-#     in=${1} \
-#     in2=${2} \
-#     literal=${FWD_PRIMER},${REV_PRIMER} \
-#     out=reject1.fastq.gz \
-#     out2=reject2.fastq.gz \
-#     outm=${7}_${6}_${5}_R1.fastq.gz \
-#     outm2=${7}_${6}_${5}_R2.fastq.gz \
-#     restrictleft=${KMER_LEN} \
-#     copyundefined=true \
-#     k=${MINK_LEN} \
-#     hdist=3 \
-#     rcomp=t \
-#     stats=split_loci_stats_${7}_${6}_${5}.txt \
-#     lhist=split_loci_lhist_${7}_${6}_${5}.txt
+    ## count reads in output files
+    # forward reads
+    if [ -f ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_R1.fastq.gz ]; then
+        R1_OUT_LINES=$(zcat ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_R1.fastq.gz | wc -l)
+        R1_OUT=$(( $R1_OUT_LINES / 4 ))
+    else 
+        R1_OUT=0
+    fi
 
-## count reads in input files
-# forward reads
-if [[ $1 == *.gz ]]; then
-    R1_IN_LINES=$(zcat $1 | wc -l)
+    # reverse reads
+    if [ -f ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_R2.fastq.gz ]; then
+        R2_OUT_LINES=$(zcat ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_R2.fastq.gz | wc -l)
+        R2_OUT=$(( $R2_OUT_LINES / 4 ))
+    else 
+        R2_OUT=0
+    fi
+
+    # save as .csv 
+    echo "split_loci,$SAMPLE_ID,$FCID,$PCR_PRIMERS,$R1_OUT,$R2_OUT" > split_loci_${SAMPLE_ID}_${PCR_PRIMERS}_readsout.csv # columns: stage; sample_id; fcid; pcr_primers; fwd_out; fwd_out
+
+elif [ $PAIRED == "false" ]; then
+
+    ### single-end trimming
+    cutadapt \
+        -e $PRIMER_ERROR_RATE \
+        --action=retain \
+        --match-read-wildcards \
+        --report=minimal \
+        --discard-untrimmed \
+        --rename="{header}" \
+        -a ${FWD_PRIMER}...${REV_PRIMER_RC} \
+        --revcomp \
+        -o ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_R0.fastq.gz \
+        $SINGLE_READS 
+
+    ## count reads in input file
+    # single reads
+    if [[ $SINGLE_READS == *.gz ]]; then
+        R0_IN_LINES=$(zcat $SINGLE_READS | wc -l)
+    else 
+        R0_IN_LINES=$(cat $SINGLE_READS | wc -l)
+    fi
+    R0_IN=$(( $R0_IN_LINES / 4 ))
+
+    # save as .csv 
+    echo "input,$SAMPLE_ID,$FCID,$PCR_PRIMERS,$R0_IN,$R0_IN" > input_${SAMPLE_ID}_${PCR_PRIMERS}_readsin.csv # columns: stage; sample_id; fcid; pcr_primers; fwd_in; rev_in
+
+    ## count reads in output files
+    # forward reads
+    if [ -f ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_R0.fastq.gz ]; then
+        R0_OUT_LINES=$(zcat ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_R0.fastq.gz | wc -l)
+        R0_OUT=$(( $R0_OUT_LINES / 4 ))
+    else 
+        R0_OUT=0
+    fi
+
+    # save as .csv 
+    echo "split_loci,$SAMPLE_ID,$FCID,$PCR_PRIMERS,$R0_OUT,$R0_OUT" > split_loci_${SAMPLE_ID}_${PCR_PRIMERS}_readsout.csv # columns: stage; sample_id; fcid; pcr_primers; fwd_out; fwd_out
+
 else 
-    R1_IN_LINES=$(cat $1 | wc -l)
-fi
-R1_IN=$(( $R1_IN_LINES / 4 ))
+    echo "PAIRED variable must be true or false"
+    exit 1
+fi 
 
-# reverse reads
-if [[ $2 == *.gz ]]; then
-    R2_IN_LINES=$(zcat $2 | wc -l)
-else 
-    R2_IN_LINES=$(cat $2 | wc -l)
-fi
-R2_IN=$(( $R2_IN_LINES / 4 ))
-
-# save as .csv 
-echo "input,$7,$8,$5,$R1_IN,$R2_IN" > input_${7}_${5}_readsin.csv # columns: stage; sample_id; fcid; pcr_primers; fwd_in; rev_in
-
-## count reads in output files
-# forward reads
-if [ -f ${7}_${6}_${5}_R1.fastq.gz ]; then
-    R1_OUT_LINES=$(zcat ${7}_${6}_${5}_R1.fastq.gz | wc -l)
-    R1_OUT=$(( $R1_OUT_LINES / 4 ))
-else 
-    R1_OUT=0
-fi
-
-# reverse reads
-if [ -f ${7}_${6}_${5}_R2.fastq.gz ]; then
-    R2_OUT_LINES=$(zcat ${7}_${6}_${5}_R2.fastq.gz | wc -l)
-    R2_OUT=$(( $R2_OUT_LINES / 4 ))
-else 
-    R2_OUT=0
-fi
-
-# save as .csv 
-echo "split_loci,$7,$8,$5,$R1_OUT,$R2_OUT" > split_loci_${7}_${5}_readsout.csv # columns: stage; sample_id; fcid; pcr_primers; fwd_out; fwd_out

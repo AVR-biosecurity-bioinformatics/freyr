@@ -49,23 +49,12 @@
                     "description": "Extension of the FastQ read files, immediately after the digit indicating forward/reverse identity. Used to help match files to samples when explicit read paths are not provided.",
                     "errorMessage": "Read extension must not contain spaces or commas."
                 },
-                "illumina": {
-                    "type": "boolean",
-                    "description": "Input is short-read Illumina sequencing data (eg. from MiSeq, NovaSeq).",
-                    "errorMessage": "Must be set to 'true' or 'false'.",
-                    "default": true
-                },
-                "pacbio": {
-                    "type": "boolean",
-                    "description": "Input data is long-read PacBio sequencing data (eg. from REVIO, SEQUEL IIe).",
-                    "errorMessage": "Must be set to 'true' or 'false'.",
-                    "default": false
-                },
-                "nanopore": {
-                    "type": "boolean",
-                    "description": "Input data is long-read Nanopore sequencing data (eg. from MinION, PromethION).",
-                    "errorMessage": "Must be set to 'true' or 'false'.",
-                    "default": false
+                "seq_type": {
+                    "type": "string",
+                    "pattern":"^(illumina|nanopore|pacbio)$",
+                    "description": "Input data type: 'illumina' (Illumina-style short-read; default), 'nanopore' (ONT long-read) or 'pacbio' (PacBio long-read).",
+                    "errorMessage": "Must be set to 'illumina', 'nanopore' or 'pacbio'.",
+                    "default": "illumina"
                 },
                 "paired": {
                     "type": "boolean",

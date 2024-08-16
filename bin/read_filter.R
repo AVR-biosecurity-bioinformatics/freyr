@@ -5,6 +5,7 @@ process_packages <- c(
     "dplyr",
     "readr",
     "tibble",
+    "stringr",
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
@@ -12,8 +13,7 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "fwd_reads",
-    "rev_reads",
+    "reads_paths",
     "read_min_length",
     "read_max_length",
     "read_max_ee",
@@ -23,29 +23,67 @@ nf_vars <- c(
     "sample_id",
     "target_gene",
     "pcr_primers",
-    "fcid"
+    "fcid",
+    "seq_type",
+    "paired"
 )
 lapply(nf_vars, nf_var_check)
 
+### process variables 
+# split reads_paths into individual file paths (or keep if single reads)
+if ( paired == "true" ) {
+    reads_paths_vec <- reads_paths %>% stringr::str_split_1(";")
+    fwd_reads <- reads_paths_vec[1]
+    rev_reads <- reads_paths_vec[2]
+} else if ( paired == "false" ) {
+   single_reads <- reads_paths
+} else {
+    stop ( "'paired' must be 'true' or 'false'!" )
+}
+
 ### run R code
 
-## using dada2::filterAndTrim directly
-res <- dada2::filterAndTrim(
-    fwd = fwd_reads, 
-    filt = paste0(sample_id,"_",target_gene,"_",pcr_primers,"_filter_R1.fastq.gz"), # gets saved to working dir
-    rev = rev_reads, 
-    filt.rev = paste0(sample_id,"_",target_gene,"_",pcr_primers,"_filter_R2.fastq.gz"), # gets saved to working dir
-    minLen = as.numeric(read_min_length), 
-    maxLen = as.numeric(read_max_length), 
-    maxEE = as.numeric(read_max_ee), 
-    truncLen = as.numeric(read_trunc_length),
-    trimLeft = as.numeric(read_trim_left), 
-    trimRight = as.numeric(read_trim_right), 
-    rm.phix = TRUE, 
-    multithread = FALSE, 
-    compress = TRUE, 
-    verbose = FALSE
-)
+if ( paired == "true" & seq_type == "illumina" ) {
+
+    # filter and trim paired-end reads
+    res <- dada2::filterAndTrim(
+        fwd = fwd_reads, 
+        filt = paste0(sample_id,"_",target_gene,"_",pcr_primers,"_filter_R1.fastq.gz"), # gets saved to working dir
+        rev = rev_reads, 
+        filt.rev = paste0(sample_id,"_",target_gene,"_",pcr_primers,"_filter_R2.fastq.gz"), # gets saved to working dir
+        minLen = as.numeric(read_min_length), 
+        maxLen = as.numeric(read_max_length), 
+        maxEE = as.numeric(read_max_ee), 
+        truncLen = as.numeric(read_trunc_length),
+        trimLeft = as.numeric(read_trim_left), 
+        trimRight = as.numeric(read_trim_right), 
+        rm.phix = TRUE, 
+        multithread = FALSE, 
+        compress = TRUE, 
+        verbose = FALSE
+    )
+
+} else if ( paired == "false" & seq_type == "nanopore" ) {
+
+    # filter and trim single-end reads
+    res <- dada2::filterAndTrim(
+        fwd = single_reads, 
+        filt = paste0(sample_id,"_",target_gene,"_",pcr_primers,"_filter_R0.fastq.gz"), # gets saved to working dir
+        minLen = as.numeric(read_min_length), 
+        maxLen = as.numeric(read_max_length), 
+        maxEE = as.numeric(read_max_ee), 
+        truncLen = as.numeric(read_trunc_length),
+        trimLeft = as.numeric(read_trim_left), 
+        trimRight = as.numeric(read_trim_right), 
+        rm.phix = TRUE, 
+        multithread = FALSE, 
+        compress = TRUE, 
+        verbose = FALSE
+    )
+
+} else {
+    stop ( "Currently unsupported sequencing type -- check samplesheet" )
+}
 
 ## extract output read counts and save to file
 reads_out <- res %>%
