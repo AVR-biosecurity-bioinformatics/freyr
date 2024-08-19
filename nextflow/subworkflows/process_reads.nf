@@ -4,6 +4,7 @@
 
 
 //// modules to import
+include { FASTQC                                    } from '../modules/fastqc'
 include { MISEQ_QC                                  } from '../modules/miseq_qc'
 include { SPLIT_LOCI                                } from '../modules/split_loci'
 include { PRIMER_TRIM                               } from '../modules/primer_trim'
@@ -39,6 +40,13 @@ workflow PROCESS_READS {
     if ( params.miseq_internal == true ) {
         MISEQ_QC ( ch_fcid ) 
         }
+
+    //// run fastqc on input reads
+    FASTQC (
+        ch_sample_locus_reads,
+        seq_type,
+        paired
+        )
 
     //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( 
