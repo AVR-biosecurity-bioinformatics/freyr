@@ -118,8 +118,10 @@ include { DADA2                                     } from './nextflow/subworkfl
 include { TAXONOMY                                  } from './nextflow/subworkflows/taxonomy'
 include { RESULT_SUMMARIES                          } from './nextflow/subworkflows/result_summaries'
 
+//// import modules
+include { PARSE_INPUTS                              } from './nextflow/modules/parse_inputs'
 
-// utility processes for development and debugging
+//// utility processes for development and debugging
 include { STOP                                      } from './nextflow/modules/stop'
 
 
@@ -160,7 +162,12 @@ workflow FREYR {
     }
 
     //// read-in samplesheet and loci_params .csv files, validate their contents, and produce inputs for rest of pipeline
-    PARSE_INPUTS ( params.samplesheet, params.loci_params )
+    PARSE_INPUTS ( 
+        params.samplesheet, 
+        params.loci_params,
+        params.seq_type,
+        params.paired
+        )
 
     // ch_versions = Channel.empty()
     
@@ -170,6 +177,33 @@ workflow FREYR {
     
 
     //// parse samplesheets that contain locus-specific parameters
+    if ( params.paired == true ) {
+        PARSE_INPUTS.out.samplesheet_locus
+        .flatten ()
+        .splitCsv ( header: true )
+        .map { row -> 
+            def meta = row.subMap(
+                'sample_id','sample_name','extraction_rep','amp_rep',
+                'client_name','experiment_name','sample_type','collection_method',
+                'collection_location','latitude','longitude','environment','collection_date',
+                'operator_name','description','assay','extraction_method',
+                'amp_method','target_gene','pcr_primers','for_primer_seq',
+                'rev_primer_seq','index_plate','index_well','i7_index_id',
+                'i7_index','i5_index_id','i5_index','seq_platform',
+                'fcid','for_read_length','rev_read_length','seq_run_id',
+                'seq_id','seq_date','analysis_method','notes','max_primer_mismatch','read_min_length','read_max_length',
+                'read_max_ee','read_trunc_length','read_trim_left','read_trim_right',
+                'asv_min_length','asv_max_length','high_sensitivity','concat_unmerged','genetic_code','coding',
+                'phmm','idtaxa_db','ref_fasta','idtaxa_confidence',
+                'run_blast','blast_min_identity','blast_min_coverage','target_kingdom',
+                'target_phylum','target_class','target_order','target_family',
+                'target_genus','target_species','min_sample_reads','min_taxa_reads',
+                'min_taxa_ra','threads'
+                )
+            [ meta, [ file(row.fwd, checkIfExists: true), file(row.rev, checkIfExists: true) ] ]  
+            }
+        .set { ch_sample_locus_reads }
+    } else if ( params.paired == false ) {
     PARSE_INPUTS.out.samplesheet_locus
         .flatten ()
         .splitCsv ( header: true )
@@ -192,13 +226,12 @@ workflow FREYR {
                 'target_genus','target_species','min_sample_reads','min_taxa_reads',
                 'min_taxa_ra','threads'
                 )
-            [ meta, [
-                file(row.fwd, checkIfExists: true),
-                file(row.rev, checkIfExists: true)
-            ] ]  
+            [ meta, file(row.single, checkIfExists: true) ]  
             }
         .set { ch_sample_locus_reads }
-
+    } else {
+        error " 'params.paired' must be 'true' or 'false'. "
+    }
 
     //// create channel that links locus-specific samplesheets to pcr_primer key, in the format 'pcr_primers, csv_file'
     PARSE_INPUTS.out.samplesheet_locus

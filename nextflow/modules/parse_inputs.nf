@@ -7,6 +7,8 @@ process PARSE_INPUTS {
     input:
     val(samplesheet)
     val(loci_params)
+    val(seq_type)
+    val(paired)
 
     output: 
     path("samplesheet_parsed.csv"),         emit: samplesheet_parsed
@@ -27,6 +29,8 @@ process PARSE_INPUTS {
     ## input channel variables
     samplesheet =           "${samplesheet}"
     loci_params =           "${loci_params}"
+    seq_type =              "${seq_type}"
+    paired =                "${paired}"
 
     ## global variables
     projectDir = "$projectDir"
