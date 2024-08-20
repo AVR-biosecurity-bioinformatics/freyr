@@ -3,14 +3,16 @@ set -e
 set -u
 ## args are the following:
 # $1 = reads_paths, one or two read paths separated by ;
-# $2 = seq_type (illumina, nanopore, pacbio)
-# $3 = paired (true, false)
+# $2 = task.cpus
+# $3 = seq_type (illumina, nanopore, pacbio)
+# $4 = paired (true, false)
 
 ### define variables with better names
 
 READS_PATHS=$1
-SEQ_TYPE=$2
-PAIRED=$3
+MEMORY=$2
+SEQ_TYPE=$3
+PAIRED=$4
 
 
 ### process variables
@@ -30,19 +32,21 @@ if [ $PAIRED == "true" ]; then
 
     ### paired-end reports
     fastqc \
-    -t 1 \
-    --outdir . \
-    $FWD_READS \
-    $REV_READS
+        -t 1 \
+        --memory $MEMORY \
+        --outdir . \
+        $FWD_READS \
+        $REV_READS
 
     
 elif [ $PAIRED == "false" ]; then
 
     ### single-end reports
-        fastqc \
-    -t 1 \
-    --outdir . \
-    $SINGLE_READS
+    fastqc \
+        -t 1 \
+        --memory $MEMORY \
+        --outdir . \
+        $SINGLE_READS
 
 else 
     echo "PAIRED variable must be true or false"

@@ -1,7 +1,7 @@
 process ERROR_MODEL {
     def module_name = "error_model"
     tag "$pcr_primers; $fcid"
-    label "small"
+    label "medium"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:

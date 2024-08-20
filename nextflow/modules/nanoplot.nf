@@ -1,8 +1,8 @@
-process FASTQC {
-    def module_name = "fastqc"
+process NANOPLOT {
+    def module_name = "nanoplot"
     tag "$meta.pcr_primers; $meta.sample_id"
-    label "medium"
-    container "staphb/fastqc:0.12.1"
+    label "high"
+    container "nanozoo/nanoplot:1.42.0--547049c"
 
     input:
     tuple val(meta), path(reads)
@@ -26,7 +26,7 @@ process FASTQC {
     ### run module code
     bash ${module_name}.sh \
         "${reads_paths}" \
-        ${task.memory.mega} \
+        ${meta.sample_id} \
         ${seq_type} \
         ${paired}
     
