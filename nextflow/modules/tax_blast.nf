@@ -5,10 +5,10 @@ process TAX_BLAST {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), val(meta), path(seqtab)
+    tuple val(pcr_primers), val(fcid), val(loci_params), path(seqtab)
 
     output:
-    tuple val(pcr_primers), val(fcid), val(meta), path("*_blast.rds"), emit: blast
+    tuple val(pcr_primers), val(fcid), val(loci_params), path("*_blast.rds"), emit: blast
     tuple val(pcr_primers), val(fcid), path("*_blast_spp_low.rds"), emit: blast_assignment
     tuple val(pcr_primers), val(fcid), path("*_n_ranks.txt"), emit: n_ranks
 
@@ -26,11 +26,11 @@ process TAX_BLAST {
     fcid =                  "${fcid}"
     pcr_primers =           "${pcr_primers}"
     seqtab =                "${seqtab}"
-    target_gene =           "${meta.target_gene}"
-    ref_fasta =             "${meta.ref_fasta}"
-    blast_min_identity =    "${meta.blast_min_identity}"
-    blast_min_coverage =    "${meta.blast_min_coverage}"
-    run_blast =             "${meta.run_blast}"
+    target_gene =           "${loci_params.target_gene}"
+    ref_fasta =             "${loci_params.ref_fasta}"
+    blast_min_identity =    "${loci_params.blast_min_identity}"
+    blast_min_coverage =    "${loci_params.blast_min_coverage}"
+    run_blast =             "${loci_params.run_blast}"
 
     ## global variables
     projectDir = "$projectDir"

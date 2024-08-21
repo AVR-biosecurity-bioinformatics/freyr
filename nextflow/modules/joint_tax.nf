@@ -5,7 +5,7 @@ process JOINT_TAX {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), path(tax), path(blast), path(seqtab), val(loci_params)
+    tuple val(pcr_primers), val(fcid), val(loci_params), path(tax), path(blast), path(seqtab)
     
     output:
     tuple val(pcr_primers), val(fcid), path("*_taxblast.rds"), emit: taxtab

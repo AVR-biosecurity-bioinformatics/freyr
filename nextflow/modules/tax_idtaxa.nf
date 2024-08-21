@@ -5,11 +5,11 @@ process TAX_IDTAXA {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), val(meta), path(seqtab)
+    tuple val(pcr_primers), val(fcid), val(loci_params), path(seqtab)
 
     output:
-    tuple val(pcr_primers), val(fcid), val(meta), path("*_idtaxa_tax.rds"), emit: tax
-    tuple val(pcr_primers), val(fcid), val(meta), path("*_idtaxa_ids.rds"), emit: ids
+    tuple val(pcr_primers), val(fcid), val(loci_params), path("*_idtaxa_tax.rds"), emit: tax
+    tuple val(pcr_primers), val(fcid), val(loci_params), path("*_idtaxa_ids.rds"), emit: ids
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -25,8 +25,8 @@ process TAX_IDTAXA {
     fcid =              "${fcid}"
     pcr_primers =       "${pcr_primers}"
     seqtab =            "${seqtab}"
-    idtaxa_confidence = "${meta.idtaxa_confidence}"
-    idtaxa_db =         "${meta.idtaxa_db}"
+    idtaxa_confidence = "${loci_params.idtaxa_confidence}"
+    idtaxa_db =         "${loci_params.idtaxa_db}"
 
     ## global variables
     projectDir = "$projectDir"

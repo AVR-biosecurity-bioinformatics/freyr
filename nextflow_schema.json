@@ -43,6 +43,12 @@
                     "errorMessage": "File must exist and be a CSV file with the extension '.csv'.",
                     "schema": "assets/schema_loci_params.json"
                 },
+                "train_idtaxa": {
+                    "type": "string",
+                    "pattern": "^(formatted|unformatted)$",
+                    "description": "Train IDTAXA model(s) using the reference database .fasta file(s), which are correctly formatted ('formatted') or unformatted ('unformatted').",
+                    "errorMessage": "Must be 'formatted' or 'unformatted'."
+                },
                 "extension": {
                     "type": "string",
                     "pattern": "^[^\\s,]$",

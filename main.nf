@@ -129,6 +129,7 @@ include { RESULT_SUMMARIES                          } from './nextflow/subworkfl
 //// import modules
 include { PARSE_INPUTS                              } from './nextflow/modules/parse_inputs'
 include { DOWNSAMPLE_READS                          } from './nextflow/modules/downsample_reads'
+include { TRAIN_IDTAXA                              } from './nextflow/modules/train_idtaxa'
 
 //// utility processes for development and debugging
 include { STOP                                      } from './nextflow/modules/stop'
@@ -183,7 +184,9 @@ workflow FREYR {
     //// Create empty channels
     ch_read_tracker_grouped =   // read-tracking for grouped processes
         Channel.empty()      
-    
+    ch_idtaxa_db_new = 
+        Channel.empty()
+
 
     //// parse samplesheets that contain locus-specific parameters
     if ( params.paired == true ) {
@@ -242,18 +245,6 @@ workflow FREYR {
         error " 'params.paired' must be 'true' or 'false'. "
     }
 
-    //// downsample reads if params.downsample is defined
-    if ( params.downsample_reads ) {
-        DOWNSAMPLE_READS (
-            ch_sample_locus_reads,
-            params.seq_type,
-            params.paired,
-            params.downsample_reads
-        )
-
-        ch_sample_locus_reads = DOWNSAMPLE_READS.out.reads
-    }
-
     //// create channel that links locus-specific samplesheets to pcr_primer key, in the format 'pcr_primers, csv_file'
     PARSE_INPUTS.out.samplesheet_locus
         .flatten()
@@ -310,6 +301,38 @@ workflow FREYR {
         .set { ch_loci_params } // cardinality: pcr_primers, map(all params, incl. pcr_primers)
 
 
+    //// train IDTAXA model from reference database .fasta
+    if ( params.train_idtaxa ) {
+        
+        //// create input channel for TRAIN_IDTAXA
+        ch_loci_params
+            .map { pcr_primers, loci_params ->
+                [ pcr_primers, loci_params.ref_fasta ]  }
+            .set { ch_train_idtaxa_input }
+
+        //// train model
+        TRAIN_IDTAXA (
+            ch_train_idtaxa_input,
+            params.train_idtaxa
+        )
+
+        ch_idtaxa_db_new
+            .concat ( TRAIN_IDTAXA.out.model )
+            .set { ch_idtaxa_db_new }
+    }
+
+    //// downsample reads if params.downsample is defined
+    if ( params.downsample_reads ) {
+        DOWNSAMPLE_READS (
+            ch_sample_locus_reads,
+            params.seq_type,
+            params.paired,
+            params.downsample_reads
+        )
+
+        ch_sample_locus_reads = DOWNSAMPLE_READS.out.reads
+    }
+
     //// subworkflow: process sequencing reads
     PROCESS_READS (
         ch_sample_locus_reads,
@@ -323,26 +346,27 @@ workflow FREYR {
     DADA2 (
         PROCESS_READS.out.ch_processed_reads,
         ch_read_tracker_grouped
-    )
+        )
 
 
     //// subworkflow: assign taxonomy
     TAXONOMY (
-        DADA2.out.ch_seqtab_meta,
-        ch_loci_params
-    )
+        DADA2.out.ch_seqtab,
+        ch_loci_params,
+        ch_idtaxa_db_new
+        )
 
 
     //// subworkflow: create result summaries
     RESULT_SUMMARIES (
-        TAXONOMY.out.ch_tax_summaries,
+        DADA2.out.ch_seqtab,
         TAXONOMY.out.ch_mergetax_output,
         TAXONOMY.out.ch_seqtab,
         ch_loci_samdf,
         ch_loci_params,
         PROCESS_READS.out.ch_read_tracker_samples,
         DADA2.out.read_tracker_grouped
-    )
+        )
     
 
     ///// VISUALISATION

@@ -1,18 +1,15 @@
-process FILTER_SEQTAB {
-    def module_name = "filter_seqtab"
-    tag "$pcr_primers; $fcid"
-    label "small"
+process TRAIN_IDTAXA {
+    def module_name = "train_idtaxa"
+    tag "Whole pipeline"
+    label "high"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), val(meta), path(seqtab)
+    tuple val(pcr_primers), path(ref_fasta)
+    val(fasta_type)
 
-    output:
-    tuple val(pcr_primers), val(fcid), path("*_seqtab.cleaned.rds"),         emit: seqtab
-    tuple val(pcr_primers), val(fcid), path("*_ASV_cleanup_summary.csv"),    emit: csv
-    tuple val(pcr_primers), val(fcid), path("*_ASV_cleanup_summary.pdf"),    emit: plot
-    path("*_readsout.csv"),                                                  emit: read_tracking
-
+    output:   
+    tuple val(pcr_primers), path("*_idtaxa_db.rds")             , emit: model
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -25,16 +22,9 @@ process FILTER_SEQTAB {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    fcid =              "${fcid}"
-    pcr_primers =       "${pcr_primers}"
-    seqtab =            "${seqtab}"
-    asv_min_length =    "${meta.asv_min_length}"
-    asv_max_length =    "${meta.asv_max_length}"
-    phmm =              "${meta.phmm}"
-    coding =            "${meta.coding}"
-    genetic_code =      "${meta.genetic_code}"
-    for_primer_seq =    "${meta.for_primer_seq}"
-    rev_primer_seq =    "${meta.rev_primer_seq}"
+    pcr_primers =           "${pcr_primers}"
+    ref_fasta =             "${ref_fasta}"
+    fasta_type =            "${fasta_type}"
 
     
     ## global variables

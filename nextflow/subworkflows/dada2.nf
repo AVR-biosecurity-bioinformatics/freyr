@@ -297,7 +297,7 @@ workflow DADA2 {
         read_tracker_grouped = 
             read_tracker_grouped.concat(FILTER_SEQTAB.out.read_tracking)
 
-        ch_seqtab_meta = 
+        ch_seqtab = 
             FILTER_SEQTAB.out.seqtab
             
 
@@ -309,7 +309,7 @@ workflow DADA2 {
 
     emit:
 
-    ch_seqtab_meta
+    ch_seqtab
     read_tracker_grouped
 
 
