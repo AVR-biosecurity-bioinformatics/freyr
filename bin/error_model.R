@@ -61,7 +61,8 @@ err <- dada2::learnErrors(
         multithread = FALSE, 
         nbases = 1e8,
         randomize = FALSE, 
-        qualityType = "FastqQuality",
+        # qualityType = "FastqQuality",
+        qualityType = "Auto",
         verbose=TRUE
         )
     

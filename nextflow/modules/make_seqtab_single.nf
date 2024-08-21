@@ -1,6 +1,6 @@
 process MAKE_SEQTAB_SINGLE {
     def module_name = "make_seqtab_single"
-    tag "$pcr_primers; $meta.sample_id"
+    tag "$pcr_primers; $fcid"
     label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
