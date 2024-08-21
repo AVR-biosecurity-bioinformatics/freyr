@@ -174,7 +174,7 @@ if(!is.na(min_taxa_reads) & is.na(min_taxa_ra)){
 }
 
 #Remove all samples under the minimum read threshold 
-if(min_sample_reads > 0){
+if(!is.na(min_sample_reads) || min_sample_reads > 0){
     if (all(phyloseq::sample_sums(ps1)<min_sample_reads)) {
         stop(paste0("ERROR: No samples contained reads above the minimum threshold of ", min_sample_reads, " -- consider lowering this value"))
         }
@@ -182,7 +182,7 @@ if(min_sample_reads > 0){
     ps2 <- ps1 %>%
         phyloseq::prune_samples(phyloseq::sample_sums(.)>=min_sample_reads, .) %>% 
         phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
-} else {
+} else if (min_sample_reads == 0 || is.na(min_sample_reads) ) {
     if (!quiet){message(paste0("No minimum sample reads filter set - skipping this filter"))}
     ps2 <- ps1 %>%
         phyloseq::prune_samples(phyloseq::sample_sums(.)>=0,.) %>%
