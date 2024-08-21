@@ -254,6 +254,13 @@
                     "description": "Randomly reduce the number of input samples to this value.",
                     "errorMessage": "Must be an integer >=1 (or 'null').",
                     "help_text": "Useful to quickly test how the pipeline behaves with a particular dataset. Subsampling is pseudorandom (seed = 1), so should always reproduce the same subset for the same inputs."
+                },
+                "downsample_reads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Randomly reduce the number of reads per input samples to at most this value.",
+                    "errorMessage": "Must be an integer >=1 (or 'null').",
+                    "help_text": "Useful to quickly test how the pipeline behaves with a particular dataset. Downsampling is pseudorandom (seed = 1), so should always reproduce the same subset of reads for the same inputs."
                 }
             }
         },

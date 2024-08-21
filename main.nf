@@ -79,6 +79,10 @@ if (params.subsample) {
     log.info "*** NOTE: Input samples are being randomly subsampled to $params.subsample per primer x flowcell combination (params.subsample = $params.subsample) ***"
 }
 
+if (params.downsample_reads) {
+    log.info "*** NOTE: Input samples are being randomly downsampled to $params.downsample_reads reads (params.subsample = $params.downsample_reads) ***"
+}
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -120,6 +124,7 @@ include { RESULT_SUMMARIES                          } from './nextflow/subworkfl
 
 //// import modules
 include { PARSE_INPUTS                              } from './nextflow/modules/parse_inputs'
+include { DOWNSAMPLE_READS                          } from './nextflow/modules/downsample_reads'
 
 //// utility processes for development and debugging
 include { STOP                                      } from './nextflow/modules/stop'
@@ -231,6 +236,18 @@ workflow FREYR {
         .set { ch_sample_locus_reads }
     } else {
         error " 'params.paired' must be 'true' or 'false'. "
+    }
+
+    //// downsample reads if params.downsample is defined
+    if ( params.downsample_reads ) {
+        DOWNSAMPLE_READS (
+            ch_sample_locus_reads,
+            params.seq_type,
+            params.paired,
+            params.downsample_reads
+        )
+
+        ch_sample_locus_reads = DOWNSAMPLE_READS.out.reads
     }
 
     //// create channel that links locus-specific samplesheets to pcr_primer key, in the format 'pcr_primers, csv_file'
