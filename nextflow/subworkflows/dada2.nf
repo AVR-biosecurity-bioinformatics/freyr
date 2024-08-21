@@ -273,14 +273,15 @@ workflow DADA2 {
             // prepare single reads
             DENOISE2_S.out.seq
                 .map { direction, pcr_primers, fcid, meta, reads, seqs ->
-                        [ pcr_primers, fcid, meta.concat_unmerged, meta, reads, seqs ] }
+                        [ pcr_primers, fcid, meta.concat_unmerged, meta, file(reads, checkIfExists: true), file(seqs, checkIfExists: true) ] }
+                .groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples
                 .set { ch_seq_single }
-
 
         } else { // don't run second denoising step with priors
             DENOISE1_S.out.seq
                 .map { direction, pcr_primers, fcid, meta, reads, seqs ->
-                        [ pcr_primers, fcid, meta.concat_unmerged, meta, reads, seqs ] }
+                        [ pcr_primers, fcid, meta.concat_unmerged, meta, file(reads, checkIfExists: true), file(seqs, checkIfExists: true) ] }
+                .groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples
                 .set { ch_seq_single }
         }
 

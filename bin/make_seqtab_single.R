@@ -46,7 +46,7 @@ names(reads_list) <- sample_id_list
 seqs_list <- # convert input sequences list from Groovy format to R format
     stringr::str_extract_all(
         seqs, 
-        pattern = "\\S+?_dada[1,2]F\\.rds" 
+        pattern = "\\S+?_dada[1,2]S\\.rds" 
         ) %>% 
     unlist()
 
@@ -68,17 +68,17 @@ saveRDS(seqtab, paste0(fcid,"_",pcr_primers,"_seqtab.rds"))
 # save number of merged reads per sample
 getN <- function(x) sum(dada2::getUniques(x))
 
-sapply(mergers, getN) %>% 
+sapply(seqs_extracted, getN) %>% 
     as.data.frame() %>% 
     magrittr::set_colnames("pairs") %>%
     tibble::rownames_to_column(var = "sample_id") %>%
     dplyr::mutate(
         fcid = fcid,
         pcr_primers = pcr_primers,
-        stage = "dada_mergereads"
+        stage = "make_seqtab"
     ) %>%
     dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>% 
-    readr::write_csv(., paste0("dada_mergereads_",fcid,"_",pcr_primers,"_readsout.csv"))
+    readr::write_csv(., paste0("make_seqtab_",fcid,"_",pcr_primers,"_readsout.csv"))
 
 
 # stop(" *** stopped manually *** ") ##########################################

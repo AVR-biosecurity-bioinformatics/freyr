@@ -76,11 +76,15 @@ validateParameters( parameters_schema: 'nextflow_schema.json' )
 log.info paramsSummaryLog(workflow)
 // make it clear that samples are being subsampled
 if (params.subsample) {
-    log.info "*** NOTE: Input samples are being randomly subsampled to $params.subsample per primer x flowcell combination (params.subsample = $params.subsample) ***"
+    log.info "***"
+    log.info "NOTE: Input samples are being randomly subsampled to $params.subsample per primer x flowcell combination (params.subsample = $params.subsample)"
+    log.info "***"
 }
 
 if (params.downsample_reads) {
-    log.info "*** NOTE: Input samples are being randomly downsampled to $params.downsample_reads reads (params.subsample = $params.downsample_reads) ***"
+    log.info "***"
+    log.info "NOTE: Input samples are being randomly downsampled to $params.downsample_reads reads (params.subsample = $params.downsample_reads)"
+    log.info "***"
 }
 
 

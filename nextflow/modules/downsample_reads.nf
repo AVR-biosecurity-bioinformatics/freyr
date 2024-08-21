@@ -1,7 +1,7 @@
 process DOWNSAMPLE_READS {
     def module_name = "downsample_reads"
     tag "$meta.pcr_primers; $meta.sample_id"
-    label "medium"
+    label "small"
     container "staphb/seqtk:1.4"
 
     input:

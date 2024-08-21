@@ -9,7 +9,7 @@ process DENOISE {
     val(n_pass)
 
     output:
-    tuple val(direction), val(pcr_primers), val(fcid), val(meta), path(reads), path("*_dada{1,2}{F,R}.rds"), emit: seq
+    tuple val(direction), val(pcr_primers), val(fcid), val(meta), path(reads), path("*_dada{1,2}{F,R,S}.rds"), emit: seq
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
