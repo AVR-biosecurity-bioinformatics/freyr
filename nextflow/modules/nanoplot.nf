@@ -10,7 +10,7 @@ process NANOPLOT {
     val(paired)
 
     output:   
-    path("*.html"),     emit: report
+    path("*report.html"),     emit: report
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
