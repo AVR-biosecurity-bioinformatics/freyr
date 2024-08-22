@@ -21,6 +21,8 @@ nf_vars <- c(
 lapply(nf_vars, nf_var_check)
 
 ### run R code
+set.seed(1)
+
 errormodel <- readRDS(errormodel) # import error model
 
 if ( direction == "forward" ) { # recode read direction as "F" or "R"

@@ -21,6 +21,8 @@ nf_vars <- c(
 lapply(nf_vars, nf_var_check)
 
 ### run R code (from step_errormodel)
+set.seed(1)
+
 if (!direction %in% c("forward","reverse","single")) { 
     stop(" Input reads direction needs to be 'forward', 'reverse' or 'single'! ")
 }

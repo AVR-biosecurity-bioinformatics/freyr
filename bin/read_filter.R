@@ -43,6 +43,8 @@ if ( paired == "true" ) {
 
 ### run R code
 
+set.seed(1)
+
 if ( paired == "true" & seq_type == "illumina" ) {
 
     # filter and trim paired-end reads
