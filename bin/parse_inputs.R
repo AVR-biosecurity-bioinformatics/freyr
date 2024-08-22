@@ -448,8 +448,10 @@ loci_params_df <- loci_params_df %>%
 # check phmm, idtaxa_db and ref_fasta are readable files
 check_paths <- loci_params_df$phmm %>% unlist() # check phmm paths
 for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
-check_paths <- loci_params_df$idtaxa_db %>% unlist() # check idtaxa_db paths
-for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
+if ( params.train_idtaxa == "null" ) {
+    check_paths <- loci_params_df$idtaxa_db %>% unlist() # check idtaxa_db paths
+    for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }  
+}
 check_paths <- loci_params_df$ref_fasta %>% unlist() # check ref_fasta paths
 for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
 

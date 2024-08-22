@@ -63,8 +63,10 @@ idtaxa_model <- taxreturn::train_idtaxa(
     quiet = FALSE
     )
 
+# make filename
+out_filename <- stringr::str_remove(basename(ref_fasta), "\\..+$")
 
 # Write out idtaxa objects
-saveRDS(idtaxa_model, paste0(pcr_primers,"_idtaxa_db.rds"))
+saveRDS(idtaxa_model, paste0(out_filename,"_idtaxa_db.rds"))
 
 # stop(" *** stopped manually *** ") ##########################################
