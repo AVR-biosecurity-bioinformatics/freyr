@@ -1,7 +1,7 @@
 process ERROR_MODEL {
     def module_name = "error_model"
     tag "$pcr_primers; $fcid"
-    label "medium"
+    label "high"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
@@ -27,6 +27,7 @@ process ERROR_MODEL {
     fcid =              "${fcid}"
     pcr_primers =       "${pcr_primers}"
     reads =             "${reads}"
+    threads =           "${task.cpus}"
     
     ## global variables
     projectDir = "$projectDir"

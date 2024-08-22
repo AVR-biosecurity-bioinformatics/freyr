@@ -15,7 +15,8 @@ nf_vars <- c(
     "direction",
     "fcid",
     "pcr_primers",
-    "reads"
+    "reads",
+    "threads"
 )
 lapply(nf_vars, nf_var_check)
 
@@ -58,7 +59,7 @@ if(direction == "forward"){
 ## Learn error rates 
 err <- dada2::learnErrors(
         reads_list, 
-        multithread = FALSE, 
+        multithread = as.numeric(threads), 
         nbases = 1e8,
         randomize = FALSE, 
         # qualityType = "FastqQuality",

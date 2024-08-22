@@ -319,6 +319,8 @@ workflow FREYR {
         ch_idtaxa_db_new
             .concat ( TRAIN_IDTAXA.out.model )
             .set { ch_idtaxa_db_new }
+    } else {
+        ch_idtaxa_db_new = channel.value( "no_new_model" )
     }
 
     //// downsample reads if params.downsample is defined

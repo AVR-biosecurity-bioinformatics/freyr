@@ -31,7 +31,7 @@ workflow TAXONOMY {
         .set { ch_seqtab_params }
 
     //// use newly trained IDTAXA model, if it exists
-    if ( ch_idtaxa_db_new ) {
+    if ( params.train_idtaxa ) {
         ch_seqtab_params
             .join ( ch_idtaxa_db_new, by: 0 ) // join by pcr_primers
             .map { pcr_primers, fcid, loci_params, seqtab, new_idtaxa ->
