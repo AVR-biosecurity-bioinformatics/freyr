@@ -28,8 +28,8 @@ lapply(nf_vars, nf_var_check)
 # for samplesheet path
 if ( stringr::str_starts(samplesheet, "\\./") ) {
     samplesheet <- stringr::str_replace(samplesheet, "\\.", projectDir)
-} else if ( stringr::str_starts(samplesheet, "/") ) {
-    stringr::str_replace(samplesheet, "/", paste0(projectDir,"/")) 
+} else if ( !stringr::str_starts(samplesheet, "/") ) {
+    samplesheet <- paste0(projectDir,"/",samplesheet)
 } else {
     samplesheet <- samplesheet
 }
@@ -37,8 +37,8 @@ if ( stringr::str_starts(samplesheet, "\\./") ) {
 # for loci_params path
 if ( stringr::str_starts(loci_params, "\\./") ) {
     loci_params <- stringr::str_replace(loci_params, "\\.", projectDir)
-} else if ( stringr::str_starts(loci_params, "/") ) {
-    stringr::str_replace(loci_params, "/", paste0(projectDir,"/")) 
+} else if ( !stringr::str_starts(loci_params, "/") ) {
+    loci_params <- paste0(projectDir,"/",loci_params)
 } else {
     loci_params <- loci_params
 }
