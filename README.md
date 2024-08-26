@@ -32,11 +32,14 @@ To get a list of allowed parameters/command while in your analysis directory:
 
     nextflow run . --help
 
-**2024-08-09:** AgVic users of the pipeline with access to the BASC HPC system can now follow a [step-by-step guide/tutorial](/docs/insect_coi.md), which is focused on typical insect COI analyses. 
+**2024-08-26:** A [step-by-step guide/tutorial](/docs/nanopore_tutorial.md) focused on analyses of Nanopore data is now available for AgVic users of the pipeline with access to the BASC HPC system.
+
+**2024-08-09:** A [step-by-step guide/tutorial](/docs/insect_coi.md) focused on typical insect COI analyses is now available for AgVic users of the pipeline with access to the BASC HPC system. 
 
 #### Important notes:
 
-- `freyr` currently only works on Illumina paired-end data where sequencing adapters have been ligated onto the end of each amplicon (ie. fragmentation-based library preps are not supported)
+- `freyr` currently only works on data where sequencing adapters have been ligated onto the end of each amplicon (ie. fragmentation-based library preps are not supported)
+- Short-read (eg. Illumina) paired-end data is currently best supported, but there is (very) experimental support for Nanopore data
 - This pipeline currently only works with native Shifter support (ie. with `-profile shifter` in the Nextflow run command) if Nextflow is version `23.04.5` (or possibly older). This is due to a bug in how Nextflow (at least versions `23.10.0` to `24.04.2`) sets up the process environment in `.command.run`
 - The pipeline has not been tested with Docker, Singularity, Apptainer or Podman--only Shifter. If you attempt to run the pipeline using one of these platforms, please let us know if it works or not!
 - When running the pipeline with containers, you must be using a Linux system with AMD64/x86-64 architecture (such as AgVic's BASC). In the future, we aim to support other architectures by using multi-platform containers. 
