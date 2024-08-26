@@ -4,9 +4,11 @@ process_packages <- c(
     "dada2",
     "dplyr",
     "readr",
+    "S4Vectors",
     "stringr",
     "taxreturn",
     "tibble",
+    "tidyr",
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
@@ -84,7 +86,7 @@ if (isTRUE(run_blast)) { # run BLAST if requested
     names(seqs) <- seqmap$name
     
     # Get the filename of that db that we can use to name the output files
-    db_name <- basename(database) %>% stringr::str_remove("_.*$")
+    db_name <- basename(database) %>% stringr::str_remove("_\\.*$")
 
     # empty file to debug output
     # EMPTY_FILE <- c()
