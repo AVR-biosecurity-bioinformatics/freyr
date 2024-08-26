@@ -10,7 +10,7 @@ This tutorial will help you run `freyr` on the Agriculture Victoria BASC HPC sys
 The following are some assumptions that you need to make sure are met before you start this Nanopore-specific analysis:
 1. Samples have been sequenced with Oxford Nanopore Technologies (ONT; 'Nanopore') sequencing (ie. from MinION, PromethION etc.).
 2. Adapters sequences have been added/ligated to the end of each full-length amplicon, ie. amplicons have **not** been fragmented before adapters were added. 
-    - This means libraries generated with 'Rapid Sequencing' kits (eg. SQK-RAD114) are **not** supported; please use ' Ligation Sequencing' kits (eg. SQK-LSK114) instead.
+    - This means libraries generated with 'Rapid Sequencing' kits (eg. SQK-RAD114) are **not** supported; please use 'Ligation Sequencing' kits (eg. SQK-LSK114) instead.
 3. Your data is available, per sample, as (optionally gzipped) individual FastQ files (with `.fastq`, `.fq`, `.fastq.gz` or `.fq.gz` extensions).
 
 --- 
@@ -67,14 +67,14 @@ The samplesheet is a `.csv` file that conveys information to the pipeline about 
 
 | field | meaning | requirements | change to: |
 | --- | --- | --- | --- |
-| `sample_id` | Unique sample ID | Currently must be `fcid` and `sample_name` separated by an underscore. If `read_dir` is used over `fwd`/`rev`, it must be present at the start of the name of each read file. | Depends on data |
+| `sample_id` | Unique sample ID | Currently must be `fcid` and `sample_name` separated by an underscore. If `read_dir` is used over `single`, it must be present at the start of the name of each read file. | Depends on data |
 | `sample_name` | Sample name | Has to be unique within a flowcell. See `sample_id`. | Depends on data |
 | `fcid` | Flowcell ID | One of the two core groupings within the pipeline, along with `pcr_primers`. See `sample_id`. | Depends on data  |
-| `target_gene` | Name of the target gene(s) amplified | Can specify multiple by separating with a semi-colon. | Name of your target gene (ie. `COI`)  |
-| `pcr_primers` | Name of the PCR primer pair(s) | Can specify multiple by separating with a semi-colon. | Name of your primer pair(s) (ie.`fwhF2-fwhR2n`) |
-| `for_primer_seq` | 5'-3' sequence of the forward primer(s) | Can specify multiple by separating with a semi-colon. | Your sequence (ie. `GGDACWGGWTGAACWGTWTAYCCHCC`)  |
-| `rev_primer_seq` | 5'-3' sequence of the reverse primer(s) | Can specify multiple by separating with a semi-colon. | Your sequence (ie. `GTRATWGCHCCDGCTARWACWGG`)  |
-| `read_dir` | Directory containing sequencing reads | If this is specified, the pipeline searches this directory (including subdirectories) for read files starting with `sample_id`. Cannot be used in conjunction with `fwd` and `rev`; delete field if not using. | Up to you! |
+| `target_gene` | Name of the target gene(s) amplified | Can specify multiple by separating with a semi-colon. | Name of your target gene (eg. `COI`)  |
+| `pcr_primers` | Name of the PCR primer pair(s) | Can specify multiple by separating with a semi-colon. | Name of your primer pair(s) (eg.`fwhF2-fwhR2n`) |
+| `for_primer_seq` | 5'-3' sequence of the forward primer(s) | Can specify multiple by separating with a semi-colon. | Your sequence (eg. `GGDACWGGWTGAACWGTWTAYCCHCC`)  |
+| `rev_primer_seq` | 5'-3' sequence of the reverse primer(s) | Can specify multiple by separating with a semi-colon. | Your sequence (eg. `GTRATWGCHCCDGCTARWACWGG`)  |
+| `read_dir` | Directory containing sequencing reads | If this is specified, the pipeline searches this directory (including subdirectories) for read files starting with `sample_id`. Cannot be used in conjunction with `single`; delete field if not using. | Up to you! |
 | `single` | Exact path of the read file for this sample | Cannot be used in conjunction with `read_dir`; delete field if not using. | Up to you!  |
 
 The easiest way to specify the reads for each sample is to copy your read files into the `./data` directory and then put `./data` in the `read_dir` field for every row in the samplesheet. 
@@ -87,7 +87,7 @@ Once you have made your samplesheet `.csv` (it can have any name), upload it to 
 
 ### Make your loci parameters file
 
-The loci parameters (or `loci_params`) file is a `.csv` that conveys information to the pipeline about how to process each type of amplicon found in each sample (ie. those derived from `pcr_primers` in the samplesheet). One row should be used per locus/primer pair. Every field in the `loci_params` file is currently required and must be specified, so don't remove any of the columns. 
+The loci parameters (or `loci_params`) file is a `.csv` that conveys information to the pipeline about how to process each type of amplicon found in each sample (ie. those derived from `pcr_primers` in the samplesheet). One row should be used per locus/primer pair. Paths can be absolute, or relative to the analysis directory. 
 
 A 'default' file can be found at `./inputs/loci_params_default.csv` that contains defaults for 'typical' runs focusing on the COI locus, but you will need to change some of these:
 
@@ -98,11 +98,13 @@ A 'default' file can be found at `./inputs/loci_params_default.csv` that contain
 | `read_trunc_length` | Length (bp) to truncate all reads to | `0` (means disabled) |
 | `asv_min_length` | Minimum allowed ASV length (bp) | Typically should be same as `read_min_length` |
 | `asv_max_length` | Maximum allowed ASV length (bp) | Typically should be same as `read_max_length` |
-| `phmm` | Path to PHMM model of COI | Path to your PHMM model in R data structure (`.rds`) format |
-| `idtaxa_db` | Path to trained IDTAXA database | `/group/referencedata/mspd-db/metabarcoding/arthropod/imappests_coi_18_08_2020/idtaxa_bftrimmed.rds` |
-| `ref_fasta` | Path to reference sequence database  | `/group/referencedata/mspd-db/metabarcoding/arthropod/imappests_coi_18_08_2020/insecta_hierarchial_bftrimmed.fa.gz` |
+| `phmm` | Path to PHMM model of your target sequence | eg. `folmer_fullength_model.rds`; if you don't have one, set to `NA` |
+| `idtaxa_db` | Path to trained IDTAXA database | eg. `reference/idtaxa_bftrimmed.rds`; if you don't have one, set to `NA` |
+| `ref_fasta` | Path to reference sequence database  | eg. `reference/insecta_hierarchial_bftrimmed.fa.gz` |
 
 > NOTE: Because Nanopore reads tend to be highly variable in length, it is important to set `read_min_length`/`read_max_length` appropriately so that ultra-long, off-target reads get filtered out early in the pipeline. The presence of such reads can slow down the pipeline or even cause it to fail. 
+
+> NOTE: If you don't have a trained IDTAXA model, you must have a [correctly formatted](https://alexpiper.github.io/taxreturn/articles/taxreturn.html) reference database `.fasta` file specified in `ref_fasta`, and you need to run the pipeline command with the additional flag `--train_idtaxa formatted`. 
 
 Once you have made your loci parameters `.csv` (it can have any name), upload it to the `inputs` directory.
 
@@ -131,7 +133,9 @@ NXF_VER=23.04.5 \
     nextflow run . \
     --samplesheet ./inputs/[your_samplesheet].csv \
     --loci_params ./inputs/[your_loci_params].csv \
-    -profile basc_slurm
+    -profile basc_slurm \
+    --seq_type nanopore \
+    --paired false
 
 ```
 
@@ -140,6 +144,7 @@ The above code is doing the following:
 - `nextflow run .` tells `nextflow` to run the pipeline using files in the current directory
 - `--samplesheet` and `--loci_params` specify where your samplesheet and loci parameters files are; these can be relative or absolute paths, here we use relative paths
 - `-profile basc_slurm` tells `nextflow` to run using settings that make sense for BASC; in particular, it will spawn a new job for every process, making its computational execution very efficient, and will use `shifter` to run Docker containers for all the software tools
+- `--seq_type nanopore` and `--paired false` tell the pipeline we're using Nanopore data
 
 > NOTE: Confusingly, pipeline parameters like `--samplesheet` need to be typed on the command line using a double hyphen, while `nextflow` parameters like `-profile` need to be typed with a single hyphen. When in doubt, copy-paste from this page.
 
@@ -149,10 +154,10 @@ The above code is doing the following:
 
 | parameter | meaning | requirements |
 | --- | --- | --- |
-| `--miseq_internal` | If your sequencing data was generated by a MiSeq machine and re-demultiplexed to put indices in headers, use this option to estimate index switching and some other QC stats | Can be `false` (default) or `true`; ignore if you're uncertain about this |
 | `--primer_error_rate` | Error rate allowed when detecting primer sequences | Sets the value for `cutadapt -e`; see the [`cutadapt` reference manual](https://cutadapt.readthedocs.io/en/v4.7/guide.html#error-tolerance) for more info |
 | `--primer_n_trim` | Recognise N bases in reads when detecting primers | Can be `false` (default) or `true`; only use this if your sequencing data quality is very low |
 | `--subsample` | Reduce the number of input samples per `pcr_primers` x `fcid` combination to this number | Should be a number >=1; this is mainly used for development and debugging and should only be used if you're trying to quickly work out if you have the right parameters for a particular dataset |
+| `--downsample_reads` | Reduce the number of input reads per sample to at most this number | Should be a number >=1; this is mainly used for development and debugging and should only be used if you're trying to quickly work out if you have the right parameters for a particular dataset |
 
 
 #### Using an interactive shell
@@ -177,7 +182,7 @@ There is also a template SLURM script for running `freyr` on BASC available at [
 
 ### Optional: Running a test dataset
 
-`freyr` comes packaged with a small test dataset that can be used to quickly check that the pipeline is working as expected and get you familiar with pipeline outputs. Typically, this should take only 5-10 minutes if the BASC job queue isn't full, and is most easily done in an interactive shell. To run `freyr` on this dataset, use the following commands:
+`freyr` comes packaged with a small (Illumina) test dataset that can be used to quickly check that the pipeline is working as expected and get you familiar with pipeline outputs. Typically, this should take only 5-10 minutes if the BASC job queue isn't full, and is most easily done in an interactive shell. To run `freyr` on this dataset, use the following commands:
 
 ```
 ## run these inside your cloned directory (ie. $working_dir)
@@ -344,7 +349,5 @@ The `phyloseq_unfiltered` directory contains **accumulation curve plots** (`accu
 
 A **read tracking plot** (`read_tracker.pdf`) can be found in `./output/modules/read_tracking`. This shows the total number of reads, per flowcell, that make it through each step of the pipeline, including the final taxonomic and abundance filtering of OTUs/ASVs. 
 
-**Read quality plots** per sample and primer pair can be found in `./output/modules/filter_qualplots`, that visualise quality before (`*_pre_qualplots.pdf`) and after (`*_post_qualplots.pdf`) read filtering and truncation. These show the distribution of base quality per position (top) and the cumulative number of expected errors per read for various quantiles (bottom).
-
-If the pipeline parameter `--miseq_internal` was set to `true` and the data directory had the correct MiSeq-output structure, there will be **additional QC plots** in `./output/modules/seq_qc` per flowcell. `*_flowcell_qc.pdf` has stats about the quality of the MiSeq runs, while `*_index_switching.pdf` shows a heat map of the calculated index switching rate per index combination. 
+**Read quality plots** per sample and primer pair can be found in `./output/modules/filter_qualplots`, that visualise quality before (`*_pre_qualplots.pdf`) and after (`*_post_qualplots.pdf`) read filtering and truncation. These show the distribution of base quality per position (top) and the cumulative number of expected errors per read for various quantiles (bottom). A Nanopore-specific input QC report per sample from [`NanoPlot`](https://github.com/wdecoster/NanoPlot) (`*_NanoPlot-report.html`) can be found in `./output/modules/nanoplot`.
 
