@@ -74,13 +74,6 @@
                     "errorMessage": "Must be set to 'true' or 'false'.",
                     "default": false
                 },
-                "high_sensitivity": {
-                    "type": "boolean",
-                    "description": "Run DADA2 ASV inference in high-sensitivity mode, ie. use pseudo-pooling.",
-                    "errorMessage": "Must be set to 'true' or 'false'.",
-                    "help_text": "Run DADA2 ASV inference in high-sensitivity mode, ie. use pseudo-pooling.",
-                    "default": true
-                },
                 "primer_error_rate": {
                     "type": "number",
                     "minimum": 0,
@@ -95,6 +88,27 @@
                     "errorMessage": "Must be set to 'true' or 'false'.",
                     "help_text": "Use 'cutadapt --match-read-wildcards' to recognise N bases in reads when trimming primers. Recommended only for low-quality data input when trying to retain as much data as possible.",
                     "default": false
+                },
+                "high_sensitivity": {
+                    "type": "boolean",
+                    "description": "Run DADA2 ASV inference in high-sensitivity mode, ie. use pseudo-pooling.",
+                    "errorMessage": "Must be set to 'true' or 'false'.",
+                    "help_text": "Run DADA2 ASV inference in high-sensitivity mode, ie. use pseudo-pooling.",
+                    "default": true
+                },
+                "dada_band_size": {
+                    "type": "integer",
+                    "description": "Set BAND_SIZE parameter for dada2::dada denoising function. For explanation, see dada2::setDadaOpt().",
+                    "errorMessage": "Must be an integer. Set to a negative number to turn off banding.",
+                    "help_text": "Set BAND_SIZE parameter for dada2::dada denoising function. For explanation, see dada2::setDadaOpt().",
+                    "default": 16
+                },
+                "dada_homopolymer": {
+                    "type": "integer",
+                    "maximum": -1,
+                    "description": "Set HOMOPOLYMER_GAP_PENALTY parameter for dada2::dada denoising function. For explanation, see dada2::setDadaOpt().",
+                    "errorMessage": "Must be a negative integer. Leave unset (default) to treat homopolymer gaps like regular gaps.",
+                    "help_text": "Set HOMOPOLYMER_GAP_PENALTY parameter for dada2::dada denoising function. For explanation, see dada2::setDadaOpt()."
                 },
                 "threads": {
                     "type": ["boolean", "integer"],
