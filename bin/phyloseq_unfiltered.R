@@ -118,7 +118,7 @@ taxtab_out <- phyloseq::tax_table(ps) %>%
 
 # Check taxonomy table outputs
 ### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
-if(!all(colnames(taxtab) == c("OTU", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
+if(!all(colnames(taxtab_out) == c("OTU", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
     message("Warning: Taxonomy table columns do not meet expectations for the staging database \n
             Database requires the columns: OTU, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species ")
 }
@@ -135,7 +135,7 @@ readr::write_csv(samdf_out, paste0("samdf_unfiltered_",pcr_primers,".csv"))
 saveRDS(ps, paste0("ps_unfiltered_",pcr_primers,".rds"))
 
 ## creates accumulation curve plots and saves plot
-gg.acc_curve <- rareplot(ps, step="auto", threshold = max(samdf$min_sample_reads))
+gg.acc_curve <- rareplot(ps, step=1L, threshold = max(samdf$min_sample_reads))
 
 pdf(file=paste0("accumulation_curve_",pcr_primers,".pdf"), width = 11, height = 8 , paper="a4r")
     print(gg.acc_curve)
