@@ -1,4 +1,4 @@
-# Nanopore tutorial [INCOMPLETE--DO NOT USE]
+# Nanopore tutorial
 #### by Jack Scanlan, 2024-08 
 
 This tutorial will help you run `freyr` on the Agriculture Victoria BASC HPC system, for experiments on mixed arthropod samples (focusing on insects).
