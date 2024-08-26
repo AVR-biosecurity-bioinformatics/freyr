@@ -12,7 +12,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     PRINT PARAMS SUMMARY
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
+*/ 
 
 // include functions from nf-schema
 include { validateParameters; paramsHelp; paramsSummaryLog; samplesheetToList } from 'plugin/nf-schema' 
@@ -76,7 +76,15 @@ validateParameters( parameters_schema: 'nextflow_schema.json' )
 log.info paramsSummaryLog(workflow)
 // make it clear that samples are being subsampled
 if (params.subsample) {
-    log.info "*** NOTE: Input samples are being randomly subsampled to $params.subsample per primer x flowcell combination (params.subsample = $params.subsample) ***"
+    log.info "***"
+    log.info "NOTE: Input samples are being randomly subsampled to $params.subsample per primer x flowcell combination (params.subsample = $params.subsample)"
+    log.info "***"
+}
+
+if (params.downsample_reads) {
+    log.info "***"
+    log.info "NOTE: Input samples are being randomly downsampled to $params.downsample_reads reads (params.subsample = $params.downsample_reads)"
+    log.info "***"
 }
 
 
@@ -120,6 +128,8 @@ include { RESULT_SUMMARIES                          } from './nextflow/subworkfl
 
 //// import modules
 include { PARSE_INPUTS                              } from './nextflow/modules/parse_inputs'
+include { DOWNSAMPLE_READS                          } from './nextflow/modules/downsample_reads'
+include { TRAIN_IDTAXA                              } from './nextflow/modules/train_idtaxa'
 
 //// utility processes for development and debugging
 include { STOP                                      } from './nextflow/modules/stop'
@@ -162,16 +172,50 @@ workflow FREYR {
     }
 
     //// read-in samplesheet and loci_params .csv files, validate their contents, and produce inputs for rest of pipeline
-    PARSE_INPUTS ( params.samplesheet, params.loci_params )
+    PARSE_INPUTS ( 
+        params.samplesheet, 
+        params.loci_params,
+        params.seq_type,
+        params.paired
+        )
 
     // ch_versions = Channel.empty()
     
     //// Create empty channels
     ch_read_tracker_grouped =   // read-tracking for grouped processes
         Channel.empty()      
-    
+    ch_idtaxa_db_new = 
+        Channel.empty()
+
 
     //// parse samplesheets that contain locus-specific parameters
+    if ( params.paired == true ) {
+        PARSE_INPUTS.out.samplesheet_locus
+        .flatten ()
+        .splitCsv ( header: true )
+        .map { row -> 
+            def meta = row.subMap(
+                'sample_id','sample_name','extraction_rep','amp_rep',
+                'client_name','experiment_name','sample_type','collection_method',
+                'collection_location','latitude','longitude','environment','collection_date',
+                'operator_name','description','assay','extraction_method',
+                'amp_method','target_gene','pcr_primers','for_primer_seq',
+                'rev_primer_seq','index_plate','index_well','i7_index_id',
+                'i7_index','i5_index_id','i5_index','seq_platform',
+                'fcid','for_read_length','rev_read_length','seq_run_id',
+                'seq_id','seq_date','analysis_method','notes','max_primer_mismatch','read_min_length','read_max_length',
+                'read_max_ee','read_trunc_length','read_trim_left','read_trim_right',
+                'asv_min_length','asv_max_length','high_sensitivity','concat_unmerged','genetic_code','coding',
+                'phmm','idtaxa_db','ref_fasta','idtaxa_confidence',
+                'run_blast','blast_min_identity','blast_min_coverage','target_kingdom',
+                'target_phylum','target_class','target_order','target_family',
+                'target_genus','target_species','min_sample_reads','min_taxa_reads',
+                'min_taxa_ra','threads'
+                )
+            [ meta, [ file(row.fwd, checkIfExists: true), file(row.rev, checkIfExists: true) ] ]  
+            }
+        .set { ch_sample_locus_reads }
+    } else if ( params.paired == false ) {
     PARSE_INPUTS.out.samplesheet_locus
         .flatten ()
         .splitCsv ( header: true )
@@ -194,13 +238,12 @@ workflow FREYR {
                 'target_genus','target_species','min_sample_reads','min_taxa_reads',
                 'min_taxa_ra','threads'
                 )
-            [ meta, [
-                file(row.fwd, checkIfExists: true),
-                file(row.rev, checkIfExists: true)
-            ] ]  
+            [ meta, file(row.single, checkIfExists: true) ]  
             }
         .set { ch_sample_locus_reads }
-
+    } else {
+        error " 'params.paired' must be 'true' or 'false'. "
+    }
 
     //// create channel that links locus-specific samplesheets to pcr_primer key, in the format 'pcr_primers, csv_file'
     PARSE_INPUTS.out.samplesheet_locus
@@ -258,6 +301,40 @@ workflow FREYR {
         .set { ch_loci_params } // cardinality: pcr_primers, map(all params, incl. pcr_primers)
 
 
+    //// train IDTAXA model from reference database .fasta
+    if ( params.train_idtaxa ) {
+        
+        //// create input channel for TRAIN_IDTAXA
+        ch_loci_params
+            .map { pcr_primers, loci_params ->
+                [ pcr_primers, loci_params.ref_fasta ]  }
+            .set { ch_train_idtaxa_input }
+
+        //// train model
+        TRAIN_IDTAXA (
+            ch_train_idtaxa_input,
+            params.train_idtaxa
+        )
+
+        ch_idtaxa_db_new
+            .concat ( TRAIN_IDTAXA.out.model )
+            .set { ch_idtaxa_db_new }
+    } else {
+        ch_idtaxa_db_new = channel.value( "no_new_model" )
+    }
+
+    //// downsample reads if params.downsample is defined
+    if ( params.downsample_reads ) {
+        DOWNSAMPLE_READS (
+            ch_sample_locus_reads,
+            params.seq_type,
+            params.paired,
+            params.downsample_reads
+        )
+
+        ch_sample_locus_reads = DOWNSAMPLE_READS.out.reads
+    }
+
     //// subworkflow: process sequencing reads
     PROCESS_READS (
         ch_sample_locus_reads,
@@ -271,26 +348,27 @@ workflow FREYR {
     DADA2 (
         PROCESS_READS.out.ch_processed_reads,
         ch_read_tracker_grouped
-    )
+        )
 
 
     //// subworkflow: assign taxonomy
     TAXONOMY (
-        DADA2.out.ch_seqtab_meta,
-        ch_loci_params
-    )
+        DADA2.out.ch_seqtab,
+        ch_loci_params,
+        ch_idtaxa_db_new
+        )
 
 
     //// subworkflow: create result summaries
     RESULT_SUMMARIES (
-        TAXONOMY.out.ch_tax_summaries,
+        DADA2.out.ch_seqtab,
         TAXONOMY.out.ch_mergetax_output,
         TAXONOMY.out.ch_seqtab,
         ch_loci_samdf,
         ch_loci_params,
         PROCESS_READS.out.ch_read_tracker_samples,
         DADA2.out.read_tracker_grouped
-    )
+        )
     
 
     ///// VISUALISATION

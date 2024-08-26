@@ -115,7 +115,7 @@ elif [ $PAIRED == "false" ]; then
     ## run cutadapt in "linked adapter" mode
     # see here: https://cutadapt.readthedocs.io/en/stable/recipes.html#trimming-amplicon-primers-from-paired-end-reads
     cutadapt \
-        -a ${FWD_PRIMER}...${REV_PRIMER_RC} \
+        -g X${FWD_PRIMER}...${REV_PRIMER_RC}X \
         --discard-untrimmed \
         --rename="{header}" \
         --report=minimal \

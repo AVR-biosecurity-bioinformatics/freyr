@@ -20,13 +20,28 @@ nf_vars <- c(
 )
 lapply(nf_vars, nf_var_check)
 
+### set dada defaults if params aren't parsed
+if ( params.dada_band_size == "null" ){
+    dada_band_size <- 16
+} else { dada_band_size <- as.numeric(params.dada_band_size) }
+
+if ( params.dada_homopolymer == "null" ){
+    dada_homopolymer <- NULL
+} else { dada_homopolymer <- as.numeric(params.dada_homopolymer) }
+
+
+
 ### run R code
+set.seed(1)
+
 errormodel <- readRDS(errormodel) # import error model
 
 if ( direction == "forward" ) { # recode read direction as "F" or "R"
     direction_short <- "F"
 } else if ( direction == "reverse" ) {
     direction_short <- "R"
+} else if ( direction == "single" ) {
+    direction_short <- "S"
 } else {
     stop(" Input reads direction needs to be 'forward' or 'reverse'! ")
 }
@@ -42,7 +57,9 @@ if ( n_pass == "first" && priors == "NO_FILE" ) { # first pass condition; no pri
         priors = priors, 
         selfConsist = FALSE, 
         pool = FALSE, 
-        verbose = TRUE
+        verbose = TRUE,
+        BAND_SIZE = dada_band_size,
+        HOMOPOLYMER_GAP_PENALTY = dada_homopolymer
     )
 
     saveRDS(dada_output, paste0(sample_id,"_",pcr_primers,"_dada1",direction_short,".rds"))

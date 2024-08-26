@@ -16,46 +16,55 @@ workflow TAXONOMY {
 
     take:
 
-    ch_seqtab_meta
+    ch_seqtab
     ch_loci_params
+    ch_idtaxa_db_new
 
 
     main:
 
+    //// join loci_params to seqtab
+    ch_seqtab
+        .join ( ch_loci_params, by: 0 )
+        .map { pcr_primers, fcid, seqtab, loci_params -> 
+            [ pcr_primers, fcid, loci_params, seqtab ] }
+        .set { ch_seqtab_params }
+
+    //// use newly trained IDTAXA model, if it exists
+    if ( params.train_idtaxa ) {
+        ch_seqtab_params
+            .join ( ch_idtaxa_db_new, by: 0 ) // join by pcr_primers
+            .map { pcr_primers, fcid, loci_params, seqtab, new_idtaxa ->
+                [ pcr_primers, fcid, loci_params + [ idtaxa_db: new_idtaxa ], seqtab ] }
+            .set { ch_seqtab_params }
+    }
+    
     //// use IDTAXA to assign taxonomy
-    TAX_IDTAXA ( ch_seqtab_meta )
+    TAX_IDTAXA ( ch_seqtab_params )
     
     ch_tax_idtaxa_tax = 
         TAX_IDTAXA.out.tax
-        .map { pcr_primers, fcid, meta, tax -> // remove meta
-            [ pcr_primers, fcid, tax ] }
+        // .map { pcr_primers, fcid, meta, tax -> // remove meta
+        //     [ pcr_primers, fcid, tax ] }
 
     ch_tax_idtaxa_ids = 
         TAX_IDTAXA.out.ids 
-        .map { pcr_primers, fcid, meta, ids -> // remove meta
-            [ pcr_primers, fcid, ids ] }
-
-    ch_seqtab = 
-        ch_seqtab_meta
-        .map { pcr_primers, fcid, meta, seqtab -> // remove meta
-            [ pcr_primers, fcid, seqtab ] }
+        // .map { pcr_primers, fcid, meta, ids -> // remove meta
+        //     [ pcr_primers, fcid, ids ] }
 
     //// use blastn to assign taxonomy
-    TAX_BLAST ( ch_seqtab_meta )
+    TAX_BLAST ( ch_seqtab_params )
 
     ch_tax_blast = 
         TAX_BLAST.out.blast
-        .map { pcr_primers, fcid, meta, blast -> // remove meta
-            [ pcr_primers, fcid, blast ] }
+        // .map { pcr_primers, fcid, meta, blast -> // remove meta
+        //     [ pcr_primers, fcid, blast ] }
 
     //// merge tax assignment outputs and filtered seqtab (pre-assignment)
-    ch_tax_idtaxa_tax
-        .combine ( ch_tax_blast, by: [0,1] ) 
-        .combine ( ch_seqtab, by: [0,1] )
-        .combine ( ch_loci_params, by: 0 ) // adds map of loci_params
-        .set { ch_joint_tax_input } // pcr_primers, fcid, tax, blast, seqtab, loci_params
-
-    // ch_joint_tax_input.view()
+    ch_tax_idtaxa_tax // pcr_primers, fcid, loci_params, tax
+        .join ( ch_tax_blast, by: [0,1,2] ) 
+        .join ( ch_seqtab_params, by: [0,1,2] )
+        .set { ch_joint_tax_input } // pcr_primers, fcid, loci_params, tax, blast, seqtab
 
     //// aggregate taxonomic assignment
     JOINT_TAX ( ch_joint_tax_input )
@@ -72,19 +81,18 @@ workflow TAXONOMY {
 
     //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
     /// channel has one item per fcid x pcr_primer combo
-    ch_seqtab
-        .combine ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by pcr_primers, fcid 
-        .combine ( JOINT_TAX.out.taxtab, by: [0,1] ) // combine by pcr_primers, fcid
-        .combine ( ch_loci_params, by: 0 ) // add loci info
+    ch_seqtab_params // pcr_primers, fcid, loci_params, seqtab
+        .join ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by pcr_primers, fcid 
+        .join ( JOINT_TAX.out.taxtab, by: [0,1] ) // combine by pcr_primers, fcid
         .set { ch_assignment_plot_input }
 
     //// do assignment plot
     ASSIGNMENT_PLOT ( ch_assignment_plot_input )
 
     /// generate taxonomic assignment summary per locus (also hash seq)
-    ch_tax_idtaxa_tax // pcr_primers, fcid, "*_idtaxa_tax.rds"
-        .combine ( ch_tax_idtaxa_ids, by: [0,1] ) // + "*_idtaxa_ids.rds"
-        .combine ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + "*_joint.rds", map(loci_params)
+    ch_tax_idtaxa_tax // pcr_primers, fcid, loci_params, tax
+        .join ( ch_tax_idtaxa_ids, by: [0,1,2] ) // + "*_idtaxa_ids.rds"
+        .join ( ASSIGNMENT_PLOT.out.joint, by: [0,1,2] ) // + "*_joint.rds"
         .set { ch_tax_summary_input }
 
     //// create taxonomic assignment summaries per locus x flowcell

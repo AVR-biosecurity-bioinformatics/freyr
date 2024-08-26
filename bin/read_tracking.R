@@ -96,7 +96,7 @@ stage_vec <- c(
     "split_loci", 
     "primer_trim",
     "read_filter",
-    "dada_mergereads", 
+    "make_seqtab", 
     "filter_chimera", 
     "filter_length", 
     "filter_phmm", 

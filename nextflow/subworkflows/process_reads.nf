@@ -4,6 +4,8 @@
 
 
 //// modules to import
+include { FASTQC                                    } from '../modules/fastqc'
+include { NANOPLOT                                    } from '../modules/nanoplot'
 include { MISEQ_QC                                  } from '../modules/miseq_qc'
 include { SPLIT_LOCI                                } from '../modules/split_loci'
 include { PRIMER_TRIM                               } from '../modules/primer_trim'
@@ -21,6 +23,9 @@ workflow PROCESS_READS {
 
 
     main:
+
+    ch_seq_type = channel.value ( seq_type )
+    ch_paired = channel.value ( paired )
 
     //// create empty channels
     ch_read_tracker_samples =   // read-tracking for sample-level processes; card: path(.csv)
@@ -40,39 +45,55 @@ workflow PROCESS_READS {
         MISEQ_QC ( ch_fcid ) 
         }
 
+    //// run fastqc on input reads
+    FASTQC (
+        ch_sample_locus_reads,
+        ch_seq_type,
+        ch_paired
+        )
+        
+    //// run nanoplot on nanopore reads
+    if ( seq_type == "nanopore" ) {
+        NANOPLOT (
+            ch_sample_locus_reads,
+            ch_seq_type,
+            ch_paired
+            )
+    }
+
     //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( 
         ch_sample_locus_reads,
-        seq_type,
-        paired
+        ch_seq_type,
+        ch_paired
         ) 
 
     //// trim primer sequences from the start and end of reads
     PRIMER_TRIM ( 
         SPLIT_LOCI.out.reads,
-        seq_type,
-        paired 
+        ch_seq_type,
+        ch_paired 
         )
 
     //// filter reads using dada2 and input parameters
     READ_FILTER ( 
         PRIMER_TRIM.out.reads,
-        seq_type,
-        paired
+        ch_seq_type,
+        ch_paired
         )
 
     //// create plots of read quality pre- and post-filtering, per flowcell (optional)
     FILTER_QUALPLOTS_PRE ( 
         PRIMER_TRIM.out.reads,
-        seq_type,
-        paired,
+        ch_seq_type,
+        ch_paired,
         "pre"
         )
 
     FILTER_QUALPLOTS_POST ( 
         READ_FILTER.out.reads,
-        seq_type,
-        paired,
+        ch_seq_type,
+        ch_paired,
         "post"
         )
 

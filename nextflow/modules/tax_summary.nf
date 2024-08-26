@@ -5,7 +5,7 @@ process TAX_SUMMARY {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), path(tax), path(ids), path(joint), val(loci_params)
+    tuple val(pcr_primers), val(fcid), val(loci_params), path(tax), path(ids), path(joint)
 
     output:
     tuple val(pcr_primers), val(fcid), val(loci_params), path("*_taxonomic_assignment_summary.rds"), emit: rds

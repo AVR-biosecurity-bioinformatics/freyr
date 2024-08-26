@@ -23,6 +23,8 @@ if (direction == "forward") { # recode read direction as "F" or "R"
     direction_short <- "F"
 } else if (direction == "reverse") {
     direction_short <- "R"
+} else if ( direction == "single" ) {
+    direction_short <- "S"
 } else {
     stop(" Input reads direction needs to be 'forward' or 'reverse'! ")
 }

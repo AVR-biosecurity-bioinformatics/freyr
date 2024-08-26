@@ -43,6 +43,8 @@ if ( paired == "true" ) {
 
 ### run R code
 
+set.seed(1)
+
 if ( paired == "true" & seq_type == "illumina" ) {
 
     # filter and trim paired-end reads
@@ -60,7 +62,8 @@ if ( paired == "true" & seq_type == "illumina" ) {
         rm.phix = TRUE, 
         multithread = FALSE, 
         compress = TRUE, 
-        verbose = FALSE
+        verbose = FALSE,
+        n = 1e5
     )
 
 } else if ( paired == "false" & seq_type == "nanopore" ) {
@@ -78,7 +81,8 @@ if ( paired == "true" & seq_type == "illumina" ) {
         rm.phix = TRUE, 
         multithread = FALSE, 
         compress = TRUE, 
-        verbose = FALSE
+        verbose = FALSE,
+        n = 1e4
     )
 
 } else {

@@ -272,42 +272,21 @@ workflow DADA2 {
             /// create sequence table from dada object
             // prepare single reads
             DENOISE2_S.out.seq
-                .map { direction, pcr_primers, fcid, meta, readsF, seqF ->
-                        [ meta.sample_id, pcr_primers, fcid, meta, readsF, seqF ] }
+                .map { direction, pcr_primers, fcid, meta, reads, seqs ->
+                        [ pcr_primers, fcid, meta.concat_unmerged, meta, file(reads, checkIfExists: true), file(seqs, checkIfExists: true) ] }
+                .groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples
                 .set { ch_seq_single }
-
-            // join
-            ch_seq_forward
-                .combine ( ch_seq_reverse, by: [0,1,2,3] ) // combine by sample_id
-                .map { sample_id, pcr_primers, fcid, meta, readsF, seqF, readsR, seqR -> // remove sample_id and meta
-                        [ pcr_primers, fcid, meta.concat_unmerged, meta,
-                        file(readsF, checkIfExists: true),
-                        file(readsR, checkIfExists: true), 
-                        file(seqF, checkIfExists: true),
-                        file(seqR, checkIfExists: true) ] } 
-                .groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples, which it should be
-                .set { ch_seq_combined }
 
         } else { // don't run second denoising step with priors
-            /// join F and R DENOISE1 outputs
-            // prepare forward reads
             DENOISE1_S.out.seq
-                .map { direction, pcr_primers, fcid, meta, readsS, seqS ->
-                        [ meta.sample_id, pcr_primers, fcid, meta, readsS, seqS ] }
-                .set { ch_seq_single }
-
-            // make seqtab
-            ch_seq_single
-                .map { sample_id, pcr_primers, fcid, meta, readsS, seqS -> // remove sample_id and meta
-                        [ pcr_primers, fcid, meta.concat_unmerged, meta,
-                        file(readsS, checkIfExists: true),
-                        file(seqS, checkIfExists: true) ] } 
+                .map { direction, pcr_primers, fcid, meta, reads, seqs ->
+                        [ pcr_primers, fcid, meta.concat_unmerged, meta, file(reads, checkIfExists: true), file(seqs, checkIfExists: true) ] }
                 .groupTuple ( by: [0,1,2] ) // assumes concat_unmerged is the same for all samples
-                .set { ch_seq_combined }
+                .set { ch_seq_single }
         }
 
         //// merge paired-end reads per flowcell x locus combo
-        MAKE_SEQTAB_SINGLE ( ch_seq_combined )
+        MAKE_SEQTAB_SINGLE ( ch_seq_single )
 
         read_tracker_grouped = 
             read_tracker_grouped.concat(MAKE_SEQTAB_SINGLE.out.read_tracking)
@@ -318,7 +297,7 @@ workflow DADA2 {
         read_tracker_grouped = 
             read_tracker_grouped.concat(FILTER_SEQTAB.out.read_tracking)
 
-        ch_seqtab_meta = 
+        ch_seqtab = 
             FILTER_SEQTAB.out.seqtab
             
 
@@ -330,7 +309,7 @@ workflow DADA2 {
 
     emit:
 
-    ch_seqtab_meta
+    ch_seqtab
     read_tracker_grouped
 
 

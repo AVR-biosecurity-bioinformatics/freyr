@@ -15,11 +15,14 @@ nf_vars <- c(
     "direction",
     "fcid",
     "pcr_primers",
-    "reads"
+    "reads",
+    "threads"
 )
 lapply(nf_vars, nf_var_check)
 
 ### run R code (from step_errormodel)
+set.seed(1)
+
 if (!direction %in% c("forward","reverse","single")) { 
     stop(" Input reads direction needs to be 'forward', 'reverse' or 'single'! ")
 }
@@ -58,10 +61,11 @@ if(direction == "forward"){
 ## Learn error rates 
 err <- dada2::learnErrors(
         reads_list, 
-        multithread = FALSE, 
+        multithread = as.numeric(threads), 
         nbases = 1e8,
         randomize = FALSE, 
-        qualityType = "FastqQuality",
+        # qualityType = "FastqQuality",
+        qualityType = "Auto",
         verbose=TRUE
         )
     

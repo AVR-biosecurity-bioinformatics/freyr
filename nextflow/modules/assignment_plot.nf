@@ -5,11 +5,11 @@ process ASSIGNMENT_PLOT {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), path(seqtab), path(blast), path(tax), val(loci_params)
+    tuple val(pcr_primers), val(fcid), val(loci_params), path(seqtab), path(blast), path(tax)
 
     output:
     path("*_taxonomic_assignment_summary.pdf"), emit: plot
-    tuple val(pcr_primers), val(fcid), path("*_joint.rds"), val(loci_params), emit: joint
+    tuple val(pcr_primers), val(fcid), val(loci_params), path("*_joint.rds"), emit: joint
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

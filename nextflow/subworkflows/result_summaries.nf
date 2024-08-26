@@ -28,14 +28,14 @@ workflow RESULT_SUMMARIES {
     //// inputs for PHYLOSEQ_UNFILTERED
     ch_seqtables_locus = 
         ch_seqtab
-        .map { pcr_primers, fcid, seqtab -> [ pcr_primers, seqtab ] } // remove fcid field
+        .map { pcr_primers, fcid, seqtab -> [ pcr_primers, seqtab ] } // remove fcid and loci_params fields
         .groupTuple ( by: 0 ) // group seqtabs into lists per locus
     
     // combine taxtables, seqtables and parameters
     ch_mergetax_output
-        .combine ( ch_seqtables_locus, by: 0 )
-        .combine ( ch_loci_samdf, by: 0 )
-        .combine ( ch_loci_params, by: 0 )
+        .join ( ch_seqtables_locus, by: 0 )
+        .join ( ch_loci_samdf, by: 0 )
+        .join ( ch_loci_params, by: 0 )
         .set { ch_phyloseq_input }
 
     //// create phyloseq objects per locus; output unfiltered summary tables and accumulation curve plot

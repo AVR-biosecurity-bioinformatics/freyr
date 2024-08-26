@@ -16,15 +16,39 @@ nf_vars <- c(
     "projectDir",
     "params_dict",
     "samplesheet",
-    "loci_params"
+    "loci_params",
+    "seq_type",
+    "paired"
 )
 lapply(nf_vars, nf_var_check)
+
+### process variables 
+
+## make relative paths absolute
+# for samplesheet path
+if ( stringr::str_starts(samplesheet, "\\./") ) {
+    samplesheet <- stringr::str_replace(samplesheet, "\\.", projectDir)
+} else if ( stringr::str_starts(samplesheet, "/") ) {
+    stringr::str_replace(samplesheet, "/", paste0(projectDir,"/")) 
+} else {
+    samplesheet <- samplesheet
+}
+
+# for loci_params path
+if ( stringr::str_starts(loci_params, "\\./") ) {
+    loci_params <- stringr::str_replace(loci_params, "\\.", projectDir)
+} else if ( stringr::str_starts(loci_params, "/") ) {
+    stringr::str_replace(loci_params, "/", paste0(projectDir,"/")) 
+} else {
+    loci_params <- loci_params
+}
 
 ### run code
 
 # read in samplesheet
-samplesheet_df <- readr::read_csv(paste0(projectDir,"/",samplesheet), show_col_types = F, skip_empty_rows = TRUE, na = c("", "NA", " ")) %>%
-    dplyr::select(!tidyselect::starts_with("...")) # remove any blank columns that have been named "...X"
+samplesheet_df <- readr::read_csv(samplesheet, show_col_types = F, skip_empty_rows = TRUE, na = c("", "NA", " ")) %>%
+    dplyr::select(!tidyselect::starts_with("...")) %>% # remove any blank columns that have been named "...X"
+    dplyr::filter(dplyr::if_any(tidyselect::everything(), ~ !is.na(.))) # remove completely blank lines
 
 # pseudorandomly subsample samplesheet if params.subsample is defined
 # this is done per pcr_primer x fcid combination so expected combinations are (likely) retained
@@ -37,8 +61,9 @@ if (params.subsample != "null") {
 }
 
 # read in loci parameters
-loci_params_df <- readr::read_csv(paste0(projectDir,"/",loci_params), show_col_types = F, skip_empty_rows = TRUE, na = c("", "NA", " ")) %>%
-    dplyr::select(!tidyselect::starts_with("...")) # remove any blank columns that have been named "...X"
+loci_params_df <- readr::read_csv(loci_params, show_col_types = F, skip_empty_rows = TRUE, na = c("", "NA", " ")) %>%
+    dplyr::select(!tidyselect::starts_with("...")) %>% # remove any blank columns that have been named "...X"
+    dplyr::filter(dplyr::if_any(tidyselect::everything(), ~ !is.na(.))) # remove completely blank lines
 
 ### validation of samplesheet content
 
@@ -122,83 +147,155 @@ if (
     !identical(stringr::str_count(samplesheet_df$pcr_primers, ";"), stringr::str_count(samplesheet_df$rev_primer_seq, ";"))
     ) { stop("SAMPLESHEET ERROR: Mismatch between number of supplied primer pair names and primer sequences!") }
 
-### parse and/or detect read paths
+# check if disallowed read column combinations are detected
+if ( paired == "true" & "single" %in% colnames(samplesheet_df) ) {
+    stop( "SAMPLESHEET ERROR: If data is paired-end, 'single' field cannot be used in the samplesheet.\n\tUse either 'fwd' and 'rev', or 'read_dir' to specify data locations." )
+} 
 
-if ( "read_dir" %in% colnames(samplesheet_df) ) { # if "read_dir" column exists in samplesheet
-    if ("fwd" %in% colnames(samplesheet_df) | "rev" %in% colnames(samplesheet_df) ) { # if "fwd" or "rev" column exists as well as "read_dir", throw error
-        stop ("SAMPLESHEET ERROR: 'read_dir' and one or both of 'fwd' and 'rev' should not be specified together.\n\tSpecify read file locations using only one of: the read directory path ('read_dir'), or direct read paths ('fwd' and 'rev').")
-    } else { # try to find reads
-        # convert read directory to absolute path
-        samplesheet_df <- samplesheet_df %>% 
-            dplyr::mutate(
-                read_dir = dplyr::case_when(
-                    stringr::str_starts(read_dir, "/") ~ read_dir, # if already absolute path, leave it be
-                    stringr::str_starts(read_dir, "\\./") ~ stringr::str_replace(read_dir, "^\\.", projectDir),  # replace "." with projectDir to produce absolute path
-                    .default = stringr::str_replace(read_dir, "^", paste0(projectDir,"/")) # else lead with projectDir to produce absolute path
-                )
-            )
-        reads_list = list() # create empty list
-        for (i in 1:length(samplesheet_df$read_dir)) { # loop through rows of samplesheet
-            i_readfiles <- list.files( # find full paths of files matching sample_id with a fastQ extension
-                path = samplesheet_df$read_dir[i],
-                pattern = paste0(samplesheet_df$sample_id[i],"[^\\s/]*\\.f(ast)?q(\\.gz)?$"),
-                full.names = T, 
-                recursive = T
-                ) %>% unlist()
-            # check exactly two read files are found
-            if ( length(i_readfiles) != 2 ) { 
-                stop (paste0("SAMPLESHEET ERROR: Found ",length(i_readfiles)," read files matching '",samplesheet_df$sample_id[i],"' in '",samplesheet_df$read_dir[i],"' when 2 were expected.\n\tCheck you have filled out samplesheet correctly."))  
-            }
-            if (params.extension != "null") { # using params.extension if supplied
-                message(paste0("Using 'params.extension' (",params.extension,") to find read files in supplied directories ('read_dir')."))
-                # check read files match params.extension
-                if (any(stringr::str_detect(i_readfiles, pattern = paste0(params.extension,"$")))) { stop("SAMPLESHEET ERROR: Read files found in 'read_dir' do not match 'params.extension' file extension--check samplesheet and pipeline parameters.")}
-                # sort read files by text after extension
-                ### TODO: do this
-            } else { # not using params.extension
-                # sort read files by natural order (ie. 1 before 2; F before R)
-                i_readfiles <- stringr::str_sort(i_readfiles)
-            }
-            
-            reads_list[[i]] <- c(samplesheet_df$sample_id[i], i_readfiles) # append to list
-        }
-        reads_df <- do.call(rbind, reads_list) # combine list into dataframe
-        colnames(reads_df) <- c("sample_id","fwd","rev") # name columns
-        reads_df <- reads_df %>% tibble::as_tibble() # convert to tibble
-        # add read paths to samplesheet
-        samplesheet_df <- samplesheet_df %>% 
-            dplyr::left_join(., reads_df, by = "sample_id")
-    } 
-} else { # if "read_dir" doesn't exist...
-    if ( "fwd" %in% colnames(samplesheet_df) & "rev" %in% colnames(samplesheet_df) ) { # if 'fwd' and 'rev' columns both exist...
-        # convert read paths to absolute paths
-        samplesheet_df <- samplesheet_df %>% 
-            dplyr::mutate(
-                across(
-                    c(fwd, rev),
-                    ~ dplyr::case_when(
-                        stringr::str_starts(., "/") ~ ., # if already absolute path, leave it be
-                        stringr::str_starts(., "\\./") ~ stringr::str_replace(., "^\\.", projectDir),  # replace "." with projectDir to produce absolute path
-                        .default = stringr::str_replace(., "^", paste0(projectDir,"/")) # else append projectDir to front to produce absolute path
-                    )
-                )
-            )
-        
-    } else {
-        stop ("SAMPLESHEET ERROR: One of 'fwd' or 'rev' is not present, with 'read_dir' not present!")
+if ( paired == "false" & ( "fwd" %in% colnames(samplesheet_df) | "rev" %in% colnames(samplesheet_df) ) ) {
+    stop( "SAMPLESHEET ERROR: If data is single-end, 'fwd' or 'rev' fields cannot be used in the samplesheet.\n\tUse either 'single', or 'read_dir' to specify data locations." )
+} 
+
+if ( 
+    ( "fwd" %in% colnames(samplesheet_df) & "single" %in% colnames(samplesheet_df) ) | 
+    ( "rev" %in% colnames(samplesheet_df) & "single" %in% colnames(samplesheet_df) ) | 
+    ( "read_dir" %in% colnames(samplesheet_df) & "fwd" %in% colnames(samplesheet_df) ) | 
+    ( "read_dir" %in% colnames(samplesheet_df) & "rev" %in% colnames(samplesheet_df) ) | 
+    ( "read_dir" %in% colnames(samplesheet_df) & "single" %in% colnames(samplesheet_df) ) 
+    ) { 
+    stop ("SAMPLESHEET ERROR: Disallowed combination of read file columns.\n\tSpecify read file locations using only one of: the read directory path ('read_dir'), paired-end direct read paths ('fwd' and 'rev'), or single-end direct read paths ('single').") 
     }
+
+### parse and/or detect read paths
+if ( "read_dir" %in% colnames(samplesheet_df) & paired == "true" ) { # if "read_dir" column exists in samplesheet
+    ## try to find reads
+    # convert read directory to absolute path
+    samplesheet_df <- samplesheet_df %>% 
+        dplyr::mutate(
+            read_dir = dplyr::case_when(
+                stringr::str_starts(read_dir, "/") ~ read_dir, # if already absolute path, leave it be
+                stringr::str_starts(read_dir, "\\./") ~ stringr::str_replace(read_dir, "^\\.", projectDir),  # replace "." with projectDir to produce absolute path
+                .default = stringr::str_replace(read_dir, "^", paste0(projectDir,"/")) # else lead with projectDir to produce absolute path
+            )
+        )
+    reads_list = list() # create empty list
+    for (i in 1:length(samplesheet_df$read_dir)) { # loop through rows of samplesheet
+        i_readfiles <- list.files( # find full paths of files matching sample_id with a fastQ extension
+            path = samplesheet_df$read_dir[i],
+            pattern = paste0(samplesheet_df$sample_id[i],"[^\\s/]*\\.f(ast)?q(\\.gz)?$"),
+            full.names = T, 
+            recursive = T
+            ) %>% unlist()
+        # check exactly two read files are found
+        if ( length(i_readfiles) != 2 ) { 
+            stop (paste0("SAMPLESHEET ERROR: Found ",length(i_readfiles)," read files matching '",samplesheet_df$sample_id[i],"' in '",samplesheet_df$read_dir[i],"' when 2 were expected.\n\tCheck you have filled out samplesheet correctly."))  
+        }
+        if (params.extension != "null") { # using params.extension if supplied
+            message(paste0("Using 'params.extension' (",params.extension,") to find read files in supplied directories ('read_dir')."))
+            # check read files match params.extension
+            if (any(stringr::str_detect(i_readfiles, pattern = paste0(params.extension,"$")))) { stop("SAMPLESHEET ERROR: Read files found in 'read_dir' do not match 'params.extension' file extension--check samplesheet and pipeline parameters.")}
+            # sort read files by text after extension
+            ### TODO: do this
+        } else { # not using params.extension
+            # sort read files by natural order (ie. 1 before 2; F before R)
+            i_readfiles <- stringr::str_sort(i_readfiles)
+        }
+        
+        reads_list[[i]] <- c(samplesheet_df$sample_id[i], i_readfiles) # append to list
+    }
+    reads_df <- do.call(rbind, reads_list) # combine list into dataframe
+    colnames(reads_df) <- c("sample_id","fwd","rev") # name columns
+    reads_df <- reads_df %>% tibble::as_tibble() # convert to tibble
+    # add read paths to samplesheet
+    samplesheet_df <- samplesheet_df %>% 
+        dplyr::left_join(., reads_df, by = "sample_id") 
+
+} else if ( "fwd" %in% colnames(samplesheet_df) & "rev" %in% colnames(samplesheet_df) & paired == "true") { # if 'fwd' and 'rev' columns both exist...
+    # convert read paths to absolute paths
+    samplesheet_df <- samplesheet_df %>% 
+        dplyr::mutate(
+            across(
+                c(fwd, rev),
+                ~ dplyr::case_when(
+                    stringr::str_starts(., "/") ~ ., # if already absolute path, leave it be
+                    stringr::str_starts(., "\\./") ~ stringr::str_replace(., "^\\.", projectDir),  # replace "." with projectDir to produce absolute path
+                    .default = stringr::str_replace(., "^", paste0(projectDir,"/")) # else append projectDir to front to produce absolute path
+                )
+            )
+        )
+} else if ( "read_dir" %in% colnames(samplesheet_df) & paired == "false" ) { # if "read_dir" column exists in samplesheet
+    ## try to find reads
+    # convert read directory to absolute path
+    samplesheet_df <- samplesheet_df %>% 
+        dplyr::mutate(
+            read_dir = dplyr::case_when(
+                stringr::str_starts(read_dir, "/") ~ read_dir, # if already absolute path, leave it be
+                stringr::str_starts(read_dir, "\\./") ~ stringr::str_replace(read_dir, "^\\.", projectDir),  # replace "." with projectDir to produce absolute path
+                .default = stringr::str_replace(read_dir, "^", paste0(projectDir,"/")) # else lead with projectDir to produce absolute path
+            )
+        )
+    reads_list = list() # create empty list
+    for (i in 1:length(samplesheet_df$read_dir)) { # loop through rows of samplesheet
+        i_readfiles <- list.files( # find full paths of files matching sample_id with a fastQ extension
+            path = samplesheet_df$read_dir[i],
+            pattern = paste0(samplesheet_df$sample_id[i],"[^\\s/]*\\.f(ast)?q(\\.gz)?$"),
+            full.names = T, 
+            recursive = T
+            ) %>% unlist()
+        # check exactly one read file is found per sample
+        if ( length(i_readfiles) != 1 ) { 
+            stop (paste0("SAMPLESHEET ERROR: Found ",length(i_readfiles)," read files matching '",samplesheet_df$sample_id[i],"' in '",samplesheet_df$read_dir[i],"' when 1 was expected.\n\tCheck you have filled out samplesheet correctly."))  
+        }
+        if (params.extension != "null") { # using params.extension if supplied
+            message(paste0("Using 'params.extension' (",params.extension,") to find read files in supplied directories ('read_dir')."))
+            # check read files match params.extension
+            if (any(stringr::str_detect(i_readfiles, pattern = paste0(params.extension,"$")))) { stop("SAMPLESHEET ERROR: Read files found in 'read_dir' do not match 'params.extension' file extension--check samplesheet and pipeline parameters.")}
+            # sort read files by text after extension
+            ### TODO: do this
+        } else { # not using params.extension
+            # sort read files by natural order (ie. 1 before 2; F before R)
+            i_readfiles <- stringr::str_sort(i_readfiles)
+        }
+        
+        reads_list[[i]] <- c(samplesheet_df$sample_id[i], i_readfiles) # append to list
+    }
+    reads_df <- do.call(rbind, reads_list) # combine list into dataframe
+    colnames(reads_df) <- c("sample_id","single") # name columns
+    reads_df <- reads_df %>% tibble::as_tibble() # convert to tibble
+    # add read paths to samplesheet
+    samplesheet_df <- samplesheet_df %>% 
+        dplyr::left_join(., reads_df, by = "sample_id") 
+
+} else if (( "single" %in% colnames(samplesheet_df) & paired == "false")) { # if single reads only
+# convert read paths to absolute paths
+    samplesheet_df <- samplesheet_df %>% 
+        dplyr::mutate(
+            across(
+                c(single),
+                ~ dplyr::case_when(
+                    stringr::str_starts(., "/") ~ ., # if already absolute path, leave it be
+                    stringr::str_starts(., "\\./") ~ stringr::str_replace(., "^\\.", projectDir),  # replace "." with projectDir to produce absolute path
+                    .default = stringr::str_replace(., "^", paste0(projectDir,"/")) # else append projectDir to front to produce absolute path
+                )
+            )
+        )
+} else {
+    stop ("SAMPLESHEET ERROR: Disallowed combination of samplesheet read columns and 'paired' pipeline parameter.")
 }
 
-## check that read file paths are readable
-check_paths <- samplesheet_df$fwd %>% unlist() # check fwd paths
-for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
-check_paths <- samplesheet_df$rev %>% unlist() # check rev paths
-for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
+
 
 # check that read file paths are unique
 ### TODO: make this a more informative error -- say which files are duplicated
-if (any(duplicated(samplesheet_df$fwd))) {stop ("SAMPLESHEET ERROR: At least two samples share the same forward read file in the samplesheet!")}
-if (any(duplicated(samplesheet_df$rev))) {stop ("SAMPLESHEET ERROR: At least two samples share the same reverse read file in the samplesheet!")}
+if (paired == "true") {
+    if (any(duplicated(samplesheet_df$fwd))) {stop ("SAMPLESHEET ERROR: At least two samples share the same forward read file in the samplesheet!")}
+    if (any(duplicated(samplesheet_df$rev))) {stop ("SAMPLESHEET ERROR: At least two samples share the same reverse read file in the samplesheet!")}
+} else if ( paired == "false" ) {
+    if (any(duplicated(samplesheet_df$single))) {stop ("SAMPLESHEET ERROR: At least two samples share the same read file in the samplesheet!")}
+} else {
+    stop(paste0("PIPELINE PARAMETER ERROR: 'paired' = '", paired, "' but must be 'true' or 'false'."))
+}
+
 
 ## write parsed samplesheet to file
 readr::write_csv(samplesheet_df, "samplesheet_parsed.csv")
@@ -308,8 +405,15 @@ for ( i in 1:length(lp_vec) ) {
     }
 }
 
+# if `idtaxa_db` is not provided and `params.train_idtaxa` is not true, throw error
+if ( any(loci_params_df$idtaxa_db %in% c("null",NA) ) && params.train_idtaxa == "null" ) {
+    stop ("LOCI_PARAMS ERROR: One or more values of 'idtaxa_db' are missing and 'params.train_idtaxa' is set to 'null'.")
+    }
+
 # check pcr_primers column contains only unique values
-if (any(duplicated(loci_params_df$pcr_primers))) {stop ("LOCI_PARAMS ERROR: 'pcr_primers' values are not unique!")}
+if (any(duplicated(loci_params_df$pcr_primers))) {
+    stop ("LOCI_PARAMS ERROR: 'pcr_primers' values are not unique!")
+    }
 
 # create split samplesheet for checking against loci_params
 samplesheet_split_check <- samplesheet_df %>% 
@@ -346,13 +450,24 @@ loci_params_df <- loci_params_df %>%
                 .default = stringr::str_replace(., "^", paste0(projectDir,"/")) # else lead with projectDir to produce absolute path
             )
         )
-    ) 
+    )
 
-# check phmm, idtaxa_db and ref_fasta are readable files
+## check phmm, idtaxa_db and ref_fasta are readable files
+# phmm path check 
 check_paths <- loci_params_df$phmm %>% unlist() # check phmm paths
-for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
+for(i in seq_along(check_paths)){ if (!is.na(check_paths[i])) {
+    message (paste0("Checking 'phmm' path '",check_paths[i],"'..."))
+    assertthat::is.readable(check_paths[i])} 
+    }
+
+# idtaxa_db path check
 check_paths <- loci_params_df$idtaxa_db %>% unlist() # check idtaxa_db paths
-for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
+for(i in seq_along(check_paths)){ if (!is.na(check_paths[i])) {
+    message (paste0("Checking 'idtaxa_db' path '",check_paths[i],"'..."))
+    assertthat::is.readable(check_paths[i])} 
+    }
+
+# ref_fasta path check
 check_paths <- loci_params_df$ref_fasta %>% unlist() # check ref_fasta paths
 for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
 
