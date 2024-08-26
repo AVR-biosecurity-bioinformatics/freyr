@@ -405,8 +405,15 @@ for ( i in 1:length(lp_vec) ) {
     }
 }
 
+# if `idtaxa_db` is not provided and `params.train_idtaxa` is not true, throw error
+if ( any(loci_params_df$idtaxa_db %in% c("null",NA) ) && params.train_idtaxa == "null" ) {
+    stop ("LOCI_PARAMS ERROR: One or more values of 'idtaxa_db' are missing and 'params.train_idtaxa' is set to 'null'.")
+    }
+
 # check pcr_primers column contains only unique values
-if (any(duplicated(loci_params_df$pcr_primers))) {stop ("LOCI_PARAMS ERROR: 'pcr_primers' values are not unique!")}
+if (any(duplicated(loci_params_df$pcr_primers))) {
+    stop ("LOCI_PARAMS ERROR: 'pcr_primers' values are not unique!")
+    }
 
 # create split samplesheet for checking against loci_params
 samplesheet_split_check <- samplesheet_df %>% 
@@ -443,15 +450,24 @@ loci_params_df <- loci_params_df %>%
                 .default = stringr::str_replace(., "^", paste0(projectDir,"/")) # else lead with projectDir to produce absolute path
             )
         )
-    ) 
+    )
 
-# check phmm, idtaxa_db and ref_fasta are readable files
+## check phmm, idtaxa_db and ref_fasta are readable files
+# phmm path check 
 check_paths <- loci_params_df$phmm %>% unlist() # check phmm paths
-for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
-if ( params.train_idtaxa == "null" ) {
-    check_paths <- loci_params_df$idtaxa_db %>% unlist() # check idtaxa_db paths
-    for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }  
-}
+for(i in seq_along(check_paths)){ if (!is.na(check_paths[i])) {
+    message (paste0("Checking 'phmm' path '",check_paths[i],"'..."))
+    assertthat::is.readable(check_paths[i])} 
+    }
+
+# idtaxa_db path check
+check_paths <- loci_params_df$idtaxa_db %>% unlist() # check idtaxa_db paths
+for(i in seq_along(check_paths)){ if (!is.na(check_paths[i])) {
+    message (paste0("Checking 'idtaxa_db' path '",check_paths[i],"'..."))
+    assertthat::is.readable(check_paths[i])} 
+    }
+
+# ref_fasta path check
 check_paths <- loci_params_df$ref_fasta %>% unlist() # check ref_fasta paths
 for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
 

@@ -22,8 +22,6 @@
         "concat_unmerged",
         "genetic_code",
         "coding",
-        "phmm",
-        "idtaxa_db",
         "ref_fasta",
         "idtaxa_confidence",
         "run_blast",
@@ -135,10 +133,8 @@
         },
         "phmm": {
             "type": "string",
-            "format": "file-path",
             "pattern": "^[^\\s,]+$",
-            "exists": true,
-            "description": "Path to a profile Hidden Markov Model (pHMM) of the amplicon.",
+            "description": "Path to a profile Hidden Markov Model (pHMM) of the target amplicon sequence.",
             "errorMessage": "pHMM path cannot contain spaces or commas."
         },
         "idtaxa_db ": {
