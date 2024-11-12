@@ -30,10 +30,6 @@ workflow TAXONOMY {
             [ pcr_primers, fcid, loci_params, seqtab ] }
         .set { ch_seqtab_params }
 
-    ch_seqtab.view{ "ch_seqtab = $it" }
-    ch_loci_params.view{ "ch_loci_params = $it" }
-    ch_idtaxa_db_new.view{ "ch_idtaxa_db_new = $it" }
-
     //// use newly trained IDTAXA model, if it exists
     if ( params.train_idtaxa ) {
         ch_seqtab_params
@@ -43,8 +39,6 @@ workflow TAXONOMY {
             .set { ch_seqtab_params }
     }
     
-    ch_seqtab_params.view{ "ch_seqtab_params = $it" }
-
     //// use IDTAXA to assign taxonomy
     TAX_IDTAXA ( ch_seqtab_params )
     
@@ -57,10 +51,6 @@ workflow TAXONOMY {
         TAX_IDTAXA.out.ids 
         // .map { pcr_primers, fcid, meta, ids -> // remove meta
         //     [ pcr_primers, fcid, ids ] }
-
-    ch_tax_idtaxa_tax.view{ "ch_tax_idtaxa_tax = $it" }
-    ch_tax_idtaxa_ids.view{ "ch_tax_idtaxa_ids = $it" }
-    ch_tax_idtaxa_tax.view{ "ch_tax_idtaxa_tax = $it" }
 
     //// use blastn to assign taxonomy
     TAX_BLAST ( ch_seqtab_params )
