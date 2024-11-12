@@ -177,8 +177,8 @@ workflow FREYR {
 
     //// read-in samplesheet and loci_params .csv files, validate their contents, and produce inputs for rest of pipeline
     PARSE_INPUTS ( 
-        params.samplesheet, 
-        params.loci_params,
+        ch_samplesheet_file, 
+        ch_loci_params_file,
         params.seq_type,
         params.paired
         )
