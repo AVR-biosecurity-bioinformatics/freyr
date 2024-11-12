@@ -171,6 +171,10 @@ workflow FREYR {
         error "Disallowed combination of --seq_type and --paired"
     }
 
+    //// parse path channels
+    ch_samplesheet_file = channel.fromPath( params.samplesheet, checkIfExists: true, type: 'file' )
+    ch_loci_params_file = channel.fromPath( params.loci_params, checkIfExists: true, type: 'file' )
+
     //// read-in samplesheet and loci_params .csv files, validate their contents, and produce inputs for rest of pipeline
     PARSE_INPUTS ( 
         params.samplesheet, 

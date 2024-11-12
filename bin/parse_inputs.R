@@ -13,7 +13,7 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 
 ### check Nextflow environment variables
 nf_vars <- c(
-    "projectDir",
+    "launchDir",
     "params_dict",
     "samplesheet",
     "loci_params",
@@ -24,24 +24,24 @@ lapply(nf_vars, nf_var_check)
 
 ### process variables 
 
-## make relative paths absolute
-# for samplesheet path
-if ( stringr::str_starts(samplesheet, "\\./") ) {
-    samplesheet <- stringr::str_replace(samplesheet, "\\.", projectDir)
-} else if ( !stringr::str_starts(samplesheet, "/") ) {
-    samplesheet <- paste0(projectDir,"/",samplesheet)
-} else {
-    samplesheet <- samplesheet
-}
+# ## make relative paths absolute
+# # for samplesheet path
+# if ( stringr::str_starts(samplesheet, "\\./") ) {
+#     samplesheet <- stringr::str_replace(samplesheet, "\\.", launchDir)
+# } else if ( !stringr::str_starts(samplesheet, "/") ) {
+#     samplesheet <- paste0(launchDir,"/",samplesheet)
+# } else {
+#     samplesheet <- samplesheet
+# }
 
-# for loci_params path
-if ( stringr::str_starts(loci_params, "\\./") ) {
-    loci_params <- stringr::str_replace(loci_params, "\\.", projectDir)
-} else if ( !stringr::str_starts(loci_params, "/") ) {
-    loci_params <- paste0(projectDir,"/",loci_params)
-} else {
-    loci_params <- loci_params
-}
+# # for loci_params path
+# if ( stringr::str_starts(loci_params, "\\./") ) {
+#     loci_params <- stringr::str_replace(loci_params, "\\.", launchDir)
+# } else if ( !stringr::str_starts(loci_params, "/") ) {
+#     loci_params <- paste0(launchDir,"/",loci_params)
+# } else {
+#     loci_params <- loci_params
+# }
 
 ### run code
 
@@ -174,8 +174,8 @@ if ( "read_dir" %in% colnames(samplesheet_df) & paired == "true" ) { # if "read_
         dplyr::mutate(
             read_dir = dplyr::case_when(
                 stringr::str_starts(read_dir, "/") ~ read_dir, # if already absolute path, leave it be
-                stringr::str_starts(read_dir, "\\./") ~ stringr::str_replace(read_dir, "^\\.", projectDir),  # replace "." with projectDir to produce absolute path
-                .default = stringr::str_replace(read_dir, "^", paste0(projectDir,"/")) # else lead with projectDir to produce absolute path
+                stringr::str_starts(read_dir, "\\./") ~ stringr::str_replace(read_dir, "^\\.", launchDir),  # replace "." with launchDir to produce absolute path
+                .default = stringr::str_replace(read_dir, "^", paste0(launchDir,"/")) # else lead with launchDir to produce absolute path
             )
         )
     reads_list = list() # create empty list
@@ -218,8 +218,8 @@ if ( "read_dir" %in% colnames(samplesheet_df) & paired == "true" ) { # if "read_
                 c(fwd, rev),
                 ~ dplyr::case_when(
                     stringr::str_starts(., "/") ~ ., # if already absolute path, leave it be
-                    stringr::str_starts(., "\\./") ~ stringr::str_replace(., "^\\.", projectDir),  # replace "." with projectDir to produce absolute path
-                    .default = stringr::str_replace(., "^", paste0(projectDir,"/")) # else append projectDir to front to produce absolute path
+                    stringr::str_starts(., "\\./") ~ stringr::str_replace(., "^\\.", launchDir),  # replace "." with launchDir to produce absolute path
+                    .default = stringr::str_replace(., "^", paste0(launchDir,"/")) # else append launchDir to front to produce absolute path
                 )
             )
         )
@@ -230,8 +230,8 @@ if ( "read_dir" %in% colnames(samplesheet_df) & paired == "true" ) { # if "read_
         dplyr::mutate(
             read_dir = dplyr::case_when(
                 stringr::str_starts(read_dir, "/") ~ read_dir, # if already absolute path, leave it be
-                stringr::str_starts(read_dir, "\\./") ~ stringr::str_replace(read_dir, "^\\.", projectDir),  # replace "." with projectDir to produce absolute path
-                .default = stringr::str_replace(read_dir, "^", paste0(projectDir,"/")) # else lead with projectDir to produce absolute path
+                stringr::str_starts(read_dir, "\\./") ~ stringr::str_replace(read_dir, "^\\.", launchDir),  # replace "." with launchDir to produce absolute path
+                .default = stringr::str_replace(read_dir, "^", paste0(launchDir,"/")) # else lead with launchDir to produce absolute path
             )
         )
     reads_list = list() # create empty list
@@ -274,8 +274,8 @@ if ( "read_dir" %in% colnames(samplesheet_df) & paired == "true" ) { # if "read_
                 c(single),
                 ~ dplyr::case_when(
                     stringr::str_starts(., "/") ~ ., # if already absolute path, leave it be
-                    stringr::str_starts(., "\\./") ~ stringr::str_replace(., "^\\.", projectDir),  # replace "." with projectDir to produce absolute path
-                    .default = stringr::str_replace(., "^", paste0(projectDir,"/")) # else append projectDir to front to produce absolute path
+                    stringr::str_starts(., "\\./") ~ stringr::str_replace(., "^\\.", launchDir),  # replace "." with launchDir to produce absolute path
+                    .default = stringr::str_replace(., "^", paste0(launchDir,"/")) # else append launchDir to front to produce absolute path
                 )
             )
         )
@@ -446,8 +446,8 @@ loci_params_df <- loci_params_df %>%
             ~ dplyr::case_when(
                 is.na(.) ~ ., # keep as NA if NA
                 stringr::str_starts(., "/") ~ ., # if already absolute path, leave it be
-                stringr::str_starts(., "\\./") ~ stringr::str_replace(., "^\\.", projectDir),  # replace "." with projectDir to produce absolute path
-                .default = stringr::str_replace(., "^", paste0(projectDir,"/")) # else lead with projectDir to produce absolute path
+                stringr::str_starts(., "\\./") ~ stringr::str_replace(., "^\\.", launchDir),  # replace "." with launchDir to produce absolute path
+                .default = stringr::str_replace(., "^", paste0(launchDir,"/")) # else lead with launchDir to produce absolute path
             )
         )
     )

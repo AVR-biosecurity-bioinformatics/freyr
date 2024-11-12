@@ -5,8 +5,8 @@ process PARSE_INPUTS {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    val(samplesheet)
-    val(loci_params)
+    path(samplesheet)
+    path(loci_params)
     val(seq_type)
     val(paired)
 
@@ -33,7 +33,7 @@ process PARSE_INPUTS {
     paired =                "${paired}"
 
     ## global variables
-    projectDir = "$projectDir"
+    launchDir = "$launchDir"
     params_dict = "$params"
 
     tryCatch({
