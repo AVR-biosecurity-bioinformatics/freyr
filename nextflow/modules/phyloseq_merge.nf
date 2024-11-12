@@ -1,7 +1,7 @@
 process PHYLOSEQ_MERGE {
     def module_name = "phyloseq_merge"
     tag "Whole dataset"
-    label "small"
+    label "medium"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
