@@ -34,6 +34,7 @@ process PARSE_INPUTS {
 
     ## global variables
     launchDir = "$launchDir"
+    projectDir = "$projectDir"
     params_dict = "$params"
 
     tryCatch({

@@ -14,6 +14,7 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "launchDir",
+    "projectDir",
     "params_dict",
     "samplesheet",
     "loci_params",
