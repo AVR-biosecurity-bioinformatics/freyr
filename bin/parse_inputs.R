@@ -342,7 +342,8 @@ default_params <- tibble::tibble(
 )
 
 loci_params_df <- new_bind(default_params %>% filter(FALSE), loci_params_df) %>%
-    dplyr::mutate(across(everything(), as.character))
+  dplyr::mutate(across(everything(), as.character))%>%
+  dplyr::select(colnames(default_params))
 
 ### replace parameters from '--loci_params' .csv file with those from the '--lp_*' flags
 # vector of loci parameters
