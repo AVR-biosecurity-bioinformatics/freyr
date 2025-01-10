@@ -183,7 +183,7 @@ if ( "read_dir" %in% colnames(samplesheet_df) & paired == "true" ) { # if "read_
     for (i in 1:length(samplesheet_df$read_dir)) { # loop through rows of samplesheet
         i_readfiles <- list.files( # find full paths of files matching sample_id with a fastQ extension
             path = samplesheet_df$read_dir[i],
-            pattern = paste0(samplesheet_df$sample_id[i],"[^\\s/]*\\.f(ast)?q(\\.gz)?$"),
+            pattern = paste0(samplesheet_df$sample_id[i],"(?:_[^\\s/]+)?\\.f(ast)?q(\\.gz)?$"),
             full.names = T, 
             recursive = T
             ) %>% unlist()
@@ -239,7 +239,7 @@ if ( "read_dir" %in% colnames(samplesheet_df) & paired == "true" ) { # if "read_
     for (i in 1:length(samplesheet_df$read_dir)) { # loop through rows of samplesheet
         i_readfiles <- list.files( # find full paths of files matching sample_id with a fastQ extension
             path = samplesheet_df$read_dir[i],
-            pattern = paste0(samplesheet_df$sample_id[i],"[^\\s/]*\\.f(ast)?q(\\.gz)?$"),
+            pattern = paste0(samplesheet_df$sample_id[i],"(?:_[^\\s/]+)?\\.f(ast)?q(\\.gz)?$"),
             full.names = T, 
             recursive = T
             ) %>% unlist()
