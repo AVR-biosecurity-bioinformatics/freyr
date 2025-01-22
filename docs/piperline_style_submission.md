@@ -1,7 +1,7 @@
 ---
 title: "Piperline style freyr submission"
 output: html_document
-date: "2025-01-08"
+date: "2025-01-22"
 ---
 
 # Introduction
@@ -9,6 +9,36 @@ date: "2025-01-08"
 The below code is written for the Agriculture Victoria BASC computing cluster.
 
 This workflow gives examples of how to run freyr through SLURM with a piperline style submission syntax
+
+
+Install nextflow in your home directory
+freyr currently requires a specific version of nextflow that is not available as a BASC module. It also uses a third-party validation plugin that doesn't work with standalone (ie. module-based) distributions of nextflow. Luckily, it is very easy to install nextflow for a specific user on BASC:
+
+```
+## this can be done in a login node
+
+# change to your home directory
+cd ~
+
+# load Java
+module load Java/17.0.6
+
+# install nextflow in current directory
+curl -s https://get.nextflow.io | bash
+
+# make nextflow executable
+chmod 777 nextflow
+
+# make a home bin directory if you don't already have one
+mkdir -p ~/bin
+
+# move nextflow into bin to make it executable from any path
+mv nextflow ~/bin
+
+```
+
+NOTE: This only needs to be done once before any particular user uses nextflow for the first time -- you don't need to repeat this step for subsequent runs of this pipeline, or any other nextflow pipeline.
+
 
 # Clone the freyr github repository
 
