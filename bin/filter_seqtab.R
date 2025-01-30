@@ -30,22 +30,6 @@ nf_vars <- c(
 )
 lapply(nf_vars, nf_var_check)
 
-## check and define variables 
-if(is.na(asv_min_length))   {asv_min_length <- NULL}
-if(is.na(asv_max_length))   {asv_max_length <- NULL}
-if(is.na(phmm))             {phmm <- NULL}
-if(is.na(for_primer_seq))   {for_primer_seq <- NULL}
-if(is.na(rev_primer_seq))   {rev_primer_seq <- NULL}
-
-# read seqtab from file 
-if(is.matrix(seqtab) | is.data.frame(seqtab)){
-    if(!quiet){message("Input is a matrix or data frame")}
-} else if (is.character(seqtab) & stringr::str_detect(seqtab, ".rds")){
-    seqtab <- readRDS(seqtab)
-} else {
-    stop("seqtab must be a matrix/data frame or .rds file")
-}
-
 ## extract variables and deal with repetition
 asv_min_length <-   parse_nf_var_repeat(asv_min_length) %>% as.numeric
 asv_max_length <-   parse_nf_var_repeat(asv_max_length) %>% as.numeric
@@ -55,6 +39,13 @@ genetic_code <-     parse_nf_var_repeat(genetic_code)
 for_primer_seq <-   parse_nf_var_repeat(for_primer_seq)
 rev_primer_seq <-   parse_nf_var_repeat(rev_primer_seq)
 
+## check and define variables 
+if(is.na(asv_min_length))   {asv_min_length <- NULL}
+if(is.na(asv_max_length))   {asv_max_length <- NULL}
+if(is.na(phmm))             {phmm <- NULL}
+if(is.na(for_primer_seq))   {for_primer_seq <- NULL}
+if(is.na(rev_primer_seq))   {rev_primer_seq <- NULL}
+
 check_frame <- coding
 quiet <- FALSE # switch quiet off for now
 multithread <- FALSE # multithreading switched off for now
@@ -62,6 +53,15 @@ multithread <- FALSE # multithreading switched off for now
 
 # set primers vector
 primers <- c(for_primer_seq, rev_primer_seq)
+
+# read seqtab from file 
+if(is.matrix(seqtab) | is.data.frame(seqtab)){
+    if(!quiet){message("Input is a matrix or data frame")}
+} else if (is.character(seqtab) & stringr::str_detect(seqtab, ".rds")){
+    seqtab <- readRDS(seqtab)
+} else {
+    stop("seqtab must be a matrix/data frame or .rds file")
+}
 
 ### run R code
 
