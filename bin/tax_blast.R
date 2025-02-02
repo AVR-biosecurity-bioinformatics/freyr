@@ -72,6 +72,7 @@ run_blast <-            as.logical(run_blast)
 database <-             normalizePath(ref_fasta)
 identity <-             as.numeric(blast_min_identity)
 coverage <-             as.numeric(blast_min_coverage)
+db_name <-              basename(database) %>% stringr::str_remove("_\\.*$")
 
 ### run R code
 seqtab <- readRDS(seqtab) # read in seqtab
@@ -84,9 +85,7 @@ if (isTRUE(run_blast)) { # run BLAST if requested
     
     seqs <- taxreturn::char2DNAbin(seqmap$OTU)
     names(seqs) <- seqmap$name
-    
-    # Get the filename of that db that we can use to name the output files
-    db_name <- basename(database) %>% stringr::str_remove("_\\.*$")
+
 
     # empty file to debug output
     # EMPTY_FILE <- c()
