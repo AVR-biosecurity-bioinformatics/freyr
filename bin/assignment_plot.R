@@ -30,48 +30,53 @@ seqtab <-   readRDS(seqtab)
 blast <-    readRDS(blast) # blast is the low-stringency blast output from TAX_BLAST
 tax <-      readRDS(tax)
 
-# convert blast 'resolve_ties="all"' output to 'resolve_ties="first"'
-blast <- blast %>%
-    dplyr::group_by(qseqid) %>% 
-    dplyr::mutate(row_n = dplyr::row_number()) %>%
-    dplyr::top_n(1, row_n) %>% # Break ties by position
-    dplyr::select(-row_n) %>%
-    dplyr::ungroup()
-
-
 ### run R code
 
-#filter tax table
-tax <- tax %>% 
-    seqateurs::unclassified_to_na(rownames=FALSE) %>%
-    dplyr::mutate(lowest = seqateurs::lowest_classified(.)) # causes warning: ' argument is not an atomic vector; coercing'
-    ### TODO: resolve above warning message
+# if blast output isn't NULL...
+if ( !is.null(blast) ){
 
-# make seqmap 
-seqmap <- tibble::enframe(dada2::getSequences(seqtab), name = NULL, value="OTU") %>%
-    dplyr::mutate(name = paste0("SV", seq(length(dada2::getSequences(seqtab)))))
-# get ASV sequences
-seqs <- taxreturn::char2DNAbin(seqmap$OTU)
-names(seqs) <- seqmap$name
+    # convert blast 'resolve_ties="all"' output to 'resolve_ties="first"'
+    blast <- blast %>%
+        dplyr::group_by(qseqid) %>% 
+        dplyr::mutate(row_n = dplyr::row_number()) %>%
+        dplyr::top_n(1, row_n) %>% # Break ties by position
+        dplyr::select(-row_n) %>%
+        dplyr::ungroup()
 
-# add sequences to blast output and rename columns
-blast <- blast %>% 
-    dplyr::mutate(blastspp = paste0(Genus, " ", Species)) %>%
-    dplyr::select(name = qseqid, acc, blastspp, pident, total_score, max_score, evalue, qcovs) %>%
-    dplyr::left_join(seqmap) %>%
-    dplyr::select(-name)
+    # filter tax table
+    tax <- tax %>% 
+        seqateurs::unclassified_to_na(rownames=FALSE) %>%
+        dplyr::mutate(lowest = seqateurs::lowest_classified(.)) # causes warning: ' argument is not an atomic vector; coercing'
+        ### TODO: resolve above warning message
 
-# combine blast output and tax table
-if ( nrow(blast) > 0 & nrow(tax) > 0 ) {
-    joint <- blast %>% 
-        dplyr::left_join(tax, by="OTU")
-    
+    # make seqmap 
+    seqmap <- tibble::enframe(dada2::getSequences(seqtab), name = NULL, value="OTU") %>%
+        dplyr::mutate(name = paste0("SV", seq(length(dada2::getSequences(seqtab)))))
+    # get ASV sequences
+    seqs <- taxreturn::char2DNAbin(seqmap$OTU)
+    names(seqs) <- seqmap$name
+
+    # add sequences to blast output and rename columns
+    blast <- blast %>% 
+        dplyr::mutate(blastspp = paste0(Genus, " ", Species)) %>%
+        dplyr::select(name = qseqid, acc, blastspp, pident, total_score, max_score, evalue, qcovs) %>%
+        dplyr::left_join(seqmap) %>%
+        dplyr::select(-name)
+
+    # combine blast output and tax table
+    if ( nrow(blast) > 0 & nrow(tax) > 0 ) {
+        joint <- blast %>% 
+            dplyr::left_join(tax, by="OTU")
+        
+    } else {
+        joint <- NULL
+    }
 } else {
     joint <- NULL
 }
 
 # save joint object
-    saveRDS(joint, paste0(fcid,"_",pcr_primers,"_joint.rds"))
+saveRDS(joint, paste0(fcid,"_",pcr_primers,"_joint.rds"))
 
 # make assignment plot
 if ( !is.null(joint) ) {
@@ -122,8 +127,7 @@ if ( !is.null(plot) ){
 } else {
     pdf(file = plot_filename, width = 11, height = 8 , paper="a4r")
     plot.new()
-    text(x=.5, y=.5, "ERROR: No blast hits to reference fasta -- assignment plot not created") 
+    text(x=.5, y=.5, "No blast hits to reference fasta -- assignment plot not created") 
     try(dev.off(), silent=TRUE)
 }
 
-# stop(" *** stopped manually *** ") ##########################################

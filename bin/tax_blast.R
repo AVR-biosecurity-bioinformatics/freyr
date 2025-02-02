@@ -176,6 +176,10 @@ if (isTRUE(run_blast)) { # run BLAST if requested
     # save output
     saveRDS(out, paste0(fcid,"_",pcr_primers,"_",db_name,"_blast.rds"))
 
+    # save NULL output for assignment plot
+    blast_spp_low <- NULL
+    saveRDS(blast_spp_low, paste0(fcid,"_",pcr_primers,"_blast_spp_low.rds"))
+
 }
 
 # stop(" *** stopped manually *** ") ##########################################
