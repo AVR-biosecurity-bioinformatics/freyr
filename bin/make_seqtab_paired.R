@@ -75,7 +75,7 @@ seqs_R_list <- # convert input sequences list from Groovy format to R format
 seqs_R_extracted <- lapply(seqs_R_list, readRDS)
 names(seqs_R_extracted) <- sample_id_list
 
-## merge pairs, keeping unmerged reads only if concat_unmerged is FALSE
+## merge pairs, keeping unmerged reads only if concat_unmerged is TRUE
 if ( concat_unmerged ) {
     mergers <- dada2::mergePairs(
         dadaF = seqs_F_extracted,
