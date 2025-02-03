@@ -25,6 +25,10 @@ nf_vars <- c(
 )
 lapply(nf_vars, nf_var_check)
 
+if ( is.na(concat_unmerged) || concat_unmerged == "NA" || !is.logical(concat_unmerged)){
+    concat_unmerged <- FALSE
+}
+
 ### run R code
 ## process sample IDs to name the read and seq lists
 ## NOTE: the format of this list is different: "[a,b,c]" not "a b c"

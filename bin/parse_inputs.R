@@ -437,7 +437,12 @@ loci_params_df <- loci_params_df %>%
         high_sensitivity = as.logical(high_sensitivity),
         run_blast = as.logical(run_blast),
         coding = as.logical(coding),
-        concat_unmerged = as.logical(concat_unmerged)
+        concat_unmerged = dplyr::case_when(
+            concat_unmerged == "NA" ~ FALSE,
+            concat_unmerged %in% c("TRUE", "true") ~ TRUE,
+            concat_unmerged %in% c("FALSE", "false") ~ FALSE,
+            .default = FALSE
+        )
     )
 
 # convert phmm, idtaxa_db and ref_fasta paths to absolute paths
