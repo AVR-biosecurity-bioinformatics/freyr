@@ -1,7 +1,7 @@
 process PHYLOSEQ_UNFILTERED {
     def module_name = "phyloseq_unfiltered"
     tag "$pcr_primers"
-    label "medium"
+    label "phyloseq"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
@@ -11,7 +11,7 @@ process PHYLOSEQ_UNFILTERED {
     path("*.csv"),                                                          emit: csvs
     tuple val(pcr_primers), path("ps_unfiltered_*.rds"), val(loci_params),  emit: ps 
     path("*.fasta"),                                                        emit: asv_fasta
-    path("accumulation_curve_*.pdf"),                                       emit: acc_curve
+    // path("accumulation_curve_*.pdf"),                                       emit: acc_curve
     path("*.nwk"),                                                          emit: nwk, optional: true
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
