@@ -44,12 +44,11 @@ NOTE: This only needs to be done once before any particular user uses nextflow f
 
 ```
 # Define the directory you will be running the analysis in
-working_dir=/group/pathogens/IAWS/Personal/Alexp/metabarcoding/marine_surveillance #CHANGE TO YOUR DIRECTORY
+working_dir=/group/your.account/IAWS/Personal/Alexp/metabarcoding/marine_surveillance #CHANGE TO YOUR DIRECTORY
 
 git clone https://github.com/AVR-biosecurity-bioinformatics/freyr $working_dir
 
 ```
-
 
 ## Updating freyr
 
@@ -141,9 +140,11 @@ This requires the data to be placed within the subfolders of the data directory.
          
 Paths to files can be relative to the submission location, or absolute paths     
 
+**You will need to change your email address and account code below, see [BASC account code lists](https://users.basc.science.depi.vic.gov.au/jobs/slurm/slurm_accounts/)**
+
 ```
 # Submit slurm job - CHANGE EMAIL TO YOUR OWN EMAIL
-sbatch --mail-user=your.name@email.com --account=pathogens supplementary_scripts/submit_slurm.sh \
+sbatch --mail-user=your.name@email.com --account=your.account supplementary_scripts/submit_slurm.sh \
 --pcr_primers fwhF2-fwhR2n \
 --for_primer_seq GGDACWGGWTGAACWGTWTAYCCHCC \
 --rev_primer_seq GTRATWGCHCCDGCTARWACWGG \
@@ -190,9 +191,11 @@ if you wish to use multiple values (i.e. multiple reference databases, multiple 
 
 Note, watch for the naming of the runParameters file, different versions of the miseq software output this file with a capitalized or lowercase R
 
+**You will need to change your email address and account code below, see [BASC account code lists](https://users.basc.science.depi.vic.gov.au/jobs/slurm/slurm_accounts/)**
+
 ```
 # Submit slurm job - CHANGE EMAIL TO YOUR OWN EMAIL
-sbatch --mail-user=your.name@email.com --account=pathogens supplementary_scripts/submit_slurm.sh \
+sbatch --mail-user=your.name@email.com --account=your.account supplementary_scripts/submit_slurm.sh \
 --sample_sheet 'data/K739J/SampleSheet_K739J.csv,data/JDYG3/SampleSheet_JDYG3.csv'  \
 --run_parameters 'data/K739J/RunParameters.xml,data/JDYG3/runParameters.xml' \
 --read_dir 'data/K739J/,data/JDYG3/' \
@@ -240,9 +243,11 @@ Some metabarcoding assays amplify a sample with multiple primer sets, either in 
 
 To handle this case, you need to provide the parameters for each primer seperated by a ; and encapsulated in a ''. This will enable the pipeline to demultiplex the multiplexed data into the seperate amplicons before further processing. Important! The parameters for each primer must be in the same order as defined in --pcr_primers.
 
+**You will need to change your email address and account code below, see [BASC account code lists](https://users.basc.science.depi.vic.gov.au/jobs/slurm/slurm_accounts/)**
+
 ```
 # Multiple primers within each sample
-sbatch --mail-user=your.name@email.com --account=pathogens supplementary_scripts/submit_slurm.sh \
+sbatch --mail-user=your.name@email.com --account=your.account supplementary_scripts/submit_slurm.sh \
 --sample_sheet data/K739J/SampleSheet_K739J.csv \
 --run_parameters data/K739J/RunParameters.xml \
 --read_dir data/K739J/ \
@@ -293,9 +298,11 @@ For instance --pcr_primers '[COI]fwhF2-fwhR2n' will add the value fwhF2-fwhR2n t
 
 NOTE: You need to ensure that all samples are covered by the strings you input, as a sample missing parameters cannot be run through freyr
 
+**You will need to change your email address and account code below, see [BASC account code lists](https://users.basc.science.depi.vic.gov.au/jobs/slurm/slurm_accounts/)**
+
 ```
 # Match primers and parameters to samples based on string matching
-sbatch --mail-user=your.name@email.com --account=pathogens supplementary_scripts/submit_slurm.sh \
+sbatch --mail-user=your.name@email.com --account=your.account supplementary_scripts/submit_slurm.sh \
 --sample_sheet data/K3DVL/SampleSheet_K3DVL.csv \
 --run_parameters data/K3DVL/RunParameters.xml \
 --read_dir data/K3DVL/ \

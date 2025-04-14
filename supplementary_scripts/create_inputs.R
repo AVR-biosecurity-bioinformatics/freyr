@@ -45,7 +45,10 @@ names(options) <- c(
 )
 
 print(options)
-library(tidyverse)
+library(dplyr)
+library(stringr)
+library(purrr)
+library(readr)
 
 # Define functions
 create_samplesheet <- function(SampleSheet, runParameters, read_dirs, template = "V4"){
@@ -263,12 +266,17 @@ parse_seqrun <- function(SampleSheet, runParameters){
   return(combined)
 }
 
+str_split_new <- function(string, pattern) {
+  str_split(string, pattern)[[1]]
+  }
+
 # get number of primers
-primer_length <- length(options$pcr_primers %>% str_split_1(",|;"))
+primer_length <- length(options$pcr_primers %>%
+                          str_split_new(",|;"))
 
 # Check that number of provided parameters are either 1, or match the number of provided primers
 param_lengths <- options[!names(options) %in% c("sample_sheet", "run_parameters", "read_dir", "pcr_primers")] %>%
-  purrr::map_dbl(~length(.x %>% str_split_1(",|;")))
+  purrr::map_dbl(~length(.x %>% str_split_new(",|;")))
 
 if(any(!param_lengths %in% c(1, primer_length))){
   stop(names(param_lengths[param_lengths %in% c(1, primer_length)]), " parameters must have either 1 argument, or the same as pcr_primers (", primer_length,")")
@@ -276,13 +284,13 @@ if(any(!param_lengths %in% c(1, primer_length))){
 
 # Get sample sheet & runparameters
 sample_sheet <- options$sample_sheet%>%
-  str_split_1(",") %>%
+  str_split_new(",") %>%
   normalizePath()
 run_parameters <- options$run_parameters%>%
-  str_split_1(",") %>%
+  str_split_new(",") %>%
   normalizePath()
 read_dirs <- options$read_dir%>%
-  str_split_1(",") %>%
+  str_split_new(",") %>%
   normalizePath()
 
 message("Creating new params file from input arguments")
@@ -292,7 +300,7 @@ params <- options[!names(options) %in% c("sample_sheet", "run_parameters", "read
   purrr::map(~{
     #if(is.na(.x)){return(NA)}
     .x %>%
-      str_split_1(",|;") %>%
+      str_split_new(",|;") %>%
       str_remove("\\[.*\\]")}) %>%
   bind_rows() %>%
   dplyr::select(any_of(c(
@@ -353,8 +361,8 @@ if(pattern_matching){
   
   # Helper function to create named vectors
   create_named_vector <- function(input) {
-    input_values <- str_split_1(input, ",") %>% str_remove("\\[.*\\]")
-    input_names <- str_split_1(input, ",") %>% str_remove("].*$") %>% str_remove("^.*\\[")
+    input_values <- str_split_new(input, ",") %>% str_remove("\\[.*\\]")
+    input_names <- str_split_new(input, ",") %>% str_remove("].*$") %>% str_remove("^.*\\[")
     setNames(input_values, input_names)
   }
   

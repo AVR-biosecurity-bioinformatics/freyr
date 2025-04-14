@@ -207,12 +207,13 @@ for arg in "${allowed_tool_args[@]}"; do
 done
 
 # Load modules
-module load R/4.2.0-foss-2021b
+#module load R/4.4.2-gfbf-2024a
 module load Java/17.0.6
+module load shifter/22.02.1
 
 # Run the tool
 log "Running sample sheet creation with arguments: ${tool_values_list[@]}"
-Rscript supplementary_scripts/create_inputs.R "${tool_values_list[@]}"
+shifter --image=jackscanlan/piperline-multi:0.0.1 -- Rscript supplementary_scripts/create_inputs.R "${tool_values_list[@]}"
 
 # Run Nextflow
 log "Running Nextflow with arguments: ${nextflow_args[@]}"
@@ -221,8 +222,9 @@ NXF_VER=23.04.5 \
     nextflow run . \
     --samplesheet ./inputs/Sample_info.csv \
     --loci_params ./inputs/loci_params.csv \
+    --slurm_account ${SLURM_JOB_ACCOUNT} \
     -profile basc_slurm
-    
+
 # once the dataset has run, clean up your analysis directory
 #rm -rf ${SLURM_SUBMIT_DIR}/output/modules/* ${SLURM_SUBMIT_DIR}/output/*.html ${SLURM_SUBMIT_DIR}/work/*
 
