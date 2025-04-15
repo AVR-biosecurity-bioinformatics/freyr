@@ -128,7 +128,7 @@ while [[ "$#" -gt 0 ]]; do
                     shift  # Skip the value
                 else
                     # Add parameter only
-                    nextflow_args+=("--$param")
+                    nextflow_args+=("-$param")
                 fi
             else
                 echo "Error: Invalid Nextflow argument --nextflow-$param"
@@ -211,9 +211,23 @@ done
 module load Java/17.0.6
 module load shifter/22.02.1
 
-# Run the tool
-log "Running sample sheet creation with arguments: ${tool_values_list[@]}"
-shifter --image=jackscanlan/piperline-multi:0.0.1 -- Rscript supplementary_scripts/create_inputs.R "${tool_values_list[@]}"
+# Check if resume is set
+for arg in "${nextflow_args[@]}"; do
+    if [[ "$arg" == "-resume" ]]; then
+        echo "Found '-resume' in nextflow_args"
+        resume=true
+        break
+    fi
+done
+
+if [[ "$resume" = true ]]; then
+  echo '-resume is set, restoring previous run'
+else 
+  echo 'resume is not set, starting run again'
+  # Run the tool
+  log "Running sample sheet creation with arguments: ${tool_values_list[@]}"
+  shifter --image=jackscanlan/piperline-multi:0.0.1 -- Rscript supplementary_scripts/create_inputs.R "${tool_values_list[@]}"
+fi
 
 # Run Nextflow
 log "Running Nextflow with arguments: ${nextflow_args[@]}"
@@ -223,7 +237,8 @@ NXF_VER=23.04.5 \
     --samplesheet ./inputs/Sample_info.csv \
     --loci_params ./inputs/loci_params.csv \
     --slurm_account ${SLURM_JOB_ACCOUNT} \
-    -profile basc_slurm
+    -profile basc_slurm \
+    "${nextflow_args[@]}"
 
 # once the dataset has run, clean up your analysis directory
 #rm -rf ${SLURM_SUBMIT_DIR}/output/modules/* ${SLURM_SUBMIT_DIR}/output/*.html ${SLURM_SUBMIT_DIR}/work/*

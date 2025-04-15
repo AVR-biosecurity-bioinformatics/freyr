@@ -282,14 +282,19 @@ if(any(!param_lengths %in% c(1, primer_length))){
   stop(names(param_lengths[param_lengths %in% c(1, primer_length)]), " parameters must have either 1 argument, or the same as pcr_primers (", primer_length,")")
 }
 
-# Get sample sheet & runparameters
-sample_sheet <- options$sample_sheet%>%
+# Get sample sheet, runparameters, and read dir
+sample_sheet <- options$sample_sheet %>%
+  trimws() %>%
   str_split_new(",") %>%
   normalizePath()
-run_parameters <- options$run_parameters%>%
+
+run_parameters <- options$run_parameters %>%
+  trimws() %>%
   str_split_new(",") %>%
   normalizePath()
-read_dirs <- options$read_dir%>%
+
+read_dirs <- options$read_dir %>%
+  trimws() %>%
   str_split_new(",") %>%
   normalizePath()
 
