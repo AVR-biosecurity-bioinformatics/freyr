@@ -67,11 +67,13 @@ git pull
 
 For this workflow to run, we will need some sequencing runs to work with. If you are working with MiSeq data, it is recommended that the data is demultiplexed again using bcl2fastq, as the miseq does not put indexes in fasta headers by default which is required for the index swtiching calculation.
 
+If you are not working with miseq data, the pipeline can still be run but the index switching calculations will be skipped
+
 The below code is written for the Agriculture Victoria BASC computing cluster, and the locations will be different if you are using a different HPC cluster.
 
 ```
 #load module
-module load bcl2fastq2/2.20.0-foss-2018b
+module load bcl2fastq2/2.20.0-GCC-13.3.0
 
 #raise amount of available file handles
 ulimit -n 4000
@@ -115,12 +117,20 @@ done
 
 ## Copy reference databases
 
-Reference databases are stored in the referencedata directory on BASC
+Reference databases for metaabrcoding are stored in /group/referencedata/mspd-db/metabarcoding/ on BASC
 
+The latest terrestrial arthropod database is available here:
+```
+# Change 'folder-name' to the directory you are running the analysis in
+cp /group/referencedata/mspd-db/metabarcoding/arthropod/terrestrial_arthropod_25_03_07/* $working_dir/reference/.
+```
+
+The older 'imappests' database is available here:
 ```
 # Change 'folder-name' to the directory you are running the analysis in
 cp /group/referencedata/mspd-db/metabarcoding/arthropod/imappests_coi_18_08_2020/* $working_dir/reference/.
 ```
+
 
 # Submitting jobs
 
@@ -233,6 +243,8 @@ sbatch --mail-user=your.name@email.com --account=your.account supplementary_scri
 --min_sample_reads 1000 \
 --min_taxa_reads NA \
 --min_taxa_ra 1e-4
+
+# Note: to resume a previous run, add --nextflow-resume
 
 ```
 
