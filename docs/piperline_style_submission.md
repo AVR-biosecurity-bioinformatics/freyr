@@ -11,7 +11,8 @@ The below code is written for the Agriculture Victoria BASC computing cluster.
 This workflow gives examples of how to run freyr through SLURM with a piperline style submission syntax
 
 
-Install nextflow in your home directory
+##Install nextflow in your home directory
+
 freyr currently requires a specific version of nextflow that is not available as a BASC module. It also uses a third-party validation plugin that doesn't work with standalone (ie. module-based) distributions of nextflow. Luckily, it is very easy to install nextflow for a specific user on BASC:
 
 ```
@@ -355,10 +356,13 @@ sbatch --mail-user=your.name@email.com --account=your.account supplementary_scri
 
 ```
 
+## Resuming failed runs
+
+**To resume a failed or paused run, add `--nextflow-resume` to the end of the command**
+
 
 ## More complex setups
 
 For more complex setups, you can point the submission script to a premade freyr format sample sheet and loci parameters file
 
-**TODO**
 

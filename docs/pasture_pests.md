@@ -8,10 +8,11 @@ date: "2025-04-29"
 
 The below code is written for the Agriculture Victoria BASC computing cluster.
 
-This workflow gives examples of how to run freyr through SLURM with a piperline style submission syntax
+This workflow gives examples of how to run freyr through SLURM with a piperline style submission syntax with parameters specific to the Pasture Pest metabarcoding project.
 
 
-## Install nextflow in your home directory
+##Install nextflow in your home directory
+
 freyr currently requires a specific version of nextflow that is not available as a BASC module. It also uses a third-party validation plugin that doesn't work with standalone (ie. module-based) distributions of nextflow. Luckily, it is very easy to install nextflow for a specific user on BASC:
 
 ```
@@ -121,13 +122,11 @@ Reference databases for metaabrcoding are stored in /group/referencedata/mspd-db
 
 The latest terrestrial arthropod database is available here:
 ```
-# Change 'folder-name' to the directory you are running the analysis in
 cp /group/referencedata/mspd-db/metabarcoding/arthropod/terrestrial_arthropod_25_03_07/* $working_dir/reference/.
 ```
 
 The older 'imappests' database is available here:
 ```
-# Change 'folder-name' to the directory you are running the analysis in
 cp /group/referencedata/mspd-db/metabarcoding/arthropod/imappests_coi_18_08_2020/* $working_dir/reference/.
 ```
 
@@ -188,6 +187,7 @@ sbatch --mail-user=your.name@email.com --account=your.account supplementary_scri
 --min_taxa_ra 1e-3
 ```
 
+**To resume a failed or paused run, add `--nextflow-resume` to the end of the command**
 
 ## Manually pointing to data folders
 
