@@ -84,24 +84,24 @@ ulimit -n 4000
 #Set up input and outputs
 inputdir=/group/sequencing/210219_M03633_0489_000000000-JDYG3 #CHANGE TO YOUR SEQ RUN
 
-fcid=$(echo $input_dir | sed 's/^.*-//')
+fcid=$(echo $inputdir | sed 's/^.*-//')
 outputdir=$working_dir/data/$fcid
-samplesheet=$input_dir/SampleSheet.csv
+samplesheet=$inputdir/SampleSheet.csv
 
 # convert samplesheet to unix format
 dos2unix $samplesheet
 
 #Demultiplex
-bcl2fastq -p 12 --runfolder-dir $input_dir \
+bcl2fastq -p 12 --runfolder-dir $inputdir \
 --output-dir $outputdir \
 --sample-sheet $samplesheet \
 --no-lane-splitting --barcode-mismatches 1
 
 # Copy other necessary files and move fastqs
 cd $outputdir
-cp -r $input_dir/InterOp $outputdir
-cp $input_dir/RunInfo.xml $outputdir
-cp $input_dir/[Rr]unParameters.xml $outputdir
+cp -r $inputdir/InterOp $outputdir
+cp $inputdir/RunInfo.xml $outputdir
+cp $inputdir/[Rr]unParameters.xml $outputdir
 cp $samplesheet $outputdir
 mv **/*.fastq.gz $outputdir
 
@@ -123,6 +123,9 @@ Reference databases for metaabrcoding are stored in /group/referencedata/mspd-db
 The latest terrestrial arthropod database is available here:
 ```
 cp /group/referencedata/mspd-db/metabarcoding/arthropod/terrestrial_arthropod_25_03_07/* $working_dir/reference/.
+
+# Copy the PHMM model
+cp /group/referencedata/mspd-db/metabarcoding/arthropod/imappests_coi_18_08_2020/folmer_fullength_model.rds $working_dir/reference/.
 ```
 
 The older 'imappests' database is available here:
@@ -149,6 +152,9 @@ Paths to files can be relative to the submission location, or absolute paths
 **You will need to change your email address and account code below, see [BASC account code lists](https://users.basc.science.depi.vic.gov.au/jobs/slurm/slurm_accounts/)**
 
 ```
+# Move back to working directory
+cd $working_dir
+
 # Submit slurm job - CHANGE EMAIL TO YOUR OWN EMAIL
 sbatch --mail-user=your.name@email.com --account=your.account supplementary_scripts/submit_slurm.sh \
 --pcr_primers fwhF2-fwhR2n \
