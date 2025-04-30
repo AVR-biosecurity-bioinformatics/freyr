@@ -165,7 +165,7 @@ sbatch --mail-user=your.name@email.com --account=your.account supplementary_scri
 --read_min_length 200 \
 --read_max_length Inf \
 --read_max_ee 1 \
---read_trunc_length 225 \
+--read_trunc_length 200 \
 --read_trim_left 0 \
 --read_trim_right 0 \
 --asv_min_length 195 \
