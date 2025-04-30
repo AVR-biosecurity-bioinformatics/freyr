@@ -334,6 +334,13 @@ samdf <- samdf %>%
     TRUE ~ sample_id
   ))
 
+# Check that sample_name exists, otherwise make them the sample id without fcid
+samdf <- samdf %>%
+  mutate(sample_name = case_when(
+    is.na(sample_name) ~ sample_id %>% str_remove(paste0(fcid,"_")),
+    TRUE ~ sample_name
+  ))
+
 # Validate samples match the sample sheet
 fastqFs <- purrr::map(read_dirs,
                       list.files, pattern="_R1_", full.names = TRUE) %>%
