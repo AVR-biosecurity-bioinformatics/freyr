@@ -3,7 +3,7 @@ set -e
 set -u
 ## args are the following:
 # $1 = reads_paths, one or two read paths separated by ;
-# $2 = meta.sample_id
+# $2 = sample_id
 # $3 = seq_type (illumina, nanopore, pacbio)
 # $4 = paired (true, false)
 

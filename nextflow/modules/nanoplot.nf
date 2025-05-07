@@ -1,11 +1,11 @@
 process NANOPLOT {
     def module_name = "nanoplot"
-    tag "$meta.pcr_primers; $meta.sample_id"
+    tag "$sample_id"
     label "high"
     container "nanozoo/nanoplot:1.42.0--547049c"
 
     input:
-    tuple val(meta), path(reads)
+    tuple val(sample_id), path(reads)
     val(seq_type)
     val(paired)
 
@@ -26,7 +26,7 @@ process NANOPLOT {
     ### run module code
     bash ${module_name}.sh \
         "${reads_paths}" \
-        ${meta.sample_id} \
+        ${sample_id} \
         ${seq_type} \
         ${paired}
     

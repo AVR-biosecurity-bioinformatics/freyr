@@ -59,9 +59,15 @@ workflow PROCESS_READS {
         ) 
     }
 
+    //// remove metadata from reads for FASTQC and NANOPLOT input
+    ch_sample_locus_reads
+        .map { meta, reads -> [ meta.sample_id, reads ] }
+        .unique()
+        .set { ch_qc_input }
+
     //// run fastqc on input reads
     FASTQC (
-        ch_sample_locus_reads,
+        ch_qc_input,
         ch_seq_type,
         ch_paired
         )
@@ -69,7 +75,7 @@ workflow PROCESS_READS {
     //// run nanoplot on nanopore reads
     if ( seq_type == "nanopore" ) {
         NANOPLOT (
-            ch_sample_locus_reads,
+            ch_qc_input,
             ch_seq_type,
             ch_paired
             )
