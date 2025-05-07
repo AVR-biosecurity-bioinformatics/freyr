@@ -191,13 +191,14 @@ gg.read_tracker_sample <- read_tracker_wide %>%
     dplyr::mutate( 
             stage = forcats::fct_relevel(stage, stage_vec), # reorder x-axis
             alpha = case_when( ### TODO: Use the locus parameter min reads as a filter here
-                pairs < 1000 ~ 0.8,
+                pairs < 1000 ~ 0.6,
                 pairs >= 1000 ~ 1
                 )
             ) %>% 
     ggplot2::ggplot(aes(x = stage, y = pairs, colour = pcr_primers)) +
     geom_line(aes(group = sample_id_com, alpha = alpha)) +
     scale_colour_manual(values = wong_pal[-1]) +
+    scale_alpha_identity() +
     facet_grid(fcid~pcr_primers) +
     theme_bw() +
     theme(
