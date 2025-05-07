@@ -27,6 +27,12 @@ workflow PROCESS_READS {
     ch_seq_type = channel.value ( seq_type )
     ch_paired = channel.value ( paired )
 
+    if ( params.miseq_dir ) {
+        ch_miseq_dir = Channel.fromPath(params.miseq_dir).first()
+    } else {
+        ch_miseq_dir = Channel.empty()
+    }
+
     //// create empty channels
     ch_read_tracker_samples =   // read-tracking for sample-level processes; card: path(.csv)
         Channel.empty()  
@@ -42,8 +48,16 @@ workflow PROCESS_READS {
 
     //// run SEQ_QC per flow cell if data is internal MiSeq
     if ( params.miseq_internal == true ) {
-        MISEQ_QC ( ch_fcid ) 
+
+        if ( !ch_miseq_dir ) {
+            error "'--miseq_dir' must be specified when using '--miseq_internal'"
         }
+
+        MISEQ_QC ( 
+            ch_fcid,
+            ch_miseq_dir
+        ) 
+    }
 
     //// run fastqc on input reads
     FASTQC (

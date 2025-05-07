@@ -6,10 +6,12 @@ process MISEQ_QC {
 
     input:
     val(fcid) 
+    val(miseq_dir)
 
     output:
-    path "${fcid}_flowcell_qc.pdf"
-    path "${fcid}_index_switching.pdf" 
+    path "*_flowcell_qc.pdf"
+    path "*_index_switching.pdf" 
+    path "*.csv"
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -22,7 +24,8 @@ process MISEQ_QC {
     
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    fcid = "$fcid"
+    fcid = "${fcid}"
+    miseq_dir = "${miseq_dir}"
     
     ## global variables
     projectDir = "$projectDir"
