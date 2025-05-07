@@ -19,7 +19,7 @@ git clone https://github.com/AVR-biosecurity-bioinformatics/freyr $analysis_dir 
     && cd $analysis_dir
 
 # run pipeline
-NXF_VER=23.04.5 \
+NXF_VER=23.05.0-edge \
     nextflow run . \
     --samplesheet samplesheet.csv \
     --loci_params loci_params.csv \

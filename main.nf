@@ -62,11 +62,11 @@ if (params.help) {
    exit 0
 }
 
-// check Nextflow version matches 23.04.5, due to incompatibility of higher versions with Shifter
-if( !nextflow.version.matches('=23.04.5') ) {
+// check Nextflow version matches 23.05.0-edge, due to incompatibility of higher versions with Shifter
+if( !nextflow.version.matches('=23.05.0-edge') ) {
     println " "
-    println "*** ERROR ~ This pipeline currently requires Nextflow version 23.04.5 -- You are running version ${nextflow.version}. ***"
-    error "*** You can use version 23.04.5 by appending 'NXF_VER=23.04.5' to the front of the 'nextflow run' command. ***"
+    println "*** ERROR ~ This pipeline currently requires Nextflow version 23.05.0-edge -- You are running version ${nextflow.version}. ***"
+    error "*** Either: append 'NXF_VER=23.05.0-edge' to the front of the 'nextflow run' command, or run 'export NXF_VER=23.05.0-edge'. ***"
 }
 
 // Validate input parameters using schema

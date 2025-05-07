@@ -122,7 +122,7 @@ module load Java/17.0.6
 
 # run the pipeline
 # make sure you replace the square bracketed file names (including the brackets) with the names of the files you made earlier
-NXF_VER=23.04.5 \
+NXF_VER=23.05.0-edge \
     nextflow run . \
     --samplesheet ./inputs/[your_samplesheet].csv \
     --loci_params ./inputs/[your_loci_params].csv \
@@ -131,7 +131,7 @@ NXF_VER=23.04.5 \
 ```
 
 The above code is doing the following:
--  `NXF_VER=23.04.5` tells `nextflow` to run as version 23.04.5, which is currently required for the pipeline to work correctly on BASC
+-  `NXF_VER=23.05.0-edge` tells `nextflow` to run as version 23.05.0-edge, which is currently required for the pipeline to work correctly on BASC
 - `nextflow run .` tells `nextflow` to run the pipeline using files in the current directory
 - `--samplesheet` and `--loci_params` specify where your samplesheet and loci parameters files are; these can be relative or absolute paths, here we use relative paths
 - `-profile basc_slurm` tells `nextflow` to run using settings that make sense for BASC; in particular, it will spawn a new job for every process, making its computational execution very efficient, and will use `shifter` to run Docker containers for all the software tools
@@ -184,7 +184,7 @@ cd $working_dir
 module load Java/17.0.6
 
 # run nextflow on test data
-NXF_VER=23.04.5 \
+NXF_VER=23.05.0-edge \
     nextflow run . \
     -profile basc_slurm,test
 
@@ -198,7 +198,7 @@ While `freyr` is running, something like the following will be displayed in the 
 
 ```
 Nextflow 24.04.4 is available - Please consider updating your version to it
-N E X T F L O W  ~  version 23.04.5
+N E X T F L O W  ~  version 23.05.0-edge
 Launching `./main.nf` [boring_hypatia] DSL2 - revision: 226d236840
 
 

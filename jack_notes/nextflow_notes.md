@@ -105,7 +105,7 @@ Run with shifter:
 
     module load Java/17.0.6 shifter/22.02.1
 
-    NXF_VER=23.04.5 \
+    NXF_VER=23.05.0-edge \
         nextflow run . \
         --samplesheet test_data/dual/samplesheet_read_dir.csv \
         -profile shifter
@@ -116,7 +116,7 @@ Run with shifter and slurm in BASC
 
     export NXF_EXECUTOR=slurm
 
-    NXF_VER=23.04.5 \
+    NXF_VER=23.05.0-edge \
         nextflow run . \
         --samplesheet test_data/dual/samplesheet_read_dir.csv \
         -profile basc_slurm
@@ -129,13 +129,13 @@ Run with shifter and slurm in BASC, with test data
 
     module load Java/17.0.6 shifter/22.02.1
 
-    NXF_VER=23.04.5 nextflow run . -profile basc_slurm,test
+    NXF_VER=23.05.0-edge nextflow run . -profile basc_slurm,test
 
 Run test data with minimal samples:
 
     module load Java/17
 
-    NXF_VER=23.04.5 nextflow run . -profile basc_slurm,test,debug --subsample 1
+    NXF_VER=23.05.0-edge nextflow run . -profile basc_slurm,test,debug --subsample 1
 
 
 

@@ -232,7 +232,7 @@ fi
 # Run Nextflow
 log "Running Nextflow with arguments: ${nextflow_args[@]}"
 # make sure you replace the square bracketed file names (including the brackets) with the names of the files you made earlier
-NXF_VER=23.04.5 \
+NXF_VER=23.05.0-edge \
     nextflow run . \
     --samplesheet ./inputs/Sample_info.csv \
     --loci_params ./inputs/loci_params.csv \

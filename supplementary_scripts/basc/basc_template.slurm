@@ -61,7 +61,7 @@ rm -rf ./output/modules/* ./output/*.html ./work/*
 module load Java/17.0.6
 
 # run pipeline with nextflow
-NXF_VER=23.04.5 \
+NXF_VER=23.05.0-edge \
     nextflow run . \
     --samplesheet $SAMPLESHEET \
     --loci_params $LOCI_PARAMS \
