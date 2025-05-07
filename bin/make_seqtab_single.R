@@ -78,7 +78,7 @@ sapply(seqs_extracted, getN) %>%
         stage = "make_seqtab"
     ) %>%
     dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>% 
-    readr::write_csv(., paste0("make_seqtab_",fcid,"_",pcr_primers,"_readsout.csv"))
+    readr::write_csv(., paste0("dada_mergereads_",fcid,"_",pcr_primers,"_readsout.csv"))
 
 
 # stop(" *** stopped manually *** ") ##########################################
