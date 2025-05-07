@@ -214,7 +214,7 @@ workflow FREYR {
                 'run_blast','blast_min_identity','blast_min_coverage','target_kingdom',
                 'target_phylum','target_class','target_order','target_family',
                 'target_genus','target_species','min_sample_reads','min_taxa_reads',
-                'min_taxa_ra','threads'
+                'min_taxa_ra'
                 )
             [ meta, [ file(row.fwd, checkIfExists: true), file(row.rev, checkIfExists: true) ] ]  
             }
@@ -240,7 +240,7 @@ workflow FREYR {
                 'run_blast','blast_min_identity','blast_min_coverage','target_kingdom',
                 'target_phylum','target_class','target_order','target_family',
                 'target_genus','target_species','min_sample_reads','min_taxa_reads',
-                'min_taxa_ra','threads'
+                'min_taxa_ra'
                 )
             [ meta, file(row.single, checkIfExists: true) ]  
             }

@@ -337,8 +337,7 @@ default_params <- tibble::tibble(
     target_species = NA_character_,
     min_sample_reads = 0,
     min_taxa_reads = 0,
-    min_taxa_ra = 0,
-    threads = 1
+    min_taxa_ra = 0
 )
 
 loci_params_df <- new_bind(default_params %>% filter(FALSE), loci_params_df) %>%
@@ -377,8 +376,7 @@ lp_vec <- c(
     "target_species",
     "min_sample_reads",
     "min_taxa_reads",
-    "min_taxa_ra",
-    "threads"
+    "min_taxa_ra"
 )
 
 # loop through parameters, changing those with lp_* not set to "null"

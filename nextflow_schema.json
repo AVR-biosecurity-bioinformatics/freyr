@@ -9,7 +9,10 @@
             "title": "Main arguments",
             "type": "object",
             "description": "Main arguments for the pipeline.",
-            "required": [ "samplesheet", "loci_params" ],
+            "required": [ 
+                "samplesheet", 
+                "loci_params" 
+            ],
             "properties": {
                 "data_folder": {
                     "type": "string",
@@ -244,10 +247,6 @@
                 "lp_min_taxa_ra": {
                     "type": "string",
                     "description": "Override for 'min_taxa_ra'."
-                },
-                "lp_threads": {
-                    "type": "string",
-                    "description": "Override for 'threads'."
                 }
             }
         },

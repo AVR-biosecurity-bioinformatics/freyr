@@ -36,8 +36,7 @@
         "target_species",
         "min_sample_reads",
         "min_taxa_reads",
-        "min_taxa_ra",
-        "threads"
+        "min_taxa_ra"
         ],
       "properties": {
         "pcr_primers": {
@@ -240,12 +239,6 @@
             "maximum": 1,
             "description": "Minimum relative abundance (proportion) per ASV/taxon to pass filter. Note: '0.0001' = '0.01%'",
             "errorMessage": "Minimum relative abundance must be a number (float) between 0-1, inclusive."
-        },
-        "threads": {
-            "type": "integer",
-            "minimum": 1,
-            "description": "Number of threads/CPUs to run the pipeline across.",
-            "errorMessage": "Threads must be an integer >= 1."
         }
       }
     }
