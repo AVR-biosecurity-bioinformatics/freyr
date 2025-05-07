@@ -156,10 +156,6 @@
                     "type": "string",
                     "description": "Override for 'read_trim_right'."
                 },
-                "lp_high_sensitivity": {
-                    "type": "string",
-                    "description": "Override for 'high_sensitivity'."
-                },
                 "lp_asv_min_length": {
                     "type": "string",
                     "description": "Override for 'asv_min_length'."

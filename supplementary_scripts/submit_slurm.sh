@@ -64,7 +64,6 @@ allowed_tool_args=( \
     "read_trim_right" \
     "asv_min_length" \
     "asv_max_length" \
-    "high_sensitivity" \
     "concat_unmerged" \
     "genetic_code" \
     "coding" \

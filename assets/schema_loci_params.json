@@ -16,7 +16,6 @@
         "read_trunc_length",
         "read_trim_left",
         "read_trim_right",
-        "high_sensitivity",
         "asv_min_length",
         "asv_max_length",
         "concat_unmerged",
@@ -93,12 +92,6 @@
             "minimum": 0,
             "description": "Trim this many bases from the right side of primer-trimmed reads.",
             "errorMessage": "Right-trimming amount must be an integer >= 0."
-        },
-        "high_sensitivity": {
-            "type": "string",
-            "pattern": "^(TRUE|T|FALSE|F)$",
-            "description": "Run ASV inference for this locus in high-sensitivity mode, ie. use DADA2 pseudo-pooling.",
-            "errorMessage": "High sensitivity must be enabled with 'TRUE' or 'T', or disabled with 'FALSE' or 'F'."
         },
         "asv_min_length": {
             "type": "integer",

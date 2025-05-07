@@ -172,7 +172,6 @@ sbatch --mail-user=your.name@email.com --account=your.account supplementary_scri
 --read_trim_right 0 \
 --asv_min_length 195 \
 --asv_max_length 215 \
---high_sensitivity TRUE \
 --concat_unmerged FALSE \
 --genetic_code SGC4 \
 --coding TRUE \
@@ -226,7 +225,6 @@ sbatch --mail-user=your.name@email.com --account=your.account supplementary_scri
 --read_trim_right 0 \
 --asv_min_length 195 \
 --asv_max_length 215 \
---high_sensitivity TRUE \
 --concat_unmerged FALSE \
 --genetic_code SGC4 \
 --coding TRUE \
@@ -280,7 +278,6 @@ sbatch --mail-user=your.name@email.com --account=your.account supplementary_scri
 --read_trim_right 0 \
 --asv_min_length '195;207' \
 --asv_max_length '215;227' \
---high_sensitivity TRUE \
 --concat_unmerged FALSE \
 --genetic_code 'SGC4;SGC0' \
 --coding TRUE \
@@ -335,7 +332,6 @@ sbatch --mail-user=your.name@email.com --account=your.account supplementary_scri
 --read_trim_right 0 \
 --asv_min_length '[fwh]195,[EIF]207' \
 --asv_max_length '[fwh]215,[EIF]227' \
---high_sensitivity TRUE \
 --concat_unmerged FALSE \
 --genetic_code '[fwh]SGC4,SGC0' \
 --coding TRUE \

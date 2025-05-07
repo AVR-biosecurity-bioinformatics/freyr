@@ -315,7 +315,6 @@ default_params <- tibble::tibble(
     read_trunc_length = 0,
     read_trim_left = 0,
     read_trim_right = 0,
-    high_sensitivity = TRUE,
     asv_min_length = 0,
     asv_max_length = Inf,
     concat_unmerged = FALSE,
@@ -354,7 +353,6 @@ lp_vec <- c(
     "read_trunc_length",
     "read_trim_left",
     "read_trim_right",
-    "high_sensitivity",
     "asv_min_length",
     "asv_max_length",
     "concat_unmerged",
@@ -429,10 +427,9 @@ if (!setequal(samplesheet_split_check$target_gene %>% unique(), loci_params_df$t
     stop("LOCI_PARAMS ERROR: Samplesheet and loci_params do not share the same values of 'target_gene'!")
 }
 
-# convert high_sensitivity, run_blast, coding and concat_unmerged to logical values
+# convert run_blast, coding and concat_unmerged to logical values
 loci_params_df <- loci_params_df %>%
     dplyr::mutate( ### NOTE: this assumes all columns are present in the data frame, but this might not always be true
-        high_sensitivity = as.logical(high_sensitivity),
         run_blast = as.logical(run_blast),
         coding = as.logical(coding),
         concat_unmerged = dplyr::case_when(
