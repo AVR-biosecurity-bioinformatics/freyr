@@ -109,6 +109,7 @@ phyloseq::psmelt(ps_u) %>%
         names_to = "rank",
         values_to="name"
         ) %>%
+    dplyr::mutate(name = if_else(!stringr::str_detect(name, "__"), name, NA_character_)) %>%
     dplyr::filter(!is.na(name))%>%
     dplyr::group_by(sample_id, fcid, pcr_primers, rank) %>%
     dplyr::summarise(Abundance = sum(Abundance)) %>%
