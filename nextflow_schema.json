@@ -112,13 +112,6 @@
                     "errorMessage": "Must be a negative integer. Leave unset (default) to treat homopolymer gaps like regular gaps.",
                     "help_text": "Set HOMOPOLYMER_GAP_PENALTY parameter for dada2::dada denoising function. For explanation, see dada2::setDadaOpt()."
                 },
-                "threads": {
-                    "type": ["boolean", "integer"],
-                    "minimum": 1,
-                    "description": "Maximum number of threads/cpus to use. Setting to 'null' will use as many as available.",
-                    "errorMessage": "Must be set to an integer >0 or 'null'.",
-                    "default": null
-                },
                 "slurm_account": {
                     "type": "string",
                     "description": "Account to use when submitting SLURM jobs.",
