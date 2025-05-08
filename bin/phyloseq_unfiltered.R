@@ -73,16 +73,18 @@ ps <- step_phyloseq(
 phyloseq::taxa_names(ps) <- phyloseq::tax_table(ps)[,ncol(phyloseq::tax_table(ps))] # use final column of tax_table (hash) to name OTUs
 phyloseq::tax_table(ps) <- phyloseq::tax_table(ps)[,1:ncol(phyloseq::tax_table(ps))-1] # remove hash 'rank' from tax_table
 
+# Melt ps object
+ps_df <- phyloseq::psmelt(ps) %>% 
+  dplyr::filter(Abundance > 0)
+
 ## output summaries; from step_output_summary()
 # Export raw csv
-phyloseq::psmelt(ps) %>% 
-    dplyr::filter(Abundance > 0) %>%
+ps_df %>%
     dplyr::select(-Sample) %>%
     readr::write_csv(., paste0("raw_unfiltered_",pcr_primers,".csv"))
 
 # Export species level summary of filtered results
-phyloseq::psmelt(ps) %>% 
-    dplyr::filter(Abundance > 0) %>%
+ps_df %>%
     dplyr::left_join(
         phyloseq::refseq(ps) %>% as.character() %>% tibble::enframe(name="OTU", value="sequence"),
         by = "OTU"

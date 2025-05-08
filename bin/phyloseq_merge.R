@@ -37,15 +37,17 @@ ps_filtered <- lapply(ps_filtered, readRDS) # read in phyloseq objects and store
 ## merge unfiltered phyloseq objects
 ps_u <- merge_phyloseq_new(ps_unfiltered)
 
+# Melt unfiltered ps object
+ps_u_df <- phyloseq::psmelt(ps_u) %>% 
+  dplyr::filter(Abundance > 0) 
+
 ## output merged data tables
-phyloseq::psmelt(ps_u) %>% 
-    dplyr::filter(Abundance > 0) %>%
+ps_u_df %>%
     dplyr::select(-Sample) %>%
     readr::write_csv(., paste0("raw_unfiltered.csv"))
 
 # Export species level summary of filtered results
-phyloseq::psmelt(ps_u) %>% 
-    dplyr::filter(Abundance > 0) %>%
+ps_u_df %>%
     dplyr::left_join(
         phyloseq::refseq(ps_u) %>% as.character() %>% tibble::enframe(name="OTU", value="sequence"),
         by = "OTU"
@@ -99,44 +101,35 @@ saveRDS(ps_u, paste0("ps_unfiltered.rds"))
 
 ## read tracking output from unfiltered phyloseq
 rank_cols <- colnames(phyloseq::tax_table(ps_u)) # only retrieve this once
-rank_cols_lower <- stringr::str_to_lower(rank_cols)
 
-phyloseq::psmelt(ps_u) %>% 
-    dplyr::filter(Abundance > 0) %>%
-    dplyr::select(sample_id, fcid, pcr_primers, Abundance, tidyselect::any_of(rank_cols)) %>%
-    tidyr::pivot_longer(
-        cols=tidyselect::any_of(colnames(phyloseq::tax_table(ps_u))), 
-        names_to = "rank",
-        values_to="name"
-        ) %>%
-    dplyr::mutate(name = if_else(!stringr::str_detect(name, "__"), name, NA_character_)) %>%
-    dplyr::filter(!is.na(name))%>%
-    dplyr::group_by(sample_id, fcid, pcr_primers, rank) %>%
-    dplyr::summarise(Abundance = sum(Abundance)) %>%
-    tidyr::pivot_wider(
-        names_from="rank",
-        values_from="Abundance"
-        )%>%
-    dplyr::rename_with(~stringr::str_to_lower(.), tidyselect::any_of(rank_cols)) %>%
-    dplyr::rename_with(~stringr::str_c("classified_", .), tidyselect::any_of(rank_cols_lower)) %>% 
-    tidyr::pivot_longer(cols = tidyselect::starts_with("classified_"), names_to = "stage", values_to = "pairs") %>% 
-    dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>% 
-    readr::write_csv("ps_u_readsout.csv")
+ps_u_df %>%
+  dplyr::select(sample_id, fcid, pcr_primers, Abundance, tidyselect::any_of(rank_cols)) %>%
+  dplyr::mutate(dplyr::across(tidyselect::any_of(rank_cols), 
+                              ~ ifelse(!stringr::str_detect(.x, "__"), Abundance, NA_integer_))) %>% 
+  dplyr::group_by(sample_id, fcid, pcr_primers) %>%
+  dplyr::summarise(dplyr::across(tidyselect::any_of(rank_cols),
+                                 ~ sum(., na.rm = TRUE), .names = "classified_{.col}")) %>% 
+  tidyr::pivot_longer(cols = tidyselect::starts_with("classified_"), names_to = "stage", values_to = "pairs") %>% 
+  mutate(stage = stringr::str_to_lower(stage)) %>%
+  dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>%
+  readr::write_csv("ps_u_readsout.csv")
 
-
+  
 ### filtered
 ## merge filtered phyloseq objects
 ps_f <- merge_phyloseq_new(ps_filtered)
 
+# Melt filtered ps object
+ps_f_df <- phyloseq::psmelt(ps_f) %>% 
+  dplyr::filter(Abundance > 0) 
+
 ## output merged data tables
-phyloseq::psmelt(ps_f) %>% 
-    dplyr::filter(Abundance > 0) %>%
+ps_f_df %>%
     dplyr::select(-Sample) %>%
     readr::write_csv(., paste0("raw_filtered.csv"))
 
 # Export species level summary of filtered results
-phyloseq::psmelt(ps_f) %>% 
-    dplyr::filter(Abundance > 0) %>%
+ps_f_df %>%
     dplyr::left_join(
         phyloseq::refseq(ps_f) %>% as.character() %>% tibble::enframe(name="OTU", value="sequence"),
         by = "OTU"
@@ -189,8 +182,7 @@ readr::write_csv(samdf_out_f, paste0("samdf_filtered.csv"))
 saveRDS(ps_f, paste0("ps_filtered.rds"))
 
 ## read tracking output from filtered phyloseq
-phyloseq::psmelt(ps_f) %>% 
-    dplyr::filter(Abundance > 0) %>%
+ps_f_df %>%
     dplyr::select(sample_id, fcid, pcr_primers, Abundance) %>%
     dplyr::group_by(sample_id, fcid, pcr_primers) %>%
     dplyr::summarise(pairs = sum(Abundance)) %>% 

@@ -192,16 +192,18 @@ if(!is.na(min_sample_reads) || min_sample_reads > 0){
 # Message how many were removed
 if(!quiet){message(phyloseq::nsamples(ps) - phyloseq::nsamples(ps2), " Samples and ", phyloseq::ntaxa(ps) - phyloseq::ntaxa(ps2), " ASVs dropped")}
 
+# Melt ps object
+ps2_df <- phyloseq::psmelt(ps2) %>% 
+  dplyr::filter(Abundance > 0)
+
 ### output filtered results per locus; from step_output_summary()
 # Export raw csv
-phyloseq::psmelt(ps2) %>% 
-    dplyr::filter(Abundance > 0) %>%
+ps2_df %>%
     dplyr::select(-Sample) %>%
     readr::write_csv(., paste0("raw_filtered_",pcr_primers,".csv"))
 
 # Export species level summary of filtered results
-phyloseq::psmelt(ps2) %>% 
-    dplyr::filter(Abundance > 0) %>%
+ps2_df %>%
     dplyr::left_join(
         phyloseq::refseq(ps2) %>% as.character() %>% tibble::enframe(name="OTU", value="sequence"),
         by = "OTU"
