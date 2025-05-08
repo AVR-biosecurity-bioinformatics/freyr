@@ -37,30 +37,18 @@ ps_filtered <- lapply(ps_filtered, readRDS) # read in phyloseq objects and store
 ## merge unfiltered phyloseq objects
 ps_u <- merge_phyloseq_new(ps_unfiltered)
 
-# Melt unfiltered ps object
-ps_u_df <- phyloseq::psmelt(ps_u) %>% 
-  dplyr::filter(Abundance > 0) 
-
-## output merged data tables
-ps_u_df %>%
+## output merged data tables - NOTE: This is memory intensive
+phyloseq::psmelt(ps_u) %>% 
+    dplyr::filter(Abundance > 0)  %>%
     dplyr::select(-Sample) %>%
     readr::write_csv(., paste0("raw_unfiltered.csv"))
 
-# Export species level summary of filtered results
-ps_u_df %>%
-    dplyr::left_join(
-        phyloseq::refseq(ps_u) %>% as.character() %>% tibble::enframe(name="OTU", value="sequence"),
-        by = "OTU"
-        ) %>%
-    dplyr::select(OTU, sequence, phyloseq::rank_names(ps_u), sample_id, Abundance ) %>%
-    tidyr::pivot_wider(names_from = sample_id,
-                values_from = Abundance,
-                values_fill = list(Abundance = 0)) %>%
+# Export species level summary of unfiltered results
+summarise_phyloseq(ps_u) %>%
     readr::write_csv(., paste0("summary_unfiltered.csv"))
 
 # Output fasta of all ASVs
-seqs <- Biostrings::DNAStringSet(as.vector(phyloseq::refseq(ps_u)))
-Biostrings::writeXStringSet(seqs, filepath = paste0("asvs_unfiltered.fasta"), width = 100) 
+Biostrings::writeXStringSet(phyloseq::refseq(ps_u), filepath = paste0("asvs_unfiltered.fasta"), width = 100) 
 
 # write .nwk file if phylogeny present
 if(!is.null(phyloseq::phy_tree(ps_u, errorIfNULL = FALSE))){
@@ -102,8 +90,11 @@ saveRDS(ps_u, paste0("ps_unfiltered.rds"))
 ## read tracking output from unfiltered phyloseq
 rank_cols <- colnames(phyloseq::tax_table(ps_u)) # only retrieve this once
 
-ps_u_df %>%
-  dplyr::select(sample_id, fcid, pcr_primers, Abundance, tidyselect::any_of(rank_cols)) %>%
+summarise_phyloseq(ps_u) %>%
+  tidyr::pivot_longer(cols = sample_names(ps_u), names_to="sample_id", values_to = "Abundance")%>%
+  dplyr::left_join(phyloseq::sample_data(ps_u) %>%
+              as("data.frame") %>%
+              dplyr::select(sample_id, fcid, pcr_primers))%>%
   dplyr::mutate(dplyr::across(tidyselect::any_of(rank_cols), 
                               ~ ifelse(!stringr::str_detect(.x, "__"), Abundance, NA_integer_))) %>% 
   dplyr::group_by(sample_id, fcid, pcr_primers) %>%
@@ -114,35 +105,22 @@ ps_u_df %>%
   dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>%
   readr::write_csv("ps_u_readsout.csv")
 
-  
 ### filtered
 ## merge filtered phyloseq objects
 ps_f <- merge_phyloseq_new(ps_filtered)
 
-# Melt filtered ps object
-ps_f_df <- phyloseq::psmelt(ps_f) %>% 
-  dplyr::filter(Abundance > 0) 
-
-## output merged data tables
-ps_f_df %>%
+## output merged raw data tables - NOTE: This is memory intensive
+phyloseq::psmelt(ps_f) %>% 
+    dplyr::filter(Abundance > 0)  %>%
     dplyr::select(-Sample) %>%
     readr::write_csv(., paste0("raw_filtered.csv"))
 
 # Export species level summary of filtered results
-ps_f_df %>%
-    dplyr::left_join(
-        phyloseq::refseq(ps_f) %>% as.character() %>% tibble::enframe(name="OTU", value="sequence"),
-        by = "OTU"
-        ) %>%
-    dplyr::select(OTU, sequence, phyloseq::rank_names(ps_f), sample_id, Abundance ) %>%
-    tidyr::pivot_wider(names_from = sample_id,
-                values_from = Abundance,
-                values_fill = list(Abundance = 0)) %>%
+summarise_phyloseq(ps_f) %>%
     readr::write_csv(., paste0("summary_filtered.csv"))
 
 # Output fasta of all ASVs
-seqs <- Biostrings::DNAStringSet(as.vector(phyloseq::refseq(ps_f)))
-Biostrings::writeXStringSet(seqs, filepath = paste0("asvs_filtered.fasta"), width = 100) 
+Biostrings::writeXStringSet(phyloseq::refseq(ps_f), filepath = paste0("asvs_filtered.fasta"), width = 100) 
 
 # write .nwk file if phylogeny present
 if(!is.null(phyloseq::phy_tree(ps_f, errorIfNULL = FALSE))){
@@ -182,13 +160,14 @@ readr::write_csv(samdf_out_f, paste0("samdf_filtered.csv"))
 saveRDS(ps_f, paste0("ps_filtered.rds"))
 
 ## read tracking output from filtered phyloseq
-ps_f_df %>%
-    dplyr::select(sample_id, fcid, pcr_primers, Abundance) %>%
-    dplyr::group_by(sample_id, fcid, pcr_primers) %>%
-    dplyr::summarise(pairs = sum(Abundance)) %>% 
+phyloseq::sample_sums(ps_f) %>%
+    tibble::enframe(name = "sample_id", value = "pairs")%>%
+    dplyr::left_join(phyloseq::sample_data(ps_f) %>%
+                     as("data.frame") %>%
+                     dplyr::select(sample_id, fcid, pcr_primers)) %>% 
     dplyr::mutate(stage = "filter_sample_taxon") %>% 
     dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>% 
     readr::write_csv("ps_f_readsout.csv")
-
+    
 
 # stop(" *** stopped manually *** ") ##########################################

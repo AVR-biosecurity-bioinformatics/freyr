@@ -73,31 +73,19 @@ ps <- step_phyloseq(
 phyloseq::taxa_names(ps) <- phyloseq::tax_table(ps)[,ncol(phyloseq::tax_table(ps))] # use final column of tax_table (hash) to name OTUs
 phyloseq::tax_table(ps) <- phyloseq::tax_table(ps)[,1:ncol(phyloseq::tax_table(ps))-1] # remove hash 'rank' from tax_table
 
-# Melt ps object
-ps_df <- phyloseq::psmelt(ps) %>% 
-  dplyr::filter(Abundance > 0)
-
 ## output summaries; from step_output_summary()
-# Export raw csv
-ps_df %>%
+# Export raw csv  - NOTE: This is memory intensive
+ps_df <- phyloseq::psmelt(ps) %>% 
+    dplyr::filter(Abundance > 0) %>%
     dplyr::select(-Sample) %>%
     readr::write_csv(., paste0("raw_unfiltered_",pcr_primers,".csv"))
 
 # Export species level summary of filtered results
-ps_df %>%
-    dplyr::left_join(
-        phyloseq::refseq(ps) %>% as.character() %>% tibble::enframe(name="OTU", value="sequence"),
-        by = "OTU"
-        ) %>%
-    dplyr::select(OTU, sequence, phyloseq::rank_names(ps), sample_id, Abundance ) %>%
-    tidyr::pivot_wider(names_from = sample_id,
-                values_from = Abundance,
-                values_fill = list(Abundance = 0)) %>%
+summarise_phyloseq(ps) %>%
     readr::write_csv(., paste0("summary_unfiltered_",pcr_primers,".csv"))
 
 # Output fasta of all ASVs
-seqs <- Biostrings::DNAStringSet(as.vector(phyloseq::refseq(ps)))
-Biostrings::writeXStringSet(seqs, filepath = paste0("asvs_unfiltered_",pcr_primers,".fasta"), width = 100) 
+Biostrings::writeXStringSet(phyloseq::refseq(ps), filepath = paste0("asvs_unfiltered_",pcr_primers,".fasta"), width = 100) 
 
 # write .nwk file if phylogeny present
 if(!is.null(phyloseq::phy_tree(ps, errorIfNULL = FALSE))){

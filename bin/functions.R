@@ -265,6 +265,26 @@ merge_phyloseq_new <- function (arguments){
   return(do.call(phyloseq, merged.list))
 }
 
+summarise_phyloseq <- function(ps){
+  phyloseq::otu_table(ps) %>%
+    t() %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column("OTU") %>%
+    dplyr::left_join(
+      phyloseq::tax_table(ps) %>%
+        as.data.frame() %>%
+        tibble::rownames_to_column("OTU"),
+      by = "OTU"
+    ) %>%  
+    dplyr::left_join(
+      phyloseq::refseq(ps) %>% 
+        as.character() %>% 
+        tibble::enframe(name="OTU", value="sequence"),
+      by = "OTU"
+    )  %>%
+    dplyr::select(OTU, sequence, phyloseq::rank_names(ps), phyloseq::sample_names(ps))
+}
+
 rareplot <- function(ps, step="auto", threshold=0){
   if(step == "auto"){
     step <- round(max(sample_sums(ps)) / 100)

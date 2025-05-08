@@ -192,31 +192,20 @@ if(!is.na(min_sample_reads) || min_sample_reads > 0){
 # Message how many were removed
 if(!quiet){message(phyloseq::nsamples(ps) - phyloseq::nsamples(ps2), " Samples and ", phyloseq::ntaxa(ps) - phyloseq::ntaxa(ps2), " ASVs dropped")}
 
-# Melt ps object
-ps2_df <- phyloseq::psmelt(ps2) %>% 
-  dplyr::filter(Abundance > 0)
-
 ### output filtered results per locus; from step_output_summary()
-# Export raw csv
-ps2_df %>%
+
+# Export raw csv  - NOTE: This is memory intensive
+phyloseq::psmelt(ps2) %>% 
+    dplyr::filter(Abundance > 0) %>%
     dplyr::select(-Sample) %>%
     readr::write_csv(., paste0("raw_filtered_",pcr_primers,".csv"))
 
 # Export species level summary of filtered results
-ps2_df %>%
-    dplyr::left_join(
-        phyloseq::refseq(ps2) %>% as.character() %>% tibble::enframe(name="OTU", value="sequence"),
-        by = "OTU"
-        ) %>%
-    dplyr::select(OTU, sequence, rank_names(ps2), sample_id, Abundance ) %>%
-    tidyr::pivot_wider(names_from = sample_id,
-                values_from = Abundance,
-                values_fill = list(Abundance = 0)) %>%
+summarise_phyloseq(ps2) %>%
     readr::write_csv(., paste0("summary_filtered_",pcr_primers,".csv"))
 
 # Output fasta of all ASVs
-seqs <- Biostrings::DNAStringSet(as.vector(phyloseq::refseq(ps2)))
-Biostrings::writeXStringSet(seqs, filepath = paste0("asvs_filtered_",pcr_primers,".fasta"), width = 100) 
+Biostrings::writeXStringSet(phyloseq::refseq(ps2), filepath = paste0("asvs_filtered_",pcr_primers,".fasta"), width = 100) 
 
 # write .nwk file if phylogeny present
 if(!is.null(phyloseq::phy_tree(ps2, errorIfNULL = FALSE))){
