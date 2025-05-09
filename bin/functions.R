@@ -285,6 +285,53 @@ summarise_phyloseq <- function(ps){
     dplyr::select(OTU, sequence, phyloseq::rank_names(ps), phyloseq::sample_names(ps))
 }
 
+melt_phyloseq <- function(ps) {
+  
+  # Enforce OTU table orientation. Redundant-looking step
+  seqtab <- phyloseq::otu_table(ps)
+  if(!taxa_are_rows(seqtab)){seqtab <- t(seqtab)}
+  
+  # Convert otu table to tall form (one sample-taxon per row)
+  df <- seqtab %>% 
+    as("matrix") %>%
+    data.table::as.data.table(keep.rownames = "OTU") %>%
+    data.table::melt(id.vars = c("OTU"), variable.name = "sample_id", 
+                     value.name = "Abundance", variable.factor = FALSE)
+  
+  # Remove observations with no abundance
+  df <- df[Abundance > 0]
+  
+  #sample data
+  if(!is.null(phyloseq::sample_variables(ps))) {
+    samdf <- phyloseq::sample_data(ps) %>%
+      as("data.frame") %>% 
+      data.table::as.data.table(keep.rownames = FALSE)
+    df <- df[samdf, on = .(sample_id = sample_id)]
+  }
+  
+  # Add the tax table if it exists
+  if(!is.null(phyloseq::rank_names(ps))) {
+    taxtab <- phyloseq::tax_table(ps) %>%
+      as("matrix") %>%
+      data.table::as.data.table(keep.rownames = "OTU")
+    df <- df[taxtab, on = .(OTU = OTU)]
+  }
+  
+  # Add the sequences if they exist
+  if(!is.null(phyloseq::refseq(ps))) {
+    seqs <- phyloseq::refseq(ps) %>%
+      as("character") %>%
+      data.table::as.data.table(keep.rownames = "OTU")
+    data.table::setnames(seqs, old = c("OTU", "."), new = c("OTU", "sequence"))
+    df <- df[seqs, on = .(OTU = OTU)]
+  }
+  
+  # Arrange by Abundance, then OTU names (to approx. phyloseq behavior)
+  df <- df %>%
+    data.table::setorder(-Abundance, OTU) 
+  return(df)
+}
+
 rareplot <- function(ps, step="auto", threshold=0){
   if(step == "auto"){
     step <- round(max(sample_sums(ps)) / 100)

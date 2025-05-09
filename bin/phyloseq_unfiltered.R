@@ -11,6 +11,7 @@ process_packages <- c(
     "scales",
     "stringr",
     "tibble",
+    "data.table",
     "tidyr",
     "vegan",
     NULL
@@ -75,9 +76,7 @@ phyloseq::tax_table(ps) <- phyloseq::tax_table(ps)[,1:ncol(phyloseq::tax_table(p
 
 ## output summaries; from step_output_summary()
 # Export raw csv  - NOTE: This is memory intensive
-ps_df <- phyloseq::psmelt(ps) %>% 
-    dplyr::filter(Abundance > 0) %>%
-    dplyr::select(-Sample) %>%
+melt_phyloseq(ps) %>%
     readr::write_csv(., paste0("raw_unfiltered_",pcr_primers,".csv"))
 
 # Export species level summary of filtered results

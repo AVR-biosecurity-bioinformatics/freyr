@@ -8,6 +8,7 @@ process_packages <- c(
     "seqateurs",
     "stringr",
     "tibble",
+    "data.table",
     "tidyr",
     NULL
 )
@@ -195,9 +196,7 @@ if(!quiet){message(phyloseq::nsamples(ps) - phyloseq::nsamples(ps2), " Samples a
 ### output filtered results per locus; from step_output_summary()
 
 # Export raw csv  - NOTE: This is memory intensive
-phyloseq::psmelt(ps2) %>% 
-    dplyr::filter(Abundance > 0) %>%
-    dplyr::select(-Sample) %>%
+melt_phyloseq(ps2) %>% 
     readr::write_csv(., paste0("raw_filtered_",pcr_primers,".csv"))
 
 # Export species level summary of filtered results

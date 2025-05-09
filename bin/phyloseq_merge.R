@@ -8,6 +8,7 @@ process_packages <- c(
     "seqateurs",
     "stringr",
     "tibble",
+    "data.table",
     "tidyr",
     NULL
 )
@@ -37,11 +38,9 @@ ps_filtered <- lapply(ps_filtered, readRDS) # read in phyloseq objects and store
 ## merge unfiltered phyloseq objects
 ps_u <- merge_phyloseq_new(ps_unfiltered)
 
-## output merged data tables - NOTE: This is memory intensive
-phyloseq::psmelt(ps_u) %>% 
-    dplyr::filter(Abundance > 0)  %>%
-    dplyr::select(-Sample) %>%
-    readr::write_csv(., paste0("raw_unfiltered.csv"))
+## output merged data tables 
+melt_phyloseq(ps_u) %>% 
+  readr::write_csv(., paste0("raw_unfiltered.csv"))
 
 # Export species level summary of unfiltered results
 summarise_phyloseq(ps_u) %>%
@@ -110,9 +109,7 @@ summarise_phyloseq(ps_u) %>%
 ps_f <- merge_phyloseq_new(ps_filtered)
 
 ## output merged raw data tables - NOTE: This is memory intensive
-phyloseq::psmelt(ps_f) %>% 
-    dplyr::filter(Abundance > 0)  %>%
-    dplyr::select(-Sample) %>%
+melt_phyloseq(ps_f) %>% 
     readr::write_csv(., paste0("raw_filtered.csv"))
 
 # Export species level summary of filtered results
