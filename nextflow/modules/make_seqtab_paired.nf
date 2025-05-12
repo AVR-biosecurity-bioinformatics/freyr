@@ -8,8 +8,9 @@ process MAKE_SEQTAB_PAIRED {
     tuple val(pcr_primers), val(fcid), val(concat_unmerged), val(meta), path(readsF), path(readsR), path(seqsF), path(seqsR)
 
     output:
-    tuple val(pcr_primers), val(fcid), val(meta), path("*_seqtab.rds"), emit: seqtab
-    path("*_readsout.csv"),                                             emit: read_tracking
+    tuple val(pcr_primers), val(fcid), val(meta), path("*_seqtab.rds"),                                 emit: seqtab
+    tuple val(pcr_primers), val(fcid), val(meta), path("*_seqtab_tibble.csv"), path("*_seqs.fasta"),    emit: seqtab_new
+    path("*_readsout.csv"),                                                                             emit: read_tracking
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

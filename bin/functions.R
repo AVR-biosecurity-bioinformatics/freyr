@@ -385,3 +385,53 @@ rareplot <- function(ps, step="auto", threshold=0){
   
   return(gg.rare)
 }
+
+#' write fasta
+#'
+#' @param x a list of sequences in DNAbin or AAbin format, or a vector of sequences as concatenated upper-case character strings.
+#' @param file character string giving a valid file path to output the text to. If file = "" (default setting) the text file is written to the console.
+#' @param compress logical indicating whether the output file should be gzipped.
+#' @param quiet Whether progress should be printed to consoe
+#'
+#' @return
+#' @export
+#'
+#' @examples
+write_fasta <- function(x, file = "", compress = FALSE, quiet=FALSE) {
+  if(stringr::str_detect(file, "\\.gz$") & !compress){
+    compress <- TRUE
+    if(!quiet) message(".gz detected in filename, compressing output file")
+  }
+  if (!is.null(dim(x))) {
+    x <- as.list(as.data.frame(t(unclass(x))))
+  }
+  if (inherits(x, "DNAbin")) {
+    tmp <- DNAbin2char(x)
+  } else if (is.list(x)) {
+    if (length(x[[1]] == 1)) {
+      tmp <- unlist(x, use.names = TRUE)
+    }
+    else {
+      tmp <- sapply(x, paste0, collapse = "")
+    }
+  } else {
+    tmp <- x
+  }
+  reslen <- 2 * length(tmp)
+  res <- character(reslen)
+  res[seq(1, reslen, by = 2)] <- paste0(">", names(tmp))
+  res[seq(2, reslen, by = 2)] <- tmp
+  if(!file == ""){
+    f <- if(compress){
+        gzfile(file, "w")
+      } else {
+        file(file, "w")
+    }
+    writeLines(res, f)
+    close(f)
+  } else {
+    writeLines(res)
+  }
+  if(!quiet){message("Wrote ", length(tmp), " sequences to ", file)}
+  invisible(NULL)
+}
