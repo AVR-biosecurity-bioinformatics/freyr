@@ -51,7 +51,7 @@ process FILTER_QUALPLOTS {
     )
     }, finally = {
     ### save R environment for debugging
-    if ("${params.rdata}" == "true") { save.image(file = "${task.process}_${task.index}.rda") } 
+    if ("${params.rdata}" == "true") { save.image(file = "${task.process}.rda") } 
     })
     
     """

@@ -367,7 +367,6 @@ workflow FREYR {
     RESULT_SUMMARIES (
         DADA2.out.ch_seqtab,
         TAXONOMY.out.ch_mergetax_output,
-        TAXONOMY.out.ch_seqtab,
         ch_loci_samdf,
         ch_loci_params,
         PROCESS_READS.out.ch_read_tracker_samples,
