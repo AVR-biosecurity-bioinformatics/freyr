@@ -14,9 +14,8 @@ workflow RESULT_SUMMARIES {
 
     take:
 
-    ch_tax_summaries
-    ch_mergetax_output
     ch_seqtab
+    ch_mergetax_output
     ch_loci_samdf
     ch_loci_params
     ch_read_tracker_samples
