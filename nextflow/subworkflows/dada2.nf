@@ -202,13 +202,18 @@ workflow DADA2 {
         }
 
         //// merge paired-end reads per flowcell x locus combo
-        MAKE_SEQTAB_PAIRED ( ch_seq_combined )
+        MAKE_SEQTAB_PAIRED ( 
+            ch_seq_combined 
+        )
 
         read_tracker_grouped = 
             read_tracker_grouped.concat(MAKE_SEQTAB_PAIRED.out.read_tracking)
 
         //// filter sequence table
-        FILTER_SEQTAB ( MAKE_SEQTAB_PAIRED.out.seqtab )
+        FILTER_SEQTAB ( 
+            MAKE_SEQTAB_PAIRED.out.seqtab,
+            MAKE_SEQTAB_PAIRED.out.seqtab_new
+        )
 
         read_tracker_grouped = 
             read_tracker_grouped.concat(FILTER_SEQTAB.out.read_tracking)
@@ -286,13 +291,18 @@ workflow DADA2 {
         }
 
         //// merge paired-end reads per flowcell x locus combo
-        MAKE_SEQTAB_SINGLE ( ch_seq_single )
+        MAKE_SEQTAB_SINGLE ( 
+            ch_seq_single 
+        )
 
         read_tracker_grouped = 
             read_tracker_grouped.concat(MAKE_SEQTAB_SINGLE.out.read_tracking)
 
         //// filter sequence table
-        FILTER_SEQTAB ( MAKE_SEQTAB_SINGLE.out.seqtab )
+        FILTER_SEQTAB ( 
+            MAKE_SEQTAB_SINGLE.out.seqtab,
+            MAKE_SEQTAB_SINGLE.out.seqtab_new
+        )
 
         read_tracker_grouped = 
             read_tracker_grouped.concat(FILTER_SEQTAB.out.read_tracking)

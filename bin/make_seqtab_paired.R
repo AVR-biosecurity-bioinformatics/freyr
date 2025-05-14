@@ -192,6 +192,8 @@ seqtab_tibble <-
     # join to seq_tibble
     dplyr::left_join(., seq_tibble, by = "sequence") %>%
     dplyr::select(-sequence) %>% # remove sequence
+    # add pcr_primers to sample_id
+    dplyr::mutate(sample_id = paste0(sample_id,"_",pcr_primers)) %>%
     tidyr::pivot_wider(names_from = sample_id, values_from = abundance)
 
 
