@@ -18,7 +18,7 @@ nf_vars <- c(
     "projectDir",
     "fcid",
     "pcr_primers",
-    "seqtab",
+    "fasta",
     "target_gene",
     "ref_fasta",
     "blast_min_identity",
@@ -75,20 +75,12 @@ coverage <-             as.numeric(blast_min_coverage)
 db_name <-              basename(database) %>% stringr::str_remove("_\\.*$")
 
 ### run R code
-seqtab <- readRDS(seqtab) # read in seqtab
+seqs <-  Biostrings::readDNAStringSet(fasta) %>% as.character() # read in fasta
 
 
 if (isTRUE(run_blast)) { # run BLAST if requested
     
-    seqmap <- tibble::enframe(dada2::getSequences(seqtab), name = NULL, value="OTU") %>%
-        dplyr::mutate(name = paste0("SV", seq(length(dada2::getSequences(seqtab)))))
-    
-    seqs <- taxreturn::char2DNAbin(seqmap$OTU)
-    names(seqs) <- seqmap$name
-
-
-    # empty file to debug output
-    # EMPTY_FILE <- c()
+    seqmap <- seqs %>% tibble::enframe(., name = "seq_name", value = "sequence")
     
     if ( length(seqs) > 0 ) { # if there are ASV sequences, run BLAST
         ## make low stringency, ident = 60, coverage = 80, then save
@@ -125,7 +117,7 @@ if (isTRUE(run_blast)) { # run BLAST if requested
                 n == 1 ~ binomial
                 )
             ) %>%
-            dplyr::select(OTU = qseqid, Genus, Species = binomial, pident, qcovs, max_score, total_score, evalue) %>% 
+            dplyr::select(seq_name = qseqid, Genus, Species = binomial, pident, qcovs, max_score, total_score, evalue) %>% 
             dplyr::rename(blast_genus = Genus, blast_spp = Species) %>%
             dplyr::filter(!is.na(blast_spp)) 
 
@@ -134,33 +126,33 @@ if (isTRUE(run_blast)) { # run BLAST if requested
 
         if( nrow(blast_spp) > 0 ) {
         # Transform into taxtab format
-        out <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") %>%
+        out <- seqmap %>%
             dplyr::left_join(
                 blast_spp %>%
-                    dplyr::select(name = OTU, Genus = blast_genus, Species = blast_spp) %>%
-                    dplyr::left_join(seqmap, by = "name") %>%
+                    dplyr::select(name = seq_name, Genus = blast_genus, Species = blast_spp) %>%
+                    dplyr::left_join(., seqmap, by = dplyr::join_by("name" == "seq_name")) %>%
                     dplyr::select(-name), 
-                by="OTU"
-                ) %>%
-            tibble::column_to_rownames("OTU") %>%
+                by = "sequence"
+            ) %>%
+            tibble::column_to_rownames("sequence") %>%
             as.matrix()
         } else {
             warning(paste0("No Species assigned with BLAST to ", database, " -- have you used the correct database?"))
-        out <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") %>%
-                dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
-                tibble::column_to_rownames("OTU") %>%
-                as.matrix()
+        out <- seqmap %>%
+            dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
+            tibble::column_to_rownames("sequence") %>%
+            as.matrix()
         }
     } else {
         warning(paste0("No sequences present in seqtab -- BLAST skipped"))
-        out <- tibble::enframe(dada2::getSequences(seqtab), name = NULL, value = "OTU") %>%
-        dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
-        tibble::column_to_rownames("OTU") %>%
-        as.matrix()
+        out <- seqmap %>%
+            dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
+            tibble::column_to_rownames("sequence") %>%
+            as.matrix()
     }
     
     # Check that output dimensions match input
-    if(!all(rownames(out) %in% colnames(seqtab))){
+    if(!all(rownames(out) %in% seqs)){
         stop("Number of ASVs classified does not match the number of input ASVs")
     }
     
@@ -169,10 +161,10 @@ if (isTRUE(run_blast)) { # run BLAST if requested
     
 } else { # if BLAST not requested, produce null output
     
-    out <- tibble::enframe(dada2::getSequences(seqtab), name = NULL, value = "OTU") %>%
-                    dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
-                    tibble::column_to_rownames("OTU") %>%
-                    as.matrix()    
+    out <- seqmap %>%
+        dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
+        tibble::column_to_rownames("sequence") %>%
+        as.matrix()    
     # save output
     saveRDS(out, paste0(fcid,"_",pcr_primers,"_",db_name,"_blast.rds"))
 

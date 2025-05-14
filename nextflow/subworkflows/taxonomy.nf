@@ -53,23 +53,20 @@ workflow TAXONOMY {
         ch_seqtab_params_new
     )
     
-    ch_tax_idtaxa_tax = 
-        TAX_IDTAXA.out.tax
-        // .map { pcr_primers, fcid, meta, tax -> // remove meta
-        //     [ pcr_primers, fcid, tax ] }
+    ch_tax_idtaxa_tax = TAX_IDTAXA.out.tax
 
-    ch_tax_idtaxa_ids = 
-        TAX_IDTAXA.out.ids 
-        // .map { pcr_primers, fcid, meta, ids -> // remove meta
-        //     [ pcr_primers, fcid, ids ] }
+
+    ch_tax_idtaxa_ids = TAX_IDTAXA.out.ids 
+
 
     //// use blastn to assign taxonomy
-    TAX_BLAST ( ch_seqtab_params )
+    TAX_BLAST ( 
+        // ch_seqtab_params,
+        ch_seqtab_params_new
+    )
 
     ch_tax_blast = 
         TAX_BLAST.out.blast
-        // .map { pcr_primers, fcid, meta, blast -> // remove meta
-        //     [ pcr_primers, fcid, blast ] }
 
     //// merge tax assignment outputs and filtered seqtab (pre-assignment)
     ch_tax_idtaxa_tax // pcr_primers, fcid, loci_params, tax
