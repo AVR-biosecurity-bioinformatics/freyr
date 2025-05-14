@@ -5,7 +5,8 @@ process TAX_IDTAXA {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), val(loci_params), path(seqtab)
+    tuple val(pcr_primers), val(fcid), val(loci_params), path(fasta)
+    //tuple val(pcr_primers2), val(fcid2), val(loci_params2), path(fasta)
 
     output:
     tuple val(pcr_primers), val(fcid), val(loci_params), path("*_idtaxa_tax.rds"), emit: tax
@@ -24,9 +25,9 @@ process TAX_IDTAXA {
     ## input channel variables
     fcid =              "${fcid}"
     pcr_primers =       "${pcr_primers}"
-    seqtab =            "${seqtab}"
     idtaxa_confidence = "${loci_params.idtaxa_confidence}"
     idtaxa_db =         "${loci_params.idtaxa_db}"
+    fasta =             "${fasta}"
 
     ## global variables
     projectDir = "$projectDir"

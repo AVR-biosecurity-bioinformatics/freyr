@@ -215,14 +215,6 @@ workflow DADA2 {
             MAKE_SEQTAB_PAIRED.out.seqtab_new
         )
 
-        read_tracker_grouped = 
-            read_tracker_grouped.concat(FILTER_SEQTAB.out.read_tracking)
-
-        ch_seqtab = 
-            FILTER_SEQTAB.out.seqtab
-
-
-
 
     } else if ( params.paired == false && params.seq_type == "nanopore" )  {
 
@@ -304,23 +296,26 @@ workflow DADA2 {
             MAKE_SEQTAB_SINGLE.out.seqtab_new
         )
 
-        read_tracker_grouped = 
-            read_tracker_grouped.concat(FILTER_SEQTAB.out.read_tracking)
-
-        ch_seqtab = 
-            FILTER_SEQTAB.out.seqtab
-            
-
 
     } else {
         error ("Disallowed 'params.paired' and 'params.seq_type' combination")
     }
+
+    read_tracker_grouped = 
+        read_tracker_grouped.concat(FILTER_SEQTAB.out.read_tracking)
+
+    ch_seqtab = 
+        FILTER_SEQTAB.out.seqtab
+
+    ch_seqtab_new = 
+        FILTER_SEQTAB.out.seqtab_new
 
 
     emit:
 
     ch_seqtab
     read_tracker_grouped
+    ch_seqtab_new
 
 
 }

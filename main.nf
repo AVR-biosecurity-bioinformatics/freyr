@@ -359,7 +359,8 @@ workflow FREYR {
     TAXONOMY (
         DADA2.out.ch_seqtab,
         ch_loci_params,
-        ch_idtaxa_db_new
+        ch_idtaxa_db_new,
+        DADA2.out.ch_seqtab_new
         )
 
 

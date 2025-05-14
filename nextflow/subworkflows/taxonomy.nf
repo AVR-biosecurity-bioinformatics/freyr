@@ -19,6 +19,7 @@ workflow TAXONOMY {
     ch_seqtab
     ch_loci_params
     ch_idtaxa_db_new
+    ch_seqtab_new
 
 
     main:
@@ -38,9 +39,19 @@ workflow TAXONOMY {
                 [ pcr_primers, fcid, loci_params + [ idtaxa_db: new_idtaxa ], seqtab ] }
             .set { ch_seqtab_params }
     }
+
+    /// modify ch_seqtab_new as parallel input channel
+    ch_seqtab_new
+        .combine ( ch_loci_params, by: 0 )
+        .map { pcr_primers, fcid, seqtab, fasta, loci_params -> 
+            [ pcr_primers, fcid, loci_params, fasta ] }
+        .set { ch_seqtab_params_new }
     
     //// use IDTAXA to assign taxonomy
-    TAX_IDTAXA ( ch_seqtab_params )
+    TAX_IDTAXA ( 
+        // ch_seqtab_params,
+        ch_seqtab_params_new
+    )
     
     ch_tax_idtaxa_tax = 
         TAX_IDTAXA.out.tax
