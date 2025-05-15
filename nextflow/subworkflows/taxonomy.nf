@@ -77,6 +77,7 @@ workflow TAXONOMY {
 
     //// group taxtab across flowcells (per locus)
     JOINT_TAX.out.joint
+        .map { pcr_primers, fcid, tax_tibble -> [ pcr_primers, tax_tibble ] }
         .groupTuple ( by: 0 ) // group into tuples using pcr_primers
         .set { ch_mergetax_input }
 
