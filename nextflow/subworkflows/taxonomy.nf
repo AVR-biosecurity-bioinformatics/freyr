@@ -86,9 +86,9 @@ workflow TAXONOMY {
 
     ch_mergetax_output = MERGE_TAX.out.merged_tax
 
-    //// create assignment_plot input merging filtered seqtab, taxtab, and blast output
+    //// create assignment_plot input merging filtered fasta, taxtab, and blast output
     /// channel has one item per fcid x pcr_primer combo
-    ch_seqtab_params // pcr_primers, fcid, loci_params, seqtab
+    ch_seqtab_params_new // pcr_primers, fcid, loci_params, fasta
         .join ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by pcr_primers, fcid 
         .join ( JOINT_TAX.out.joint, by: [0,1] ) // combine by pcr_primers, fcid
         .set { ch_assignment_plot_input }
