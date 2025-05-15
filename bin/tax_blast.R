@@ -101,77 +101,64 @@ if (isTRUE(run_blast)) { # run BLAST if requested
         saveRDS(blast_spp_low, paste0(fcid,"_",pcr_primers,"_blast_spp_low.rds"))
 
         # filter by identity and coverage
-        ### TODO (Alex): update this (you weren't happy with it)
-        blast_spp <- blast_spp_low %>% 
+        blast_spp <- 
+            blast_spp_low %>%
+            # filter by identity and coverage thresholds
             dplyr::filter(pident >= identity, qcovs >= coverage) %>% 
             dplyr::group_by(qseqid) %>%
+            # add end of species binomial
             dplyr::mutate(spp = Species %>% stringr::str_remove("^.* ")) %>%
+            # create "/" for species name when multiple are best hits for one species, remove old Species name
             dplyr::reframe(spp = paste(sort(unique(spp)), collapse = "/"), Genus, pident, qcovs, max_score, total_score, evalue) %>%
+            # create new binomial
             dplyr::mutate(binomial = paste(Genus, spp)) %>%
+            # remove duplicate IDs for the same sequence
             dplyr::distinct() %>%
             dplyr::group_by(qseqid) %>% # added to resolve issue of returning NAs for Species (add_tally added up all rows ungrouped)
+            # count number of best hits
             dplyr::add_tally() %>%
             dplyr::ungroup() %>% 
-            dplyr::mutate(binomial =  dplyr::case_when( #Leave unassigned if conflicted at genus level
-                n > 1 ~ as.character(NA),
-                n == 1 ~ binomial
+            # make sure binomial is NA if more than one Genus is assigned to a species
+            dplyr::mutate(
+                binomial =  dplyr::case_when( #Leave unassigned if conflicted at genus level
+                    n > 1 ~ as.character(NA),
+                    n == 1 ~ binomial
                 )
             ) %>%
+            # remove unwanted columns, making new Species column modified binomial
             dplyr::select(seq_name = qseqid, Genus, Species = binomial, pident, qcovs, max_score, total_score, evalue) %>% 
+            # rename assignment columns
             dplyr::rename(blast_genus = Genus, blast_spp = Species) %>%
+            # remove sequences without assignment to species level
             dplyr::filter(!is.na(blast_spp)) 
 
-        # for debug output
-        # saveRDS(blast_spp, paste0(fcid,"_",pcr_primers,"_blast_spp.rds"))
-
-        if( nrow(blast_spp) > 0 ) {
-        # Transform into taxtab format
-        out <- seqmap %>%
-            dplyr::left_join(
-                blast_spp %>%
-                    dplyr::select(name = seq_name, Genus = blast_genus, Species = blast_spp) %>%
-                    dplyr::left_join(., seqmap, by = dplyr::join_by("name" == "seq_name")) %>%
-                    dplyr::select(-name), 
-                by = "sequence"
-            ) %>%
-            tibble::column_to_rownames("sequence") %>%
-            as.matrix()
-        } else {
-            warning(paste0("No Species assigned with BLAST to ", database, " -- have you used the correct database?"))
-        out <- seqmap %>%
-            dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
-            tibble::column_to_rownames("sequence") %>%
-            as.matrix()
-        }
     } else {
-        warning(paste0("No sequences present in seqtab -- BLAST skipped"))
-        out <- seqmap %>%
-            dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
-            tibble::column_to_rownames("sequence") %>%
-            as.matrix()
+        stop("No sequences present in input FASTA")
     }
     
-    # Check that output dimensions match input
-    if(!all(rownames(out) %in% seqs)){
+    # Check that output sequences match input
+    if(!all(blast_spp$seq_name %in% names(seqs))){
         stop("Number of ASVs classified does not match the number of input ASVs")
     }
-    
-    # save output
-    saveRDS(out, paste0(fcid,"_",pcr_primers,"_",db_name,"_blast.rds"))
-    
-} else { # if BLAST not requested, produce null output
-    
-    out <- seqmap %>%
-        dplyr::mutate(Genus = NA_character_, Species = NA_character_) %>%
-        tibble::column_to_rownames("sequence") %>%
-        as.matrix()    
-    # save output
-    saveRDS(out, paste0(fcid,"_",pcr_primers,"_",db_name,"_blast.rds"))
+        
+} else { 
+
+    # if BLAST not requested, produce blast_spp tibble full of NAs
+    blast_spp <- 
+        seqmap %>%
+        dplyr::mutate(
+            sequence = NULL,
+            blast_genus = NA_character_, 
+            blast_spp = NA_character_
+        )   
 
     # save NULL output for assignment plot
     blast_spp_low <- NULL
     saveRDS(blast_spp_low, paste0(fcid,"_",pcr_primers,"_blast_spp_low.rds"))
 
 }
+
+# save tibble
+readr::write_csv(blast_spp, paste0(fcid,"_",pcr_primers,"_",db_name,"_blast.csv"))
 
 # stop(" *** stopped manually *** ") ##########################################

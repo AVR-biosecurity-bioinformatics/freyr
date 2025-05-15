@@ -55,9 +55,7 @@ workflow TAXONOMY {
     
     ch_tax_idtaxa_tax = TAX_IDTAXA.out.tax
 
-
     ch_tax_idtaxa_ids = TAX_IDTAXA.out.ids 
-
 
     //// use blastn to assign taxonomy
     TAX_BLAST ( 
@@ -78,7 +76,7 @@ workflow TAXONOMY {
     JOINT_TAX ( ch_joint_tax_input )
 
     //// group taxtab across flowcells (per locus)
-    JOINT_TAX.out.taxtab
+    JOINT_TAX.out.joint
         .groupTuple ( by: 0 ) // group into tuples using pcr_primers
         .set { ch_mergetax_input }
 
@@ -91,7 +89,7 @@ workflow TAXONOMY {
     /// channel has one item per fcid x pcr_primer combo
     ch_seqtab_params // pcr_primers, fcid, loci_params, seqtab
         .join ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by pcr_primers, fcid 
-        .join ( JOINT_TAX.out.taxtab, by: [0,1] ) // combine by pcr_primers, fcid
+        .join ( JOINT_TAX.out.joint, by: [0,1] ) // combine by pcr_primers, fcid
         .set { ch_assignment_plot_input }
 
     //// do assignment plot

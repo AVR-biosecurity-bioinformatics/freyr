@@ -8,7 +8,7 @@ process TAX_BLAST {
     tuple val(pcr_primers), val(fcid), val(loci_params), path(fasta)
 
     output:
-    tuple val(pcr_primers), val(fcid), val(loci_params), path("*_blast.rds"),   emit: blast
+    tuple val(pcr_primers), val(fcid), val(loci_params), path("*_blast.csv"),   emit: blast
     tuple val(pcr_primers), val(fcid), path("*_blast_spp_low.rds"),             emit: blast_assignment
     tuple val(pcr_primers), val(fcid), path("*_n_ranks.txt"),                   emit: n_ranks
 
