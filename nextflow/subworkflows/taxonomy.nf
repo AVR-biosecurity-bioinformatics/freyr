@@ -31,6 +31,13 @@ workflow TAXONOMY {
             [ pcr_primers, fcid, loci_params, seqtab ] }
         .set { ch_seqtab_params }
 
+    /// modify ch_seqtab_new as parallel input channel
+    ch_seqtab_new
+        .combine ( ch_loci_params, by: 0 )
+        .map { pcr_primers, fcid, seqtab, fasta, loci_params -> 
+            [ pcr_primers, fcid, loci_params, fasta ] }
+        .set { ch_seqtab_params_new }
+
     //// use newly trained IDTAXA model, if it exists
     if ( params.train_idtaxa ) {
         ch_seqtab_params
@@ -38,15 +45,14 @@ workflow TAXONOMY {
             .map { pcr_primers, fcid, loci_params, seqtab, new_idtaxa ->
                 [ pcr_primers, fcid, loci_params + [ idtaxa_db: new_idtaxa ], seqtab ] }
             .set { ch_seqtab_params }
+
+        ch_seqtab_params_new
+            .combine ( ch_idtaxa_db_new, by: 0 ) // join by pcr_primers
+            .map { pcr_primers, fcid, loci_params, seqtab, fasta, new_idtaxa ->
+                [ pcr_primers, fcid, loci_params + [ idtaxa_db: new_idtaxa ], seqtab, fasta ] }
+            .set { ch_seqtab_params_new }
     }
 
-    /// modify ch_seqtab_new as parallel input channel
-    ch_seqtab_new
-        .combine ( ch_loci_params, by: 0 )
-        .map { pcr_primers, fcid, seqtab, fasta, loci_params -> 
-            [ pcr_primers, fcid, loci_params, fasta ] }
-        .set { ch_seqtab_params_new }
-    
     //// use IDTAXA to assign taxonomy
     TAX_IDTAXA ( 
         // ch_seqtab_params,
@@ -94,16 +100,20 @@ workflow TAXONOMY {
         .set { ch_assignment_plot_input }
 
     //// do assignment plot
-    ASSIGNMENT_PLOT ( ch_assignment_plot_input )
+    ASSIGNMENT_PLOT ( 
+        ch_assignment_plot_input 
+    )
 
     /// generate taxonomic assignment summary per locus (also hash seq)
-    ch_tax_idtaxa_tax // pcr_primers, fcid, loci_params, tax
+    ch_tax_idtaxa_tax // pcr_primers, fcid, loci_params, tax_csv
         .join ( ch_tax_idtaxa_ids, by: [0,1,2] ) // + "*_idtaxa_ids.rds"
         .join ( ASSIGNMENT_PLOT.out.joint, by: [0,1,2] ) // + "*_joint.rds"
         .set { ch_tax_summary_input }
 
     //// create taxonomic assignment summaries per locus x flowcell
-    TAX_SUMMARY ( ch_tax_summary_input )
+    TAX_SUMMARY ( 
+        ch_tax_summary_input 
+    )
 
     // create channel containing a single list of all TAX_SUMMARY outputs
     TAX_SUMMARY.out.rds

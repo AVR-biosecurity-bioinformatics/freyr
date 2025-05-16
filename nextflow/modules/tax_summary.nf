@@ -24,13 +24,13 @@ process TAX_SUMMARY {
     ## input channel variables
     pcr_primers =           "${pcr_primers}"
     fcid =                  "${fcid}"   
-    tax =                   "${tax}"
-    ids =                   "${ids}"
+    tax_file =              "${tax}"
+    ids_file =              "${ids}"
     joint_file =            "${joint}"
     target_gene =           "${loci_params.target_gene}"
     idtaxa_db =             "${loci_params.idtaxa_db}"
     ref_fasta =             "${loci_params.ref_fasta}"
-    
+      
     ## global variables
     projectDir = "$projectDir"
     params_dict = "$params"
