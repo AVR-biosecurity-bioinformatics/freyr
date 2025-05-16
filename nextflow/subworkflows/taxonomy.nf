@@ -116,14 +116,16 @@ workflow TAXONOMY {
     )
 
     // create channel containing a single list of all TAX_SUMMARY outputs
-    TAX_SUMMARY.out.rds
+    TAX_SUMMARY.out.csv
         .map { pcr_primers, fcid, loci_params, tax_summary ->
             [ tax_summary ] } 
         .collect()
         .set { ch_tax_summaries } 
 
     //// merge TAX_SUMMARY outputs together across loci and flow cells
-    TAX_SUMMARY_MERGE ( ch_tax_summaries )
+    TAX_SUMMARY_MERGE ( 
+        ch_tax_summaries 
+    )
 
 
     emit:

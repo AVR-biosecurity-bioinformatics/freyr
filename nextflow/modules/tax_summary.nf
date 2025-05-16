@@ -9,7 +9,7 @@ process TAX_SUMMARY {
 
     output:
     tuple val(pcr_primers), val(fcid), val(loci_params), path("*_taxonomic_assignment_summary.rds"), emit: rds
-    path("*_taxonomic_assignment_summary.csv"), emit: csv
+    tuple val(pcr_primers), val(fcid), val(loci_params), path("*_taxonomic_assignment_summary.csv"), emit: csv
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
