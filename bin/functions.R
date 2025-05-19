@@ -267,22 +267,22 @@ merge_phyloseq_new <- function (arguments){
 
 summarise_phyloseq <- function(ps){
   phyloseq::otu_table(ps) %>%
-    t() %>%
+    # t() %>%     # removed because rows are sequence names not samples
     as.data.frame() %>%
-    tibble::rownames_to_column("OTU") %>%
+    tibble::rownames_to_column("seq_name") %>%
     dplyr::left_join(
       phyloseq::tax_table(ps) %>%
         as.data.frame() %>%
-        tibble::rownames_to_column("OTU"),
-      by = "OTU"
+        tibble::rownames_to_column("seq_name"),
+      by = "seq_name"
     ) %>%  
     dplyr::left_join(
       phyloseq::refseq(ps) %>% 
         as.character() %>% 
-        tibble::enframe(name="OTU", value="sequence"),
-      by = "OTU"
+        tibble::enframe(name="seq_name", value="sequence"),
+      by = "seq_name"
     )  %>%
-    dplyr::select(OTU, sequence, phyloseq::rank_names(ps), phyloseq::sample_names(ps))
+    dplyr::select(seq_name, sequence, phyloseq::rank_names(ps), phyloseq::sample_names(ps))
 }
 
 melt_phyloseq <- function(ps) {
@@ -294,8 +294,8 @@ melt_phyloseq <- function(ps) {
   # Convert otu table to tall form (one sample-taxon per row)
   df <- seqtab %>% 
     as("matrix") %>%
-    data.table::as.data.table(keep.rownames = "OTU") %>%
-    data.table::melt(id.vars = c("OTU"), variable.name = "sample_id", 
+    data.table::as.data.table(keep.rownames = "seq_name") %>%
+    data.table::melt(id.vars = c("seq_name"), variable.name = "sample_id", 
                      value.name = "Abundance", variable.factor = FALSE)
   
   # Remove observations with no abundance
@@ -313,22 +313,22 @@ melt_phyloseq <- function(ps) {
   if(!is.null(phyloseq::rank_names(ps))) {
     taxtab <- phyloseq::tax_table(ps) %>%
       as("matrix") %>%
-      data.table::as.data.table(keep.rownames = "OTU")
-    df <- df[taxtab, on = .(OTU = OTU)]
+      data.table::as.data.table(keep.rownames = "seq_name")
+    df <- df[taxtab, on = .(seq_name = seq_name)]
   }
   
   # Add the sequences if they exist
   if(!is.null(phyloseq::refseq(ps))) {
     seqs <- phyloseq::refseq(ps) %>%
       as("character") %>%
-      data.table::as.data.table(keep.rownames = "OTU")
-    data.table::setnames(seqs, old = c("OTU", "."), new = c("OTU", "sequence"))
-    df <- df[seqs, on = .(OTU = OTU)]
+      data.table::as.data.table(keep.rownames = "seq_name")
+    data.table::setnames(seqs, old = c("seq_name", "."), new = c("seq_name", "sequence"))
+    df <- df[seqs, on = .(seq_name = seq_name)]
   }
   
-  # Arrange by Abundance, then OTU names (to approx. phyloseq behavior)
+  # Arrange by Abundance, then sequence names (to approx. phyloseq behavior)
   df <- df %>%
-    data.table::setorder(-Abundance, OTU) 
+    data.table::setorder(-Abundance, seq_name) 
   return(df)
 }
 

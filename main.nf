@@ -366,7 +366,7 @@ workflow FREYR {
 
     //// subworkflow: create result summaries
     RESULT_SUMMARIES (
-        DADA2.out.ch_seqtab,
+        DADA2.out.ch_seqtab_new,
         TAXONOMY.out.ch_mergetax_output,
         ch_loci_samdf,
         ch_loci_params,
