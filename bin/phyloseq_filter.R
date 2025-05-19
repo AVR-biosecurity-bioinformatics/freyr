@@ -19,6 +19,7 @@ nf_vars <- c(
     "projectDir",
     "pcr_primers",
     "ps",
+    "filters_tibble",
     "target_kingdom",
     "target_phylum",
     "target_class",
@@ -34,6 +35,7 @@ lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 ps <- readRDS(ps)
+seq_filters <- readr::read_csv(filters_tibble)
 
 # convert "NA" strings to true NA
 if(target_kingdom == "NA"){ target_kingdom <- NA }
@@ -60,14 +62,14 @@ taxtab <- phyloseq::tax_table(ps) %>%
     as.data.frame()
 
 # Check if any taxonomic filters are enabled
-ps0 <- ps
+ps_taxfiltered <- ps
 
 if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, target_family, target_genus, target_species), is.na))){
 
     # Filter kingdom
     if(!is.na(target_kingdom)){
         if (any(stringr::str_detect(taxtab$Kingdom, target_kingdom))){
-        ps0 <- ps0 %>%
+        ps_taxfiltered <- ps_taxfiltered %>%
             subset_taxa_new(
                 rank = "Kingdom",
                 value = target_kingdom
@@ -80,7 +82,7 @@ if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, targ
     # Filter phylum
     if(!is.na(target_phylum)){
         if (any(stringr::str_detect(taxtab$Phylum, target_phylum))){
-        ps0 <- ps0 %>%
+        ps_taxfiltered <- ps_taxfiltered %>%
             subset_taxa_new(
                 rank = "Phylum",
                 value = target_phylum
@@ -93,7 +95,7 @@ if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, targ
     # Filter class
     if(!is.na(target_class)){
         if (any(stringr::str_detect(taxtab$Class, target_class))){
-        ps0 <- ps0 %>%
+        ps_taxfiltered <- ps_taxfiltered %>%
             subset_taxa_new(
                 rank = "Class",
                 value = target_class
@@ -106,7 +108,7 @@ if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, targ
     # Filter order
     if(!is.na(target_order)){
         if (any(stringr::str_detect(taxtab$Order, target_order))){
-        ps0 <- ps0 %>%
+        ps_taxfiltered <- ps_taxfiltered %>%
             subset_taxa_new(
                 rank = "Order",
                 value = target_order
@@ -119,7 +121,7 @@ if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, targ
     # Filter family
     if(!is.na(target_family)){
         if (any(stringr::str_detect(taxtab$Family, target_family))){
-        ps0 <- ps0 %>%
+        ps_taxfiltered <- ps_taxfiltered %>%
             subset_taxa_new(
                 rank = "Family",
                 value = target_family
@@ -132,7 +134,7 @@ if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, targ
     # Filter genus
     if(!is.na(target_genus)){
         if (any(stringr::str_detect(taxtab$Genus, target_genus))){
-        ps0 <- ps0 %>%
+        ps_taxfiltered <- ps_taxfiltered %>%
             subset_taxa_new(
                 rank = "Genus",
                 value = target_genus
@@ -145,7 +147,7 @@ if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, targ
     # Filter Species
     if(!is.na(target_species)){
         if (any(stringr::str_detect(taxtab$Species, target_species))){
-        ps0 <- ps0 %>%
+        ps_taxfiltered <- ps_taxfiltered %>%
             subset_taxa_new(
                 rank = "Species",
                 value = target_species
@@ -159,81 +161,106 @@ if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, targ
     if (!quiet){message(paste0("No taxonomic filters set - skipping this filter"))}
 }
 
+## remove sequences that failed the sequence-level soft filters
+seqs_passing <- 
+    seq_filters %>%
+    dplyr::filter(
+        chimera_filter, 
+        length_filter,
+        phmm_filter,
+        frame_filter
+    ) %>%
+    dplyr::pull(seq_name)
+
+ps_seqfiltered <- phyloseq::prune_taxa(taxa = seqs_passing, ps_taxfiltered)
+
 # Remove any taxa under read count or relative abundance thresholds
 ### TODO: Add comments explaining what is happening here
 if(!is.na(min_taxa_reads) & is.na(min_taxa_ra)){
-    ps1 <- phyloseq::transform_sample_counts(ps0, function(OTU, ab = min_taxa_reads){ ifelse(OTU <= ab,  0, OTU) })
+    ps_abfiltered <- phyloseq::transform_sample_counts(ps_seqfiltered, function(OTU, ab = min_taxa_reads){ ifelse(OTU <= ab,  0, OTU) })
 } else if(is.na(min_taxa_reads) & !is.na(min_taxa_ra)){
-    ps1 <- phyloseq::transform_sample_counts(ps0, function(OTU, ab = min_taxa_ra ){ ifelse((OTU / sum(OTU)) <= ab,  0, OTU) })
+    ps_abfiltered <- phyloseq::transform_sample_counts(ps_seqfiltered, function(OTU, ab = min_taxa_ra ){ ifelse((OTU / sum(OTU)) <= ab,  0, OTU) })
 } else if (!is.na(min_taxa_reads) & !is.na(min_taxa_ra)){
-    ps1 <- ps0 %>%
+    ps_abfiltered <- ps_seqfiltered %>%
         phyloseq::transform_sample_counts(function(OTU, ab = min_taxa_reads){ ifelse(OTU <= ab,  0, OTU) }) %>%
         phyloseq::transform_sample_counts(function(OTU, ab = min_taxa_ra ){ ifelse((OTU / sum(OTU)) <= ab,  0, OTU) })
 } else {
     if (!quiet){message(paste0("No minimum abundance filters set - skipping this filter"))}
-    ps1 <- ps0
+    ps_abfiltered <- ps_seqfiltered
 }
 
 #Remove all samples under the minimum read threshold 
 if(!is.na(min_sample_reads) || min_sample_reads > 0){
-    if (all(phyloseq::sample_sums(ps1)<min_sample_reads)) {
+    if (all(phyloseq::sample_sums(ps_abfiltered)<min_sample_reads)) {
         stop(paste0("ERROR: No samples contained reads above the minimum threshold of ", min_sample_reads, " -- consider lowering this value"))
         }
     
-    ps2 <- ps1 %>%
+    ps_sampfiltered <- ps_abfiltered %>%
         phyloseq::prune_samples(phyloseq::sample_sums(.)>=min_sample_reads, .) %>% 
         phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
 } else if (min_sample_reads == 0 || is.na(min_sample_reads) ) {
     if (!quiet){message(paste0("No minimum sample reads filter set - skipping this filter"))}
-    ps2 <- ps1 %>%
+    ps_sampfiltered <- ps_abfiltered %>%
         phyloseq::prune_samples(phyloseq::sample_sums(.)>=0,.) %>%
         phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
 }
 
 # Message how many were removed
-if(!quiet){message(phyloseq::nsamples(ps) - phyloseq::nsamples(ps2), " Samples and ", phyloseq::ntaxa(ps) - phyloseq::ntaxa(ps2), " ASVs dropped")}
+if(!quiet){message(phyloseq::nsamples(ps) - phyloseq::nsamples(ps_sampfiltered), " Samples and ", phyloseq::ntaxa(ps) - phyloseq::ntaxa(ps_sampfiltered), " ASVs dropped")}
 
 ### output filtered results per locus; from step_output_summary()
 
 # Export raw csv  - NOTE: This is memory intensive
-melt_phyloseq(ps2) %>% 
+melt_phyloseq(ps_sampfiltered) %>% 
     readr::write_csv(., paste0("raw_filtered_",pcr_primers,".csv"))
 
 # Export species level summary of filtered results
-summarise_phyloseq(ps2) %>%
+summarise_phyloseq(ps_sampfiltered) %>%
     readr::write_csv(., paste0("summary_filtered_",pcr_primers,".csv"))
 
-# Output fasta of all ASVs
-Biostrings::writeXStringSet(phyloseq::refseq(ps2), filepath = paste0("asvs_filtered_",pcr_primers,".fasta"), width = 100) 
+# save sequences as .fasta file (with taxonomy in header, in format "seq_name|pcr_primers;Root;Kingdom;Phylum;Class;Order;Family;Genus;Species")
+seqs_output <- phyloseq::refseq(ps_sampfiltered)
 
-# write .nwk file if phylogeny present
-if(!is.null(phyloseq::phy_tree(ps2, errorIfNULL = FALSE))){
-    #Output newick tree
-    ape::write.tree(phyloseq::phy_tree(ps2), file = paste0("tree_filtered",pcr_primers,".nwk"))
-}
+seq_names_new <- 
+    phyloseq::tax_table(ps_sampfiltered) %>%
+    as("matrix") %>%
+    tibble::as_tibble(rownames = "seq_name") %>%
+    # ensure sequence name order is same as the DSS object
+    dplyr::arrange(factor(seq_name, levels = names(seqs_output))) %>%
+    # add pcr_primers
+    dplyr::mutate(pcr_primers = pcr_primers, .after = seq_name) %>%
+    # unite columns into a single header string per sequence
+    tidyr::unite(col = "lineage", Root:Species, sep = ";") %>%
+    tidyr::unite(col = "id", c(seq_name, pcr_primers), sep = "|") %>%
+    tidyr::unite(col = "header", c(id, lineage), sep = ";") %>%
+    dplyr::pull(header)
+
+names(seqs_output) <- seq_names_new
+
+write_fasta(seqs_output, paste0("asvs_unfiltered_", pcr_primers, ".fasta"))  
 
 ## output phyloseq and component data; from step_output_ps
 
 # save seqtab as wide tibble (rows = sample_id, cols = OTU name (hash), cells = abundance)
-seqtab_out <- phyloseq::otu_table(ps2) %>%
+seqtab_out <- phyloseq::otu_table(ps_sampfiltered) %>%
     as("matrix") %>%
     tibble::as_tibble(rownames = "sample_id")
 
 # save taxtab as long tibble (rows = OTU/ASV, cols = tax rankings)
-taxtab_out <- phyloseq::tax_table(ps2) %>%
+taxtab_out <- phyloseq::tax_table(ps_sampfiltered) %>%
     as("matrix") %>%
-    tibble::as_tibble(rownames = "OTU") %>%
+    tibble::as_tibble(rownames = "seq_name") %>%
     seqateurs::unclassified_to_na(rownames = FALSE)
 
 # Check taxonomy table outputs
 ### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
-if(!all(colnames(taxtab_out) == c("OTU", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
+if(!all(colnames(taxtab_out) == c("seq_name", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
     message("Warning: Taxonomy table columns do not meet expectations for the staging database \n
-            Database requires the columns: OTU, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species ")
+            Database requires the columns: seq_name, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species ")
 }
 
 # save samplesheet
-samdf_out <- phyloseq::sample_data(ps2) %>%
+samdf_out <- phyloseq::sample_data(ps_sampfiltered) %>%
     as("matrix") %>%
     tibble::as_tibble()
 
@@ -241,7 +268,7 @@ samdf_out <- phyloseq::sample_data(ps2) %>%
 readr::write_csv(seqtab_out, paste0("seqtab_filtered_",pcr_primers,".csv"))
 readr::write_csv(taxtab_out, paste0("taxtab_filtered_",pcr_primers,".csv"))
 readr::write_csv(samdf_out, paste0("samdf_filtered_",pcr_primers,".csv"))
-saveRDS(ps2, paste0("ps_filtered_",pcr_primers,".rds"))
+saveRDS(ps_sampfiltered, paste0("ps_filtered_",pcr_primers,".rds"))
 
 
 

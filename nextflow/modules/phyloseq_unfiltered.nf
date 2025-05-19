@@ -8,9 +8,9 @@ process PHYLOSEQ_UNFILTERED {
     tuple val(pcr_primers), path(taxtab), path(seqtab_list), path(fasta_list), path(samdf_locus), val(loci_params)
 
     output:
-    path("*.csv"),                                                          emit: csvs
-    tuple val(pcr_primers), path("ps_unfiltered_*.rds"), val(loci_params),  emit: ps 
-    path("*.fasta"),                                                        emit: asv_fasta
+    path("*.csv"),                                                                                 emit: csvs
+    tuple val(pcr_primers), path("ps_unfiltered_*.rds"), path("filters_*.csv"), val(loci_params),  emit: ps 
+    path("*.fasta"),                                                                               emit: asv_fasta
     // path("accumulation_curve_*.pdf"),                                       emit: acc_curve
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'

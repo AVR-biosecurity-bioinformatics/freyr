@@ -45,7 +45,7 @@ workflow RESULT_SUMMARIES {
 
     //// combine phyloseq outputs to merge across loci
     PHYLOSEQ_UNFILTERED.out.ps // val(pcr_primers), path("ps_unfiltered_*.rds"), val(loci_params)
-        .map { pcr_primers, ps, loci_params ->
+        .map { pcr_primers, ps, filters_tibble, loci_params ->
             [ ps ] }
         .collect()
         .set { ch_ps_unfiltered }
