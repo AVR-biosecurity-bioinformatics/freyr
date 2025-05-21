@@ -58,7 +58,9 @@ workflow RESULT_SUMMARIES {
 
     PHYLOSEQ_MERGE ( 
         ch_ps_unfiltered, 
-        ch_ps_filtered 
+        ch_ps_filtered,
+        PHYLOSEQ_UNFILTERED.out.asv_fasta.collect(),
+        PHYLOSEQ_FILTER.out.asv_fasta.collect()
         )
     
     ch_read_tracker_grouped = 

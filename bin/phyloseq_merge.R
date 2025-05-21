@@ -18,7 +18,9 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 nf_vars <- c(
     "projectDir",
     "ps_unfiltered",
-    "ps_filtered"
+    "ps_filtered",
+    "unfiltered_fastas",
+    "filtered_fastas"
 )
 lapply(nf_vars, nf_var_check)
 
@@ -32,9 +34,32 @@ ps_filtered <- # convert Groovy to R list format
     stringr::str_extract_all(ps_filtered, pattern = "[^\\s,\\[\\]]+") %>% unlist()
 ps_filtered <- lapply(ps_filtered, readRDS) # read in phyloseq objects and store as list
 
+# import fasta files
+unfiltered_seqs_list <- 
+    unfiltered_fastas %>%
+    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
+    lapply(., Biostrings::readDNAStringSet)
+
+filtered_seqs_list <- 
+    filtered_fastas %>%
+    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
+    lapply(., Biostrings::readDNAStringSet)
+
 ### run R code
 
-### unfiltered 
+### unfiltered ---------------------------------------------------------------------------------------------
+
+# combine fasta DSS objects, removing redundant sequences
+seqs_uf <- 
+    unfiltered_seqs_list %>%
+    lapply(., as.character) %>%
+    unlist(use.names = T) %>% 
+    .[!duplicated(.)] %>%
+    Biostrings::DNAStringSet()
+
+# save combined fasta of filtered sequences
+write_fasta(seqs_uf, "asvs_unfiltered.fasta")
+
 ## merge unfiltered phyloseq objects
 ps_u <- merge_phyloseq_new(ps_unfiltered)
 
@@ -46,15 +71,6 @@ melt_phyloseq(ps_u) %>%
 summarise_phyloseq(ps_u) %>%
     readr::write_csv(., paste0("summary_unfiltered.csv"))
 
-# Output fasta of all ASVs
-Biostrings::writeXStringSet(phyloseq::refseq(ps_u), filepath = paste0("asvs_unfiltered.fasta"), width = 100) 
-
-# write .nwk file if phylogeny present
-if(!is.null(phyloseq::phy_tree(ps_u, errorIfNULL = FALSE))){
-    #Output newick tree
-    ape::write.tree(phyloseq::phy_tree(ps_u), file = paste0("tree_unfiltered.nwk"))
-}
-
 ## output phyloseq and component data; from step_output_ps
 
 # save seqtab as wide tibble (rows = sample_id, cols = OTU name (hash), cells = abundance)
@@ -65,14 +81,17 @@ seqtab_out_u <- phyloseq::otu_table(ps_u) %>%
 # save taxtab as long tibble (rows = OTU/ASV, cols = tax rankings)
 taxtab_out_u <- phyloseq::tax_table(ps_u) %>%
     as("matrix") %>%
-    tibble::as_tibble(rownames = "OTU") %>%
-    seqateurs::unclassified_to_na(rownames = FALSE)
+    tibble::as_tibble(rownames = "seq_name") %>%
+    # convert propagated taxonomy to NA values
+    dplyr::mutate( 
+        dplyr::across(Root:Species, ~ dplyr::if_else(stringr::str_detect(.x, "^\\w__"), NA, .x))
+    )
 
 # Check taxonomy table outputs
 ### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
-if(!all(colnames(taxtab_out_u) == c("OTU", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
+if(!all(colnames(taxtab_out_u) == c("seq_name", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
     message("Warning: Taxonomy table columns do not meet expectations for the staging database \n
-            Database requires the columns: OTU, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species ")
+            Database requires the columns: seq_name, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species ")
 }
 
 # save samplesheet
@@ -90,21 +109,33 @@ saveRDS(ps_u, paste0("ps_unfiltered.rds"))
 rank_cols <- colnames(phyloseq::tax_table(ps_u)) # only retrieve this once
 
 summarise_phyloseq(ps_u) %>%
-  tidyr::pivot_longer(cols = sample_names(ps_u), names_to="sample_id", values_to = "Abundance")%>%
-  dplyr::left_join(phyloseq::sample_data(ps_u) %>%
-              as("data.frame") %>%
-              dplyr::select(sample_id, fcid, pcr_primers))%>%
-  dplyr::mutate(dplyr::across(tidyselect::any_of(rank_cols), 
-                              ~ ifelse(!stringr::str_detect(.x, "__"), Abundance, NA_integer_))) %>% 
-  dplyr::group_by(sample_id, fcid, pcr_primers) %>%
-  dplyr::summarise(dplyr::across(tidyselect::any_of(rank_cols),
-                                 ~ sum(., na.rm = TRUE), .names = "classified_{.col}")) %>% 
-  tidyr::pivot_longer(cols = tidyselect::starts_with("classified_"), names_to = "stage", values_to = "pairs") %>% 
-  mutate(stage = stringr::str_to_lower(stage)) %>%
-  dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>%
-  readr::write_csv("ps_u_readsout.csv")
+    tidyr::pivot_longer(cols = sample_names(ps_u), names_to="sample_id", values_to = "Abundance")%>%
+    dplyr::left_join(phyloseq::sample_data(ps_u) %>%
+                as("data.frame") %>%
+                dplyr::select(sample_id, fcid, pcr_primers))%>%
+    dplyr::mutate(dplyr::across(tidyselect::any_of(rank_cols), 
+                                ~ ifelse(!stringr::str_detect(.x, "__"), Abundance, NA_integer_))) %>% 
+    dplyr::group_by(sample_id, fcid, pcr_primers) %>%
+    dplyr::summarise(dplyr::across(tidyselect::any_of(rank_cols),
+                                    ~ sum(., na.rm = TRUE), .names = "classified_{.col}")) %>% 
+    tidyr::pivot_longer(cols = tidyselect::starts_with("classified_"), names_to = "stage", values_to = "pairs") %>% 
+    mutate(stage = stringr::str_to_lower(stage)) %>%
+    dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>%
+    readr::write_csv("ps_u_readsout.csv")
 
-### filtered
+### filtered ----------------------------------------------------------------------------------------------------------
+
+# combine fasta DSS objects, removing redundant sequences
+seqs_f <- 
+    filtered_seqs_list %>%
+    lapply(., as.character) %>%
+    unlist(use.names = T) %>% 
+    .[!duplicated(.)] %>%
+    Biostrings::DNAStringSet()
+
+# save combined fasta of filtered sequences
+write_fasta(seqs_f, "asvs_filtered.fasta")
+
 ## merge filtered phyloseq objects
 ps_f <- merge_phyloseq_new(ps_filtered)
 
@@ -116,15 +147,6 @@ melt_phyloseq(ps_f) %>%
 summarise_phyloseq(ps_f) %>%
     readr::write_csv(., paste0("summary_filtered.csv"))
 
-# Output fasta of all ASVs
-Biostrings::writeXStringSet(phyloseq::refseq(ps_f), filepath = paste0("asvs_filtered.fasta"), width = 100) 
-
-# write .nwk file if phylogeny present
-if(!is.null(phyloseq::phy_tree(ps_f, errorIfNULL = FALSE))){
-    #Output newick tree
-    ape::write.tree(phyloseq::phy_tree(ps_f), file = paste0("tree_filtered.nwk"))
-}
-
 ## output phyloseq and component data; from step_output_ps
 
 # save seqtab as wide tibble (rows = sample_id, cols = OTU name (hash), cells = abundance)
@@ -135,14 +157,17 @@ seqtab_out_f <- phyloseq::otu_table(ps_f) %>%
 # save taxtab as long tibble (rows = OTU/ASV, cols = tax rankings)
 taxtab_out_f <- phyloseq::tax_table(ps_f) %>%
     as("matrix") %>%
-    tibble::as_tibble(rownames = "OTU") %>%
-    seqateurs::unclassified_to_na(rownames = FALSE)
+    tibble::as_tibble(rownames = "seq_name") %>%
+    # convert propagated taxonomy to NA values
+    dplyr::mutate( 
+        dplyr::across(Root:Species, ~ dplyr::if_else(stringr::str_detect(.x, "^\\w__"), NA, .x))
+    )
 
 # Check taxonomy table outputs
 ### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
-if(!all(colnames(taxtab_out_f) == c("OTU", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
+if(!all(colnames(taxtab_out_f) == c("seq_name", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
     message("Warning: Taxonomy table columns do not meet expectations for the staging database \n
-            Database requires the columns: OTU, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species ")
+            Database requires the columns: seq_name, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species ")
 }
 
 # save samplesheet
