@@ -5,15 +5,11 @@ process FILTER_SEQTAB {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), val(meta), path(seqtab)
     tuple val(pcr_primers), val(fcid), val(meta), path(seqtab_tibble), path(fasta)
 
     output:
-    tuple val(pcr_primers), val(fcid), path("*_seqtab.cleaned.rds"),                emit: seqtab
-    tuple val(pcr_primers), val(fcid), path("*_ASV_cleanup_summary.csv"),           emit: csv
-    tuple val(pcr_primers), val(fcid), path("*_ASV_cleanup_summary.pdf"),           emit: plot
-    tuple val(pcr_primers), val(fcid), path("*_seqtab_filtered.csv"), path(fasta),  emit: seqtab_new
-    tuple val(pcr_primers), val(fcid), path("*_ASV_cleanup.csv"),                   emit: csv_new
+    tuple val(pcr_primers), val(fcid), path("*_seqtab_filtered.csv"), path(fasta),  emit: seqtab
+    tuple val(pcr_primers), val(fcid), path("*_ASV_cleanup.csv"),                   emit: csv
     tuple val(pcr_primers), val(fcid), path("*_asv_abundance.pdf"),                 emit: abundance_plot
     tuple val(pcr_primers), val(fcid), path("*_asv_count.pdf"),                     emit: count_plot
     path("*_readsout.csv"),                                                         emit: read_tracking
@@ -32,7 +28,6 @@ process FILTER_SEQTAB {
     ## input channel variables
     fcid =              "${fcid}"
     pcr_primers =       "${pcr_primers}"
-    seqtab =            "${seqtab}"
     asv_min_length =    "${meta.asv_min_length}"
     asv_max_length =    "${meta.asv_max_length}"
     phmm =              "${meta.phmm}"

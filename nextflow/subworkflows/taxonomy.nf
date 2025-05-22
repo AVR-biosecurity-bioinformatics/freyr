@@ -19,44 +19,28 @@ workflow TAXONOMY {
     ch_seqtab
     ch_loci_params
     ch_idtaxa_db_new
-    ch_seqtab_new
-
 
     main:
 
     //// combine loci_params to seqtab
     ch_seqtab
         .combine ( ch_loci_params, by: 0 )
-        .map { pcr_primers, fcid, seqtab, loci_params -> 
-            [ pcr_primers, fcid, loci_params, seqtab ] }
-        .set { ch_seqtab_params }
-
-    /// modify ch_seqtab_new as parallel input channel
-    ch_seqtab_new
-        .combine ( ch_loci_params, by: 0 )
         .map { pcr_primers, fcid, seqtab, fasta, loci_params -> 
             [ pcr_primers, fcid, loci_params, fasta ] }
-        .set { ch_seqtab_params_new }
+        .set { ch_seqtab_params }
 
     //// use newly trained IDTAXA model, if it exists
     if ( params.train_idtaxa ) {
         ch_seqtab_params
             .combine ( ch_idtaxa_db_new, by: 0 ) // join by pcr_primers
-            .map { pcr_primers, fcid, loci_params, seqtab, new_idtaxa ->
-                [ pcr_primers, fcid, loci_params + [ idtaxa_db: new_idtaxa ], seqtab ] }
-            .set { ch_seqtab_params }
-
-        ch_seqtab_params_new
-            .combine ( ch_idtaxa_db_new, by: 0 ) // join by pcr_primers
             .map { pcr_primers, fcid, loci_params, seqtab, fasta, new_idtaxa ->
                 [ pcr_primers, fcid, loci_params + [ idtaxa_db: new_idtaxa ], seqtab, fasta ] }
-            .set { ch_seqtab_params_new }
+            .set { ch_seqtab_params }
     }
 
     //// use IDTAXA to assign taxonomy
     TAX_IDTAXA ( 
-        // ch_seqtab_params,
-        ch_seqtab_params_new
+        ch_seqtab_params
     )
     
     ch_tax_idtaxa_tax = TAX_IDTAXA.out.tax
@@ -65,8 +49,7 @@ workflow TAXONOMY {
 
     //// use blastn to assign taxonomy
     TAX_BLAST ( 
-        // ch_seqtab_params,
-        ch_seqtab_params_new
+        ch_seqtab_params
     )
 
     ch_tax_blast = 
@@ -75,8 +58,7 @@ workflow TAXONOMY {
     //// merge tax assignment outputs and filtered seqtab (pre-assignment)
     ch_tax_idtaxa_tax // pcr_primers, fcid, loci_params, tax
         .join ( ch_tax_blast, by: [0,1,2] ) 
-        .join ( ch_seqtab_params, by: [0,1,2] )
-        .set { ch_joint_tax_input } // pcr_primers, fcid, loci_params, tax, blast, seqtab
+        .set { ch_joint_tax_input } // pcr_primers, fcid, loci_params, tax, blast
 
     //// aggregate taxonomic assignment
     JOINT_TAX ( ch_joint_tax_input )
@@ -94,7 +76,7 @@ workflow TAXONOMY {
 
     //// create assignment_plot input merging filtered fasta, taxtab, and blast output
     /// channel has one item per fcid x pcr_primer combo
-    ch_seqtab_params_new // pcr_primers, fcid, loci_params, fasta
+    ch_seqtab_params // pcr_primers, fcid, loci_params, fasta
         .join ( TAX_BLAST.out.blast_assignment, by: [0,1] ) // combine by pcr_primers, fcid 
         .join ( JOINT_TAX.out.joint, by: [0,1] ) // combine by pcr_primers, fcid
         .set { ch_assignment_plot_input }
@@ -132,6 +114,5 @@ workflow TAXONOMY {
 
     ch_tax_summaries
     ch_mergetax_output
-    ch_seqtab
 
 }

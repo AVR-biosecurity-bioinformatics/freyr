@@ -359,14 +359,13 @@ workflow FREYR {
     TAXONOMY (
         DADA2.out.ch_seqtab,
         ch_loci_params,
-        ch_idtaxa_db_new,
-        DADA2.out.ch_seqtab_new
+        ch_idtaxa_db_new
         )
 
 
     //// subworkflow: create result summaries
     RESULT_SUMMARIES (
-        DADA2.out.ch_seqtab_new,
+        DADA2.out.ch_seqtab,
         TAXONOMY.out.ch_mergetax_output,
         ch_loci_samdf,
         ch_loci_params,

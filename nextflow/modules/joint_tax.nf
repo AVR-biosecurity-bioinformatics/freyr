@@ -5,7 +5,7 @@ process JOINT_TAX {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), val(loci_params), path(tax), path(blast), path(seqtab_tibble)
+    tuple val(pcr_primers), val(fcid), val(loci_params), path(tax), path(blast)
     
     output:
     tuple val(pcr_primers), val(fcid), path("*_joint.csv"), emit: joint
@@ -26,7 +26,6 @@ process JOINT_TAX {
     target_gene =           "${loci_params.target_gene}"
     idtaxa_output =         "${tax}"
     blast_output =          "${blast}"
-    seqtab_tibble =         "${seqtab_tibble}"
     
     ## global variables
     projectDir = "$projectDir"

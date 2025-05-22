@@ -211,8 +211,7 @@ workflow DADA2 {
 
         //// filter sequence table
         FILTER_SEQTAB ( 
-            MAKE_SEQTAB_PAIRED.out.seqtab,
-            MAKE_SEQTAB_PAIRED.out.seqtab_new
+            MAKE_SEQTAB_PAIRED.out.seqtab
         )
 
 
@@ -292,8 +291,7 @@ workflow DADA2 {
 
         //// filter sequence table
         FILTER_SEQTAB ( 
-            MAKE_SEQTAB_SINGLE.out.seqtab,
-            MAKE_SEQTAB_SINGLE.out.seqtab_new
+            MAKE_SEQTAB_SINGLE.out.seqtab
         )
 
 
@@ -307,15 +305,11 @@ workflow DADA2 {
     ch_seqtab = 
         FILTER_SEQTAB.out.seqtab
 
-    ch_seqtab_new = 
-        FILTER_SEQTAB.out.seqtab_new
-
 
     emit:
 
     ch_seqtab
     read_tracker_grouped
-    ch_seqtab_new
 
 
 }

@@ -17,8 +17,7 @@ nf_vars <- c(
     "pcr_primers",
     "target_gene",
     "idtaxa_output",
-    "blast_output",
-    "seqtab_tibble"
+    "blast_output"
 )
 lapply(nf_vars, nf_var_check)
 
@@ -27,10 +26,9 @@ target_gene <-          parse_nf_var_repeat(target_gene)
 
 propagate_tax <-        TRUE
 
-### run R code      # derived from step_join_tax_blast() in functions.R and tar_target(joint_tax)
+### run R code      
 idtaxa_output <-             readr::read_csv(idtaxa_output)
 blast_output <-              readr::read_csv(blast_output)
-# seqtab_tibble <-              readr::read_csv(seqtab_tibble)
 
 # check that BLAST ASVs are those in IDTAXA ASVs
 if(!all(blast_output$seq_name %in% idtaxa_output$seq_name)){

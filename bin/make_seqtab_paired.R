@@ -140,7 +140,7 @@ if ( concat_unmerged ) {
 # Construct sequence table for fcid x pcr_primers from merged reads per sample
 seqtab <- dada2::makeSequenceTable(mergers)
 
-saveRDS(seqtab, paste0(fcid,"_",pcr_primers,"_seqtab.rds"))
+# saveRDS(seqtab, paste0(fcid,"_",pcr_primers,"_seqtab.rds"))
 
 # save number of merged reads per sample
 getN <- function(x) sum(dada2::getUniques(x))
