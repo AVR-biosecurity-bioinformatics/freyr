@@ -333,28 +333,28 @@ Currently, the outputs of the pipeline are found in the `./output/modules` direc
 
 #### Sequences, abundances, and taxonomic assignment
 
-Inferred sequences (confusingly currently called both 'ASVs' and 'OTUs' in the pipeline) are filtered per locus/primer pair using the parameters specified in the `loci_params` file. As such, there are both filtered and unfiltered output files, which are found in the `./output/modules/phyloseq_unfiltered` and `./output/modules/phyloseq_filter` directories, respectively. Files in these directories are separated by locus, which is useful if your PCR primers target different genes. In contrast, the `./output/modules/phyloseq_merge` directory contains filtered and unfiltered results merged across primer pairs, which is useful if all your primer pairs target the same gene (eg. tagging technical or biological replicates). 
+Inferred sequences (ASVs) are filtered per locus/primer pair using the parameters specified in the `loci_params` file. As such, there are both filtered and unfiltered output files, which are found in the `./output/modules/phyloseq_unfiltered` and `./output/modules/phyloseq_filter` directories, respectively. Files in these directories are separated by locus, which is useful if your PCR primers target different genes. In contrast, the `./output/modules/phyloseq_merge` directory contains filtered and unfiltered results merged across primer pairs, which is useful if all your primer pairs target the same gene (eg. tagging technical or biological replicates). 
 
 All three of these directories contain the following types of files (where `*` is a variable part of the file name):
-- `asvs_*.fasta`: FastA file of OTU/ASV sequences
-- `taxtab_*.csv`: taxonomic assignment of each OTU/ASV (name, no sequence) for every taxonomic rank
-- `summary_*.csv`: abundance of OTUs/ASVs per sample (wide format), including sequence and taxonomic assignment
-- `seqtab_*.csv`: simple table of OTU/ASV abundance per sample, not containing sequence or taxonomic assignment
+- `asvs_*.fasta`: FastA file of ASV sequences, headers include unique ASV name, primer pair and taxonomic assignment
+- `taxtab_*.csv`: taxonomic assignment of each ASV (name, no sequence) for every taxonomic rank
+- `summary_*.csv`: abundance of ASVs per sample (wide format), including sequence and taxonomic assignment
+- `seqtab_*.csv`: simple table of ASV abundance per sample, not containing sequence or taxonomic assignment
 - `samdf_*.csv`: samplesheets, split by primer pair, containing input metadata; samples removed during filtering will be missing from the `filtered` versions of this file
-- `raw_*.csv`: large file of sample-level abundance per OTU/ASV (long format), including samplesheet metadata, loci parameters and taxonomic assignment (but not sequence)
+- `raw_*.csv`: large file of sample-level abundance per ASV (long format), including samplesheet metadata, loci parameters, taxonomic assignment and nucleotide sequence
 - `ps_*.rds`: R data files in the [`phyloseq`](https://joey711.github.io/phyloseq/) format 
 
-Detailed taxonomic assignment information for the unfiltered OTU/ASV set, merged across primer pairs, can also be found in `./output/modules/tax_summary_merge` in the `taxonomic_assignment_summary.csv` file. This includes the OTU/ASV name, sequence, primer pair, taxonomic assignment confidence per rank, and the identity of the top BLAST hit in the reference database. 
+Detailed taxonomic assignment information for the unfiltered ASV set, merged across primer pairs, can also be found in `./output/modules/tax_summary_merge` in the `taxonomic_assignment_summary.csv` file. This includes the ASV name, sequence, primer pair, taxonomic assignment confidence per rank, and the identity of the top BLAST hit in the reference database. 
 
 #### Visualisation and QC plots
 
-The `phyloseq_unfiltered` directory contains **accumulation curve plots** (`accumulation_curve_*.pdf`) that show OTU/ASV accumulation curves per sample and flowcell. 
+The `phyloseq_unfiltered` directory contains **accumulation curve plots** (`accumulation_curve_*.pdf`) that show ASV accumulation curves per sample and flowcell. 
 
 **Taxonomic assignment plots** (`*_taxonomic_assignment_summary.pdf`) can be found in `./output/modules/assignment_plot` and show the relationship between IDTAXA taxonomic assignment level and % identity to the top BLAST hit in the database, per flowcell and PCR primer combination. 
 
-**OTU/ASV filtering plots** (`*_ASV_cleanup_summary.pdf`) can be found in `./output/modules/filter_seqtab` and show the number and abundance of sequences kept or filtered, within each flowcell and PCR primer combination.
+**ASV filtering plots** (`*_ASV_cleanup_summary.pdf`) can be found in `./output/modules/filter_seqtab` and show the number and abundance of sequences kept or filtered, within each flowcell and PCR primer combination.
 
-A **read tracking plot** (`read_tracker.pdf`) can be found in `./output/modules/read_tracking`. This shows the total number of reads, per flowcell, that make it through each step of the pipeline, including the final taxonomic and abundance filtering of OTUs/ASVs. 
+A **read tracking plot** (`read_tracker.pdf`) can be found in `./output/modules/read_tracking`. This shows the total number of reads, per flowcell, that make it through each step of the pipeline, including the final taxonomic and abundance filtering of ASVs. 
 
 **Read quality plots** per sample and primer pair can be found in `./output/modules/filter_qualplots`, that visualise quality before (`*_pre_qualplots.pdf`) and after (`*_post_qualplots.pdf`) read filtering and truncation. These show the distribution of base quality per position (top) and the cumulative number of expected errors per read for various quantiles (bottom).
 

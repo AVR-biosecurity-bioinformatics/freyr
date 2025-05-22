@@ -241,12 +241,12 @@ write_fasta(seqs_output, paste0("asvs_unfiltered_", pcr_primers, ".fasta"))
 
 ## output phyloseq and component data; from step_output_ps
 
-# save seqtab as wide tibble (rows = sample_id, cols = OTU name (hash), cells = abundance)
+# save seqtab as wide tibble (rows = sample_id, cols = ASV name (hash), cells = abundance)
 seqtab_out <- phyloseq::otu_table(ps_sampfiltered) %>%
     as("matrix") %>%
     tibble::as_tibble(rownames = "sample_id")
 
-# save taxtab as long tibble (rows = OTU/ASV, cols = tax rankings)
+# save taxtab as long tibble (rows = ASV, cols = tax rankings)
 taxtab_out <- phyloseq::tax_table(ps_sampfiltered) %>%
     as("matrix") %>%
     tibble::as_tibble(rownames = "seq_name") %>%

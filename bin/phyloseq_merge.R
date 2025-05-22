@@ -73,12 +73,12 @@ summarise_phyloseq(ps_u) %>%
 
 ## output phyloseq and component data; from step_output_ps
 
-# save seqtab as wide tibble (rows = sample_id, cols = OTU name (hash), cells = abundance)
+# save seqtab as wide tibble (rows = sample_id, cols = ASV name (hash), cells = abundance)
 seqtab_out_u <- phyloseq::otu_table(ps_u) %>%
     as("matrix") %>%
     tibble::as_tibble(rownames = "sample_id")
 
-# save taxtab as long tibble (rows = OTU/ASV, cols = tax rankings)
+# save taxtab as long tibble (rows = ASV, cols = tax rankings)
 taxtab_out_u <- phyloseq::tax_table(ps_u) %>%
     as("matrix") %>%
     tibble::as_tibble(rownames = "seq_name") %>%
@@ -149,12 +149,12 @@ summarise_phyloseq(ps_f) %>%
 
 ## output phyloseq and component data; from step_output_ps
 
-# save seqtab as wide tibble (rows = sample_id, cols = OTU name (hash), cells = abundance)
+# save seqtab as wide tibble (rows = sample_id, cols = ASV name (hash), cells = abundance)
 seqtab_out_f <- phyloseq::otu_table(ps_f) %>%
     as("matrix") %>%
     tibble::as_tibble(rownames = "sample_id")
 
-# save taxtab as long tibble (rows = OTU/ASV, cols = tax rankings)
+# save taxtab as long tibble (rows = ASV, cols = tax rankings)
 taxtab_out_f <- phyloseq::tax_table(ps_f) %>%
     as("matrix") %>%
     tibble::as_tibble(rownames = "seq_name") %>%

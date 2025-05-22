@@ -343,13 +343,13 @@ rareplot <- function(ps, step="auto", threshold=0){
   ps <- ps %>%
     phyloseq::prune_samples(sample_sums(.)>0, .) %>% 
     phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
-  rare <- otu_table(ps) %>%
+  rare <- phyloseq::otu_table(ps) %>%
     as("matrix") %>%
     vegan::rarecurve(step=step) %>% 
     purrr::set_names(sample_names(ps)) %>%
     purrr::map_dfr(., function(x){
       b <- as.data.frame(x)
-      b <- data.frame(OTU = b[,1], count = rownames(b))
+      b <- data.frame(ASV = b[,1], count = rownames(b))
       b$count <- as.numeric(gsub("N", "",  b$count))
       return(b)
     },.id="sample_id") %>%
@@ -361,11 +361,11 @@ rareplot <- function(ps, step="auto", threshold=0){
   
   gg.rare <- rare %>%
     ggplot2::ggplot() +
-    geom_line(aes(x = count, y = OTU, group=sample_id), alpha=0.3)+
+    geom_line(aes(x = count, y = ASV, group=sample_id), alpha=0.3)+
     geom_point(data = rare %>% 
                  group_by(sample_id) %>% 
                  top_n(1, count),
-               aes(x = count, y = OTU, colour=count > threshold)) +
+               aes(x = count, y = ASV, colour=count > threshold)) +
     scale_x_continuous(label = scales::label_number(scale_cut = append(scales::cut_short_scale(), 1, 1)))+
     scale_colour_manual(values=c("FALSE" = "#F8766D", "TRUE"="#619CFF"))+
     facet_wrap(fcid~., scales="free", ncol=1)+

@@ -376,7 +376,7 @@ workflow FREYR {
 
     ///// VISUALISATION
     /*
-    - stacked bar charts of OTU abundance across samples -- filtered vs unfiltered
+    - stacked bar charts of ASV abundance across samples -- filtered vs unfiltered
     - plots showing proportion of sequences that passed or failed the final filters, per sample/flowcell/locus etc
     - taxonomy heatmap tree
     */
