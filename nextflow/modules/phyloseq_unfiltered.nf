@@ -29,7 +29,7 @@ process PHYLOSEQ_UNFILTERED {
     fasta_list =            "${fasta_list}"
     loci_params =           "${loci_params}"
     samdf =                 "${samdf_locus}"
-    
+     
     ## global variables
     projectDir = "$projectDir"
     params_dict = "$params"

@@ -190,6 +190,13 @@ melt_phyloseq(ps_uf) %>%
 
 # export summary .csv from phyloseq object
 summarise_phyloseq(ps_uf) %>%
+    dplyr::left_join(
+        .,
+        seqtab_combined %>% 
+            dplyr::select(seq_name, sequence, chimera_filter, length_filter, phmm_filter, frame_filter),
+        by = c("seq_name", "sequence")
+    ) %>%
+    dplyr::relocate(seq_name, sequence, Root:Species, chimera_filter:frame_filter) %>%
     readr::write_csv(., paste0("summary_unfiltered_",pcr_primers,".csv"))
 
 # export phyloseq object
