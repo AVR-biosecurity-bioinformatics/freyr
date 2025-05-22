@@ -110,7 +110,7 @@
                     "type": "integer",
                     "minimum": 1,
                     "description": "Number of sequences to taxonomically assign per process.",
-                    "errorMessage": "Must be an integer >= 1.",
+                    "errorMessage": "Must be an integer >= 1, preferably >10.",
                     "help_text": "Number of sequences to taxonomically assign per process. Decreasing this may speed up the pipeline when many CPUs are available. Setting to very low values (<10) is not recommended.",
                     "default": 100
                 },

@@ -16,8 +16,8 @@ nf_vars <- c(
     "fcid",
     "pcr_primers",
     "target_gene",
-    "idtaxa_output",
-    "blast_output"
+    "idtaxa_list",
+    "blast_list"
 )
 lapply(nf_vars, nf_var_check)
 
@@ -27,8 +27,17 @@ target_gene <-          parse_nf_var_repeat(target_gene)
 propagate_tax <-        TRUE
 
 ### run R code      
-idtaxa_output <-             readr::read_csv(idtaxa_output)
-blast_output <-              readr::read_csv(blast_output)
+idtaxa_output <- 
+    idtaxa_list %>%
+    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
+    lapply(., readr::read_csv) %>% # read in seqtabs and store as list of tibbles
+    dplyr::bind_rows()
+
+blast_output <- 
+    blast_list %>%
+    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
+    lapply(., readr::read_csv) %>% # read in seqtabs and store as list of tibbles
+    dplyr::bind_rows()
 
 # check that BLAST ASVs are those in IDTAXA ASVs
 if(!all(blast_output$seq_name %in% idtaxa_output$seq_name)){

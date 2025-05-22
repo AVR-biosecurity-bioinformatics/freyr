@@ -5,7 +5,7 @@ process ASSIGNMENT_PLOT {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), val(loci_params), path(fasta), path(blast), path(tax)
+    tuple val(pcr_primers), val(fcid), val(loci_params), path(fasta), path(blast, name: "blast*.rds"), path(tax)
 
     output:
     path("*_taxonomic_assignment_summary.pdf"), emit: plot
@@ -25,7 +25,7 @@ process ASSIGNMENT_PLOT {
     fcid =                  "${fcid}"
     pcr_primers =           "${pcr_primers}"
     fasta =                 "${fasta}"
-    blast =                 "${blast}"
+    blast_list =            "${blast}"
     tax =                   "${tax}"
     target_gene =           "${loci_params.target_gene}"
     idtaxa_db =             "${loci_params.idtaxa_db}"

@@ -5,7 +5,7 @@ process TAX_SUMMARY {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), val(loci_params), path(tax), path(ids), path(joint)
+    tuple val(pcr_primers), val(fcid), val(loci_params), path(fasta), path(tax, name: "idtaxa*.csv"), path(ids, name: "idtaxa*.rds"), path(joint)
 
     output:
     tuple val(pcr_primers), val(fcid), val(loci_params), path("*_taxonomic_assignment_summary.rds"), emit: rds
@@ -24,8 +24,9 @@ process TAX_SUMMARY {
     ## input channel variables
     pcr_primers =           "${pcr_primers}"
     fcid =                  "${fcid}"   
-    tax_file =              "${tax}"
-    ids_file =              "${ids}"
+    fasta =                 "${fasta}"
+    tax_list =              "${tax}"
+    ids_list =              "${ids}"
     joint_file =            "${joint}"
     target_gene =           "${loci_params.target_gene}"
     idtaxa_db =             "${loci_params.idtaxa_db}"

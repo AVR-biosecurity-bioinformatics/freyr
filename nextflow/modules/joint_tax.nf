@@ -5,7 +5,7 @@ process JOINT_TAX {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), val(loci_params), path(tax), path(blast)
+    tuple val(pcr_primers), val(fcid), val(loci_params), path(tax, name: "idtaxa*.csv"), path(blast, name: "blast*.csv")
     
     output:
     tuple val(pcr_primers), val(fcid), path("*_joint.csv"), emit: joint
@@ -18,14 +18,14 @@ process JOINT_TAX {
     def module_script = "${module_name}.R"
     """
     #!/usr/bin/env Rscript
-
+    
     ### defining Nextflow environment variables as R variables
     ## input channel variables
     fcid =                  "${fcid}"
     pcr_primers =           "${pcr_primers}"
     target_gene =           "${loci_params.target_gene}"
-    idtaxa_output =         "${tax}"
-    blast_output =          "${blast}"
+    idtaxa_list =           "${tax}"
+    blast_list =            "${blast}"
     
     ## global variables
     projectDir = "$projectDir"

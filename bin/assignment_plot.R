@@ -19,7 +19,7 @@ nf_vars <- c(
     "fcid",     
     "pcr_primers",   
     "fasta",
-    "blast",  
+    "blast_list",  
     "tax",           
     "target_gene",
     "idtaxa_db",  
@@ -29,7 +29,13 @@ lapply(nf_vars, nf_var_check)
 
 ## read in files
 fasta <-   Biostrings::readDNAStringSet(fasta)
-blast_input <-   readRDS(blast) # blast is the low-stringency blast output from TAX_BLAST
+
+blast_input <- 
+    blast_list %>%
+    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
+    lapply(., readRDS) %>% # read in .rds and store as list of tibbles
+    dplyr::bind_rows()
+
 tax_input <-      readr::read_csv(tax)
 
 ### run R code

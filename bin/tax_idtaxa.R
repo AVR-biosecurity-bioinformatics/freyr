@@ -19,7 +19,6 @@ nf_vars <- c(
     "projectDir",
     "fcid",
     "pcr_primers",
-    # "seqtab",
     "idtaxa_confidence",
     "idtaxa_db",
     "fasta"

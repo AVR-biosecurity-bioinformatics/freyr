@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 ### load only required packages
 process_packages <- c(
+    "Biostrings",
     "dplyr",
     "magrittr",
     "purrr",
@@ -16,8 +17,8 @@ nf_vars <- c(
     "projectDir",
     "pcr_primers",
     "fcid",
-    "tax_file",
-    "ids_file",
+    "tax_list",
+    "ids_list",
     "joint_file",
     "target_gene",
     "idtaxa_db",
@@ -26,8 +27,23 @@ nf_vars <- c(
 lapply(nf_vars, nf_var_check)
 
 ## check and define variables
-idtaxa_tax <-   readr::read_csv(tax_file)
-idtaxa_ids <-   readRDS(ids_file)
+# read in fasta as tibble
+seqs <- 
+    Biostrings::readDNAStringSet(fasta) %>% 
+    as.character() %>%
+    tibble::enframe(name = "seq_name", value = "sequence")
+
+idtaxa_tax <-   
+    tax_list %>%
+    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
+    lapply(., readr::read_csv) %>% # read in .rds and store as list of tibbles
+    dplyr::bind_rows()
+
+idtaxa_ids <-  # lsit of Taxa objects 
+    ids_list %>%
+    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
+    lapply(., readRDS)
+
 joint <-        readRDS(joint_file)
 
 # TODO: use explicitly defined ranks from ref fasta database or parameter instead of guess
@@ -36,21 +52,26 @@ ranks <- c("Root","Kingdom", "Phylum","Class", "Order", "Family", "Genus","Speci
 ### run R code
 idtaxa_summary <- 
   idtaxa_ids %>%
-    # transform "Taxa" data frame, one row at a time
-    purrr::imap_dfr(function(x, idx){
-        # get assigned taxa as vector
-        taxa <- paste0(x$taxon, "_", x$confidence)
-        # make unclassified taxa NA
-        taxa[startsWith(taxa, "unclassified_")] <- NA
-        # make a data frame with the ranks as columns and taxa as values, seq_name as column too
-        out_df <- 
-            data.frame(t(taxa)) %>% 
-            magrittr::set_colnames(ranks[1:ncol(.)]) %>%
-            dplyr::mutate(seq_name = idx) %>%
-            dplyr::relocate(seq_name)
+    # convert each Taxa object into a data frame
+    lapply(., function(taxa_obj){
+        # transform "Taxa" data frame, one row at a time
+        purrr::imap_dfr(.x = taxa_obj, .f = function(x, idx){
+            # get assigned taxa as vector
+            taxa <- paste0(x$taxon, "_", x$confidence)
+            # make unclassified taxa NA
+            taxa[startsWith(taxa, "unclassified_")] <- NA
+            # make a data frame with the ranks as columns and taxa as values, seq_name as column too
+            out_df <- 
+                data.frame(t(taxa)) %>% 
+                magrittr::set_colnames(ranks[1:ncol(.)]) %>%
+                dplyr::mutate(seq_name = idx) %>%
+                dplyr::relocate(seq_name)
 
-        return(out_df)
+            return(out_df)
+        })
     }) %>%
+    # combine list into one data frame/tibble
+    dplyr::bind_rows() %>% 
     dplyr::mutate(
       # add confidence as % to end of taxon name
       dplyr::across(Root:Species, ~{
@@ -62,7 +83,7 @@ idtaxa_summary <-
       dplyr::across(Root:Species, ~ dplyr::na_if(.x, "NA__NA%"))
     ) %>%
     # add ASV sequence
-    dplyr::left_join(., joint %>% dplyr::select(seq_name, sequence), by = "seq_name") %>%
+    dplyr::left_join(., seqs, by = "seq_name") %>%
     dplyr::relocate(seq_name, sequence) %>%
      # add metadata
     dplyr::mutate(
