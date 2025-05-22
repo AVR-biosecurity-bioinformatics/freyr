@@ -4,6 +4,7 @@
 
 
 //// modules to import
+include { ACCUMULATION_CURVE                        } from '../modules/accumulation_curve'
 include { PHYLOSEQ_UNFILTERED                       } from '../modules/phyloseq_unfiltered'
 include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_filter'
 include { PHYLOSEQ_MERGE                            } from '../modules/phyloseq_merge'
@@ -39,6 +40,11 @@ workflow RESULT_SUMMARIES {
 
     //// create phyloseq objects per locus; output unfiltered summary tables and accumulation curve plot
     PHYLOSEQ_UNFILTERED ( ch_phyloseq_input )
+
+    //// create accumulation curve plots
+    ACCUMULATION_CURVE (
+        PHYLOSEQ_UNFILTERED.out.ps
+    )
 
     //// apply taxonomic and minimum abundance filtering per locus (from loci_params), then combine to output filtered summary tables
     PHYLOSEQ_FILTER ( PHYLOSEQ_UNFILTERED.out.ps )

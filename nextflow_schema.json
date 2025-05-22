@@ -114,6 +114,13 @@
                     "help_text": "Number of sequences to taxonomically assign per process. Decreasing this may speed up the pipeline when many CPUs are available. Setting to very low values (<10) is not recommended.",
                     "default": 100
                 },
+                "accumulation_curve": {
+                    "type": "boolean",
+                    "description": "Generate accumulation curves for each sample per PCR primer pair.",
+                    "errorMessage": "Must be set to 'true' or 'false'.",
+                    "help_text": "Generate accumulation curves for each sample per PCR primer pair. On large datasets, this can take a long time.",
+                    "default": true
+                },
                 "slurm_account": {
                     "type": "string",
                     "description": "Account to use when submitting SLURM jobs.",

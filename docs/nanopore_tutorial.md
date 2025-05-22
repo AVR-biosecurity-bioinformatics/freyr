@@ -341,7 +341,7 @@ Detailed taxonomic assignment information for the unfiltered ASV set, merged acr
 
 #### Visualisation and QC plots
 
-The `phyloseq_unfiltered` directory contains **accumulation curve plots** (`accumulation_curve_*.pdf`) that show ASV accumulation curves per sample and flowcell. [not true currently]
+The `accumulation_curve` directory contains **accumulation curve plots** (`accumulation_curve_*.pdf`) that show ASV accumulation curves per sample for a particular primer pair. 
 
 **Taxonomic assignment plots** (`*_taxonomic_assignment_summary.pdf`) can be found in `./output/modules/assignment_plot` and show the relationship between IDTAXA taxonomic assignment level and % identity to the top BLAST hit in the database, per flowcell and PCR primer combination. 
 
