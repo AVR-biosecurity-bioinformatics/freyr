@@ -139,3 +139,12 @@ Run test data with minimal samples:
 
 
 
+Test with Horsham data (one flowcell, three primer pairs)
+
+    nextflow run . \
+        -profile basc_slurm,debug \
+        --samplesheet /group/pathogens/IAWS/Projects/NGDSI/Horsham/samplesheets/freyr_samplesheet_LM2TV.csv \
+        --loci_params /group/pathogens/IAWS/Projects/NGDSI/Horsham/analysis/loci_params.csv \
+        --lp_idtaxa_db /group/pathogens/IAWS/Personal/JackS/databases/coi/tarth_250307/idtaxa_model.rds \
+        --lp_ref_fasta /group/pathogens/IAWS/Personal/JackS/databases/coi/tarth_250307/final_database.fasta \
+        -resume

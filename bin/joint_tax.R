@@ -31,12 +31,14 @@ idtaxa_output <-
     idtaxa_list %>%
     stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
     lapply(., readr::read_csv) %>% # read in seqtabs and store as list of tibbles
+    purrr::keep(., ~ nrow(.x) > 0) %>% # remove tibbles with 0 rows
     dplyr::bind_rows()
 
 blast_output <- 
     blast_list %>%
     stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
     lapply(., readr::read_csv) %>% # read in seqtabs and store as list of tibbles
+    purrr::keep(., ~ nrow(.x) > 0) %>% # remove tibbles with 0 rows
     dplyr::bind_rows()
 
 # check that BLAST ASVs are those in IDTAXA ASVs
