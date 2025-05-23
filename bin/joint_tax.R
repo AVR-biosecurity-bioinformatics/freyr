@@ -3,6 +3,7 @@
 process_packages <- c(
     "dplyr",
     "purrr",
+    "readr",
     "stringr",
     "tibble",
     NULL
@@ -15,9 +16,8 @@ nf_vars <- c(
     "fcid",
     "pcr_primers",
     "target_gene",
-    "idtaxa_output",
-    "blast_output",
-    "seqtab"
+    "idtaxa_list",
+    "blast_list"
 )
 lapply(nf_vars, nf_var_check)
 
@@ -26,71 +26,87 @@ target_gene <-          parse_nf_var_repeat(target_gene)
 
 propagate_tax <-        TRUE
 
-### run R code      # derived from step_join_tax_blast() in functions.R and tar_target(joint_tax)
-idtaxa_output <-              readRDS(idtaxa_output)
-blast_output <-               readRDS(blast_output)
-seqtab <-                     readRDS(seqtab)
+### run R code      
+idtaxa_output <- 
+    idtaxa_list %>%
+    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
+    lapply(., readr::read_csv) %>% # read in seqtabs and store as list of tibbles
+    purrr::keep(., ~ nrow(.x) > 0) %>% # remove tibbles with 0 rows
+    dplyr::bind_rows()
 
-# merge idtaxa outputs
-if ( length(idtaxa_output) == 1 ) {
-    idtaxa_output <- idtaxa_output[[1]]
-} else if( length(idtaxa_output) == 2 ) {
-    idtaxa_output <- coalesce_tax(idtaxa_output[[1]], idtaxa_output[[2]])
-} else if( length(idtaxa_output) == 3 ) {
-    temptax <- coalesce_tax(idtaxa_output[[1]], idtaxa_output[[2]])
-    idtaxa_output <- coalesce_tax(temptax, idtaxa_output[[3]])
-}
+blast_output <- 
+    blast_list %>%
+    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
+    lapply(., readr::read_csv) %>% # read in seqtabs and store as list of tibbles
+    purrr::keep(., ~ nrow(.x) > 0) %>% # remove tibbles with 0 rows
+    dplyr::bind_rows()
 
-# Check that idtaxa_output dimensions match input
-if(!all(rownames(idtaxa_output) %in% colnames(seqtab))){
-    stop("Number of ASVs classified does not match the number of input ASVs [idtaxa_output]")
-}
-
-# merge blast outputs
-if( length(blast_output) == 1 ) {
-    blast_output <- blast_output[[1]]
-} else if( length(blast_output) == 2 ) {
-    blast_output <- coalesce_tax(blast_output[[1]], blast_output[[2]])
-} else if( length(blast_output) == 3 ) {
-    temptax <- coalesce_tax(blast_output[[1]], blast_output[[2]])
-    blast_output <- coalesce_tax(temptax, blast_output[[3]])
-}
-
-# Check that blast_output dimensions match input
-if(!all(rownames(blast_output) %in% colnames(seqtab))){
-    stop("Number of ASVs classified does not match the number of input ASVs [blast_output]")
-}
-
-# another check
-if(!all(rownames(idtaxa_output) %in% rownames(blast_output))){
-    stop("ASVs in idtaxa_output and blast_output do not match")
+# check that BLAST ASVs are those in IDTAXA ASVs
+if(!all(blast_output$seq_name %in% idtaxa_output$seq_name)){
+    stop("ASV names in BLAST output don't match those in IDTAXA output")
 }
 
 # try to merge IDTAXA and BLAST assignments
+# NOTE: BLAST assignment will only be used if it matches IDTAXA at Genus rank and the IDTAXA Species assignment is NA
 if(nrow(idtaxa_output) > 0 & nrow(blast_output) > 0){
-    #Set BLAST ids where idtaxa_output isn't at genus level to NA
-    disagreements <- !blast_output[,1] == idtaxa_output[,7]
-    disagreements[is.na(disagreements)] <- TRUE
-    blast_output[,1][disagreements] <- NA
-    blast_output[,2][disagreements] <- NA
-    
-    # Join the two taxonomies, prefering names from the tax
-    tax_blast <- coalesce_tax(idtaxa_output, blast_output)
-
-    if ( propagate_tax ) {
-        tax_blast <- tax_blast %>%
-            seqateurs::na_to_unclassified() # Propagate high order ranks to unassigned ASVs
-    }
+    # join idtaxa and blast output together
+    joint_assignment <- 
+        dplyr::full_join(idtaxa_output, blast_output, by = dplyr::join_by(seq_name)) %>%
+        dplyr::mutate(
+            # if idtaxa hasn't assigned to Genus level, then set blast assignment to NA
+            blast_genus = dplyr::if_else(is.na(Genus), NA, blast_genus),
+            blast_spp = dplyr::if_else(is.na(Genus), NA, blast_spp),
+            # if blast genus doesn't match idtaxa genus, set former (and blast_spp) to NA
+            blast_genus = dplyr::if_else(Genus != blast_genus, NA, blast_genus),
+            blast_spp = dplyr::if_else(Genus != blast_genus, NA, blast_spp)
+        ) %>%
+        # work out the matching between idtaxa and blast assignments at genus and species ranks
+        dplyr::mutate(
+            species_match = dplyr::case_when(
+                is.na(Species) & is.na(blast_spp) ~ "both_NA",
+                is.na(Species) & (!is.na(blast_spp)) ~ "idtaxa_NA",
+                (!is.na(Species)) & is.na(blast_spp) ~ "blast_NA",
+                Species == blast_spp ~ "yes"
+            )
+        ) %>%
+        # replace species assignment with BLAST assignment if species_match == "idtaxa_NA"
+        dplyr::mutate(Species = dplyr::if_else(species_match == "idtaxa_NA", blast_spp, Species)) %>%
+        # keep only taxon rank columns + seq_name
+        dplyr::select(seq_name, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species) %>%
+        # replace "NA" taxa with the lowest assigned rank in the "G__Genus" format
+        dplyr::mutate(
+            # unsure Root is always "Root"
+            Root = "Root",
+            # determine the lowest assigned rank, choosing the first true case
+            lowest_assignment = dplyr::case_when(
+                is.na(Kingdom)  ~ paste0("R__",Root),
+                is.na(Phylum)   ~ paste0("K__",Kingdom),
+                is.na(Class)    ~ paste0("P__",Phylum),
+                is.na(Order)    ~ paste0("C__",Class),
+                is.na(Family)   ~ paste0("O__",Order),
+                is.na(Genus)    ~ paste0("F__",Family),
+                is.na(Species)  ~ paste0("G__",Genus),
+                .default        = NA
+            ),
+            # replace NA ranks with the "G__Genus" format ('propagate')
+            dplyr::across(
+                Kingdom:Species, 
+                ~dplyr::case_when(
+                    is.na(.) & !is.na(lowest_assignment) ~ lowest_assignment, 
+                    .default = .
+                )
+            )
+        ) %>%
+        dplyr::select(-lowest_assignment)
 } else {
-    warning("Either idtaxa_output or blast_output is empty")
-    tax_blast <- as.matrix(idtaxa_output)
+    stop("Either idtaxa_output or blast_output is empty")
 }
 
 # another check
-if ( !all(rownames(idtaxa_output) %in% rownames(tax_blast)) ) {
-    stop("Number of ASVs output does not match the number of input ASVs")
+if(!all(idtaxa_output$seq_name %in% joint_assignment$seq_name)){
+    stop("Not all input ASVs are in the joint assignment output")
 }
 
-# Write taxonomy table for that db to disk
-saveRDS(tax_blast, paste0(fcid,"_",pcr_primers,"_taxblast.rds"))
+# Write tibble
+readr::write_csv(joint_assignment, paste0(fcid,"_",pcr_primers,"_joint.csv"))
 

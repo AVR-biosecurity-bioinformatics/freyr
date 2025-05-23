@@ -1,9 +1,11 @@
 #!/usr/bin/env Rscript
 ### load only required packages
 process_packages <- c(
+    "Biostrings",
     "dada2",
     "dplyr",
     "ggplot2",
+    "readr",
     "seqateurs",
     "taxreturn",
     "tibble",
@@ -16,8 +18,8 @@ nf_vars <- c(
     "projectDir",
     "fcid",     
     "pcr_primers",   
-    "seqtab",
-    "blast",  
+    "fasta",
+    "blast_list",  
     "tax",           
     "target_gene",
     "idtaxa_db",  
@@ -26,9 +28,15 @@ nf_vars <- c(
 lapply(nf_vars, nf_var_check)
 
 ## read in files
-seqtab <-   readRDS(seqtab)
-blast <-    readRDS(blast) # blast is the low-stringency blast output from TAX_BLAST
-tax <-      readRDS(tax)
+fasta <-   Biostrings::readDNAStringSet(fasta)
+
+blast_input <- 
+    blast_list %>%
+    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
+    lapply(., readRDS) %>% # read in .rds and store as list of tibbles
+    dplyr::bind_rows()
+
+tax_input <-      readr::read_csv(tax)
 
 ### run R code
 
@@ -36,38 +44,44 @@ tax <-      readRDS(tax)
 if ( !is.null(blast) ){
 
     # convert blast 'resolve_ties="all"' output to 'resolve_ties="first"'
-    blast <- blast %>%
+    blast <- blast_input %>%
         dplyr::group_by(qseqid) %>% 
         dplyr::mutate(row_n = dplyr::row_number()) %>%
         dplyr::top_n(1, row_n) %>% # Break ties by position
         dplyr::select(-row_n) %>%
         dplyr::ungroup()
 
-    # filter tax table
-    tax <- tax %>% 
-        seqateurs::unclassified_to_na(rownames=FALSE) %>%
-        dplyr::mutate(lowest = seqateurs::lowest_classified(.)) # causes warning: ' argument is not an atomic vector; coercing'
-        ### TODO: resolve above warning message
-
+    # add "lowest" (lowest assigned rank) to tax tibble
+    tax <- 
+      tax_input %>%
+        dplyr::mutate(lowest = dplyr::case_when(
+          stringr::str_detect(Kingdom, "__")  ~ "Root",
+          stringr::str_detect(Phylum, "__")  ~ "Kingdom",
+          stringr::str_detect(Class, "__")  ~ "Phylum",
+          stringr::str_detect(Order, "__")  ~ "Class",
+          stringr::str_detect(Family, "__")  ~ "Order",
+          stringr::str_detect(Genus, "__")  ~ "Family",
+          stringr::str_detect(Species, "__")  ~ "Genus",
+          .default = "Species"
+          )
+        )
+        
     # make seqmap 
-    seqmap <- tibble::enframe(dada2::getSequences(seqtab), name = NULL, value="OTU") %>%
-        dplyr::mutate(name = paste0("SV", seq(length(dada2::getSequences(seqtab)))))
-    # get ASV sequences
-    seqs <- taxreturn::char2DNAbin(seqmap$OTU)
-    names(seqs) <- seqmap$name
+    seqmap <- tibble::enframe(fasta %>% as.character(), name = "seq_name", value="sequence") 
+    # get ASV sequences as named vector
+    seqs <- fasta %>% as.character()
 
     # add sequences to blast output and rename columns
     blast <- blast %>% 
-        dplyr::mutate(blastspp = paste0(Genus, " ", Species)) %>%
-        dplyr::select(name = qseqid, acc, blastspp, pident, total_score, max_score, evalue, qcovs) %>%
-        dplyr::left_join(seqmap) %>%
-        dplyr::select(-name)
+        dplyr::mutate(blastspp = Species) %>%
+        dplyr::select(seq_name = qseqid, acc, blastspp, pident, total_score, max_score, evalue, qcovs) %>%
+        dplyr::left_join(., seqmap, by = dplyr::join_by("seq_name")) 
 
     # combine blast output and tax table
     if ( nrow(blast) > 0 & nrow(tax) > 0 ) {
         joint <- blast %>% 
-            dplyr::left_join(tax, by="OTU")
-        
+            dplyr::left_join(tax, by = "seq_name")
+
     } else {
         joint <- NULL
     }
@@ -99,9 +113,9 @@ if ( !is.null(joint) ) {
         geom_histogram(colour="black", binwidth = 1, position = "stack") + 
         labs(
             title = paste0(fcid, "  ", pcr_primers, " Top hit identity distribution"),
-            subtitle = paste0("IDTAXA database:", idtaxa_db, " BLAST database:", ref_fasta),
+            subtitle = paste0("IDTAXA database:", idtaxa_db, "\nBLAST database:", ref_fasta),
             x = "BLAST top hit % identity",
-            y = "Sequence Variants"
+            y = "ASVs"
             ) + 
         scale_x_continuous(breaks=seq(60,100,2)) +
         scale_fill_manual(name = "Taxonomic \nAssignment", values = cols)+
@@ -130,4 +144,3 @@ if ( !is.null(plot) ){
     text(x=.5, y=.5, "No blast hits to reference fasta -- assignment plot not created") 
     try(dev.off(), silent=TRUE)
 }
-

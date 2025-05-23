@@ -3,6 +3,7 @@
 process_packages <- c(
     "dplyr",
     "purrr",
+    "readr",
     "rlang",
     "stringr",
     "tibble",
@@ -14,54 +15,36 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 nf_vars <- c(
     "projectDir",
     "pcr_primers",
-    "fcid",
-    "taxtab"
+    "taxtabs"
 )
 lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 taxtab_list <- # convert Groovy to R list format
-    stringr::str_extract_all(taxtab, pattern = "[^\\s,\\[\\]]+") %>% unlist()
+    stringr::str_extract_all(taxtabs, pattern = "[^\\s,\\[\\]]+") %>% unlist()
 
-taxtab_list <- lapply(taxtab_list, readRDS) # read in taxtabs and store as list of tibbles
+taxtab_list <- lapply(taxtab_list, readr::read_csv) # read in taxtabs and store as list of tibbles
 
 ### run R code
 
-tax_merged <- taxtab_list %>% 
-    purrr::map(~{ .x %>% tibble::as_tibble(rownames = "OTU") }) %>%
+tax_merged <- 
+    taxtab_list %>% 
     dplyr::bind_rows() %>%
-    dplyr::distinct() # Remove any exact duplicates being in different seqtab
-
-# create hash of OTU sequence that can be used as OTU name
-# 'OTU_hash' column is now the 'name' of the sequence
-OTU_hash <- lapply(tax_merged$OTU, rlang::hash) %>% unlist()
-tax_merged <- cbind(tax_merged, OTU_hash)
-
-# saveRDS(tax_merged, paste0(pcr_primers,"_tax_merged.rds"))
+    dplyr::distinct() # Remove any exact duplicates being in different tables
 
 # Check for duplicated ASVs across taxtabs
-if(any(duplicated(tax_merged$OTU))){
+if(any(duplicated(tax_merged$seq_name))){
     warning("Duplicated ASVs detected, selecting first occurrence")
-    merged_tax <- tax_merged %>%
-        dplyr::group_by(OTU) %>%
+    merged_tax <- 
+        tax_merged %>%
+        dplyr::group_by(seq_name) %>%
         dplyr::slice(1) %>%
-        tibble::column_to_rownames("OTU") %>%
-        as.matrix()
+        dplyr::ungroup()
 } else{
-    merged_tax <- tax_merged %>%
-    tibble::column_to_rownames("OTU") %>%
-    as.matrix()
+    merged_tax <- tax_merged
 }
 
-# print(out)
 
-### TODO: Not sure dimensions of merged seqtab
-# Check that output dimensions match input
-### .y is mergedseqtab
-# if(!all(rownames(out) %in% colnames(.y))){
-#     stop("Number of ASVs classified does not match the number of input ASVs")
-# }
-
-saveRDS(merged_tax, paste0(pcr_primers,"_merged_tax.rds"))
+readr::write_csv(merged_tax, paste0(pcr_primers,"_merged_tax.csv"))
 
 # stop(" *** stopped manually *** ") ##########################################

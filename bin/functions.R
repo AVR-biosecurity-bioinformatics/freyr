@@ -267,22 +267,22 @@ merge_phyloseq_new <- function (arguments){
 
 summarise_phyloseq <- function(ps){
   phyloseq::otu_table(ps) %>%
-    t() %>%
+    # t() %>%     # removed because rows are sequence names not samples
     as.data.frame() %>%
-    tibble::rownames_to_column("OTU") %>%
+    tibble::rownames_to_column("seq_name") %>%
     dplyr::left_join(
       phyloseq::tax_table(ps) %>%
         as.data.frame() %>%
-        tibble::rownames_to_column("OTU"),
-      by = "OTU"
+        tibble::rownames_to_column("seq_name"),
+      by = "seq_name"
     ) %>%  
     dplyr::left_join(
       phyloseq::refseq(ps) %>% 
         as.character() %>% 
-        tibble::enframe(name="OTU", value="sequence"),
-      by = "OTU"
+        tibble::enframe(name="seq_name", value="sequence"),
+      by = "seq_name"
     )  %>%
-    dplyr::select(OTU, sequence, phyloseq::rank_names(ps), phyloseq::sample_names(ps))
+    dplyr::select(seq_name, sequence, phyloseq::rank_names(ps), phyloseq::sample_names(ps))
 }
 
 melt_phyloseq <- function(ps) {
@@ -294,8 +294,8 @@ melt_phyloseq <- function(ps) {
   # Convert otu table to tall form (one sample-taxon per row)
   df <- seqtab %>% 
     as("matrix") %>%
-    data.table::as.data.table(keep.rownames = "OTU") %>%
-    data.table::melt(id.vars = c("OTU"), variable.name = "sample_id", 
+    data.table::as.data.table(keep.rownames = "seq_name") %>%
+    data.table::melt(id.vars = c("seq_name"), variable.name = "sample_id", 
                      value.name = "Abundance", variable.factor = FALSE)
   
   # Remove observations with no abundance
@@ -313,75 +313,130 @@ melt_phyloseq <- function(ps) {
   if(!is.null(phyloseq::rank_names(ps))) {
     taxtab <- phyloseq::tax_table(ps) %>%
       as("matrix") %>%
-      data.table::as.data.table(keep.rownames = "OTU")
-    df <- df[taxtab, on = .(OTU = OTU)]
+      data.table::as.data.table(keep.rownames = "seq_name")
+    df <- df[taxtab, on = .(seq_name = seq_name)]
   }
   
   # Add the sequences if they exist
   if(!is.null(phyloseq::refseq(ps))) {
     seqs <- phyloseq::refseq(ps) %>%
       as("character") %>%
-      data.table::as.data.table(keep.rownames = "OTU")
-    data.table::setnames(seqs, old = c("OTU", "."), new = c("OTU", "sequence"))
-    df <- df[seqs, on = .(OTU = OTU)]
+      data.table::as.data.table(keep.rownames = "seq_name")
+    data.table::setnames(seqs, old = c("seq_name", "."), new = c("seq_name", "sequence"))
+    df <- df[seqs, on = .(seq_name = seq_name)]
   }
   
-  # Arrange by Abundance, then OTU names (to approx. phyloseq behavior)
+  # Arrange by Abundance, then sequence names (to approx. phyloseq behavior)
   df <- df %>%
-    data.table::setorder(-Abundance, OTU) 
+    data.table::setorder(-Abundance, seq_name) 
   return(df)
 }
 
 rareplot <- function(ps, step="auto", threshold=0){
-  if(step == "auto"){
-    step <- round(max(sample_sums(ps)) / 100)
-  } else if (is.integer(step)){
-    step <- step
-  } else {
-    stop("Step must be an integer or 'auto' ")
-  }
-  ps <- ps %>%
-    phyloseq::prune_samples(sample_sums(.)>0, .) %>% 
-    phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
-  rare <- otu_table(ps) %>%
-    as("matrix") %>%
-    vegan::rarecurve(step=step) %>% 
-    purrr::set_names(sample_names(ps)) %>%
-    purrr::map_dfr(., function(x){
-      b <- as.data.frame(x)
-      b <- data.frame(OTU = b[,1], count = rownames(b))
-      b$count <- as.numeric(gsub("N", "",  b$count))
-      return(b)
-    },.id="sample_id") %>%
-    left_join(phyloseq::sample_data(ps)%>%
+    if(step == "auto"){
+        step <- round(max(sample_sums(ps)) / 100)
+    } else if (is.integer(step)){
+        step <- step
+    } else {
+        stop("Step must be an integer or 'auto' ")
+    }
+    ps <- ps %>%
+        phyloseq::prune_samples(sample_sums(.)>0, .) %>% 
+        phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
+    rare <- 
+        phyloseq::otu_table(ps) %>%
+        as("matrix") %>%
+        t() %>%
+        vegan::rarecurve(step=step) %>% 
+        purrr::set_names(sample_names(ps)) %>%
+        purrr::map_dfr(., function(x){
+            b <- as.data.frame(x)
+            b <- data.frame(ASV = b[,1], count = rownames(b))
+            b$count <- as.numeric(gsub("N", "",  b$count))
+            return(b)
+        },.id="sample_id") %>%
+        left_join(
+            phyloseq::sample_data(ps) %>%
                 as("matrix") %>%
                 tibble::as_tibble() %>%
                 dplyr::select(sample_id, fcid) %>%
-                dplyr::distinct())
-  
-  gg.rare <- rare %>%
-    ggplot2::ggplot() +
-    geom_line(aes(x = count, y = OTU, group=sample_id), alpha=0.3)+
-    geom_point(data = rare %>% 
-                 group_by(sample_id) %>% 
-                 top_n(1, count),
-               aes(x = count, y = OTU, colour=count > threshold)) +
-    scale_x_continuous(label = scales::label_number(scale_cut = append(scales::cut_short_scale(), 1, 1)))+
-    scale_colour_manual(values=c("FALSE" = "#F8766D", "TRUE"="#619CFF"))+
-    facet_wrap(fcid~., scales="free", ncol=1)+
-    theme_bw()+
-    theme(
-      strip.background = element_rect(colour = "black", fill = "lightgray"),
-      strip.text = element_text(size=9, family = ""),
-      plot.background = element_blank(),
-      text = element_text(size=9, family = ""),
-      axis.text = element_text(size=8, family = ""),
-      legend.position = "bottom",
-      panel.border = element_rect(colour = "black", fill=NA, size=0.5),
-      panel.grid = element_line(size = rel(0.5)),
-    ) + labs(x = "Sequence reads",
-         y = "Observed ASVs",
-         colour = "Above sample filtering theshold") 
-  
-  return(gg.rare)
+                dplyr::distinct(),
+            by = "sample_id"
+        )
+    
+    gg.rare <- rare %>%
+        ggplot2::ggplot() +
+        geom_line(aes(x = count, y = ASV, group=sample_id), alpha=0.3)+
+        geom_point(data = rare %>% 
+                    group_by(sample_id) %>% 
+                    top_n(1, count),
+                aes(x = count, y = ASV, colour=count > threshold)) +
+        scale_x_continuous(label = scales::label_number(scale_cut = append(scales::cut_short_scale(), 1, 1)))+
+        scale_colour_manual(values=c("FALSE" = "#F8766D", "TRUE"="#619CFF"))+
+        facet_wrap(fcid~., scales="free", ncol=1)+
+        theme_bw()+
+        theme(
+        strip.background = element_rect(colour = "black", fill = "lightgray"),
+        strip.text = element_text(size=9, family = ""),
+        plot.background = element_blank(),
+        text = element_text(size=9, family = ""),
+        axis.text = element_text(size=8, family = ""),
+        legend.position = "bottom",
+        panel.border = element_rect(colour = "black", fill=NA, size=0.5),
+        panel.grid = element_line(size = rel(0.5)),
+        ) + labs(x = "Sequence reads",
+            y = "Observed ASVs",
+            colour = "Above sample filtering theshold") 
+    
+    return(gg.rare)
+}
+
+#' write fasta
+#'
+#' @param x a list of sequences in DNAbin or AAbin format, or a vector of sequences as concatenated upper-case character strings.
+#' @param file character string giving a valid file path to output the text to. If file = "" (default setting) the text file is written to the console.
+#' @param compress logical indicating whether the output file should be gzipped.
+#' @param quiet Whether progress should be printed to consoe
+#'
+#' @return
+#' @export
+#'
+#' @examples
+write_fasta <- function(x, file = "", compress = FALSE, quiet=FALSE) {
+  if(stringr::str_detect(file, "\\.gz$") & !compress){
+    compress <- TRUE
+    if(!quiet) message(".gz detected in filename, compressing output file")
+  }
+  if (!is.null(dim(x))) {
+    x <- as.list(as.data.frame(t(unclass(x))))
+  }
+  if (inherits(x, "DNAbin")) {
+    tmp <- DNAbin2char(x)
+  } else if (is.list(x)) {
+    if (length(x[[1]] == 1)) {
+      tmp <- unlist(x, use.names = TRUE)
+    }
+    else {
+      tmp <- sapply(x, paste0, collapse = "")
+    }
+  } else {
+    tmp <- x
+  }
+  reslen <- 2 * length(tmp)
+  res <- character(reslen)
+  res[seq(1, reslen, by = 2)] <- paste0(">", names(tmp))
+  res[seq(2, reslen, by = 2)] <- tmp
+  if(!file == ""){
+    f <- if(compress){
+        gzfile(file, "w")
+      } else {
+        file(file, "w")
+    }
+    writeLines(res, f)
+    close(f)
+  } else {
+    writeLines(res)
+  }
+  if(!quiet){message("Wrote ", length(tmp), " sequences to ", file)}
+  invisible(NULL)
 }

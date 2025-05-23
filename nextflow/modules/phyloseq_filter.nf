@@ -5,14 +5,12 @@ process PHYLOSEQ_FILTER {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), path(ps), val(loci_params)
+    tuple val(pcr_primers), path(ps), path(filters_tibble), val(loci_params)
 
     output:
     path("*.csv"),                                                          emit: csvs
     tuple val(pcr_primers), path("ps_filtered_*.rds"), val(loci_params),    emit: ps 
     path("*.fasta"),                                                        emit: asv_fasta
-    path("*.nwk"),                                                          emit: nwk, optional: true
-
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -27,6 +25,7 @@ process PHYLOSEQ_FILTER {
     ## input channel variables
     pcr_primers =           "${pcr_primers}"
     ps =                    "${ps}"
+    filters_tibble =        "${filters_tibble}"
     target_kingdom =        "${loci_params.target_kingdom}"
     target_phylum =         "${loci_params.target_phylum}"
     target_class =          "${loci_params.target_class}"

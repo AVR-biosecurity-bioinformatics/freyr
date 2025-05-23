@@ -140,7 +140,7 @@ if ( concat_unmerged ) {
 # Construct sequence table for fcid x pcr_primers from merged reads per sample
 seqtab <- dada2::makeSequenceTable(mergers)
 
-saveRDS(seqtab, paste0(fcid,"_",pcr_primers,"_seqtab.rds"))
+# saveRDS(seqtab, paste0(fcid,"_",pcr_primers,"_seqtab.rds"))
 
 # save number of merged reads per sample
 getN <- function(x) sum(dada2::getUniques(x))
@@ -161,6 +161,49 @@ sapply(mergers, getN) %>%
     ) %>%
     dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>% 
     readr::write_csv(., paste0("dada_mergereads_",fcid,"_",pcr_primers,"_readsout.csv"))
+
+
+
+##### make new outputs ----------------------------------------------------------------------------
+
+
+### convert DADA2 format sequence table to both .fasta of sequences with hashes and .csv of sample abundances
+
+# sequences as vector
+seq_vec <- seqtab %>% dada2::getSequences()
+
+# sequences as hash
+hash_vec <- seq_vec %>% lapply(., rlang::hash) %>% unlist()
+
+# named vector of sequences
+names(seq_vec) <- hash_vec
+
+# named DSS
+seq_DSS <- Biostrings::DNAStringSet(seq_vec)
+
+# tibble of hash and seq
+seq_tibble <- tibble::enframe(seq_vec, name = "seq_name", value = "sequence")
+
+# convert seqtab to one row per sequence, ID with hash
+seqtab_tibble <- 
+    seqtab %>% 
+    tidyr::as_tibble(rownames = "sample_id") %>%
+    tidyr::pivot_longer(cols = !sample_id, names_to = "sequence", values_to = "abundance") %>%
+    # join to seq_tibble
+    dplyr::left_join(., seq_tibble, by = "sequence") %>%
+    dplyr::select(-sequence) %>% # remove sequence
+    # add pcr_primers to sample_id
+    dplyr::mutate(sample_id = paste0(sample_id,"_",pcr_primers)) %>%
+    tidyr::pivot_wider(names_from = sample_id, values_from = abundance)
+
+
+# save DSS as .fasta
+write_fasta(seq_DSS, file = paste0(fcid, "_", pcr_primers, "_seqs.fasta"))
+
+# save seqtab_tidy as .csv
+readr::write_csv(seqtab_tibble, paste0(fcid, "_", pcr_primers, "_seqtab_tibble.csv"))
+
+
 
 
 # stop(" *** stopped manually *** ") ##########################################

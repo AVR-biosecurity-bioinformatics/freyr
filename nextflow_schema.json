@@ -106,6 +106,21 @@
                     "errorMessage": "Must be a negative integer. Leave unset (default) to treat homopolymer gaps like regular gaps.",
                     "help_text": "Set HOMOPOLYMER_GAP_PENALTY parameter for dada2::dada denoising function. For explanation, see dada2::setDadaOpt()."
                 },
+                "chunk_taxassign": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Number of sequences to taxonomically assign per process.",
+                    "errorMessage": "Must be an integer >= 1, preferably >10.",
+                    "help_text": "Number of sequences to taxonomically assign per process. Decreasing this may speed up the pipeline when many CPUs are available. Setting to very low values (<10) is not recommended.",
+                    "default": 100
+                },
+                "accumulation_curve": {
+                    "type": "boolean",
+                    "description": "Generate accumulation curves for each sample per PCR primer pair.",
+                    "errorMessage": "Must be set to 'true' or 'false'.",
+                    "help_text": "Generate accumulation curves for each sample per PCR primer pair. On large datasets, this can take a long time.",
+                    "default": true
+                },
                 "slurm_account": {
                     "type": "string",
                     "description": "Account to use when submitting SLURM jobs.",

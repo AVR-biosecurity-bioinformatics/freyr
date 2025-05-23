@@ -5,12 +5,12 @@ process TAX_BLAST {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), val(loci_params), path(seqtab)
+    tuple val(pcr_primers), val(fcid), val(loci_params), path(fasta)
 
     output:
-    tuple val(pcr_primers), val(fcid), val(loci_params), path("*_blast.rds"), emit: blast
-    tuple val(pcr_primers), val(fcid), path("*_blast_spp_low.rds"), emit: blast_assignment
-    tuple val(pcr_primers), val(fcid), path("*_n_ranks.txt"), emit: n_ranks
+    tuple val(pcr_primers), val(fcid), val(loci_params), path("*_blast.csv"),   emit: blast
+    tuple val(pcr_primers), val(fcid), path("*_blast_spp_low.rds"),             emit: blast_assignment
+    tuple val(pcr_primers), val(fcid), path("*_n_ranks.txt"),                   emit: n_ranks
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -25,7 +25,7 @@ process TAX_BLAST {
     ## input channel variables
     fcid =                  "${fcid}"
     pcr_primers =           "${pcr_primers}"
-    seqtab =                "${seqtab}"
+    fasta =                 "${fasta}"
     target_gene =           "${loci_params.target_gene}"
     ref_fasta =             "${loci_params.ref_fasta}"
     blast_min_identity =    "${loci_params.blast_min_identity}"

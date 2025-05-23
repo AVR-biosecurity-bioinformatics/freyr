@@ -7,6 +7,8 @@ process PHYLOSEQ_MERGE {
     input:
     path(ps_unfiltered)
     path(ps_filtered)
+    path(unfiltered_fastas, name: "unfiltered_*.fasta")
+    path(filtered_fastas, name: "filtered_*.fasta")
 
     output:
     path("*.csv")
@@ -28,6 +30,8 @@ process PHYLOSEQ_MERGE {
     ## input channel variables
     ps_unfiltered =                  "${ps_unfiltered}"
     ps_filtered =                    "${ps_filtered}"
+    unfiltered_fastas =              "${unfiltered_fastas}"
+    filtered_fastas =                "${filtered_fastas}"
     
     ## global variables
     projectDir = "$projectDir"
