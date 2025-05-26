@@ -5,10 +5,10 @@ process MERGE_TAX {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), path(taxtab)
+    tuple val(pcr_primers), path(taxtabs)
 
     output:
-    tuple val(pcr_primers), path("*_merged_tax.rds"), emit: merged_tax
+    tuple val(pcr_primers), path("*_merged_tax.csv"), emit: merged_tax
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -22,8 +22,7 @@ process MERGE_TAX {
     ### defining Nextflow environment variables as R variables
     ## input channel variables
     pcr_primers =           "${pcr_primers}"
-    fcid =                  "${fcid}"
-    taxtab =                "${taxtab}"
+    taxtabs =                "${taxtabs}"
     
     ## global variables
     projectDir = "$projectDir"

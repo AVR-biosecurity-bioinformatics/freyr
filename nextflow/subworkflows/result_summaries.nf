@@ -4,6 +4,7 @@
 
 
 //// modules to import
+include { ACCUMULATION_CURVE                        } from '../modules/accumulation_curve'
 include { PHYLOSEQ_UNFILTERED                       } from '../modules/phyloseq_unfiltered'
 include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_filter'
 include { PHYLOSEQ_MERGE                            } from '../modules/phyloseq_merge'
@@ -27,25 +28,30 @@ workflow RESULT_SUMMARIES {
     //// inputs for PHYLOSEQ_UNFILTERED
     ch_seqtables_locus = 
         ch_seqtab
-        .map { pcr_primers, fcid, seqtab -> [ pcr_primers, seqtab ] } // remove fcid and loci_params fields
-        .groupTuple ( by: 0 ) // group seqtabs into lists per locus
+        .map { pcr_primers, fcid, seqtab, fasta -> [ pcr_primers, seqtab, fasta ] } // remove fcid and loci_params fields
+        .groupTuple ( by: 0 ) // group seqtabs and fastas into lists per locus
     
-    // combine taxtables, seqtables and parameters
+    // combine taxtables, seqtables and parameters by pcr_primers
     ch_mergetax_output
         .join ( ch_seqtables_locus, by: 0 )
         .join ( ch_loci_samdf, by: 0 )
         .join ( ch_loci_params, by: 0 )
-        .set { ch_phyloseq_input }
+        .set { ch_phyloseq_input } // pcr_primers, merged_tax, list[seqtab], list[fasta], loci_samdf, map[loci_params]
 
     //// create phyloseq objects per locus; output unfiltered summary tables and accumulation curve plot
     PHYLOSEQ_UNFILTERED ( ch_phyloseq_input )
+
+    //// create accumulation curve plots
+    ACCUMULATION_CURVE (
+        PHYLOSEQ_UNFILTERED.out.ps
+    )
 
     //// apply taxonomic and minimum abundance filtering per locus (from loci_params), then combine to output filtered summary tables
     PHYLOSEQ_FILTER ( PHYLOSEQ_UNFILTERED.out.ps )
 
     //// combine phyloseq outputs to merge across loci
     PHYLOSEQ_UNFILTERED.out.ps // val(pcr_primers), path("ps_unfiltered_*.rds"), val(loci_params)
-        .map { pcr_primers, ps, loci_params ->
+        .map { pcr_primers, ps, filters_tibble, loci_params ->
             [ ps ] }
         .collect()
         .set { ch_ps_unfiltered }
@@ -58,7 +64,9 @@ workflow RESULT_SUMMARIES {
 
     PHYLOSEQ_MERGE ( 
         ch_ps_unfiltered, 
-        ch_ps_filtered 
+        ch_ps_filtered,
+        PHYLOSEQ_UNFILTERED.out.asv_fasta.collect(),
+        PHYLOSEQ_FILTER.out.asv_fasta.collect()
         )
     
     ch_read_tracker_grouped = 

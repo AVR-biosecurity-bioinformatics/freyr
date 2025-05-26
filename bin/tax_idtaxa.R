@@ -7,6 +7,7 @@ process_packages <- c(
     "dplyr",
     "magrittr",
     "purrr",
+    "readr",
     "stringr",
     "tibble",
     NULL
@@ -18,9 +19,9 @@ nf_vars <- c(
     "projectDir",
     "fcid",
     "pcr_primers",
-    "seqtab",
     "idtaxa_confidence",
-    "idtaxa_db"
+    "idtaxa_db",
+    "fasta"
 )
 lapply(nf_vars, nf_var_check)
 
@@ -42,26 +43,27 @@ threshold <-            as.numeric(idtaxa_confidence)
 
 ### run R code
 
-seqtab <- readRDS(seqtab) # read in seqtab
+# seqtab <- readRDS(seqtab) # read in seqtab
+seqs_dss <- Biostrings::readDNAStringSet(fasta)
 trainingSet <- readRDS(normalizePath(database)) # read in training database for IDTAXA
 
 # get the sequences from the seqtab
-seqs <- Biostrings::DNAStringSet(dada2::getSequences(seqtab)) # Create a DNAStringSet from the ASVs
+# seqs <- Biostrings::DNAStringSet(dada2::getSequences(seqtab)) # Create a DNAStringSet from the ASVs
 
-if ( length(seqs) > 0 ) { # Stop if seqs are 0
+if ( length(seqs_dss) > 0 ) { # Stop if seqs are 0
 
     # Remove any 10bp N bases that were added by concatenating reads reads  
     if(remove_Ns){
-        if(any(seqs %>% purrr::map_lgl(~{str_detect(as.character(.x), "NNNNNNNNNN")}))){
-        seqs <- Biostrings::DNAStringSet(
-            seqs %>% purrr::map_chr(~{str_replace(as.character(.x), "NNNNNNNNNN", "")})
+        if(any(seqs_dss %>% purrr::map_lgl(~{str_detect(as.character(.x), "NNNNNNNNNN")}))){
+        seqs_dss <- Biostrings::DNAStringSet(
+            seqs_dss %>% purrr::map_chr(~{str_replace(as.character(.x), "NNNNNNNNNN", "")})
             )
         }
     }
 
     # Classify 
     ids <- DECIPHER::IdTaxa(
-        seqs, 
+        seqs_dss, 
         trainingSet, 
         processors=1, 
         threshold = threshold, 
@@ -74,58 +76,59 @@ if ( length(seqs) > 0 ) { # Stop if seqs are 0
         stringr::str_remove("\\..*$") %>% # remove extension 
         stringr::str_remove("_idtaxa")
 
-    # Check that more than just root has been assigned
-    if( any(sapply(ids, function(x){ length(x$taxon) }) > 2)){
-        #Convert the output object of class "Taxa" to a matrix analogous to the output from assignTaxonomy
-        tax <- ids %>%
-        purrr::map_dfr(function(x){
-            taxa <- paste0(x$taxon,"_", x$confidence)
-            taxa[startsWith(taxa, "unclassified_")] <- NA
-            data.frame(t(taxa)) %>%
-            magrittr::set_colnames(ranks[1:ncol(.)])
-        }) %>%
-        mutate_all(stringr::str_replace,pattern="(?:.(?!_))+$", replacement="") %>%
-        magrittr::set_rownames(dada2::getSequences(seqtab))
-        # add empty ranks if none were assigned to lower ranks
-        tax <- new_bind(tibble::tibble(!!!ranks, .rows = 0, .name_repair = ~ ranks), tax)
-    } else {
-        warning(paste0("No sequences assigned with IDTAXA to ", database, " have you used the correct database?"))
-        # tax <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") 
-        ## new code from https://github.com/alexpiper/piperline/commit/ce9bbf32c6fcee7b7aff55087a314d9b398f2450
-        tax <- data.frame(matrix(ncol = length(ranks), nrow = length(getSequences(seqtab))))
-        rownames(tax) <- getSequences(seqtab)
-        colnames(tax) <- ranks
+    # # Check that more than just root has been assigned
+    # if( any(sapply(ids, function(x){ length(x$taxon) }) > 2)){
+        #Convert the output object of class "Taxa" to a tibble
+        tax <- 
+            ids %>%
+            # transform "Taxa" data frame, one row at a time
+            purrr::imap_dfr(function(x, idx){
+                # get assigned taxa as vector
+                taxa <- x$taxon
+                # make unclassified taxa NA
+                taxa[startsWith(taxa, "unclassified_")] <- NA
+                # make a data frame with the ranks as columns and taxa as values, seq_name as column too
+                out_df <- 
+                    data.frame(t(taxa)) %>% 
+                    magrittr::set_colnames(ranks[1:ncol(.)]) %>%
+                    dplyr::mutate(seq_name = idx) %>%
+                    dplyr::relocate(seq_name)
+
+                return(out_df)
+            }) %>%
+            # add empty ranks if none were assigned to lower ranks
+            new_bind(tibble::tibble(!!!ranks, .rows = 0, .name_repair = ~ ranks), .) %>%
+            # make seq_name first column
+            dplyr::relocate(seq_name)
+    # } else {
+    #     warning(paste0("No sequences assigned with IDTAXA to ", database, " have you used the correct database?"))
+    #     tax <- data.frame(matrix(ncol = length(ranks), nrow = length(as.character(seqs_dss))))
+    #     rownames(tax) <- as.character(seqs_dss)
+    #     colnames(tax) <- ranks
         
-        tax[ranks[1]] <- ranks[1]
-        tax[ranks[2:length(ranks)]] <- NA_character_
-        # tax <- tax %>%
-        #     magrittr::set_rownames(dada2::getSequences(seqtab)) 
-    }
+    #     tax[ranks[1]] <- ranks[1]
+    #     tax[ranks[2:length(ranks)]] <- NA_character_
+    # }
 } else {
-    warning(paste0("No sequences present in seqtab - IDTAXA skipped"))
-    # tax <- tibble::enframe(dada2::getSequences(seqtab), name=NULL, value="OTU") 
-    tax <- data.frame(matrix(ncol = length(ranks), nrow = length(getSequences(seqtab))))
-    rownames(tax) <- getSequences(seqtab)
-    colnames(tax) <- ranks
-    
-    tax[ranks[1]] <- ranks[1]
-    tax[ranks[2:length(ranks)]] <- NA_character_
-    # tax <- tax %>%
-    #     magrittr::set_rownames(dada2::getSequences(seqtab)) 
+    stop("No sequences in input FASTA file!") 
 }
 
-# Check that output dimensions match input
-if(!all(rownames(tax) %in% colnames(seqtab))){
+# Check that output sequences match input
+if(!all(tax$seq_name %in% names(seqs_dss))){
     stop("Number of ASVs classified does not match the number of input ASVs")
 }
 
 # Check that all ranks are present
-if(!all(colnames(tax) %in% ranks)){
+if(!all(tax %>% dplyr::select(-seq_name) %>% colnames()  %in% ranks)){
     stop("Number of ranks does not match")
 }
+
+# write out tax .csv
+readr::write_csv(tax, paste0(fcid,"_",pcr_primers,"_",db_name,"_idtaxa_tax.csv"))
 
 # Write out idtaxa objects
 saveRDS(tax, paste0(fcid,"_",pcr_primers,"_",db_name,"_idtaxa_tax.rds"))
 saveRDS(ids, paste0(fcid,"_",pcr_primers,"_",db_name,"_idtaxa_ids.rds"))
 
 # stop(" *** stopped manually *** ") ##########################################
+
