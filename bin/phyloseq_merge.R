@@ -54,7 +54,11 @@ seqs_uf <-
     unfiltered_seqs_list %>%
     lapply(., as.character) %>%
     unlist(use.names = T) %>% 
-    .[!duplicated(.)] %>%
+    tibble::enframe() %>%
+    dplyr::group_by(name, value) %>%
+    dplyr::slice(1) %>%
+    dplyr::ungroup() %>%
+    tibble::deframe() %>%
     Biostrings::DNAStringSet()
 
 # save combined fasta of filtered sequences
@@ -130,7 +134,11 @@ seqs_f <-
     filtered_seqs_list %>%
     lapply(., as.character) %>%
     unlist(use.names = T) %>% 
-    .[!duplicated(.)] %>%
+    tibble::enframe() %>%
+    dplyr::group_by(name, value) %>%
+    dplyr::slice(1) %>%
+    dplyr::ungroup() %>%
+    tibble::deframe() %>%
     Biostrings::DNAStringSet()
 
 # save combined fasta of filtered sequences

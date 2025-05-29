@@ -77,7 +77,11 @@ seqs_combined <-
     fasta_list %>%
     lapply(., as.character) %>%
     unlist(use.names = T) %>% 
-    .[!duplicated(.)] %>%
+    tibble::enframe() %>%
+    dplyr::group_by(name, value) %>%
+    dplyr::slice(1) %>%
+    dplyr::ungroup() %>%
+    tibble::deframe() %>%
     Biostrings::DNAStringSet()
 
 ## check taxonomy, seqtab and fasta all have the same sequences, none are missing
