@@ -241,16 +241,19 @@ write_fasta(seqs_output, paste0("asvs_unfiltered_", pcr_primers, ".fasta"))
 
 ## output phyloseq and component data; from step_output_ps
 
-# save seqtab as wide tibble (rows = sample_id, cols = ASV name (hash), cells = abundance)
+# save seqtab as wide tibble (rows = seq_name, cols = ASV name (hash), cells = abundance)
 seqtab_out <- phyloseq::otu_table(ps_sampfiltered) %>%
     as("matrix") %>%
-    tibble::as_tibble(rownames = "sample_id")
+    tibble::as_tibble(rownames = "seq_name")
 
 # save taxtab as long tibble (rows = ASV, cols = tax rankings)
 taxtab_out <- phyloseq::tax_table(ps_sampfiltered) %>%
     as("matrix") %>%
     tibble::as_tibble(rownames = "seq_name") %>%
-    seqateurs::unclassified_to_na(rownames = FALSE)
+    # convert propagated taxonomy to NA values
+    dplyr::mutate( 
+        dplyr::across(Root:Species, ~ dplyr::if_else(stringr::str_detect(.x, "^\\w__"), NA, .x))
+    )
 
 # Check taxonomy table outputs
 ### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing

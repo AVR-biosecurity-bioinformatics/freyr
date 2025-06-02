@@ -73,6 +73,7 @@ seqtab_combined <-
             ~ dplyr::if_else(all(.), TRUE, FALSE)
         )
     ) %>%
+    dplyr::ungroup() %>%
     # pivot wider, filling missing abundance with 0
     tidyr::pivot_wider(
         names_from = sample_id,
