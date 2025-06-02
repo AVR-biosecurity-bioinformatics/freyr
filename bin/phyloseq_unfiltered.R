@@ -57,14 +57,22 @@ seqtab_combined <-
         function(x){ # per tibble
             x %>%
                 tidyr::pivot_longer(
-                cols = !c(seq_name, sequence, chimera_filter, length_filter, phmm_filter, frame_filter),
-                names_to = "sample_id",
-                values_to = "abundance"
+                    cols = !c(seq_name, sequence, chimera_filter, length_filter, phmm_filter, frame_filter),
+                    names_to = "sample_id",
+                    values_to = "abundance"
                 )
         }
     ) %>%
     # bind tibbles together now columns all match
     dplyr::bind_rows() %>%
+    # harmonise filters if different between flowcells (only chimera filter issue)
+    dplyr::group_by(seq_name, sequence) %>%
+    dplyr::mutate(
+        dplyr::across(
+            c(chimera_filter, length_filter, phmm_filter, frame_filter),
+            ~ dplyr::if_else(all(.), TRUE, FALSE)
+        )
+    ) %>%
     # pivot wider, filling missing abundance with 0
     tidyr::pivot_wider(
         names_from = sample_id,
