@@ -123,6 +123,7 @@ if (params.downsample_reads) {
 //// import subworkflows
 include { PROCESS_READS                             } from './nextflow/subworkflows/process_reads'
 include { DADA2                                     } from './nextflow/subworkflows/dada2'
+include { FILTERING                                 } from './nextflow/subworkflows/filtering'
 include { TAXONOMY                                  } from './nextflow/subworkflows/taxonomy'
 include { RESULT_SUMMARIES                          } from './nextflow/subworkflows/result_summaries'
 
@@ -345,33 +346,39 @@ workflow FREYR {
         params.seq_type,
         params.paired,
         ch_fcid
-        )
+    )
 
 
     //// subworkflow: run DADA2 to infer ASVs
     DADA2 (
-        PROCESS_READS.out.ch_processed_reads,
-        ch_read_tracker_grouped
-        )
+        PROCESS_READS.out.ch_processed_reads
+    )
 
+    //// subworkflow: apply soft filters to ASVs
+    FILTERING (
+        DADA2.out.ch_seqtab
+    )
 
     //// subworkflow: assign taxonomy
     TAXONOMY (
-        DADA2.out.ch_seqtab,
+        FILTERING.out.ch_seqtab_filtered,
         ch_loci_params,
         ch_idtaxa_db_new
-        )
+    )
 
+    //// combine read tracking grouped channels
+    ch_read_tracker_grouped = DADA2.out.ch_read_tracker_grouped
+        .concat(FILTERING.out.ch_read_tracker_grouped)
 
     //// subworkflow: create result summaries
     RESULT_SUMMARIES (
-        DADA2.out.ch_seqtab,
+        FILTERING.out.ch_seqtab_filtered,
         TAXONOMY.out.ch_mergetax_output,
         ch_loci_samdf,
         ch_loci_params,
         PROCESS_READS.out.ch_read_tracker_samples,
-        DADA2.out.read_tracker_grouped
-        )
+        ch_read_tracker_grouped
+    )
     
 
     ///// VISUALISATION
