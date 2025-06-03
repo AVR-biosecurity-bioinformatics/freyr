@@ -40,6 +40,9 @@ fasta_list <-
 asv_min_length <-   parse_nf_var_repeat(asv_min_length) %>% as.numeric
 asv_max_length <-   parse_nf_var_repeat(asv_max_length) %>% as.numeric
 
+if(is.na(asv_min_length))   {asv_min_length <- NULL}
+if(is.na(asv_max_length))   {asv_max_length <- NULL}
+
 ### run R code
 
 # combine seqtabs into wide format

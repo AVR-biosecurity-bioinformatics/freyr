@@ -6,6 +6,7 @@
 //// modules to import
 include { FILTER_CHIMERA                            } from '../modules/filter_chimera'
 include { FILTER_LENGTH                             } from '../modules/filter_length'
+include { FILTER_PHMM                               } from '../modules/filter_phmm'
 include { FILTER_SEQTAB                             } from '../modules/filter_seqtab'
 
 workflow FILTERING {
@@ -33,10 +34,10 @@ workflow FILTERING {
         ch_filter_input
     )
 
-    // //// filter by PHMM
-    // FILTER_PHMM (
-
-    // )
+    //// filter by PHMM
+    FILTER_PHMM (
+        ch_filter_input
+    )
 
     // //// filter by frameshifts/stop codons
     // FILTER_FRAME (
