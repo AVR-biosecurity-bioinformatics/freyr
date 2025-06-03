@@ -237,8 +237,9 @@ readr::write_csv(seqs_names_filters, paste0(fcid, "_", pcr_primers, "_seqtab_fil
 
 filter_info <- 
     seqs_names_filters %>%
+    dplyr::mutate(combined_filter = chimera_filter & length_filter & phmm_filter & frame_filter ) %>%
     tidyr::pivot_longer(
-        cols = !c(seq_name, sequence, chimera_filter, length_filter, phmm_filter, frame_filter), 
+        cols = !c(seq_name, sequence, chimera_filter, length_filter, phmm_filter, frame_filter, combined_filter), 
         names_to = "sample_id",
         values_to = "abundance"
     ) %>%
@@ -254,14 +255,14 @@ filter_info <-
         pcr_primers = pcr_primers,
         concat = stringr::str_detect(sequence, rep(x = "N", times = 10) %>% stringr::str_flatten()),
         dplyr::across(
-            chimera_filter:frame_filter, 
+            chimera_filter:combined_filter, 
             ~ dplyr::case_when(
                 . == TRUE ~ "pass", 
                 . == FALSE ~ "fail"
             )
         ),
         dplyr::across(
-            chimera_filter:frame_filter, 
+            chimera_filter:combined_filter, 
             ~ forcats::fct_relevel(., "pass", "fail")
         )
     )
@@ -284,9 +285,9 @@ ab_plot_fun <-
         filter_column <- enquo(filter_column)
         # summarise filter
         dataset %>%
-            dplyr::group_by(!!filter_column, length, concat) %>%
-            dplyr::summarise(abundance = sum(abundance)) %>%
-            dplyr::ungroup() %>%
+            # dplyr::group_by(!!filter_column, length, concat) %>%
+            # dplyr::summarise(abundance = sum(abundance)) %>%
+            # dplyr::ungroup() %>%
             # plot
             ggplot2::ggplot(., aes(x = length, y = abundance, colour = !!filter_column, shape = concat)) +
             geom_point(size = 3, alpha = 0.7) + 
@@ -318,6 +319,13 @@ ab_plot_fun <-
     }
 
 # make plots
+gg.combined.ab <- 
+    ab_plot_fun(
+        combined_filter,
+        "Combined filters",
+        "black"
+    )
+
 gg.chimera.ab <- 
     ab_plot_fun(
         chimera_filter,
@@ -349,7 +357,7 @@ gg.frame.ab <-
 # combine abundance plots
 
 gg.abundance <-
-    gg.chimera.ab + gg.length.ab + gg.phmm.ab + gg.frame.ab +
+    gg.combined.ab + gg.chimera.ab + gg.length.ab + gg.phmm.ab + gg.frame.ab +
     patchwork::plot_layout(ncol = 1, guides = "collect") +
     patchwork::plot_annotation(title = "ASV abundance", subtitle = paste0("Flowcell: ", fcid, "\nPCR primers: ", pcr_primers))
 
@@ -401,6 +409,13 @@ n_plot_fun <-
     }
 
 # make plots
+gg.combined.n <- 
+    n_plot_fun(
+        combined_filter,
+        "Combined filters",
+        "black"
+    )
+
 gg.chimera.n <- 
     n_plot_fun(
         chimera_filter,
@@ -432,7 +447,7 @@ gg.frame.n <-
 # combine count plots
 
 gg.n_asvs <-
-    gg.chimera.n + gg.length.n + gg.phmm.n + gg.frame.n +
+    gg.combined.n + gg.chimera.n + gg.length.n + gg.phmm.n + gg.frame.n +
     patchwork::plot_layout(ncol = 1, guides = "collect") +
     patchwork::plot_annotation(title = "Unique ASVs", subtitle = paste0("Flowcell: ", fcid, "\nPCR primers: ", pcr_primers))
 
