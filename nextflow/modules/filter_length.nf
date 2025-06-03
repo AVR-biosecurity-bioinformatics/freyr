@@ -1,15 +1,14 @@
-process FILTER_CHIMERA {
-    def module_name = "filter_chimera"
+process FILTER_LENGTH {
+    def module_name = "filter_length"
     tag "$pcr_primers"
     label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
     tuple val(pcr_primers), val(meta), path(seqtab_tibble_list), path(fasta_list)
-    val(min_sample_fraction)
 
     output:
-    tuple val(pcr_primers), path("*_chimera_filter.csv"),                     emit: tibble
+    tuple val(pcr_primers), path("*_length_filter.csv"),                     emit: tibble
     path("*_readsout.csv"),                                                   emit: read_tracking
 
 
@@ -27,7 +26,8 @@ process FILTER_CHIMERA {
     pcr_primers =           "${pcr_primers}"
     seqtab_tibble_list =    "${seqtab_tibble_list}"
     fasta_list =            "${fasta_list}"
-    minSampleFraction =     "${min_sample_fraction}"
+    asv_min_length =        "${meta.asv_min_length}"
+    asv_max_length =        "${meta.asv_max_length}"
     
     ## global variables
     projectDir = "$projectDir"

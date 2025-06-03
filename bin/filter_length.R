@@ -2,13 +2,13 @@
 ### load only required packages
 process_packages <- c(
     "Biostrings",
-    "dada2",
+    # "dada2",
     "dplyr",
-    "ggplot2",
-    "patchwork",
+    # "ggplot2",
+    # "patchwork",
     "readr",
     "stringr",
-    "taxreturn",
+    # "taxreturn",
     "tibble",
     NULL
 )
@@ -20,7 +20,8 @@ nf_vars <- c(
     "pcr_primers",
     "seqtab_tibble_list",
     "fasta_list",
-    "minSampleFraction"
+    "asv_min_length",
+    "asv_max_length"
 )
 lapply(nf_vars, nf_var_check)
 
@@ -36,7 +37,8 @@ fasta_list <-
     stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
     lapply(., Biostrings::readDNAStringSet)
 
-minSampleFraction <- as.numeric(minSampleFraction)
+asv_min_length <-   parse_nf_var_repeat(asv_min_length) %>% as.numeric
+asv_max_length <-   parse_nf_var_repeat(asv_max_length) %>% as.numeric
 
 ### run R code
 
@@ -84,45 +86,27 @@ if ( !setequal(seqs_names$seq_name, seqtab_combined$seq_name) ){
     stop("Sequence names in seqtabs don't match sequence names in .fasta files!")
 }
 
-# make a dada2-style seqtab from both tibbles
-seqtab_matrix <- 
-    seqtab_combined %>%
-    # add seq string
-    dplyr::left_join(., seqs_names, by = "seq_name") %>%
-    # remove seq_name
-    dplyr::select(-seq_name) %>%
-    # pivot longer
-    tidyr::pivot_longer(cols = !sequence, names_to = "sample_id", values_to = "abundance") %>%
-    dplyr::mutate(abundance = as.integer(abundance)) %>%
-    # pivot wider 
-    tidyr::pivot_wider(names_from = sequence, values_from = abundance) %>%
-    # sample_id as rownames
-    tibble::column_to_rownames(var = "sample_id") %>%
-    # convert to matrix
-    as.matrix() 
-
-# remove chimeras
-seqtab_nochim <- 
-    dada2::removeBimeraDenovo(
-  		seqtab_matrix, 
-  		method = "consensus",
-        minSampleFraction = minSampleFraction
-    )
-
 # output table of which sequences passed or failed filter
 out_tibble <- 
     seqs_names %>%
-	dplyr::mutate(chimera_filter = sequence %in% colnames(seqtab_nochim))
+    dplyr::mutate(
+        length = stringr::str_count(sequence, "\\w"),
+        pass_min = length > asv_min_length,
+        pass_max = length < asv_max_length,
+        length_filter = pass_min & pass_max
+    ) %>%
+    # make tibble of name, sequence, and whether it passed the length filter
+    dplyr::select(-length, -pass_min, -pass_max)
 
-readr::write_csv(out_tibble, paste0(pcr_primers, "_chimera_filter.csv"))
+readr::write_csv(out_tibble, paste0(pcr_primers, "_length_filter.csv"))
 
 # output read tracking tibble (to be modified in the "merge" process to add fcid column)
 read_tracking_out <- 
     out_tibble %>%
     dplyr::left_join(., seqtab_combined, by = "seq_name") %>%
-    dplyr::rename("filter_chimera" = chimera_filter) %>%
+    dplyr::rename("filter_length" = length_filter) %>%
     tidyr::pivot_longer(
-        cols = !c(seq_name, sequence, filter_chimera),
+        cols = !c(seq_name, sequence, filter_length),
         names_to = "sample_id",
         values_to = "abundance"
     ) %>%
@@ -140,5 +124,5 @@ read_tracking_out <-
     dplyr::select(-pass) %>%
     dplyr::select(stage, sample_id, pcr_primers, pairs)
 
-readr::write_csv(read_tracking_out, paste0("filter_chimeras_",pcr_primers,"_readsout.csv"))
+readr::write_csv(read_tracking_out, paste0("filter_length_",pcr_primers,"_readsout.csv"))
 
