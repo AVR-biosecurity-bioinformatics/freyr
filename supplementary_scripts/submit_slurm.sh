@@ -223,10 +223,10 @@ if [[ "$resume" = true ]]; then
   echo '-resume is set, restoring previous run'
 else 
   echo 'resume is not set, starting run again'
-  # Run the tool
-  log "Running sample sheet creation with arguments: ${tool_values_list[@]}"
-  shifter --image=jackscanlan/piperline-multi:0.0.1 -- Rscript supplementary_scripts/create_inputs.R "${tool_values_list[@]}"
 fi
+log "Running sample sheet creation with arguments: ${tool_values_list[@]}"
+shifter --image=jackscanlan/piperline-multi:0.0.1 -- Rscript supplementary_scripts/create_inputs.R "${tool_values_list[@]}"
+
 
 # Run Nextflow
 log "Running Nextflow with arguments: ${nextflow_args[@]}"
@@ -236,7 +236,7 @@ NXF_VER=23.05.0-edge \
     --samplesheet ./inputs/Sample_info.csv \
     --loci_params ./inputs/loci_params.csv \
     --slurm_account ${SLURM_JOB_ACCOUNT} \
-    -profile basc_slurm \
+    -profile basc_slurm,error1_backoff \
     "${nextflow_args[@]}"
 
 # once the dataset has run, clean up your analysis directory
