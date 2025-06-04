@@ -5,12 +5,12 @@ process PHYLOSEQ_UNFILTERED {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), path(taxtab), path(seqtab_list), path(fasta_list), path(samdf_locus), val(loci_params)
+    tuple val(pcr_primers), path(taxtab), path(seqtab), path(filters), path(fasta), path(samdf_locus), val(loci_params)
 
     output:
     path("*.csv"),                                                                                 emit: csvs
     tuple val(pcr_primers), path("ps_unfiltered_*.rds"), path("filters_*.csv"), val(loci_params),  emit: ps 
-    path("*.fasta"),                                                                               emit: asv_fasta
+    path("asvs_unfiltered_*.fasta"),                                                               emit: asv_fasta
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -25,8 +25,9 @@ process PHYLOSEQ_UNFILTERED {
     ## input channel variables
     pcr_primers =           "${pcr_primers}"
     taxtab_file =           "${taxtab}"
-    seqtab_list =           "${seqtab_list}"
-    fasta_list =            "${fasta_list}"
+    seqtab_file =           "${seqtab}"
+    filters_file =          "${filters}"
+    fasta_file =            "${fasta}"
     loci_params =           "${loci_params}"
     samdf =                 "${samdf_locus}"
      

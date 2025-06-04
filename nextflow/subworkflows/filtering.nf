@@ -62,24 +62,22 @@ workflow FILTERING {
         .join ( ch_grouped_seqtabs, by: 0 )
         .set { ch_merge_filters_input }
     
-    //// merge filters together and also add 
+    //// merge filters together, createfilter  read tracking tibble, and create filter plots
     MERGE_FILTERS (
         ch_merge_filters_input,
         ch_fcid.collect()
     )
 
-    //// filter sequence table (old version)
-    FILTER_SEQTAB ( 
-        ch_seqtab
-    )
+    // //// filter sequence table (old version)
+    // FILTER_SEQTAB ( 
+    //     ch_seqtab
+    // )
 
-    ch_seqtab_filtered = 
-        FILTER_SEQTAB.out.seqtab
 
     emit:
 
-    ch_seqtab_filtered
-    ch_read_tracker_grouped = FILTER_SEQTAB.out.read_tracking
+    ch_seqtab_filtered = MERGE_FILTERS.out.filtered
+    ch_read_tracker_grouped = MERGE_FILTERS.out.read_tracking
 
 
 }

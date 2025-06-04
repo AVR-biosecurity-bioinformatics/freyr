@@ -9,7 +9,7 @@ process MERGE_FILTERS {
     val(fcid_list)
 
     output:
-    tuple val(pcr_primers), path("*_seqtab_combined.csv"), path("*_filters.csv"), path("*_seqs.fasta"),      emit: seqtab
+    tuple val(pcr_primers), path("*_seqtab_combined.csv"), path("*_filters.csv"), path("*_seqs.fasta"),         emit: filtered
     path("*_ASV_cleanup.csv"),                                                                                  emit: cleanup
     path("*_asv_abundance.pdf"),                                                                                emit: abundance_plot
     path("*_asv_count.pdf"),                                                                                    emit: count_plot
