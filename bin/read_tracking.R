@@ -101,7 +101,7 @@ stage_vec <- c(
     "filter_length", 
     "filter_phmm", 
     "filter_frame", 
-    "filter_seqtab",
+    "filter_combined",
     "classified_root", 
     "classified_kingdom", 
     "classified_phylum",

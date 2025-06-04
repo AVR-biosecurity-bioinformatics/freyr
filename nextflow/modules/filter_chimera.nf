@@ -9,8 +9,7 @@ process FILTER_CHIMERA {
     val(min_sample_fraction)
 
     output:
-    tuple val(pcr_primers), path("*_chimera_filter.csv"),                     emit: tibble
-    path("*_readsout.csv"),                                                   emit: read_tracking
+    tuple val(pcr_primers), path("*_chimera_filter.csv"),        emit: tibble
 
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'

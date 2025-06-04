@@ -356,12 +356,13 @@ workflow FREYR {
 
     //// subworkflow: apply soft filters to ASVs
     FILTERING (
-        DADA2.out.ch_seqtab
+        DADA2.out.ch_seqtab,
+        ch_fcid
     )
 
     //// subworkflow: assign taxonomy
     TAXONOMY (
-        FILTERING.out.ch_seqtab_filtered,
+        DADA2.out.ch_seqtab,
         ch_loci_params,
         ch_idtaxa_db_new
     )

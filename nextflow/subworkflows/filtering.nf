@@ -9,11 +9,13 @@ include { FILTER_FRAME                              } from '../modules/filter_fr
 include { FILTER_LENGTH                             } from '../modules/filter_length'
 include { FILTER_PHMM                               } from '../modules/filter_phmm'
 include { FILTER_SEQTAB                             } from '../modules/filter_seqtab'
+include { MERGE_FILTERS                             } from '../modules/merge_filters'
 
 workflow FILTERING {
 
     take:
     ch_seqtab
+    ch_fcid
 
     main:
 
@@ -45,6 +47,26 @@ workflow FILTERING {
         ch_filter_input
     )
 
+    //// modify filter input channel to just keep seqtabs and fasta
+    ch_filter_input
+        .map { pcr_primers, meta, seqtab_tibble_list, fasta_list -> 
+            [ pcr_primers, seqtab_tibble_list, fasta_list ] }
+        .set { ch_grouped_seqtabs }
+
+    //// group filtering outputs (filters, setabs and fastas) by pcr_primers
+    FILTER_CHIMERA.out.tibble
+        .mix ( FILTER_LENGTH.out.tibble )
+        .mix ( FILTER_PHMM.out.tibble )
+        .mix ( FILTER_FRAME.out.tibble )
+        .groupTuple ( by: 0 )
+        .join ( ch_grouped_seqtabs, by: 0 )
+        .set { ch_merge_filters_input }
+    
+    //// merge filters together and also add 
+    MERGE_FILTERS (
+        ch_merge_filters_input,
+        ch_fcid.collect()
+    )
 
     //// filter sequence table (old version)
     FILTER_SEQTAB ( 

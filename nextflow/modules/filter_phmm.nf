@@ -8,8 +8,7 @@ process FILTER_PHMM {
     tuple val(pcr_primers), val(meta), path(seqtab_tibble_list), path(fasta_list)
 
     output:
-    tuple val(pcr_primers), path("*_phmm_filter.csv"),                     emit: tibble
-    path("*_readsout.csv"),                                                   emit: read_tracking
+    tuple val(pcr_primers), path("*_phmm_filter.csv"),      emit: tibble
 
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'

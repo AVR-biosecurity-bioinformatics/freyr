@@ -102,30 +102,3 @@ out_tibble <-
     dplyr::select(-length, -pass_min, -pass_max)
 
 readr::write_csv(out_tibble, paste0(pcr_primers, "_length_filter.csv"))
-
-# output read tracking tibble (to be modified in the "merge" process to add fcid column)
-read_tracking_out <- 
-    out_tibble %>%
-    dplyr::left_join(., seqtab_combined, by = "seq_name") %>%
-    dplyr::rename("filter_length" = length_filter) %>%
-    tidyr::pivot_longer(
-        cols = !c(seq_name, sequence, filter_length),
-        names_to = "sample_id",
-        values_to = "abundance"
-    ) %>%
-    dplyr::select(-seq_name, -sequence) %>%
-    dplyr::mutate(pcr_primers = pcr_primers) %>%
-    tidyr::pivot_longer(
-        cols = tidyselect::starts_with("filter_"), 
-        names_to = "stage",
-        values_to = "pass"
-    ) %>%
-    dplyr::group_by(sample_id, pcr_primers, stage, pass) %>%
-    dplyr::summarise(pairs = sum(abundance)) %>%
-    dplyr::ungroup() %>%
-    dplyr::filter(pass == TRUE) %>%
-    dplyr::select(-pass) %>%
-    dplyr::select(stage, sample_id, pcr_primers, pairs)
-
-readr::write_csv(read_tracking_out, paste0("filter_length_",pcr_primers,"_readsout.csv"))
-
