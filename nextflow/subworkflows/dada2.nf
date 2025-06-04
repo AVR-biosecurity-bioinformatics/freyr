@@ -18,7 +18,6 @@ include { DENOISE as DENOISE2_R                     } from '../modules/denoise'
 include { DENOISE as DENOISE2_S                     } from '../modules/denoise'
 include { MAKE_SEQTAB_PAIRED                        } from '../modules/make_seqtab_paired'
 include { MAKE_SEQTAB_SINGLE                        } from '../modules/make_seqtab_single'
-include { FILTER_SEQTAB                             } from '../modules/filter_seqtab'
 
 workflow DADA2 {
 

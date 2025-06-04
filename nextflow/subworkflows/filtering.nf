@@ -8,7 +8,6 @@ include { FILTER_CHIMERA                            } from '../modules/filter_ch
 include { FILTER_FRAME                              } from '../modules/filter_frame'
 include { FILTER_LENGTH                             } from '../modules/filter_length'
 include { FILTER_PHMM                               } from '../modules/filter_phmm'
-include { FILTER_SEQTAB                             } from '../modules/filter_seqtab'
 include { MERGE_FILTERS                             } from '../modules/merge_filters'
 
 workflow FILTERING {
@@ -67,11 +66,6 @@ workflow FILTERING {
         ch_merge_filters_input,
         ch_fcid.collect()
     )
-
-    // //// filter sequence table (old version)
-    // FILTER_SEQTAB ( 
-    //     ch_seqtab
-    // )
 
 
     emit:
