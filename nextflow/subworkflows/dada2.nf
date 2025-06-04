@@ -18,13 +18,11 @@ include { DENOISE as DENOISE2_R                     } from '../modules/denoise'
 include { DENOISE as DENOISE2_S                     } from '../modules/denoise'
 include { MAKE_SEQTAB_PAIRED                        } from '../modules/make_seqtab_paired'
 include { MAKE_SEQTAB_SINGLE                        } from '../modules/make_seqtab_single'
-include { FILTER_SEQTAB                             } from '../modules/filter_seqtab'
 
 workflow DADA2 {
 
     take:
     processed_reads
-    read_tracker_grouped
 
     main:
 
@@ -35,7 +33,7 @@ workflow DADA2 {
         Channel.empty()
     ch_processed_reads_single = 
         Channel.empty()
-
+    ch_read_tracker_grouped = Channel.empty()
 
     //// populate read channels with branched processed_reads input channel
     processed_reads
@@ -206,13 +204,10 @@ workflow DADA2 {
             ch_seq_combined 
         )
 
-        read_tracker_grouped = 
-            read_tracker_grouped.concat(MAKE_SEQTAB_PAIRED.out.read_tracking)
+        ch_read_tracker_grouped = 
+            ch_read_tracker_grouped.concat(MAKE_SEQTAB_PAIRED.out.read_tracking)
 
-        //// filter sequence table
-        FILTER_SEQTAB ( 
-            MAKE_SEQTAB_PAIRED.out.seqtab
-        )
+        ch_seqtab = MAKE_SEQTAB_PAIRED.out.seqtab
 
 
     } else if ( params.paired == false && params.seq_type == "nanopore" )  {
@@ -286,30 +281,21 @@ workflow DADA2 {
             ch_seq_single 
         )
 
-        read_tracker_grouped = 
-            read_tracker_grouped.concat(MAKE_SEQTAB_SINGLE.out.read_tracking)
+        ch_read_tracker_grouped = 
+            ch_read_tracker_grouped.concat(MAKE_SEQTAB_SINGLE.out.read_tracking)
 
-        //// filter sequence table
-        FILTER_SEQTAB ( 
-            MAKE_SEQTAB_SINGLE.out.seqtab
-        )
+        ch_seqtab = MAKE_SEQTAB_SINGLE.out.seqtab
 
 
     } else {
         error ("Disallowed 'params.paired' and 'params.seq_type' combination")
     }
 
-    read_tracker_grouped = 
-        read_tracker_grouped.concat(FILTER_SEQTAB.out.read_tracking)
-
-    ch_seqtab = 
-        FILTER_SEQTAB.out.seqtab
-
 
     emit:
 
     ch_seqtab
-    read_tracker_grouped
+    ch_read_tracker_grouped
 
 
 }

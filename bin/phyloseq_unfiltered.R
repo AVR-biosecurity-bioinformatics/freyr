@@ -23,8 +23,9 @@ nf_vars <- c(
     "projectDir",
     "pcr_primers",
     "taxtab_file",
-    "seqtab_list",
-    "fasta_list",
+    "seqtab_file",
+    "filters_file",
+    "fasta_file",
     "loci_params",
     "samdf"
 )
@@ -33,76 +34,29 @@ lapply(nf_vars, nf_var_check)
 ## check and define variables
 taxtab <- readr::read_csv(taxtab_file)
 
-seqtab_list <- 
-    seqtab_list %>%
-    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
-    lapply(., readr::read_csv) # read in seqtabs and store as list of tibbles
+seqtab_combined <- readr::read_csv(seqtab_file)
 
-fasta_list <- 
-    fasta_list %>%
-    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
-    lapply(., Biostrings::readDNAStringSet)
+filters <- readr::read_csv(filters_file)
+
+seqs_combined <- Biostrings::readDNAStringSet(fasta_file)
 
 samdf <- readr::read_csv(samdf, show_col_types = FALSE)
 
+## check taxonomy, seqtab, filters, and fasta all have the same sequences, none are missing
+if(!setequal(seqtab_combined$seq_name, taxtab$seq_name)){
+    stop("seqtab_combined and taxtab do not contain the exact same sequence names")
+}
+
+if(!setequal(seqtab_combined$seq_name, filters$seq_name)){
+    stop("seqtab_combined and filters do not contain the exact same sequence names")
+}
+
+if(!setequal(seqtab_combined$seq_name, names(seqs_combined))){
+    stop("seqtab_combined and seqs_combined do not contain the exact same sequence names")
+}
+
+
 ### run R code
-
-
-# combine seqtab tibbles
-seqtab_combined <- 
-    seqtab_list %>%
-    # pivot each tibble longer
-    lapply(
-        .,
-        function(x){ # per tibble
-            x %>%
-                tidyr::pivot_longer(
-                    cols = !c(seq_name, sequence, chimera_filter, length_filter, phmm_filter, frame_filter),
-                    names_to = "sample_id",
-                    values_to = "abundance"
-                )
-        }
-    ) %>%
-    # bind tibbles together now columns all match
-    dplyr::bind_rows() %>%
-    # harmonise filters if different between flowcells (only chimera filter issue)
-    dplyr::group_by(seq_name, sequence) %>%
-    dplyr::mutate(
-        dplyr::across(
-            c(chimera_filter, length_filter, phmm_filter, frame_filter),
-            ~ dplyr::if_else(all(.), TRUE, FALSE)
-        )
-    ) %>%
-    dplyr::ungroup() %>%
-    # pivot wider, filling missing abundance with 0
-    tidyr::pivot_wider(
-        names_from = sample_id,
-        values_from = abundance, 
-        values_fill = 0
-    )
-
-# combine fasta DSS objects, removing redundant sequences
-seqs_combined <- 
-    fasta_list %>%
-    lapply(., as.character) %>%
-    unlist(use.names = T) %>% 
-    tibble::enframe() %>%
-    dplyr::group_by(name, value) %>%
-    dplyr::slice(1) %>%
-    dplyr::ungroup() %>%
-    tibble::deframe() %>%
-    Biostrings::DNAStringSet()
-
-## check taxonomy, seqtab and fasta all have the same sequences, none are missing
-if(!setequal(taxtab$seq_name, seqtab_combined$seq_name)){
-    stop("taxtab and seqtab_combined do not contain the exact same sequence names")
-}
-if(!setequal(taxtab$seq_name, names(seqs_combined))){
-    stop("taxtab and seqs_combined do not contain the exact same sequence names")
-}
-if(!setequal(names(seqs_combined), seqtab_combined$seq_name)){
-    stop("seqs_combined and seqtab_combined do not contain the exact same sequence names")
-}
 
 ## mutate samdf to add pcr_primers to sample_id, to make consistent with new seqtab format
 samdf_renamed <- 
@@ -115,7 +69,7 @@ samdf_renamed <-
 # create phyloseq-format otu_table (seqtab), ignoring filters -- ASV names are rows
 otutab_ps <-   
     seqtab_combined %>%
-    dplyr::select(-c(sequence, chimera_filter, length_filter, phmm_filter, frame_filter)) %>%
+    dplyr::select(-sequence) %>%
     tibble::column_to_rownames(var = "seq_name") %>%
     as.matrix() %>%
     phyloseq::otu_table(taxa_are_rows = TRUE)
@@ -171,9 +125,7 @@ names(seqs_output) <- seq_names_new
 write_fasta(seqs_output, paste0("asvs_unfiltered_", pcr_primers, ".fasta"))  
 
 # save seqtab (filters) as wide tibble (rows = seq_name, columns = sample_id)
-seqtab_combined %>%
-    dplyr::select(seq_name, sequence, chimera_filter, length_filter, phmm_filter, frame_filter) %>%
-    readr::write_csv(., paste0("filters_",pcr_primers,".csv"))
+readr::write_csv(filters, paste0("filters_",pcr_primers,".csv"))
 
 # save seqtab (data) as wide tibble (rows = seq_name, columns = sample_id)
 phyloseq::otu_table(ps_uf) %>%
@@ -203,16 +155,9 @@ melt_phyloseq(ps_uf) %>%
 
 # export summary .csv from phyloseq object
 summarise_phyloseq(ps_uf) %>%
-    dplyr::left_join(
-        .,
-        seqtab_combined %>% 
-            dplyr::select(seq_name, sequence, chimera_filter, length_filter, phmm_filter, frame_filter),
-        by = c("seq_name", "sequence")
-    ) %>%
-    dplyr::relocate(seq_name, sequence, Root:Species, chimera_filter:frame_filter) %>%
+    dplyr::left_join(., filters, by = c("seq_name", "sequence")) %>%
+    dplyr::relocate(seq_name, sequence, Root:Species, chimera_filter, length_filter, phmm_filter, frame_filter) %>%
     readr::write_csv(., paste0("summary_unfiltered_",pcr_primers,".csv"))
 
 # export phyloseq object
 saveRDS(ps_uf, paste0("ps_unfiltered_",pcr_primers,".rds"))
-
-# stop(" *** stopped manually *** ") ##########################################

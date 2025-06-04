@@ -106,6 +106,15 @@
                     "errorMessage": "Must be a negative integer. Leave unset (default) to treat homopolymer gaps like regular gaps.",
                     "help_text": "Set HOMOPOLYMER_GAP_PENALTY parameter for dada2::dada denoising function. For explanation, see dada2::setDadaOpt()."
                 },
+                "chimera_sample_frac": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Minimum fraction of samples in which a sequence must be flagged as a chimera to be classified a chimera.",
+                    "errorMessage": "Must be a number between 0-1.",
+                    "help_text": "Minimum fraction of samples in which a sequence must be flagged as a chimera to be classified a chimera. Only considers samples in which the sequence is present. See dada2::isBimeraDenovoTable(minSampleFraction).",
+                    "default": 0.9
+                },
                 "chunk_taxassign": {
                     "type": "integer",
                     "minimum": 1,

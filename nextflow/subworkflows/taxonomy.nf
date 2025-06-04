@@ -24,8 +24,10 @@ workflow TAXONOMY {
 
     //// combine loci_params to seqtab
     ch_seqtab
+        .map { pcr_primers, fcid, meta, seqtab, fasta -> 
+            [ pcr_primers, fcid, fasta ] }
         .combine ( ch_loci_params, by: 0 )
-        .map { pcr_primers, fcid, seqtab, fasta, loci_params -> 
+        .map { pcr_primers, fcid, fasta, loci_params -> 
             [ pcr_primers, fcid, loci_params, fasta ] }
         .set { ch_seqs_params }
 
