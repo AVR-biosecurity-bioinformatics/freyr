@@ -333,62 +333,53 @@ melt_phyloseq <- function(ps) {
 }
 
 rareplot <- function(ps, step="auto", threshold=0){
-    if(step == "auto"){
-        step <- round(max(sample_sums(ps)) / 100)
-    } else if (is.integer(step)){
-        step <- step
-    } else {
-        stop("Step must be an integer or 'auto' ")
-    }
-    ps <- ps %>%
-        phyloseq::prune_samples(sample_sums(.)>0, .) %>% 
-        phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
-    rare <- 
-        phyloseq::otu_table(ps) %>%
-        as("matrix") %>%
-        t() %>%
-        vegan::rarecurve(step=step) %>% 
-        purrr::set_names(sample_names(ps)) %>%
-        purrr::map_dfr(., function(x){
-            b <- as.data.frame(x)
-            b <- data.frame(ASV = b[,1], count = rownames(b))
-            b$count <- as.numeric(gsub("N", "",  b$count))
-            return(b)
-        },.id="sample_id") %>%
-        left_join(
-            phyloseq::sample_data(ps) %>%
-                as("matrix") %>%
-                tibble::as_tibble() %>%
-                dplyr::select(sample_id, fcid) %>%
-                dplyr::distinct(),
-            by = "sample_id"
-        )
+  if(step == "auto"){
+    step <- round(median(phyloseq::sample_sums(ps)) / 100)
+  } else if (is.numeric(step)){
+    step <- as.numeric(round(step))
+  } else {
+    stop("Step must be an integer or 'auto' ")
+  }
+  if(phyloseq::taxa_are_rows(ps)){
+    otutab <- t(as(phyloseq::otu_table(ps), "matrix"))
+  } else {
+    otutab <- as(phyloseq::otu_table(ps), "matrix")
     
-    gg.rare <- rare %>%
-        ggplot2::ggplot() +
-        geom_line(aes(x = count, y = ASV, group=sample_id), alpha=0.3)+
-        geom_point(data = rare %>% 
-                    group_by(sample_id) %>% 
-                    top_n(1, count),
-                aes(x = count, y = ASV, colour=count > threshold)) +
-        scale_x_continuous(label = scales::label_number(scale_cut = append(scales::cut_short_scale(), 1, 1)))+
-        scale_colour_manual(values=c("FALSE" = "#F8766D", "TRUE"="#619CFF"))+
-        facet_wrap(fcid~., scales="free", ncol=1)+
-        theme_bw()+
-        theme(
-        strip.background = element_rect(colour = "black", fill = "lightgray"),
-        strip.text = element_text(size=9, family = ""),
-        plot.background = element_blank(),
-        text = element_text(size=9, family = ""),
-        axis.text = element_text(size=8, family = ""),
-        legend.position = "bottom",
-        panel.border = element_rect(colour = "black", fill=NA, size=0.5),
-        panel.grid = element_line(size = rel(0.5)),
-        ) + labs(x = "Sequence reads",
-            y = "Observed ASVs",
-            colour = "Above sample filtering theshold") 
-    
-    return(gg.rare)
+  }
+  otutab <- otutab[rowSums(otutab) > 0, colSums(otutab) > 0]
+  rare <- vegan::rarecurve(otutab, step=step, tidy=TRUE)%>%
+    dplyr::rename(sample_id = Site, count = Sample, ASV = Species) %>%
+    dplyr::left_join(
+      data.frame(sample_id = phyloseq::sample_data(ps)$sample_id,
+                 fcid = phyloseq::sample_data(ps)$fcid),
+      by = "sample_id"
+    )
+  
+  gg.rare <- rare %>%
+    ggplot2::ggplot() +
+    geom_line(aes(x = count, y = ASV, group=sample_id), alpha=0.3)+
+    geom_point(data = rare %>% 
+                 group_by(sample_id) %>% 
+                 top_n(1, count),
+               aes(x = count, y = ASV, colour=count > threshold)) +
+    scale_x_continuous(label = scales::label_number(scale_cut = append(scales::cut_short_scale(), 1, 1)))+
+    scale_colour_manual(values=c("FALSE" = "#F8766D", "TRUE"="#619CFF"))+
+    facet_wrap(fcid~., scales="free", ncol=1)+
+    theme_bw()+
+    theme(
+      strip.background = element_rect(colour = "black", fill = "lightgray"),
+      strip.text = element_text(size=9, family = ""),
+      plot.background = element_blank(),
+      text = element_text(size=9, family = ""),
+      axis.text = element_text(size=8, family = ""),
+      legend.position = "bottom",
+      panel.border = element_rect(colour = "black", fill=NA, size=0.5),
+      panel.grid = element_line(size = rel(0.5)),
+    ) + labs(x = "Sequence reads",
+             y = "Observed ASVs",
+             colour = "Above sample filtering theshold") 
+  
+  return(gg.rare)
 }
 
 #' write fasta

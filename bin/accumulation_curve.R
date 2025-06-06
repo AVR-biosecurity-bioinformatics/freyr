@@ -38,7 +38,7 @@ min_sample_reads <- as.numeric(min_sample_reads)
 gg.acc_curve <- 
     rareplot(
         ps, 
-        step=1L, 
+        step="auto", 
         threshold = min_sample_reads
     )
 
