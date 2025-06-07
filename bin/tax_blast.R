@@ -107,10 +107,12 @@ if (isTRUE(run_blast)) { # run BLAST if requested
             dplyr::filter(pident >= identity, qcovs >= coverage) %>% 
             dplyr::group_by(qseqid) %>%
             # add end of species binomial
-            dplyr::mutate(spp = Species %>% stringr::str_remove("^.* ")) %>%
+            dplyr::mutate(spp = Species %>%
+                            stringr::str_remove("^.* ") %>%
+                            stringr::str_remove("^.*_")) %>%
             # create "/" for species name when multiple are best hits for one species, remove old Species name
             dplyr::reframe(spp = paste(sort(unique(spp)), collapse = "/"), Genus, pident, qcovs, max_score, total_score, evalue) %>%
-            # create new binomial
+            # create new binomial if its not present already
             dplyr::mutate(binomial = paste(Genus, spp)) %>%
             # remove duplicate IDs for the same sequence
             dplyr::distinct() %>%

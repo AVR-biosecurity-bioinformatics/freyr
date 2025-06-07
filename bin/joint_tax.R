@@ -41,6 +41,13 @@ blast_output <-
     purrr::keep(., ~ nrow(.x) > 0) %>% # remove tibbles with 0 rows
     dplyr::bind_rows()
 
+# Normalise the delimiter in the blast spp output to what is used by idtaxa
+if(any(stringr::str_detect(idtaxa_output$Species, "_"), na.rm = TRUE) & !any(stringr::str_detect(idtaxa_output$Species, " "), na.rm = TRUE)){
+  blast_output$blast_spp <- stringr::str_replace_all(blast_output$blast_spp, " ", "_")
+} else if(any(str_detect(idtaxa_output$Species, " "), na.rm = TRUE) & !any(stringr::str_detect(idtaxa_output$Species, "_"), na.rm = TRUE)){
+  blast_output$blast_spp <- stringr::str_replace_all(blast_output$blast_spp, "_", " ")
+}
+
 # check that BLAST ASVs are those in IDTAXA ASVs
 if(!all(blast_output$seq_name %in% idtaxa_output$seq_name)){
     stop("ASV names in BLAST output don't match those in IDTAXA output")
@@ -66,7 +73,8 @@ if(nrow(idtaxa_output) > 0 & nrow(blast_output) > 0){
                 is.na(Species) & is.na(blast_spp) ~ "both_NA",
                 is.na(Species) & (!is.na(blast_spp)) ~ "idtaxa_NA",
                 (!is.na(Species)) & is.na(blast_spp) ~ "blast_NA",
-                Species == blast_spp ~ "yes"
+                Species == blast_spp ~ "both_species_match",
+                !is.na(Species) & !is.na(blast_spp) ~ "both_species_mismatch",
             )
         ) %>%
         # replace species assignment with BLAST assignment if species_match == "idtaxa_NA"
