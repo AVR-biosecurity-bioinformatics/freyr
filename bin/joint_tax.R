@@ -42,10 +42,10 @@ blast_output <-
     dplyr::bind_rows()
 
 # Normalise the delimiter in the blast spp output to what is used by idtaxa
-if(any(str_detect(idtaxa_output$Species, "_"), na.rm = TRUE) & !any(str_detect(idtaxa_output$Species, "_"), na.rm = TRUE)){
-  blast_output$blast_spp <- stringr::str_replace_all(" ", "_")
-} else if(any(str_detect(idtaxa_output$Species, " "), na.rm = TRUE) & !any(str_detect(idtaxa_output$Species, "_"), na.rm = TRUE)){
-  blast_output$blast_spp <- stringr::str_replace_all("_", " ")
+if(any(stringr::str_detect(idtaxa_output$Species, "_"), na.rm = TRUE) & !any(stringr::str_detect(idtaxa_output$Species, "_"), na.rm = TRUE)){
+  blast_output$blast_spp <- stringr::str_replace_all(blast_output$blast_spp, " ", "_")
+} else if(any(str_detect(idtaxa_output$Species, " "), na.rm = TRUE) & !any(stringr::str_detect(idtaxa_output$Species, "_"), na.rm = TRUE)){
+  blast_output$blast_spp <- stringr::str_replace_all(blast_output$blast_spp, "_", " ")
 }
 
 # check that BLAST ASVs are those in IDTAXA ASVs
