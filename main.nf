@@ -221,7 +221,7 @@ workflow FREYR {
             .flatten ()
             .splitCsv ( header: true )
             .map { header -> 
-                [ header.sample, header.read_group, header.primers, header.sample_primers, [ file(header.fwd, checkIfExists: true), file(header.rev, checkIfExists: true) ] ] 
+                [ header.primers, header.read_group, header.sample, header.sample_primers, [ file(header.fwd, checkIfExists: true), file(header.rev, checkIfExists: true) ] ] 
                 }
             .set { ch_sample_primers_reads }
     } else if ( !params.paired ) {
@@ -229,7 +229,7 @@ workflow FREYR {
             .flatten ()
             .splitCsv ( header: true )
             .map { header -> 
-                [ header.sample, header.read_group, header.primers, header.sample_primers, file(header.single, checkIfExists: true) ] 
+                [ header.primers, header.read_group, header.sample, header.sample_primers, file(header.single, checkIfExists: true) ] 
                 }
             .set { ch_sample_primers_reads }
     } else {
@@ -245,129 +245,103 @@ workflow FREYR {
             }
         .set { ch_primer_params }
 
-    ch_primer_params.view()
-    
-
-    //// parse samplesheets that contain locus-specific parameters
-    if ( params.paired == true ) {
-        PARSE_INPUTS.out.samplesheet_split
-        .flatten ()
-        .splitCsv ( header: true )
-        .map { row -> 
-            def meta = row.subMap(
-                'sample_id','sample_name','extraction_rep','amp_rep',
-                'client_name','experiment_name','sample_type','collection_method',
-                'collection_location','latitude','longitude','environment','collection_date',
-                'operator_name','description','assay','extraction_method',
-                'amp_method','target_gene','pcr_primers','for_primer_seq',
-                'rev_primer_seq','index_plate','index_well','i7_index_id',
-                'i7_index','i5_index_id','i5_index','seq_platform',
-                'fcid','for_read_length','rev_read_length','seq_run_id',
-                'seq_id','seq_date','analysis_method','notes','max_primer_mismatch','read_min_length','read_max_length',
-                'read_max_ee','read_trunc_length','read_trim_left','read_trim_right',
-                'asv_min_length','asv_max_length','concat_unmerged','genetic_code','coding',
-                'phmm','idtaxa_db','ref_fasta','idtaxa_confidence',
-                'run_blast','blast_min_identity','blast_min_coverage','target_kingdom',
-                'target_phylum','target_class','target_order','target_family',
-                'target_genus','target_species','min_sample_reads','min_taxa_reads',
-                'min_taxa_ra'
-                )
-            [ meta, [ file(row.fwd, checkIfExists: true), file(row.rev, checkIfExists: true) ] ]  
-            }
-        .set { ch_sample_locus_reads }
-    } else if ( params.paired == false ) {
-    PARSE_INPUTS.out.samplesheet_split
-        .flatten ()
-        .splitCsv ( header: true )
-        .map { row -> 
-            def meta = row.subMap(
-                'sample_id','sample_name','extraction_rep','amp_rep',
-                'client_name','experiment_name','sample_type','collection_method',
-                'collection_location','latitude','longitude','environment','collection_date',
-                'operator_name','description','assay','extraction_method',
-                'amp_method','target_gene','pcr_primers','for_primer_seq',
-                'rev_primer_seq','index_plate','index_well','i7_index_id',
-                'i7_index','i5_index_id','i5_index','seq_platform',
-                'fcid','for_read_length','rev_read_length','seq_run_id',
-                'seq_id','seq_date','analysis_method','notes','max_primer_mismatch','read_min_length','read_max_length',
-                'read_max_ee','read_trunc_length','read_trim_left','read_trim_right',
-                'asv_min_length','asv_max_length','concat_unmerged','genetic_code','coding',
-                'phmm','idtaxa_db','ref_fasta','idtaxa_confidence',
-                'run_blast','blast_min_identity','blast_min_coverage','target_kingdom',
-                'target_phylum','target_class','target_order','target_family',
-                'target_genus','target_species','min_sample_reads','min_taxa_reads',
-                'min_taxa_ra'
-                )
-            [ meta, file(row.single, checkIfExists: true) ]  
-            }
-        .set { ch_sample_locus_reads }
-    } else {
-        error " 'params.paired' must be 'true' or 'false'. "
-    }
-
-    //// create channel that links locus-specific samplesheets to pcr_primer key, in the format 'pcr_primers, csv_file'
-    PARSE_INPUTS.out.samplesheet_split
-        .flatten()
-        .map { csv -> 
-            def csv_name = csv.getFileName().toString()
-            ( pcr_primers, rest ) = csv_name.split("__")
-            [ pcr_primers, csv ]
-            }
-        // .dump (tag: 'ch_primer_samdf')
-        .set { ch_primer_samdf }  
-
-    //// get names and count of the multiplexed loci used
-    PARSE_INPUTS.out.samplesheet_split
-        .flatten ()
-        .splitCsv ( header: true )
-        .map { row -> row.target_gene }
-        .unique ()
-        .toList ()
-        .set { ch_primer_names } // value channel; list
-
-    ch_primer_names
-        .flatten ()
-        .count ()
-        .set { ch_primer_number } // value channel; integer
-
-
-    //// get names of flow cells ('fcid') as channel
-    //// TODO: Move these to outputs of PARSE_INPUTS, to tidy up the pipeline logic
-    // extract fcid from metadata
-    ch_sample_locus_reads 
-        .map { meta, reads ->
-            def fcid = meta.fcid
-            return tuple(fcid, reads) } 
-        .groupTuple() 
-        .set { ch_sample_reads_fcid }
-    
-    // extract flow cell IDs as channel
-    ch_sample_reads_fcid 
-        .map { group -> group[0] }
-        .set { ch_fcid }
-
-    // create channel linking pcr_primers and databases (from params)
-    ch_sample_locus_reads 
-        .map { meta, reads -> 
-                [ meta.pcr_primers, meta.target_gene, meta.idtaxa_db, meta.ref_fasta ] }
-        .unique()
-        .set { ch_primer_info }
-
-    // //// create channel of loci parameters
-    // PARSE_INPUTS.out.primer_params_parsed
+ 
+    // //// parse samplesheets that contain locus-specific parameters
+    // if ( params.paired == true ) {
+    //     PARSE_INPUTS.out.samplesheet_split
+    //     .flatten ()
     //     .splitCsv ( header: true )
     //     .map { row -> 
-    //             [ row.pcr_primers, row ] }
-    //     .set { ch_primer_params } // cardinality: pcr_primers, map(all params, incl. pcr_primers)
+    //         def meta = row.subMap(
+    //             'sample_id','sample_name','extraction_rep','amp_rep',
+    //             'client_name','experiment_name','sample_type','collection_method',
+    //             'collection_location','latitude','longitude','environment','collection_date',
+    //             'operator_name','description','assay','extraction_method',
+    //             'amp_method','target_gene','pcr_primers','for_primer_seq',
+    //             'rev_primer_seq','index_plate','index_well','i7_index_id',
+    //             'i7_index','i5_index_id','i5_index','seq_platform',
+    //             'fcid','for_read_length','rev_read_length','seq_run_id',
+    //             'seq_id','seq_date','analysis_method','notes','max_primer_mismatch','read_min_length','read_max_length',
+    //             'read_max_ee','read_trunc_length','read_trim_left','read_trim_right',
+    //             'asv_min_length','asv_max_length','concat_unmerged','genetic_code','coding',
+    //             'phmm','idtaxa_db','ref_fasta','idtaxa_confidence',
+    //             'run_blast','blast_min_identity','blast_min_coverage','target_kingdom',
+    //             'target_phylum','target_class','target_order','target_family',
+    //             'target_genus','target_species','min_sample_reads','min_taxa_reads',
+    //             'min_taxa_ra'
+    //             )
+    //         [ meta, [ file(row.fwd, checkIfExists: true), file(row.rev, checkIfExists: true) ] ]  
+    //         }
+    //     .set { ch_sample_locus_reads }
+    // } else if ( params.paired == false ) {
+    // PARSE_INPUTS.out.samplesheet_split
+    //     .flatten ()
+    //     .splitCsv ( header: true )
+    //     .map { row -> 
+    //         def meta = row.subMap(
+    //             'sample_id','sample_name','extraction_rep','amp_rep',
+    //             'client_name','experiment_name','sample_type','collection_method',
+    //             'collection_location','latitude','longitude','environment','collection_date',
+    //             'operator_name','description','assay','extraction_method',
+    //             'amp_method','target_gene','pcr_primers','for_primer_seq',
+    //             'rev_primer_seq','index_plate','index_well','i7_index_id',
+    //             'i7_index','i5_index_id','i5_index','seq_platform',
+    //             'fcid','for_read_length','rev_read_length','seq_run_id',
+    //             'seq_id','seq_date','analysis_method','notes','max_primer_mismatch','read_min_length','read_max_length',
+    //             'read_max_ee','read_trunc_length','read_trim_left','read_trim_right',
+    //             'asv_min_length','asv_max_length','concat_unmerged','genetic_code','coding',
+    //             'phmm','idtaxa_db','ref_fasta','idtaxa_confidence',
+    //             'run_blast','blast_min_identity','blast_min_coverage','target_kingdom',
+    //             'target_phylum','target_class','target_order','target_family',
+    //             'target_genus','target_species','min_sample_reads','min_taxa_reads',
+    //             'min_taxa_ra'
+    //             )
+    //         [ meta, file(row.single, checkIfExists: true) ]  
+    //         }
+    //     .set { ch_sample_locus_reads }
+    // } else {
+    //     error " 'params.paired' must be 'true' or 'false'. "
+    // }
+
+    // //// create channel that links locus-specific samplesheets to pcr_primer key, in the format 'pcr_primers, csv_file'
+    // PARSE_INPUTS.out.samplesheet_split
+    //     .flatten()
+    //     .map { csv -> 
+    //         def csv_name = csv.getFileName().toString()
+    //         ( pcr_primers, rest ) = csv_name.split("__")
+    //         [ pcr_primers, csv ]
+    //         }
+    //     // .dump (tag: 'ch_primer_samdf')
+    //     .set { ch_primer_samdf }  
+
+    // //// get names and count of the multiplexed loci used
+    // PARSE_INPUTS.out.samplesheet_split
+    //     .flatten ()
+    //     .splitCsv ( header: true )
+    //     .map { row -> row.target_gene }
+    //     .unique ()
+    //     .toList ()
+    //     .set { ch_primer_names } // value channel; list
+
+    // ch_primer_names
+    //     .flatten ()
+    //     .count ()
+    //     .set { ch_primer_number } // value channel; integer
 
 
+    //// get read_group values as channel
+    ch_sample_primers_reads 
+        .map { primers, read_group, sample, sample_primers, reads -> read_group } 
+        .unique()
+        .set { ch_read_groups }
+    
     //// train IDTAXA model from reference database .fasta
     if ( params.train_idtaxa ) {
         
         //// create input channel for TRAIN_IDTAXA
         ch_primer_params
-            .map { pcr_primers, primer_params ->
-                [ pcr_primers, primer_params.ref_fasta ]  }
+            .map { primers, primer_params ->
+                [ primers, primer_params.ref_fasta ]  }
             .set { ch_train_idtaxa_input }
 
         //// train model
@@ -386,56 +360,60 @@ workflow FREYR {
     //// downsample reads if params.downsample is defined
     if ( params.downsample_reads ) {
         DOWNSAMPLE_READS (
-            ch_sample_locus_reads,
+            ch_sample_primers_reads,
             params.seq_type,
             params.paired,
             params.downsample_reads
         )
 
-        ch_sample_locus_reads = DOWNSAMPLE_READS.out.reads
+        ch_process_reads_input = DOWNSAMPLE_READS.out.reads
+
+    } else {
+        ch_process_reads_input = ch_sample_primers_reads
     }
 
     //// subworkflow: process sequencing reads
     PROCESS_READS (
         ch_sample_reads,
-        ch_sample_locus_reads,
+        ch_process_reads_input,
+        ch_primer_params,
         params.seq_type,
         params.paired,
-        ch_fcid
+        ch_read_groups
     )
 
 
-    //// subworkflow: run DADA2 to infer ASVs
-    DADA2 (
-        PROCESS_READS.out.ch_processed_reads
-    )
+    // //// subworkflow: run DADA2 to infer ASVs
+    // DADA2 (
+    //     PROCESS_READS.out.ch_processed_reads
+    // )
 
-    //// subworkflow: apply soft filters to ASVs
-    FILTERING (
-        DADA2.out.ch_seqtab,
-        ch_fcid
-    )
+    // //// subworkflow: apply soft filters to ASVs
+    // FILTERING (
+    //     DADA2.out.ch_seqtab,
+    //     ch_fcid
+    // )
 
-    //// subworkflow: assign taxonomy
-    TAXONOMY (
-        DADA2.out.ch_seqtab,
-        ch_primer_params,
-        ch_idtaxa_db_new
-    )
+    // //// subworkflow: assign taxonomy
+    // TAXONOMY (
+    //     DADA2.out.ch_seqtab,
+    //     ch_primer_params,
+    //     ch_idtaxa_db_new
+    // )
 
-    //// combine read tracking grouped channels
-    ch_read_tracker_grouped = DADA2.out.ch_read_tracker_grouped
-        .concat(FILTERING.out.ch_read_tracker_grouped)
+    // //// combine read tracking grouped channels
+    // ch_read_tracker_grouped = DADA2.out.ch_read_tracker_grouped
+    //     .concat(FILTERING.out.ch_read_tracker_grouped)
 
-    //// subworkflow: create result summaries
-    RESULT_SUMMARIES (
-        FILTERING.out.ch_seqtab_filtered,
-        TAXONOMY.out.ch_mergetax_output,
-        ch_primer_samdf,
-        ch_primer_params,
-        PROCESS_READS.out.ch_read_tracker_samples,
-        ch_read_tracker_grouped
-    )
+    // //// subworkflow: create result summaries
+    // RESULT_SUMMARIES (
+    //     FILTERING.out.ch_seqtab_filtered,
+    //     TAXONOMY.out.ch_mergetax_output,
+    //     ch_primer_samdf,
+    //     ch_primer_params,
+    //     PROCESS_READS.out.ch_read_tracker_samples,
+    //     ch_read_tracker_grouped
+    // )
     
 
     ///// VISUALISATION

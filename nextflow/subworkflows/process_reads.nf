@@ -17,10 +17,11 @@ workflow PROCESS_READS {
 
     take:
     ch_sample_reads
-    ch_sample_locus_reads
+    ch_sample_primers_reads
+    ch_primer_params
     seq_type 
     paired
-    ch_fcid
+    ch_read_groups
 
 
     main:
@@ -55,20 +56,14 @@ workflow PROCESS_READS {
         }
 
         MISEQ_QC ( 
-            ch_fcid,
+            ch_read_groups,
             ch_miseq_dir
         ) 
     }
 
-    //// remove metadata from reads for FASTQC and NANOPLOT input
-    ch_sample_locus_reads
-        .map { meta, reads -> [ meta.sample_id, reads ] }
-        .unique()
-        .set { ch_qc_input }
-
     //// run fastqc on input reads
     FASTQC (
-        ch_qc_input,
+        ch_sample_reads,
         ch_seq_type,
         ch_paired
         )
@@ -76,17 +71,31 @@ workflow PROCESS_READS {
     //// run nanoplot on nanopore reads
     if ( seq_type == "nanopore" ) {
         NANOPLOT (
-            ch_qc_input,
+            ch_sample_reads,
             ch_seq_type,
             ch_paired
             )
     }
 
+    //// combine map of SPLIT_LOCI primer parameters to read channel
+    ch_primer_params
+        .map { primers, primer_params ->
+            def process_params = primer_params.subMap('for_primer_seq','rev_primer_seq','locus')
+            [ primers, process_params ] }
+        .set { ch_split_loci_params }
+    
+    ch_sample_primers_reads
+        .combine ( ch_split_loci_params, by: 0 )
+        .set { ch_split_loci_input }
+
+    ch_split_loci_input.view()
+
     //// split sample reads by locus (based on primer seq.)
     SPLIT_LOCI ( 
-        ch_sample_locus_reads,
+        ch_split_loci_input,
         ch_seq_type,
-        ch_paired
+        ch_paired,
+        params.primer_error_rate
         ) 
 
     //// trim primer sequences from the start and end of reads

@@ -25,7 +25,7 @@ workflow RESULT_SUMMARIES {
 
     main:
 
-    // combine taxtables, seqtables and parameters by pcr_primers
+    // combine taxtables, seqtables, sample metadata and parameters by pcr_primers
     ch_mergetax_output
         .join ( ch_seqtab_filtered, by: 0 )
         .join ( ch_loci_samdf, by: 0 )
