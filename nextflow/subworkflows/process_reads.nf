@@ -80,7 +80,9 @@ workflow PROCESS_READS {
     //// combine map of SPLIT_LOCI primer parameters to read channel
     ch_primer_params
         .map { primers, primer_params ->
-            def process_params = primer_params.subMap('for_primer_seq','rev_primer_seq','locus')
+            def process_params = 
+                primer_params.subMap('for_primer_seq','rev_primer_seq','locus') + 
+                [ 'seq_type': params.seq_type, 'paired': params.paired, 'primer_error_rate': params.primer_error_rate ]
             [ primers, process_params ] }
         .set { ch_split_loci_params }
     
@@ -88,22 +90,28 @@ workflow PROCESS_READS {
         .combine ( ch_split_loci_params, by: 0 )
         .set { ch_split_loci_input }
 
-    ch_split_loci_input.view()
-
-    //// split sample reads by locus (based on primer seq.)
+    //// split sample reads by primers (based on primer seq.)
     SPLIT_LOCI ( 
-        ch_split_loci_input,
-        ch_seq_type,
-        ch_paired,
-        params.primer_error_rate
-        ) 
+        ch_split_loci_input
+    ) 
+
+    //// combine map of PRIMER_TRIM primer parameters to read channel
+    ch_primer_params
+        .map { primers, primer_params ->
+            def process_params = 
+                primer_params.subMap('for_primer_seq','rev_primer_seq','locus') + 
+                [ 'seq_type': params.seq_type, 'paired': params.paired, 'primer_error_rate': params.primer_error_rate, 'primer_n_trim': params.primer_n_trim ]
+            [ primers, process_params ] }
+        .set { ch_primer_trim_params }
+    
+    SPLIT_LOCI.out.reads
+        .combine ( ch_primer_trim_params, by: 0 )
+        .set { ch_primer_trim_input }
 
     //// trim primer sequences from the start and end of reads
     PRIMER_TRIM ( 
-        SPLIT_LOCI.out.reads,
-        ch_seq_type,
-        ch_paired 
-        )
+        ch_primer_trim_input 
+    )
 
     //// filter reads using dada2 and input parameters
     READ_FILTER ( 

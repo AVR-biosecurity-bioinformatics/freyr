@@ -6,9 +6,6 @@ process SPLIT_LOCI {
 
     input:
     tuple val(primers), val(read_group), val(sample), val(sample_primers), path(reads), val(process_params)
-    val(seq_type)
-    val(paired)
-    val(primer_error_rate)
 
     output:   
     tuple val(primers), val(read_group), val(sample), val(sample_primers), path("*_R{0,1,2}.fastq.gz"),     emit: reads
@@ -35,9 +32,9 @@ process SPLIT_LOCI {
         ${process_params.locus} \
         ${sample_primers} \
         ${read_group} \
-        ${primer_error_rate} \
-        ${seq_type} \
-        ${paired}
+        ${process_params.primer_error_rate} \
+        ${process_params.seq_type} \
+        ${process_params.paired}
     
     """
 

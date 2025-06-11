@@ -1,17 +1,15 @@
 process PRIMER_TRIM {
     def module_name = "primer_trim"
-    tag "$meta.pcr_primers; $meta.sample_id"
+    tag "$sample_primers"
     label "medium"
     container "thatdnaguy/cutadapt:v4.7_02"
 
     input:
-    tuple val(meta), path(reads)
-    val(seq_type)
-    val(paired)
+    tuple val(primers), val(read_group), val(sample), val(sample_primers), path(reads), val(process_params)
 
     output:   
-    tuple val(meta), path("*_trim_R{0,1,2}.fastq.gz"),    emit: reads
-    path("*_readsout.csv"),                             emit: read_tracking
+    tuple val(primers), val(read_group), val(sample), val(sample_primers), path("*_trim_R{0,1,2}.fastq.gz"),    emit: reads
+    path("*_readsout.csv"),                                                                                     emit: read_tracking
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -27,16 +25,16 @@ process PRIMER_TRIM {
     ### run module code
     bash ${module_name}.sh \
         "${reads_paths}" \
-        ${meta.for_primer_seq} \
-        ${meta.rev_primer_seq} \
-        ${meta.pcr_primers} \
-        ${meta.target_gene} \
-        ${meta.sample_id} \
-        ${meta.fcid} \
-        ${params.primer_n_trim} \
-        ${params.primer_error_rate} \
-        ${seq_type} \
-        ${paired}
+        ${process_params.for_primer_seq} \
+        ${process_params.rev_primer_seq} \
+        ${primers} \
+        ${process_params.locus} \
+        ${sample_primers} \
+        ${read_group} \
+        ${process_params.primer_n_trim} \
+        ${process_params.primer_error_rate} \
+        ${process_params.seq_type} \
+        ${process_params.paired}
 
     """
 
