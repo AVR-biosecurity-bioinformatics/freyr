@@ -6,15 +6,16 @@ process PARSE_INPUTS {
 
     input:
     path(samplesheet)
-    path(loci_params)
+    path(primer_params)
     val(seq_type)
     val(paired)
+    val(subsample)
 
     output: 
-    path("samplesheet_parsed.csv"),         emit: samplesheet_parsed
-    path("samplesheet_loci_params.csv"),    emit: samplesheet_loci_params
-    path("*_samplesheet.csv"),              emit: samplesheet_locus
-    path("loci_params_parsed.csv"),         emit: loci_params_parsed
+    path("sample_metadata.csv"),                    emit: sample_metadata
+    path("samplesheet_unsplit.csv"),                emit: samplesheet_unsplit
+    path("samplesheet_split.csv"),                  emit: samplesheet_split
+    path("primer_params_parsed.csv"),               emit: primer_params_parsed
 
     publishDir "${projectDir}/output/modules/${module_name}",  mode: 'copy'
 
@@ -28,9 +29,10 @@ process PARSE_INPUTS {
     ### defining Nextflow environment variables as R variables
     ## input channel variables
     samplesheet =           "${samplesheet}"
-    loci_params =           "${loci_params}"
+    primer_params =         "${primer_params}"
     seq_type =              "${seq_type}"
     paired =                "${paired}"
+    subsample =             "${subsample}"
 
     ## global variables
     launchDir = "$launchDir"

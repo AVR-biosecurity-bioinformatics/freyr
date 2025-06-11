@@ -1,14 +1,16 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://raw.githubusercontent.com/nf-schema/example/master/assets/schema_input.json",
-    "title": "nf-schema - params.loci_params schema",
-    "description": "Schema for the file provided with params.loci_params",
+    "title": "nf-schema - params.primer_params schema",
+    "description": "Schema for the file provided with params.primer_params",
     "type": "array",
     "items": {
       "type": "object",
       "required": [
-        "pcr_primers",
-        "target_gene",
+        "primers",
+        "locus",
+        "for_primer_seq",
+        "rev_primer_seq",
         "max_primer_mismatch",
         "read_min_length",
         "read_max_length",
@@ -38,17 +40,27 @@
         "min_taxa_ra"
         ],
       "properties": {
-        "pcr_primers": {
+        "primers": {
           "type": "string",
           "pattern": "^((?!__)[^\\s,;])+$",
-          "description": "Name of the PCR primer pair. Must be unique and match that given in the samplesheet.",
+          "description": "Name of the PCR primer pair. Must be unique and match those given in the samplesheet.",
           "errorMessage": "PCR primer names must not contain spaces, commas, semi-colons or two underscores in a row."
         },
-        "target_gene": {
+        "locus": {
             "type": "string",
             "pattern": "^[^\\s,;]+$",
-            "description": "Name of the target gene. Does not have to be unique (if two or more primer pairs were used to amplify the same locus).",
-            "errorMessage": "Target gene names must not contain spaces, commas or semi-colons."
+            "description": "Name of the target locus. Does not have to be unique (if two or more primer pairs were used to amplify the same locus).",
+            "errorMessage": "Locus names must not contain spaces, commas or semi-colons."
+        },
+        "for_primer_seq": {
+            "type": "string",
+            "pattern": "^[GATCRYMKSWHBVDNIgatcrymkswhbvdni;]+$",
+            "errorMessage": "Forward primer sequence must only contain IUPAC nucleotide characters ('GATCRYMKSWHBVDNI', upper or lower case) without spaces; it may be a list of two or more items separated by a semi-colon (';')."
+        },
+        "rev_primer_seq": {
+            "type": "string",
+            "pattern": "^[GATCRYMKSWHBVDNIgatcrymkswhbvdni;]+$",
+            "errorMessage": "Reverse primer sequence must only contain IUPAC nucleotide characters ('GATCRYMKSWHBVDNI', upper or lower case) without spaces; it may be a list of two or more items separated by a semi-colon (';')."
         },
         "max_primer_mismatch": {
             "type": "integer",
@@ -230,7 +242,7 @@
             "type": "number",
             "minimum": 0,
             "maximum": 1,
-            "description": "Minimum relative abundance (proportion) per ASV/taxon to pass filter. Note: '0.0001' = '0.01%'",
+            "description": "Minimum relative abundance (proportion) per ASV/taxon to pass filter. Note: '0.01' = '1%'. Scientific notation (eg. '1e-04') is allowed.",
             "errorMessage": "Minimum relative abundance must be a number (float) between 0-1, inclusive."
         }
       }

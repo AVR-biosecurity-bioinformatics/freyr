@@ -58,7 +58,7 @@ workflow.onComplete {
 // Print help message, supply typical command line usage for the pipeline
 if (params.help) {
 //    log.info startupMessage()
-   log.info paramsHelp("nextflow run AVR-biosecurity-bioinformatics/freyr --samplesheet samplesheet.csv --loci_params loci_params.csv") // TODO: add typical commands for pipeline
+   log.info paramsHelp("nextflow run AVR-biosecurity-bioinformatics/freyr --samplesheet samplesheet.csv --primer_params primer_params.csv") // TODO: add typical commands for pipeline
    exit 0
 }
 
@@ -174,28 +174,83 @@ workflow FREYR {
 
     //// parse path channels
     ch_samplesheet_file = channel.fromPath( params.samplesheet, checkIfExists: true, type: 'file' )
-    ch_loci_params_file = channel.fromPath( params.loci_params, checkIfExists: true, type: 'file' )
+    ch_primer_params_file = channel.fromPath( params.primer_params, checkIfExists: true, type: 'file' )
 
-    //// read-in samplesheet and loci_params .csv files, validate their contents, and produce inputs for rest of pipeline
-    PARSE_INPUTS ( 
-        ch_samplesheet_file, 
-        ch_loci_params_file,
-        params.seq_type,
-        params.paired
-        )
+    //// parse subsample parameter
+    ch_subsample = params.subsample ?: "false"
 
-    // ch_versions = Channel.empty()
-    
     //// Create empty channels
     ch_read_tracker_grouped =   // read-tracking for grouped processes
         Channel.empty()      
     ch_idtaxa_db_new = 
         Channel.empty()
 
+    //// read-in samplesheet and primer_params .csv files, validate their contents, and produce inputs for rest of pipeline
+    PARSE_INPUTS ( 
+        ch_samplesheet_file, 
+        ch_primer_params_file,
+        params.seq_type,
+        params.paired,
+        ch_subsample
+    )
+
+    //// create channel of just read files for PROCESS_READS
+    if ( params.paired ){
+        PARSE_INPUTS.out.samplesheet_unsplit
+            .flatten ()
+            .splitCsv ( header: true )
+            .map { header -> 
+                [ header.sample, [ file(header.fwd, checkIfExists: true), file(header.rev, checkIfExists: true) ] ] 
+                }
+            .set { ch_sample_reads }
+    } else if ( !params.paired ) {
+        PARSE_INPUTS.out.samplesheet_unsplit
+            .flatten ()
+            .splitCsv ( header: true )
+            .map { header -> 
+                [ header.sample, file(header.single, checkIfExists: true) ] 
+                }
+            .set { ch_sample_reads }
+    } else {
+        error " '--paired' must be 'true' or 'false'. "
+    }
+    
+    //// create channel of read files with sample, read_group, primers and sample_primers
+    if ( params.paired ){
+        PARSE_INPUTS.out.samplesheet_split
+            .flatten ()
+            .splitCsv ( header: true )
+            .map { header -> 
+                [ header.sample, header.read_group, header.primers, header.sample_primers, [ file(header.fwd, checkIfExists: true), file(header.rev, checkIfExists: true) ] ] 
+                }
+            .set { ch_sample_primers_reads }
+    } else if ( !params.paired ) {
+        PARSE_INPUTS.out.samplesheet_split
+            .flatten ()
+            .splitCsv ( header: true )
+            .map { header -> 
+                [ header.sample, header.read_group, header.primers, header.sample_primers, file(header.single, checkIfExists: true) ] 
+                }
+            .set { ch_sample_primers_reads }
+    } else {
+        error " '--paired' must be 'true' or 'false'. "
+    }
+
+    //// create channel of primer parameters
+    PARSE_INPUTS.out.primer_params_parsed
+        .flatten()
+        .splitCsv ( header: true )
+        .map { header -> 
+            [ header.primers, header ]
+            }
+        .set { ch_primer_params }
+
+    ch_primer_params.view()
+    
 
     //// parse samplesheets that contain locus-specific parameters
     if ( params.paired == true ) {
-        PARSE_INPUTS.out.samplesheet_locus
+        PARSE_INPUTS.out.samplesheet_split
         .flatten ()
         .splitCsv ( header: true )
         .map { row -> 
@@ -221,7 +276,7 @@ workflow FREYR {
             }
         .set { ch_sample_locus_reads }
     } else if ( params.paired == false ) {
-    PARSE_INPUTS.out.samplesheet_locus
+    PARSE_INPUTS.out.samplesheet_split
         .flatten ()
         .splitCsv ( header: true )
         .map { row -> 
@@ -251,29 +306,29 @@ workflow FREYR {
     }
 
     //// create channel that links locus-specific samplesheets to pcr_primer key, in the format 'pcr_primers, csv_file'
-    PARSE_INPUTS.out.samplesheet_locus
+    PARSE_INPUTS.out.samplesheet_split
         .flatten()
         .map { csv -> 
             def csv_name = csv.getFileName().toString()
             ( pcr_primers, rest ) = csv_name.split("__")
             [ pcr_primers, csv ]
             }
-        // .dump (tag: 'ch_loci_samdf')
-        .set { ch_loci_samdf }  
+        // .dump (tag: 'ch_primer_samdf')
+        .set { ch_primer_samdf }  
 
     //// get names and count of the multiplexed loci used
-    PARSE_INPUTS.out.samplesheet_locus
+    PARSE_INPUTS.out.samplesheet_split
         .flatten ()
         .splitCsv ( header: true )
         .map { row -> row.target_gene }
         .unique ()
         .toList ()
-        .set { ch_loci_names } // value channel; list
+        .set { ch_primer_names } // value channel; list
 
-    ch_loci_names
+    ch_primer_names
         .flatten ()
         .count ()
-        .set { ch_loci_number } // value channel; integer
+        .set { ch_primer_number } // value channel; integer
 
 
     //// get names of flow cells ('fcid') as channel
@@ -296,23 +351,23 @@ workflow FREYR {
         .map { meta, reads -> 
                 [ meta.pcr_primers, meta.target_gene, meta.idtaxa_db, meta.ref_fasta ] }
         .unique()
-        .set { ch_loci_info }
+        .set { ch_primer_info }
 
-    //// create channel of loci parameters
-    PARSE_INPUTS.out.loci_params_parsed
-        .splitCsv ( header: true )
-        .map { row -> 
-                [ row.pcr_primers, row ] }
-        .set { ch_loci_params } // cardinality: pcr_primers, map(all params, incl. pcr_primers)
+    // //// create channel of loci parameters
+    // PARSE_INPUTS.out.primer_params_parsed
+    //     .splitCsv ( header: true )
+    //     .map { row -> 
+    //             [ row.pcr_primers, row ] }
+    //     .set { ch_primer_params } // cardinality: pcr_primers, map(all params, incl. pcr_primers)
 
 
     //// train IDTAXA model from reference database .fasta
     if ( params.train_idtaxa ) {
         
         //// create input channel for TRAIN_IDTAXA
-        ch_loci_params
-            .map { pcr_primers, loci_params ->
-                [ pcr_primers, loci_params.ref_fasta ]  }
+        ch_primer_params
+            .map { pcr_primers, primer_params ->
+                [ pcr_primers, primer_params.ref_fasta ]  }
             .set { ch_train_idtaxa_input }
 
         //// train model
@@ -342,6 +397,7 @@ workflow FREYR {
 
     //// subworkflow: process sequencing reads
     PROCESS_READS (
+        ch_sample_reads,
         ch_sample_locus_reads,
         params.seq_type,
         params.paired,
@@ -363,7 +419,7 @@ workflow FREYR {
     //// subworkflow: assign taxonomy
     TAXONOMY (
         DADA2.out.ch_seqtab,
-        ch_loci_params,
+        ch_primer_params,
         ch_idtaxa_db_new
     )
 
@@ -375,8 +431,8 @@ workflow FREYR {
     RESULT_SUMMARIES (
         FILTERING.out.ch_seqtab_filtered,
         TAXONOMY.out.ch_mergetax_output,
-        ch_loci_samdf,
-        ch_loci_params,
+        ch_primer_samdf,
+        ch_primer_params,
         PROCESS_READS.out.ch_read_tracker_samples,
         ch_read_tracker_grouped
     )

@@ -5,7 +5,7 @@
 
 //// modules to import
 include { FASTQC                                    } from '../modules/fastqc'
-include { NANOPLOT                                    } from '../modules/nanoplot'
+include { NANOPLOT                                  } from '../modules/nanoplot'
 include { MISEQ_QC                                  } from '../modules/miseq_qc'
 include { SPLIT_LOCI                                } from '../modules/split_loci'
 include { PRIMER_TRIM                               } from '../modules/primer_trim'
@@ -16,6 +16,7 @@ include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_POST } from '../modules/filter_qu
 workflow PROCESS_READS {
 
     take:
+    ch_sample_reads
     ch_sample_locus_reads
     seq_type 
     paired
