@@ -1,14 +1,14 @@
 process MAKE_SEQTAB_SINGLE {
     def module_name = "make_seqtab_single"
-    tag "$pcr_primers; $fcid"
+    tag "$primers; $read_group"
     label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), val(concat_unmerged), val(meta), path(reads), path(seqs)
+    tuple val(primers), val(read_group), val(sample), val(sample_primers), path(reads), path(seqs), val(concat_unmerged)
 
     output:
-    tuple val(pcr_primers), val(fcid), val(meta), path("*_seqtab_tibble.csv"), path("*_seqs.fasta"),    emit: seqtab
+    tuple val(primers), val(read_group), path("*_seqtab_tibble.csv"), path("*_seqs.fasta"),    emit: seqtab
     path("*_readsout.csv"),                                                                             emit: read_tracking
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
@@ -22,9 +22,9 @@ process MAKE_SEQTAB_SINGLE {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    fcid =              "${fcid}"
-    pcr_primers =       "${pcr_primers}"
-    sample_id =         "${meta.sample_id}"
+    fcid =              "${read_group}"
+    pcr_primers =       "${primers}"
+    sample_id =         "${sample_primers}"
     reads =             "${reads}"
     seqs =              "${seqs}"
     concat_unmerged =   "${concat_unmerged}"

@@ -1,15 +1,15 @@
 process ERROR_MODEL {
     def module_name = "error_model"
-    tag "$pcr_primers; $fcid"
+    tag "$primers; $read_group"
     label "high"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(direction), val(pcr_primers), val(fcid), path(reads)
+    tuple val(direction), val(primers), val(read_group), path(reads)
 
 
     output:   
-    tuple val(direction), val(pcr_primers), val(fcid), path("*_errormodel{F,R,S}.rds"),   emit: errormodel
+    tuple val(direction), val(primers), val(read_group), path("*_errormodel{F,R,S}.rds"),   emit: errormodel
     path("*_errormodel.pdf"),                                           emit: plot
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
@@ -24,8 +24,8 @@ process ERROR_MODEL {
     ### defining Nextflow environment variables as R variables
     ## input channel variables
     direction =         "${direction}"
-    fcid =              "${fcid}"
-    pcr_primers =       "${pcr_primers}"
+    fcid =              "${read_group}"
+    pcr_primers =       "${primers}"
     reads =             "${reads}"
     threads =           "${task.cpus}"
     

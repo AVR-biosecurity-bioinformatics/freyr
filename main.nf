@@ -383,16 +383,18 @@ workflow FREYR {
     )
 
 
-    // //// subworkflow: run DADA2 to infer ASVs
-    // DADA2 (
-    //     PROCESS_READS.out.ch_processed_reads
-    // )
+    //// subworkflow: run DADA2 to infer ASVs
+    DADA2 (
+        PROCESS_READS.out.ch_processed_reads,
+        ch_primer_params
+    )
 
-    // //// subworkflow: apply soft filters to ASVs
-    // FILTERING (
-    //     DADA2.out.ch_seqtab,
-    //     ch_fcid
-    // )
+    //// subworkflow: apply soft filters to ASVs
+    FILTERING (
+        DADA2.out.ch_seqtab,
+        ch_read_groups,
+        ch_primer_params
+    )
 
     // //// subworkflow: assign taxonomy
     // TAXONOMY (

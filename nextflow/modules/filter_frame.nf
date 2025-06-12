@@ -1,14 +1,14 @@
 process FILTER_FRAME {
     def module_name = "filter_frame"
-    tag "$pcr_primers"
+    tag "$primers"
     label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(meta), path(seqtab_tibble_list), path(fasta_list)
+    tuple val(primers), path(seqtab_tibble_list), path(fasta_list), val(process_params)
 
     output:
-    tuple val(pcr_primers), path("*_frame_filter.csv"),       emit: tibble
+    tuple val(primers), path("*_frame_filter.csv"),       emit: tibble
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -21,11 +21,11 @@ process FILTER_FRAME {
         
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    pcr_primers =           "${pcr_primers}"
+    pcr_primers =           "${primers}"
     seqtab_tibble_list =    "${seqtab_tibble_list}"
     fasta_list =            "${fasta_list}"
-    coding =                "${meta.coding}"
-    genetic_code =          "${meta.genetic_code}"
+    coding =                "${process_params.coding}"
+    genetic_code =          "${process_params.genetic_code}"
     
     ## global variables
     projectDir = "$projectDir"

@@ -151,7 +151,7 @@ workflow PROCESS_READS {
         //// reverse read channel
         READ_FILTER.out.reads
             .map { primers, read_group, sample, sample_primers, reads -> 
-                    [ "reverse", primers, read_group, sample, sample_primers, reads[0] ] }
+                    [ "reverse", primers, read_group, sample, sample_primers, reads[1] ] }
             .set { ch_processed_rev }
 
     } else if ( params.paired == false ) {

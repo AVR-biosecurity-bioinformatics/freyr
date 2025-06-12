@@ -1,16 +1,14 @@
 process FILTER_CHIMERA {
     def module_name = "filter_chimera"
-    tag "$pcr_primers"
+    tag "$primers"
     label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(meta), path(seqtab_tibble_list), path(fasta_list)
-    val(min_sample_fraction)
+    tuple val(primers), path(seqtab_tibble_list), path(fasta_list), val(process_params)
 
     output:
-    tuple val(pcr_primers), path("*_chimera_filter.csv"),        emit: tibble
-
+    tuple val(primers), path("*_chimera_filter.csv"),        emit: tibble
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -23,10 +21,10 @@ process FILTER_CHIMERA {
         
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    pcr_primers =           "${pcr_primers}"
+    pcr_primers =           "${primers}"
     seqtab_tibble_list =    "${seqtab_tibble_list}"
     fasta_list =            "${fasta_list}"
-    minSampleFraction =     "${min_sample_fraction}"
+    minSampleFraction =     "${process_params.chimera_sample_frac}"
     
     ## global variables
     projectDir = "$projectDir"

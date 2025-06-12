@@ -312,7 +312,7 @@ if ("read_group" %in% colnames(samplesheet_df_rp)){
                 stop(paste0("Invalid lane detection for sample '",sample_i_name,"'"))
             }
             # combine flowcell and lane into a single 'read_group' string
-            sample_rg <- paste0(sample_flowcell,":",sample_lane)
+            sample_rg <- paste0(sample_flowcell,"__",sample_lane)
         
         # MGI internal format 
         } else if ( all(stringr::str_detect(read_headers, "^[[:alnum:]]+:\\d+:[[:alnum:]-]+:\\d+:[[:alnum:]]+:\\d+:\\d+ [12]:[YN]:\\d+(:[[:alpha:]+]+)?$")) ) {
@@ -334,7 +334,7 @@ if ("read_group" %in% colnames(samplesheet_df_rp)){
                 stop(paste0("Invalid lane detection for sample '",sample_i_name,"'"))
             }
             # combine flowcell and lane into a single 'read_group' string
-            sample_rg <- paste0(sample_flowcell,":",sample_lane)
+            sample_rg <- paste0(sample_flowcell,"__",sample_lane)
             
         # MGI raw format
         } else if ( all(stringr::str_detect(read_headers, "^[[:alnum:]]+/[12]$")) ) {
@@ -356,7 +356,7 @@ if ("read_group" %in% colnames(samplesheet_df_rp)){
                 stop(paste0("Invalid lane detection for sample '",sample_i_name,"'"))
             }
             # combine flowcell and lane into a single 'read_group' string
-            sample_rg <- paste0(sample_flowcell,":",sample_lane)
+            sample_rg <- paste0(sample_flowcell,"__",sample_lane)
         
         # ONT format
         } else if ( all(stringr::str_detect(read_headers, " runid=[[:alnum:]]+")) && all(stringr::str_detect(read_headers, " flow_cell_id=[[:alnum:]]+"))  ) {
@@ -367,7 +367,7 @@ if ("read_group" %in% colnames(samplesheet_df_rp)){
             }
 
             # extract flowcell ID as read group (no lanes)
-            sample_rg <- stringr::str_extract(id_minion, "(?<=flow_cell_id=)[[:alnum:]]+(?=( |$))") %>% unique()
+            sample_rg <- stringr::str_extract(id_minion, "(?<=flow_cell_id=)[[:alnum:]]+(?=( |$))") %>% unique() %>% paste0(., "__1")
             # check only one sample_rg extracted
             if (length(sample_rg) != 1){
                 stop(paste0("Invalid flowcell detection for sample '",sample_i_name,"'"))
