@@ -1,13 +1,11 @@
 process FILTER_QUALPLOTS {
     def module_name = "filter_qualplots"
-    tag "$meta.fcid; $meta.sample_id"
+    tag "$sample_primers"
     label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(meta), path(reads)
-    val(seq_type)
-    val(paired)
+    tuple val(primers), val(read_group), val(sample), val(sample_primers), path(reads), val(process_params)
     val(file_suffix)
 
     output:   
@@ -27,12 +25,12 @@ process FILTER_QUALPLOTS {
     ### defining Nextflow environment variables as R variables
     ## input channel variables
     reads_paths =       "${reads_paths}"
-    sample_id =         "${meta.sample_id}"
-    fcid =              "${meta.fcid}"
-    target_gene =       "${meta.target_gene}"
-    pcr_primers =       "${meta.pcr_primers}"
-    seq_type =          "${seq_type}"
-    paired =            "${paired}"
+    sample_id =         "${sample_primers}"
+    fcid =              "${read_group}"
+    target_gene =       "${process_params.locus}"
+    pcr_primers =       "${primers}"
+    seq_type =          "${process_params.seq_type}"
+    paired =            "${process_params.paired}"
     file_suffix =       "${file_suffix}"
     
     ## global variables

@@ -271,8 +271,8 @@ if ("read_group" %in% colnames(samplesheet_df_rp)){
 
 } else {
   
-  # extract read_group from read headers
-  samplesheet_df_rg <- samplesheet_df_rp %>% dplyr::mutate(read_group = NA)
+    # extract read_group from read headers
+    samplesheet_df_rg <- samplesheet_df_rp %>% dplyr::mutate(read_group = NA)
 
     ## loop through each sample
     for ( i in 1:length(samplesheet_df_rg$sample)){

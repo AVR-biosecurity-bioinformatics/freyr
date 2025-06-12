@@ -1,17 +1,15 @@
 process READ_FILTER {
     def module_name = "read_filter"
-    tag "$meta.pcr_primers; $meta.sample_id"
+    tag "$sample_primers"
     label "medium"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(meta), path(reads)
-    val(seq_type)
-    val(paired)
+    tuple val(primers), val(read_group), val(sample), val(sample_primers), path(reads), val(process_params)
 
     output:   
-    tuple val(meta), path("*_filter_R{0,1,2}.fastq.gz"),         emit: reads, optional: true
-    path("*_readsout.csv"),                                      emit: read_tracking
+    tuple val(primers), val(read_group), val(sample), val(sample_primers), path("*_filter_R{0,1,2}.fastq.gz"),      emit: reads, optional: true
+    path("*_readsout.csv"),                                                                                         emit: read_tracking
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -27,18 +25,18 @@ process READ_FILTER {
     ### defining Nextflow environment variables as R variables
     ## input channel variables
     reads_paths =       "${reads_paths}"
-    read_min_length =   "${meta.read_min_length}"
-    read_max_length =   "${meta.read_max_length}"
-    read_max_ee =       "${meta.read_max_ee}"
-    read_trunc_length = "${meta.read_trunc_length}"
-    read_trim_left =    "${meta.read_trim_left}"
-    read_trim_right =   "${meta.read_trim_right}"
-    sample_id =         "${meta.sample_id}"
-    target_gene =       "${meta.target_gene}"
-    pcr_primers =       "${meta.pcr_primers}"
-    fcid =              "${meta.fcid}"
-    seq_type =          "${seq_type}"
-    paired =            "${paired}"
+    read_min_length =   "${process_params.read_min_length}"
+    read_max_length =   "${process_params.read_max_length}"
+    read_max_ee =       "${process_params.read_max_ee}"
+    read_trunc_length = "${process_params.read_trunc_length}"
+    read_trim_left =    "${process_params.read_trim_left}"
+    read_trim_right =   "${process_params.read_trim_right}"
+    sample_id =         "${sample_primers}"
+    target_gene =       "${process_params.locus}"
+    pcr_primers =       "${primers}"
+    fcid =              "${read_group}"
+    seq_type =          "${process_params.seq_type}"
+    paired =            "${process_params.paired}"
     
     ## global variables
     projectDir = "$projectDir"
