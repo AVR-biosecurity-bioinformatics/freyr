@@ -24,9 +24,9 @@ process DENOISE {
     ### defining Nextflow environment variables as R variables
     ## input channel variables
     direction =         "${direction}"
-    fcid =              "${read_group}"
-    pcr_primers =       "${primers}"
-    sample_id =         "${sample_primers}"
+    read_group =        "${read_group}"
+    primers =           "${primers}"
+    sample_primers =    "${sample_primers}"
     reads =             "${reads}"
     errormodel =        "${errormodel}"
     n_pass =            "${n_pass}"

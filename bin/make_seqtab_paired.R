@@ -14,9 +14,9 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "fcid",
-    "pcr_primers",
-    "sample_id",
+    "read_group",
+    "primers",
+    "sample_primers",
     "reads_F",
     "reads_R",
     "seqs_F",
@@ -32,9 +32,9 @@ if ( is.na(concat_unmerged) || concat_unmerged == "NA" || !is.logical(concat_unm
 ### run R code
 ## process sample IDs to name the read and seq lists
 ## NOTE: the format of this list is different: "[a,b,c]" not "a b c"
-sample_id_list <-
+sample_primers_list <-
     stringr::str_extract_all(
-        sample_id, 
+        sample_primers, 
         pattern = "[^\\s,\\[\\]]+" # extract all runs of characters that aren't spaces, commas or square brackets
         ) %>% 
     unlist()
@@ -46,7 +46,7 @@ reads_F_list <- # convert input reads list from Groovy format to R format
         pattern = "\\S+?\\.fastq\\.gz|\\S+?\\.fastq|\\S+?\\.fq\\.gz|\\S+?\\.fq" 
         ) %>% 
     unlist()
-names(reads_F_list) <- sample_id_list
+names(reads_F_list) <- sample_primers_list
 
 ## process R reads
 reads_R_list <- # convert input reads list from Groovy format to R format
@@ -55,7 +55,7 @@ reads_R_list <- # convert input reads list from Groovy format to R format
         pattern = "\\S+?\\.fastq\\.gz|\\S+?\\.fastq|\\S+?\\.fq\\.gz|\\S+?\\.fq" 
         ) %>% 
     unlist()
-names(reads_R_list) <- sample_id_list
+names(reads_R_list) <- sample_primers_list
 
 ## process F seqs
 seqs_F_list <- # convert input sequences list from Groovy format to R format
@@ -66,7 +66,7 @@ seqs_F_list <- # convert input sequences list from Groovy format to R format
     unlist()
 
 seqs_F_extracted <- lapply(seqs_F_list, readRDS)
-names(seqs_F_extracted) <- sample_id_list
+names(seqs_F_extracted) <- sample_primers_list
 
 ## process R seqs
 seqs_R_list <- # convert input sequences list from Groovy format to R format
@@ -77,7 +77,7 @@ seqs_R_list <- # convert input sequences list from Groovy format to R format
     unlist()
 
 seqs_R_extracted <- lapply(seqs_R_list, readRDS)
-names(seqs_R_extracted) <- sample_id_list
+names(seqs_R_extracted) <- sample_primers_list
 
 ## merge pairs, keeping unmerged reads only if concat_unmerged is TRUE
 if ( concat_unmerged ) {
@@ -107,7 +107,7 @@ if ( concat_unmerged ) {
 ## reformat mergers as a list with one element if there is only one sample
 if ( class(mergers) == "data.frame" ) {
   mergers <- list(mergers)
-  names(mergers) <- sample_id_list
+  names(mergers) <- sample_primers_list
 }
 
 ## TODO: write out unmerged reads? (pull from functions.R)
@@ -137,10 +137,10 @@ if ( concat_unmerged ) {
     mergers <- mergers_rescued
 }
 
-# Construct sequence table for fcid x pcr_primers from merged reads per sample
+# Construct sequence table for read_group x primers from merged reads per sample
 seqtab <- dada2::makeSequenceTable(mergers)
 
-# saveRDS(seqtab, paste0(fcid,"_",pcr_primers,"_seqtab.rds"))
+# saveRDS(seqtab, paste0(read_group,"_",primers,"_seqtab.rds"))
 
 # save number of merged reads per sample
 getN <- function(x) sum(dada2::getUniques(x))
@@ -153,14 +153,14 @@ if ( class(mergers) == "list") {
 sapply(mergers, getN) %>% 
     as.data.frame() %>% 
     magrittr::set_colnames("pairs") %>%
-    tibble::rownames_to_column(var = "sample_id") %>%
+    tibble::rownames_to_column(var = "sample_primers") %>%
     dplyr::mutate(
-        fcid = fcid,
-        pcr_primers = pcr_primers,
+        read_group = read_group,
+        primers = primers,
         stage = "dada_mergereads"
     ) %>%
-    dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>% 
-    readr::write_csv(., paste0("dada_mergereads_",fcid,"_",pcr_primers,"_readsout.csv"))
+    dplyr::select(stage, sample_primers, read_group, primers, pairs) %>% 
+    readr::write_csv(., paste0("dada_mergereads_",read_group,"_",primers,"_readsout.csv"))
 
 
 
@@ -187,21 +187,19 @@ seq_tibble <- tibble::enframe(seq_vec, name = "seq_name", value = "sequence")
 # convert seqtab to one row per sequence, ID with hash
 seqtab_tibble <- 
     seqtab %>% 
-    tidyr::as_tibble(rownames = "sample_id") %>%
-    tidyr::pivot_longer(cols = !sample_id, names_to = "sequence", values_to = "abundance") %>%
+    tidyr::as_tibble(rownames = "sample_primers") %>%
+    tidyr::pivot_longer(cols = !sample_primers, names_to = "sequence", values_to = "abundance") %>%
     # join to seq_tibble
     dplyr::left_join(., seq_tibble, by = "sequence") %>%
     dplyr::select(-sequence) %>% # remove sequence
-    # add pcr_primers to sample_id
-    dplyr::mutate(sample_id = paste0(sample_id,"_",pcr_primers)) %>%
-    tidyr::pivot_wider(names_from = sample_id, values_from = abundance)
+    tidyr::pivot_wider(names_from = sample_primers, values_from = abundance)
 
 
 # save DSS as .fasta
-write_fasta(seq_DSS, file = paste0(fcid, "_", pcr_primers, "_seqs.fasta"))
+write_fasta(seq_DSS, file = paste0(read_group, "_", primers, "_seqs.fasta"))
 
 # save seqtab_tidy as .csv
-readr::write_csv(seqtab_tibble, paste0(fcid, "_", pcr_primers, "_seqtab_tibble.csv"))
+readr::write_csv(seqtab_tibble, paste0(read_group, "_", primers, "_seqtab_tibble.csv"))
 
 
 

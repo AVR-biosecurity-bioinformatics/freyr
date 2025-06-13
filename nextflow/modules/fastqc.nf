@@ -1,11 +1,11 @@
 process FASTQC {
     def module_name = "fastqc"
-    tag "$sample_id"
+    tag "$sample"
     label "medium"
     container "staphb/fastqc:0.12.1"
 
     input:
-    tuple val(sample_id), path(reads)
+    tuple val(sample), path(reads)
     val(seq_type)
     val(paired)
 

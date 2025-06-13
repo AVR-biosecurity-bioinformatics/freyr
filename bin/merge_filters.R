@@ -17,11 +17,11 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "pcr_primers",
+    "primers",
     "filter_tibble_list",
     "seqtab_tibble_list",
     "fasta_list",
-    "fcid_list"
+    "samplesheet_split"
 )
 lapply(nf_vars, nf_var_check)
 
@@ -42,6 +42,9 @@ fasta_list <-
     stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
     lapply(., Biostrings::readDNAStringSet)
 
+samplesheet_tibble <- readr::read_csv(samplesheet_split)
+
+# stop("stopped manually")
 
 ### run R code
 
@@ -63,7 +66,7 @@ filters_combined <-
     tidyr::pivot_wider(names_from = filter, values_from = status)
 
 # export combined filters
-readr::write_csv(filters_combined, paste0(pcr_primers,"_filters.csv"))
+readr::write_csv(filters_combined, paste0(primers,"_filters.csv"))
 
 # combine seqtabs together (wide format)
 seqtab_combined <- 
@@ -75,7 +78,7 @@ seqtab_combined <-
             x %>%
             tidyr::pivot_longer(
                 cols = !seq_name,
-                names_to = "sample_id",
+                names_to = "sample_primers",
                 values_to = "abundance"
             )
         }
@@ -84,7 +87,7 @@ seqtab_combined <-
     dplyr::bind_rows() %>%
     # pivot wider, filling missing abundance with 0
     tidyr::pivot_wider(
-        names_from = sample_id,
+        names_from = sample_primers,
         values_from = abundance, 
         values_fill = 0
     )
@@ -103,22 +106,18 @@ seqs_names <-
 seqtab_combined %>%
     dplyr::left_join(., seqs_names, by = "seq_name") %>%
     dplyr::relocate(seq_name, sequence) %>%
-    readr::write_csv(., paste0(pcr_primers, "_seqtab_combined.csv"))
+    readr::write_csv(., paste0(primers, "_seqtab_combined.csv"))
 
 # export combined .fasta of all sequences across flowcells 
 seqs_names %>%
     tibble::deframe() %>%
     Biostrings::DNAStringSet() %>%
-    write_fasta(., paste0(pcr_primers,"_seqs.fasta"))
+    write_fasta(., paste0(primers,"_seqs.fasta"))
 
-# get vector of fcid names
-fcid_vec <- 
-    fcid_list %>%
-    stringr::str_extract_all(
-        ., 
-        pattern = "[^\\s,\\[\\]]+" # extract all runs of characters that aren't ' ' ',' '[' or ']' 
-    ) %>% 
-    unlist()
+# get tibble of read_group and sample_primers
+sample_read_group <- 
+    samplesheet_tibble %>%
+    dplyr::select(sample_primers, read_group)
 
 ## make new read tracking tibble from filters and seqtab
 filter_tracking <- 
@@ -131,36 +130,29 @@ filter_tracking <-
     # pivot longer
     tidyr::pivot_longer(
         cols = !c(seq_name, sequence, chimera_filter, length_filter, phmm_filter, frame_filter, combined_filter), 
-        names_to = "sample_id",
+        names_to = "sample_primers",
         values_to = "abundance"
     ) %>%
-    # add fcid extracted from sample_id
-    dplyr::mutate(
-        fcid = stringr::str_remove(
-        stringr::str_extract(
-            sample_id, 
-            stringr::str_flatten(
-            paste0("^", fcid_vec, "_"), 
-            collapse = "|"
-            )
-        ),
-        "_$"
-        )
+    # add read_group 
+    dplyr::left_join(
+        ., 
+        sample_read_group, 
+        by = dplyr::join_by("sample_primers")
     )
   
 # make list of tibbles for filter plotting (and export), one tibble per flowcell 
 filter_info <- 
     filter_tracking %>%
     # summarise down to total abundance across all samples (one row per ASV)
-    dplyr::group_by(seq_name, fcid) %>%
+    dplyr::group_by(seq_name, read_group) %>%
     dplyr::mutate(abundance = sum(abundance)) %>%
     dplyr::ungroup() %>%
-    dplyr::select(-sample_id) %>%
+    dplyr::select(-sample_primers) %>%
     dplyr::distinct() %>%
     # add extra info
     dplyr::mutate(
         length = nchar(sequence),
-        pcr_primers = pcr_primers,
+        primers = primers,
         concat = stringr::str_detect(sequence, rep(x = "N", times = 10) %>% stringr::str_flatten()),
         dplyr::across(
             c(chimera_filter, length_filter, phmm_filter, frame_filter, combined_filter), 
@@ -177,32 +169,32 @@ filter_info <-
     # remove rows with abundance = 0
     dplyr::filter(abundance > 0) %>%
     # enforce column order
-    dplyr::select(seq_name, sequence, chimera_filter, length_filter, phmm_filter, frame_filter, combined_filter, abundance, length, fcid, pcr_primers, concat) %>%
+    dplyr::select(seq_name, sequence, chimera_filter, length_filter, phmm_filter, frame_filter, combined_filter, abundance, length, read_group, primers, concat) %>%
     # arrange by abundance
     dplyr::arrange(desc(abundance)) %>%
-    # split into list, one tibble per fcid
-    split(., .$fcid)
+    # split into list, one tibble per read_group
+    split(., .$read_group)
 
 # save filter summary files, one per flowcell
 filter_info %>%
     lapply(
         ., 
         function(x){
-            readr::write_csv(x, paste0(unique(x$fcid), "_", unique(x$pcr_primers), "_ASV_cleanup.csv"))
+            readr::write_csv(x, paste0(unique(x$read_group), "_", unique(x$primers), "_ASV_cleanup.csv"))
         }
     )
 
 
 ## export read tracking group tibble per flowcell (how many reads pass through each filter for each sample?)
 filter_tracking %>%
-    # split into list by fcid
-    split(., .$fcid) %>%
+    # split into list by read_group
+    split(., .$read_group) %>%
     lapply(
         ., 
         function(x){
             x %>%
             tidyr::pivot_wider(
-                names_from = sample_id, 
+                names_from = sample_primers, 
                 values_from = abundance
             ) %>%
             dplyr::rename(
@@ -213,24 +205,24 @@ filter_tracking %>%
                 "filter_combined" = combined_filter
             ) %>%
             tidyr::pivot_longer(
-                cols = !c(seq_name, sequence, filter_chimera, filter_length, filter_phmm, filter_frame, filter_combined, fcid),
-                names_to = "sample_id",
+                cols = !c(seq_name, sequence, filter_chimera, filter_length, filter_phmm, filter_frame, filter_combined, read_group),
+                names_to = "sample_primers",
                 values_to = "abundance"
             ) %>%
             dplyr::select(-seq_name, -sequence) %>%
-            dplyr::mutate(pcr_primers = pcr_primers) %>%
+            dplyr::mutate(primers = primers) %>%
             tidyr::pivot_longer(
                 cols = tidyselect::starts_with("filter_"), 
                 names_to = "stage",
                 values_to = "pass"
             ) %>%
-            dplyr::group_by(sample_id, fcid, pcr_primers, stage, pass) %>%
+            dplyr::group_by(sample_primers, read_group, primers, stage, pass) %>%
             dplyr::summarise(pairs = sum(abundance)) %>%
             dplyr::ungroup() %>%
             dplyr::filter(pass == TRUE) %>%
             dplyr::select(-pass) %>%
-            dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>%
-            readr::write_csv(., paste0("filter_merged_",unique(.$fcid),"_", pcr_primers,"_readsout.csv"))
+            dplyr::select(stage, sample_primers, read_group, primers, pairs) %>%
+            readr::write_csv(., paste0("filter_merged_",unique(.$read_group),"_", primers,"_readsout.csv"))
         }
     )
 
@@ -377,10 +369,10 @@ filter_info %>%
             patchwork::plot_layout(ncol = 1, guides = "collect") +
             patchwork::plot_annotation(
                 title = "ASV abundance", 
-                subtitle = paste0("Flowcell: ", unique(x$fcid), "\nPCR primers: ", unique(x$pcr_primers))
+                subtitle = paste0("Flowcell: ", unique(x$read_group), "\nPCR primers: ", unique(x$primers))
             )
         
-        ggsave(paste0(unique(x$fcid), "_", unique(x$pcr_primers),"_asv_abundance.pdf"), gg.abundance, width = 8, height = 12)
+        ggsave(paste0(unique(x$read_group), "_", unique(x$primers),"_asv_abundance.pdf"), gg.abundance, width = 8, height = 12)
 
         }
     )
@@ -436,9 +428,9 @@ filter_info %>%
         gg.n_asvs <-
             gg.combined.n + gg.chimera.n + gg.length.n + gg.phmm.n + gg.frame.n +
             patchwork::plot_layout(ncol = 1, guides = "collect") +
-            patchwork::plot_annotation(title = "Unique ASVs", subtitle = paste0("Flowcell: ", unique(x$fcid), "\nPCR primers: ", unique(x$pcr_primers)))
+            patchwork::plot_annotation(title = "Unique ASVs", subtitle = paste0("Flowcell: ", unique(x$read_group), "\nPCR primers: ", unique(x$primers)))
         
-        ggsave(paste0(unique(x$fcid), "_", unique(x$pcr_primers),"_asv_count.pdf"), gg.n_asvs, width = 8, height = 12)
+        ggsave(paste0(unique(x$read_group), "_", unique(x$primers),"_asv_count.pdf"), gg.n_asvs, width = 8, height = 12)
 
         }
     )

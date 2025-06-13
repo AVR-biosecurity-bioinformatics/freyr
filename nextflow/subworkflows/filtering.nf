@@ -16,6 +16,7 @@ workflow FILTERING {
     ch_seqtab
     ch_read_groups
     ch_primer_params
+    ch_samplesheet_split
 
     main:
 
@@ -109,7 +110,7 @@ workflow FILTERING {
     //// merge filters together, create filter read tracking tibble, and create filter plots
     MERGE_FILTERS (
         ch_merge_filters_input,
-        ch_read_groups.collect()
+        ch_samplesheet_split
     )
 
 

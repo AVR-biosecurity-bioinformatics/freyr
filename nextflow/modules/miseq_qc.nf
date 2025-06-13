@@ -1,11 +1,11 @@
 process MISEQ_QC {
     def module_name = "miseq_qc"
-    tag "$fcid"
+    tag "$read_group"
     label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    val(fcid) 
+    val(read_group) 
     val(miseq_dir)
 
     output:
@@ -24,7 +24,7 @@ process MISEQ_QC {
     
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    fcid = "${fcid}"
+    read_group = "${read_group}"
     miseq_dir = "${miseq_dir}"
     
     ## global variables

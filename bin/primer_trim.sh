@@ -3,26 +3,26 @@ set -e
 set -u
 ## args are the following:
 # $1 = reads_paths, one or two read paths separated by ;
-# $2 = meta.for_primer_seq, aka. fwd primer sequence
-# $3 = meta.rev_primer_seq, aka. rev primer sequence
-# $4 = meta.pcr_primers, aka. name of PCR primer pair
-# $5 = meta.target_gene, aka. name of target gene
-# $6 = meta.sample_id, aka. sample ID
-# $7 = meta.fcid, aka. flowcell ID
-# $8 = params.primer_n_trim (true or false)
-# $9 = params.primer_error_rate
-# $10 = seq_type (illumina, nanopore, pacbio)
-# $11 = paired (true, false)
+# $2 = process_params.for_primer_seq, aka. fwd primer sequence
+# $3 = process_params.rev_primer_seq, aka. rev primer sequence
+# $4 = primers, aka. name of PCR primer pair
+# $5 = process_params.locus, aka. name of target locus
+# $6 = sample_primers, aka. sample ID
+# $7 = read_group
+# $8 = process_params.primer_n_trim (true or false)
+# $9 = process_params.primer_error_rate
+# $10 = process_params.seq_type (illumina, nanopore, pacbio)
+# $11 = process_params.paired (true, false)
 
 ### define variables with better names
 
 READS_PATHS=$1
 FOR_PRIMER_SEQ=$2
 REV_PRIMER_SEQ=$3
-PCR_PRIMERS=$4
-TARGET_GENE=$5
-SAMPLE_ID=$6
-FCID=$7
+PRIMERS=$4
+LOCUS=$5
+SAMPLE_PRIMERS=$6
+READ_GROUP=$7
 PRIMER_N_TRIM=$8
 PRIMER_ERROR_RATE=$9
 SEQ_TYPE=${10}
@@ -83,30 +83,30 @@ if [ $PAIRED == "true" ]; then
         --revcomp \
         -e $PRIMER_ERROR_RATE \
         $OPTIONAL_ARGS \
-        -o ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_trim_R1.fastq.gz \
-        -p ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_trim_R2.fastq.gz \
+        -o ${SAMPLE_PRIMERS}_${LOCUS}_${PRIMERS}_trim_R1.fastq.gz \
+        -p ${SAMPLE_PRIMERS}_${LOCUS}_${PRIMERS}_trim_R2.fastq.gz \
         ${FWD_READS} \
         ${REV_READS}
 
     ## count reads in output files
     # forward reads
-    if [ -f ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_trim_R1.fastq.gz ]; then
-        R1_OUT_LINES=$(zcat ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_trim_R1.fastq.gz | wc -l)
+    if [ -f ${SAMPLE_PRIMERS}_${LOCUS}_${PRIMERS}_trim_R1.fastq.gz ]; then
+        R1_OUT_LINES=$(zcat ${SAMPLE_PRIMERS}_${LOCUS}_${PRIMERS}_trim_R1.fastq.gz | wc -l)
         R1_OUT=$(( $R1_OUT_LINES / 4 ))
     else 
         R1_OUT=0
     fi
 
     # reverse reads
-    if [ -f ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_trim_R2.fastq.gz ]; then
-        R2_OUT_LINES=$(zcat ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_trim_R2.fastq.gz | wc -l)
+    if [ -f ${SAMPLE_PRIMERS}_${LOCUS}_${PRIMERS}_trim_R2.fastq.gz ]; then
+        R2_OUT_LINES=$(zcat ${SAMPLE_PRIMERS}_${LOCUS}_${PRIMERS}_trim_R2.fastq.gz | wc -l)
         R2_OUT=$(( $R2_OUT_LINES / 4 ))
     else 
         R2_OUT=0
     fi
 
     # save as .csv 
-    echo "primer_trim,$SAMPLE_ID,$FCID,$PCR_PRIMERS,$R1_OUT,$R2_OUT" > primer_trim_${SAMPLE_ID}_${PCR_PRIMERS}_readsout.csv # columns: stage; sample_id; fcid; pcr_primers; fwd_out; fwd_out
+    echo "primer_trim,$SAMPLE_PRIMERS,$READ_GROUP,$PRIMERS,$R1_OUT,$R2_OUT" > primer_trim_${SAMPLE_PRIMERS}_${PRIMERS}_readsout.csv # columns: stage; sample_primers; read_group; primers; fwd_out; fwd_out
 
 elif [ $PAIRED == "false" ]; then 
     
@@ -124,20 +124,20 @@ elif [ $PAIRED == "false" ]; then
         --revcomp \
         -e $PRIMER_ERROR_RATE \
         $OPTIONAL_ARGS \
-        -o ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_trim_R0.fastq.gz \
+        -o ${SAMPLE_PRIMERS}_${LOCUS}_${PRIMERS}_trim_R0.fastq.gz \
         ${SINGLE_READS} 
     
     ## count reads in output files
     # single reads
-    if [ -f ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_trim_R0.fastq.gz ]; then
-        R0_OUT_LINES=$(zcat ${SAMPLE_ID}_${TARGET_GENE}_${PCR_PRIMERS}_trim_R0.fastq.gz | wc -l)
+    if [ -f ${SAMPLE_PRIMERS}_${LOCUS}_${PRIMERS}_trim_R0.fastq.gz ]; then
+        R0_OUT_LINES=$(zcat ${SAMPLE_PRIMERS}_${LOCUS}_${PRIMERS}_trim_R0.fastq.gz | wc -l)
         R0_OUT=$(( $R0_OUT_LINES / 4 ))
     else 
         R0_OUT=0
     fi
 
     # save as .csv 
-    echo "primer_trim,$SAMPLE_ID,$FCID,$PCR_PRIMERS,$R0_OUT,$R0_OUT" > primer_trim_${SAMPLE_ID}_${PCR_PRIMERS}_readsout.csv # columns: stage; sample_id; fcid; pcr_primers; fwd_out; fwd_out
+    echo "primer_trim,$SAMPLE_PRIMERS,$READ_GROUP,$PRIMERS,$R0_OUT,$R0_OUT" > primer_trim_${SAMPLE_PRIMERS}_${PRIMERS}_readsout.csv # columns: stage; sample_primers; read_group; primers; fwd_out; fwd_out
 
 else 
     echo "PAIRED variable must be true or false"

@@ -21,7 +21,7 @@ process FILTER_FRAME {
         
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    pcr_primers =           "${primers}"
+    primers =               "${primers}"
     seqtab_tibble_list =    "${seqtab_tibble_list}"
     fasta_list =            "${fasta_list}"
     coding =                "${process_params.coding}"

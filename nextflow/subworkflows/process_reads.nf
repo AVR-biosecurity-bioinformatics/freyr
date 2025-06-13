@@ -58,7 +58,7 @@ workflow PROCESS_READS {
         ch_sample_reads,
         ch_seq_type,
         ch_paired
-        )
+    )
         
     //// run nanoplot on nanopore reads
     if ( seq_type == "nanopore" ) {
@@ -66,7 +66,7 @@ workflow PROCESS_READS {
             ch_sample_reads,
             ch_seq_type,
             ch_paired
-            )
+        )
     }
 
     //// combine map of SPLIT_LOCI primer parameters to read channel

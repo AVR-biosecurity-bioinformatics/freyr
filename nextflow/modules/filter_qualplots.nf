@@ -25,10 +25,10 @@ process FILTER_QUALPLOTS {
     ### defining Nextflow environment variables as R variables
     ## input channel variables
     reads_paths =       "${reads_paths}"
-    sample_id =         "${sample_primers}"
-    fcid =              "${read_group}"
-    target_gene =       "${process_params.locus}"
-    pcr_primers =       "${primers}"
+    sample_primers =    "${sample_primers}"
+    read_group =        "${read_group}"
+    locus =             "${process_params.locus}"
+    primers =           "${primers}"
     seq_type =          "${process_params.seq_type}"
     paired =            "${process_params.paired}"
     file_suffix =       "${file_suffix}"

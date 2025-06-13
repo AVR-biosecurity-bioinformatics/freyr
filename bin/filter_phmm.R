@@ -17,7 +17,7 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "pcr_primers",
+    "primers",
     "seqtab_tibble_list",
     "fasta_list",
     "phmm",
@@ -48,7 +48,7 @@ if(is.na(phmm))             {phmm <- NULL}
 if(is.na(for_primer_seq))   {for_primer_seq <- NULL}
 if(is.na(rev_primer_seq))   {rev_primer_seq <- NULL}
 
-primers <- c(for_primer_seq, rev_primer_seq)
+primer_seqs <- c(for_primer_seq, rev_primer_seq)
 
 ### run R code
 
@@ -62,7 +62,7 @@ seqtab_combined <-
             x %>%
             tidyr::pivot_longer(
                 cols = !seq_name,
-                names_to = "sample_id",
+                names_to = "sample_primers",
                 values_to = "abundance"
             )
         }
@@ -71,7 +71,7 @@ seqtab_combined <-
     dplyr::bind_rows() %>%
     # pivot wider, filling missing abundance with 0
     tidyr::pivot_wider(
-        names_from = sample_id,
+        names_from = sample_primers,
         values_from = abundance, 
         values_fill = 0
     )
@@ -115,37 +115,37 @@ if(is.character(phmm) && stringr::str_detect(phmm, ".rds")){
 }
 
 ## subset PHMM if primers were provided
-if (is(phmm_model, "PHMM") && !is.null(primers)){
+if (is(phmm_model, "PHMM") && !is.null(primer_seqs)){
     # Check that one of the two primers can bind
-    Fbind <- taxreturn::get_binding_position(primers[1], model = phmm_model, tryRC = TRUE, min_score = 10)
-    Rbind <- taxreturn::get_binding_position(primers[2], model = phmm_model, tryRC = TRUE, min_score = 10)
+    Fbind <- taxreturn::get_binding_position(primer_seqs[1], model = phmm_model, tryRC = TRUE, min_score = 10)
+    Rbind <- taxreturn::get_binding_position(primer_seqs[2], model = phmm_model, tryRC = TRUE, min_score = 10)
     if(!is.na(Fbind$start) & !is.na(Rbind$start)){
-        phmm_model <- taxreturn::subset_model(phmm_model, primers = primers)
+        phmm_model <- taxreturn::subset_model(phmm_model, primers = primer_seqs)
     } else if(!is.na(Fbind$start) & is.na(Rbind$start)){
         # Reverse primer not found - Try with subsets
-        for(r in seq(1, nchar(primers[2])-10, 1)){ #Minimum length of 10 as this has to match minscore
+        for(r in seq(1, nchar(primer_seqs[2])-10, 1)){ #Minimum length of 10 as this has to match minscore
             Rbind <- get_binding_position(
-                str_remove(primers[2], paste0("^.{1,",r,"}")), 
+                str_remove(primer_seqs[2], paste0("^.{1,",r,"}")), 
                 model = phmm_model, 
                 tryRC = TRUE, 
                 min_score = 10
                 )
             if (!is.na(Rbind$start)) {
-                primers[2] <- stringr::str_remove(primers[2], paste0("^.{1,",r,"}"))
+                primer_seqs[2] <- stringr::str_remove(primer_seqs[2], paste0("^.{1,",r,"}"))
                 break
             }
         }
-        phmm_model <- taxreturn::subset_model(phmm_model, primers = primers)
+        phmm_model <- taxreturn::subset_model(phmm_model, primers = primer_seqs)
     } else  if(is.na(Fbind$start) & !is.na(Rbind$start)){
         # Forward primer not found - Try with subsets
-        for(r in seq(1, nchar(primers[1])-10, 1)){ #Minimum length of 10 as this has to match minscore
-        Rbind <- taxreturn::get_binding_position(stringr::str_remove(primers[1], paste0("^.{1,",r,"}")), model = phmm_model, tryRC = TRUE, min_score = 10)
+        for(r in seq(1, nchar(primer_seqs[1])-10, 1)){ #Minimum length of 10 as this has to match minscore
+        Rbind <- taxreturn::get_binding_position(stringr::str_remove(primer_seqs[1], paste0("^.{1,",r,"}")), model = phmm_model, tryRC = TRUE, min_score = 10)
         if (!is.na(Rbind$start)) {
-            primers[1] <- stringr::str_remove(primers[1], paste0("^.{1,",r,"}"))
+            primer_seqs[1] <- stringr::str_remove(primers[1], paste0("^.{1,",r,"}"))
             break
         }
         }
-        phmm_model <- taxreturn::subset_model(phmm_model, primers = primers)
+        phmm_model <- taxreturn::subset_model(phmm_model, primers = primer_seqs)
     }
 }
 
@@ -181,4 +181,4 @@ if (is(phmm_model, "PHMM")){
         )
 }
 
-readr::write_csv(out_tibble, paste0(pcr_primers, "_phmm_filter.csv"))
+readr::write_csv(out_tibble, paste0(primers, "_phmm_filter.csv"))

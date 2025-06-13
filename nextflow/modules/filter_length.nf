@@ -21,7 +21,7 @@ process FILTER_LENGTH {
         
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    pcr_primers =           "${primers}"
+    primers =                "${primers}"
     seqtab_tibble_list =    "${seqtab_tibble_list}"
     fasta_list =            "${fasta_list}"
     asv_min_length =        "${process_params.asv_min_length}"

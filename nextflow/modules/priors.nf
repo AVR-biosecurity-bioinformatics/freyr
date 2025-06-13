@@ -22,8 +22,8 @@ process PRIORS {
     ### defining Nextflow environment variables as R variables
     ## input channel variables
     direction =         "${direction}"
-    fcid =              "${read_group}"
-    pcr_primers =       "${primers}"
+    read_group =        "${read_group}"
+    primers =           "${primers}"
     priors =            "${priors}"
     
     ## global variables

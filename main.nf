@@ -245,7 +245,7 @@ workflow FREYR {
             }
         .set { ch_primer_params }
 
- 
+
     // //// parse samplesheets that contain locus-specific parameters
     // if ( params.paired == true ) {
     //     PARSE_INPUTS.out.samplesheet_split
@@ -393,7 +393,8 @@ workflow FREYR {
     FILTERING (
         DADA2.out.ch_seqtab,
         ch_read_groups,
-        ch_primer_params
+        ch_primer_params,
+        PARSE_INPUTS.out.samplesheet_split.first()
     )
 
     // //// subworkflow: assign taxonomy

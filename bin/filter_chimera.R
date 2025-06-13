@@ -17,7 +17,7 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "pcr_primers",
+    "primers",
     "seqtab_tibble_list",
     "fasta_list",
     "minSampleFraction"
@@ -50,7 +50,7 @@ seqtab_combined <-
             x %>%
             tidyr::pivot_longer(
                 cols = !seq_name,
-                names_to = "sample_id",
+                names_to = "sample_primers",
                 values_to = "abundance"
             )
         }
@@ -59,7 +59,7 @@ seqtab_combined <-
     dplyr::bind_rows() %>%
     # pivot wider, filling missing abundance with 0
     tidyr::pivot_wider(
-        names_from = sample_id,
+        names_from = sample_primers,
         values_from = abundance, 
         values_fill = 0
     )
@@ -92,12 +92,12 @@ seqtab_matrix <-
     # remove seq_name
     dplyr::select(-seq_name) %>%
     # pivot longer
-    tidyr::pivot_longer(cols = !sequence, names_to = "sample_id", values_to = "abundance") %>%
+    tidyr::pivot_longer(cols = !sequence, names_to = "sample_primers", values_to = "abundance") %>%
     dplyr::mutate(abundance = as.integer(abundance)) %>%
     # pivot wider 
     tidyr::pivot_wider(names_from = sequence, values_from = abundance) %>%
-    # sample_id as rownames
-    tibble::column_to_rownames(var = "sample_id") %>%
+    # sample_primers as rownames
+    tibble::column_to_rownames(var = "sample_primers") %>%
     # convert to matrix
     as.matrix() 
 
@@ -114,4 +114,4 @@ out_tibble <-
     seqs_names %>%
 	dplyr::mutate(chimera_filter = sequence %in% colnames(seqtab_nochim))
 
-readr::write_csv(out_tibble, paste0(pcr_primers, "_chimera_filter.csv"))
+readr::write_csv(out_tibble, paste0(primers, "_chimera_filter.csv"))

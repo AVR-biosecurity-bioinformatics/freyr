@@ -16,10 +16,10 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 nf_vars <- c(
     "projectDir",
     "reads_paths",
-    "sample_id",
-    "fcid",
-    "target_gene",
-    "pcr_primers",
+    "sample_primers",
+    "read_group",
+    "locus",
+    "primers",
     "seq_type",
     "paired",
     "file_suffix"
@@ -40,7 +40,7 @@ if ( paired == "true" ) {
 
 truncLen <- NULL
 quiet <- FALSE
-n_reads <- 1000
+n_reads <- 10000
 
 ### run R code
 
@@ -73,7 +73,7 @@ if ( paired == "true" & seq_type == "illumina" ){
         geom_line(data = Fquals, aes(y = Q50), color = "#FC8D62", linewidth = 0.25) + 
         geom_line(data = Fquals, aes(y = Q75), color = "#FC8D62", linewidth = 0.25, linetype = "dashed") + 
         labs(x = "Reads position", y = "Quality Score") + ylim(c(0, NA))+
-        ggtitle(paste0(sample_id," ",target_gene," ",pcr_primers, " Forward Reads")) +
+        ggtitle(paste0(sample_primers," ",locus, " Forward Reads")) +
         theme(legend.position = "bottom", plot.title = element_text(size = 10))
     
     gg.Rqual <- Rquals %>% 
@@ -85,7 +85,7 @@ if ( paired == "true" & seq_type == "illumina" ){
         geom_line(data = Rquals, aes(y = Q50), color = "#FC8D62", linewidth = 0.25) + 
         geom_line(data = Rquals, aes(y = Q75), color = "#FC8D62", linewidth = 0.25, linetype = "dashed") + 
         labs(x = "Reads position", y = "Quality Score") + ylim(c(0, NA))+
-        ggtitle(paste0(sample_id," ",target_gene," ",pcr_primers, " Reverse Reads")) +
+        ggtitle(paste0(sample_primers," ",locus, " Reverse Reads")) +
         scale_x_continuous(breaks=seq(0,300,25)) +
         theme(legend.position = "bottom", plot.title = element_text(size = 10))
     
@@ -109,7 +109,7 @@ if ( paired == "true" & seq_type == "illumina" ){
         geom_text(label = "MaxEE=7", aes(x = 0, y = log10(7), hjust = 0, vjust = 0), color = "red") + 
         labs(x = "Reads position", y = "Log10 Cumulative expected errors",
             colour = "Read quantiles") + 
-        ggtitle(paste0(sample_id," ",target_gene," ",pcr_primers, " Forward Reads")) +
+        ggtitle(paste0(sample_primers," ",locus, " Forward Reads")) +
         scale_x_continuous(breaks=seq(0,300,25)) +
         theme(legend.position = "bottom", plot.title = element_text(size = 10))
 
@@ -132,7 +132,7 @@ if ( paired == "true" & seq_type == "illumina" ){
         geom_text(label = "MaxEE=5", aes(x = 0, y = log10(5), hjust = 0, vjust = 0), color = "red") + 
         geom_text(label = "MaxEE=7", aes(x = 0, y = log10(7), hjust = 0, vjust = 0), color = "red") + 
         labs(x = "Reads position", y = "Log10 Cumulative expected errors") +
-        ggtitle(paste0(sample_id," ",target_gene," ",pcr_primers, " Reverse Reads")) +
+        ggtitle(paste0(sample_primers," ",locus," Reverse Reads")) +
         scale_x_continuous(breaks=seq(0,300,25)) +
         theme(legend.position = "bottom", plot.title = element_text(size = 10))
     
@@ -153,7 +153,7 @@ if ( paired == "true" & seq_type == "illumina" ){
     
     Qualplots <- (gg.Fqual + gg.Rqual) / (gg.Fee + gg.Ree)
 
-    ggsave(paste0(sample_id,"_",target_gene,"_",pcr_primers,"_",file_suffix,"_qualplots.pdf"), Qualplots, width = 11, height = 8)
+    ggsave(paste0(sample_primers,"_",locus,"_",file_suffix,"_qualplots.pdf"), Qualplots, width = 11, height = 8)
 
 } else if ( paired == "false" & seq_type == "nanopore" ) {
 
@@ -181,7 +181,7 @@ if ( paired == "true" & seq_type == "illumina" ){
         geom_line(data = Squals, aes(y = Q50), color = "#FC8D62", linewidth = 0.25) + 
         geom_line(data = Squals, aes(y = Q75), color = "#FC8D62", linewidth = 0.25, linetype = "dashed") + 
         labs(x = "Reads position", y = "Quality Score") + ylim(c(0, NA))+
-        ggtitle(paste0(sample_id," ",target_gene," ",pcr_primers, " Single-end Reads")) +
+        ggtitle(paste0(sample_primers," ",locus, " Single-end Reads")) +
         theme(legend.position = "bottom", plot.title = element_text(size = 10))
     
     gg.See <- Squals %>% 
@@ -203,7 +203,7 @@ if ( paired == "true" & seq_type == "illumina" ){
         geom_text(label = "MaxEE=7", aes(x = 0, y = log10(7), hjust = 0, vjust = 0), color = "red") + 
         labs(x = "Reads position", y = "Log10 Cumulative expected errors",
             colour = "Read quantiles") + 
-        ggtitle(paste0(sample_id," ",target_gene," ",pcr_primers, " Single-end Reads")) +
+        ggtitle(paste0(sample_primers," ",locus, " Single-end Reads")) +
         # scale_x_continuous(breaks=seq(0,300,25)) +
         theme(legend.position = "bottom", plot.title = element_text(size = 10))
 
@@ -224,7 +224,7 @@ if ( paired == "true" & seq_type == "illumina" ){
     
     Qualplots <- gg.Squal / gg.See
 
-    ggsave(paste0(sample_id,"_",target_gene,"_",pcr_primers,"_",file_suffix,"_qualplots.pdf"), Qualplots, width = 11, height = 8)
+    ggsave(paste0(sample_primers,"_",locus,"_",file_suffix,"_qualplots.pdf"), Qualplots, width = 11, height = 8)
 
 
 
@@ -232,7 +232,5 @@ if ( paired == "true" & seq_type == "illumina" ){
 } else {
     stop ( "Currently unsupported sequencing type -- check samplesheet" )
 }
-
-### TODO: Increase "n_reads" to 10000 in final pipeline
 
 # stop(" *** stopped manually *** ") ##########################################

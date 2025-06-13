@@ -23,17 +23,17 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 # check variables defined
 nf_vars <- c(
     "projectDir",
-    "fcid",
+    "read_group",
     "miseq_dir"
 )
 lapply(nf_vars, nf_var_check)
 
-if (!exists("fcid")) {stop("'fcid' not defined!")}
+if (!exists("read_group")) {stop("'read_group' not defined!")}
 
 # convert miseq_dir to a path
 data_path <- base::normalizePath(miseq_dir)
 
-seq_dir <- paste0(data_path,"/",fcid)
+seq_dir <- paste0(data_path,"/",read_group)
   
 barcode_mismatch <- 1
 
@@ -57,15 +57,15 @@ fc <- savR::savR(seq_dir)
 
 # Ensure indices are present
 if(length(fc@parsedData)==0){
-    stop(paste0("Flow cell metrics could not be parsed for", fcid))
+    stop(paste0("Flow cell metrics could not be parsed for", read_group))
 }
 
 # write output tables
-readr::write_csv(savR::correctedIntensities(fc), paste0(fcid,"_correctedIntensities.csv"))
-readr::write_csv(savR::errorMetrics(fc), paste0(fcid, "_errorMetrics.csv"))
-readr::write_csv(savR::extractionMetrics(fc), paste0(fcid, "_extractionMetrics.csv"))
-readr::write_csv(savR::qualityMetrics(fc), paste0(fcid, "_qualityMetrics.csv"))
-readr::write_csv(savR::tileMetrics(fc), paste0(fcid, "_tileMetrics.csv"))
+readr::write_csv(savR::correctedIntensities(fc), paste0(read_group,"_correctedIntensities.csv"))
+readr::write_csv(savR::errorMetrics(fc), paste0(read_group, "_errorMetrics.csv"))
+readr::write_csv(savR::extractionMetrics(fc), paste0(read_group, "_extractionMetrics.csv"))
+readr::write_csv(savR::qualityMetrics(fc), paste0(read_group, "_qualityMetrics.csv"))
+readr::write_csv(savR::tileMetrics(fc), paste0(read_group, "_tileMetrics.csv"))
 
 # plot flowcell qc
 gg.avg_intensity <- 
@@ -81,7 +81,7 @@ gg.avg_intensity <-
     facet_wrap(~side, scales="free") +
     scale_fill_viridis_c()
 
-pdf(file=paste0(fcid,"_flowcell_qc.pdf"), width = 11, height = 8 , paper="a4r")
+pdf(file=paste0(read_group,"_flowcell_qc.pdf"), width = 11, height = 8 , paper="a4r")
 plot(gg.avg_intensity)
 savR::pfBoxplot(fc)
 for (lane in 1:fc@layout@lanecount) {
@@ -96,13 +96,13 @@ readspassing <-
     dplyr::mutate(code = case_when(
         code == 100 ~ "reads_total",
         code == 101 ~ "reads_pf"
-    ),fcid = stringr::str_remove(fc@flowcell, "^.*-")) %>% 
-    dplyr::group_by(fcid, code) %>%
+    ),read_group = stringr::str_remove(fc@flowcell, "^.*-")) %>% 
+    dplyr::group_by(read_group, code) %>%
     dplyr::summarise(reads = sum(value), .groups="drop") %>%
     tidyr::pivot_wider(names_from = code,
                         values_from = reads)
 
-readr::write_csv(readspassing, paste0(fcid, "_readsPassing.csv"))
+readr::write_csv(readspassing, paste0(read_group, "_readsPassing.csv"))
 
 
 
@@ -126,7 +126,7 @@ indices <- indices[stringr::str_detect(indices, ".fastq.gz$")] %>%
 
 # Ensure indices are present
 if(all(is.na(indices$Freq))){
-    stop(paste0("No index sequences present in fastq headers for run", fcid, " no switch rate calculated"))
+    stop(paste0("No index sequences present in fastq headers for run", read_group, " no switch rate calculated"))
 }
 combos <- indices %>% 
     dplyr::filter(!stringr::str_detect(Sample_Name, "Undetermined")) %>%
@@ -151,7 +151,7 @@ applied_indices <- switched %>%
 
 # Check if indices are combinatorial
 if(any(duplicated(applied_indices$index)) | any(duplicated(applied_indices$index2))){
-    stop(paste0("Combinatorial indexes detected for", fcid, " no switch rate calculated"))
+    stop(paste0("Combinatorial indexes detected for", read_group, " no switch rate calculated"))
 }
 
 # Get other undetermined reads which had completely unapplied indexes
@@ -212,13 +212,13 @@ gg.switch <-
         plot.title=element_text(hjust = 0.5),
         plot.subtitle =element_text(hjust = 0.5)
     ) +
-    labs(title= fcid, subtitle = paste0(
+    labs(title= read_group, subtitle = paste0(
     "Total Reads: ", sum(indices$Freq, na.rm=TRUE),
     ", Switch rate: ", sprintf("%1.4f%%", res$switch_rate*100),
     ", Contam rate: ", sprintf("%1.6f%%", res$contam_rate*100),
     ", Other reads: ", other_reads)) 
 
-pdf(file=paste0(fcid,"_index_switching.pdf"), width = 11, height = 8 , paper="a4r")
+pdf(file=paste0(read_group,"_index_switching.pdf"), width = 11, height = 8 , paper="a4r")
     plot(gg.switch)
     try(dev.off(), silent=TRUE)
 

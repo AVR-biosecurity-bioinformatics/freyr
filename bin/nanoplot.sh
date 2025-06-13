@@ -3,14 +3,14 @@ set -e
 set -u
 ## args are the following:
 # $1 = reads_paths, one or two read paths separated by ;
-# $2 = sample_id
+# $2 = sample
 # $3 = seq_type (illumina, nanopore, pacbio)
 # $4 = paired (true, false)
 
 ### define variables with better names
 
 READS_PATHS=$1
-SAMPLE_ID=$2
+SAMPLE=$2
 SEQ_TYPE=$3
 PAIRED=$4
 
@@ -48,7 +48,7 @@ elif [ $PAIRED == "false"  ] && [ $SEQ_TYPE == "nanopore" ]; then
     NanoPlot \
         --fastq $SINGLE_READS \
         --tsv_stats \
-        --prefix $SAMPLE_ID \
+        --prefix $SAMPLE \
         -o .
 
 else 

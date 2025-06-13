@@ -24,8 +24,8 @@ process ERROR_MODEL {
     ### defining Nextflow environment variables as R variables
     ## input channel variables
     direction =         "${direction}"
-    fcid =              "${read_group}"
-    pcr_primers =       "${primers}"
+    read_group =        "${read_group}"
+    primers =           "${primers}"
     reads =             "${reads}"
     threads =           "${task.cpus}"
     

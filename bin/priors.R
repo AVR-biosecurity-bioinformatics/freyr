@@ -12,8 +12,8 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 nf_vars <- c(
     "projectDir",
     "direction",
-    "fcid",
-    "pcr_primers",
+    "read_group",
+    "primers",
     "priors"
 )
 lapply(nf_vars, nf_var_check)
@@ -49,7 +49,7 @@ priors <- priors_tibble %>%
             dplyr::filter(n>1) %>%
             dplyr::pull(sequence)
 
-saveRDS(priors, paste0(fcid,"_",pcr_primers,"_priors",direction_short,".rds"))
+saveRDS(priors, paste0(read_group,"_",primers,"_priors",direction_short,".rds"))
 
 # stop(" *** stopped manually *** ") ##########################################
 

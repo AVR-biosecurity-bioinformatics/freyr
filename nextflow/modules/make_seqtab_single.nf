@@ -22,9 +22,9 @@ process MAKE_SEQTAB_SINGLE {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    fcid =              "${read_group}"
-    pcr_primers =       "${primers}"
-    sample_id =         "${sample_primers}"
+    read_group =        "${read_group}"
+    primers =           "${primers}"
+    sample_primers =    "${sample_primers}"
     reads =             "${reads}"
     seqs =              "${seqs}"
     concat_unmerged =   "${concat_unmerged}"
