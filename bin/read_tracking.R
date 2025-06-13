@@ -92,8 +92,8 @@ group_tibble_up <-
       samplesheet_split %>% dplyr::select(sample_primers, sample),
       by = "sample_primers"
     ) %>%
-    dplyr::select(stage, sample, sample_primers, read_group, primers, pairs) %>% 
-    dplyr::arrange(sample_primers, primers, desc(pairs))
+    dplyr::select(stage, sample, sample_primers, read_group, primers, reads = pairs) %>% 
+    dplyr::arrange(sample_primers, primers, desc(reads))
 
 readr::write_csv(group_tibble_up, "group_tibble.csv") # for debugging
 
@@ -122,19 +122,19 @@ stage_vec <- c(
 
 read_tracker_long <- 
     sample_tibble_altered %>%
-    dplyr::select(-rev, pairs = fwd) %>% ### TODO: check fwd and rev counts are the same; for now assume and just use fwd as read pair count
+    dplyr::select(-rev, reads = fwd) %>% ### TODO: check fwd and rev counts are the same; for now assume and just use fwd as read pair count
     rbind(., group_tibble_up) 
     
 read_tracker_inputcol <- 
     read_tracker_long %>% # pull out 
     dplyr::filter(primers == "combined") %>% 
-    dplyr::select(sample, input = pairs)
+    dplyr::select(sample, input = reads)
 
 read_tracker_wide <- 
     read_tracker_long %>% 
     dplyr::filter(primers != "combined") %>% 
     dplyr::left_join(., read_tracker_inputcol, by = "sample") %>% 
-    tidyr::pivot_wider(names_from = stage, values_from = pairs) %>%
+    tidyr::pivot_wider(names_from = stage, values_from = reads) %>%
     dplyr::select(
       tidyselect::any_of(
         c(
@@ -169,7 +169,7 @@ gg.read_tracker <-
         stage = forcats::fct_relevel(stage, stage_vec), # reorder x-axis
         primers = forcats::fct_relevel(primers, "combined") # make sure "combined" is always first
         ) %>% 
-    ggplot2::ggplot(aes(x = stage, y = pairs, fill = primers)) +
+    ggplot2::ggplot(aes(x = stage, y = reads, fill = primers)) +
     geom_col() + # TODO: Add % retention labels to the top of each bar
     scale_y_continuous(label = scales::label_number(scale_cut = append(scales::cut_short_scale(), 1, 1))) +
     scale_fill_manual(values = wong_pal) +
@@ -202,16 +202,16 @@ gg.read_tracker_sample <-
     tidyr::pivot_longer(
         cols = input:filter_sample_taxon,
         names_to = "stage",
-        values_to = "pairs"
+        values_to = "reads"
     ) %>% 
     dplyr::mutate( 
             stage = forcats::fct_relevel(stage, stage_vec), # reorder x-axis
             alpha = case_when( ### TODO: Use the locus parameter min reads as a filter here
-                pairs < 1000 ~ 0.6,
-                pairs >= 1000 ~ 1
+                reads < 1000 ~ 0.6,
+                reads >= 1000 ~ 1
                 )
             ) %>% 
-    ggplot2::ggplot(aes(x = stage, y = pairs, colour = primers)) +
+    ggplot2::ggplot(aes(x = stage, y = reads, colour = primers)) +
     geom_line(aes(group = sample, alpha = alpha)) +
     scale_colour_manual(values = wong_pal[-1]) +
     scale_alpha_identity() +
