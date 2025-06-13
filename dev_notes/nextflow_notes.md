@@ -148,3 +148,13 @@ Test with Horsham data (one flowcell, three primer pairs)
         --lp_idtaxa_db /group/pathogens/IAWS/Personal/JackS/databases/coi/tarth_250307/idtaxa_model.rds \
         --lp_ref_fasta /group/pathogens/IAWS/Personal/JackS/databases/coi/tarth_250307/final_database.fasta \
         -resume
+
+New Horsham format:
+
+    nextflow run . \
+        -profile basc_slurm,debug \
+        --samplesheet /group/pathogens/IAWS/Projects/NGDSI/Horsham/samplesheets/new_samplesheet_LM2TV.csv \
+        --primer_params /group/pathogens/IAWS/Projects/NGDSI/Horsham/analysis/primer_params.csv \
+        --pp_idtaxa_db /group/pathogens/IAWS/Personal/JackS/databases/coi/tarth_250307/idtaxa_model.rds \
+        --pp_ref_fasta /group/pathogens/IAWS/Personal/JackS/databases/coi/tarth_250307/final_database.fasta \
+        -resume

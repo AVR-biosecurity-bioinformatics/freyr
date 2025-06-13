@@ -562,8 +562,7 @@ params_vec <-
 params_pp <- params_vec[names(params_vec) %in% pp_vec]
 
 # remove parameters set to "null" (ie. unset)
-params_pp_nn <- 
-    params_pp %>% stringr::str_subset(., "^null$", negate = TRUE)
+params_pp_nn <- params_pp[!params_pp == "null"]
 
 # get vector of primers values
 primers_vec <- primer_params_da$primers
