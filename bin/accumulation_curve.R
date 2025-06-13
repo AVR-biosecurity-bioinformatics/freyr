@@ -21,9 +21,8 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "pcr_primers",
+    "primers",
     "ps_file",
-    "loci_params",
     "min_sample_reads"
 )
 lapply(nf_vars, nf_var_check)
@@ -42,7 +41,7 @@ gg.acc_curve <-
         threshold = min_sample_reads
     )
 
-pdf(file=paste0("accumulation_curve_",pcr_primers,".pdf"), width = 11, height = 8 , paper="a4r")
+pdf(file=paste0("accumulation_curve_",primers,".pdf"), width = 11, height = 8 , paper="a4r")
     print(gg.acc_curve)
 try(dev.off(), silent=TRUE)
 

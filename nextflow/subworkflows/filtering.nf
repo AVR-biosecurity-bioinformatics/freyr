@@ -100,9 +100,9 @@ workflow FILTERING {
 
     //// group filtering outputs (filters, setabs and fastas) by pcr_primers
     FILTER_CHIMERA.out.tibble
-        .mix ( FILTER_LENGTH.out.tibble )
-        .mix ( FILTER_PHMM.out.tibble )
-        .mix ( FILTER_FRAME.out.tibble )
+        .concat ( FILTER_LENGTH.out.tibble )
+        .concat ( FILTER_PHMM.out.tibble )
+        .concat ( FILTER_FRAME.out.tibble )
         .groupTuple ( by: 0 )
         .join ( ch_filter_input, by: 0 )
         .set { ch_merge_filters_input }

@@ -1,11 +1,11 @@
 process ACCUMULATION_CURVE {
     def module_name = "accumulation_curve"
-    tag "$pcr_primers"
+    tag "$primers"
     label "phyloseq"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), path(ps_file), path(filters_tibble), val(loci_params)
+    tuple val(primers), path(ps_file), path(filters_tibble), val(process_params)
 
     output:
     path("accumulation_curve_*.pdf"),                                          emit: pdf
@@ -21,10 +21,9 @@ process ACCUMULATION_CURVE {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    pcr_primers =           "${pcr_primers}"
+    primers =               "${primers}"
     ps_file =               "${ps_file}"
-    loci_params =           "${loci_params}"
-    min_sample_reads =      "${loci_params.min_sample_reads}"
+    min_sample_reads =      "${process_params.min_sample_reads}"
     
     ## global variables
     projectDir = "$projectDir"

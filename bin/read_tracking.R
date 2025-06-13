@@ -18,7 +18,8 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 nf_vars <- c(
     "projectDir",
     "rt_samples",    
-    "rt_group"    
+    "rt_group",
+    "samplesheet_split_file" 
 )
 lapply(nf_vars, nf_var_check)
 
@@ -38,30 +39,37 @@ for (i in 1:length(rt_samples)) { # loop through .csv and add values to tibble a
     sample_tibble <- rbind(sample_tibble, new_csv)
 }
 
-colnames(sample_tibble) <- c("stage","sample_id","fcid","pcr_primers","fwd","rev") 
+# get samplesheet_split as tibble
+samplesheet_split <- readr::read_csv(samplesheet_split_file)
 
-sample_tibble <- sample_tibble %>%
-    dplyr::mutate(
-        sample_id_com = sample_id, # sample_id before locus split, if done ("com" for "combined")
-        sample_id = paste0(sample_id,"_",pcr_primers) # make sample_id consistent with "sample_id" + "pcr_primers" format
-        ) %>% 
-    dplyr::select(stage, sample_id_com, sample_id, fcid, pcr_primers, fwd, rev) %>% 
-    dplyr::arrange(sample_id, pcr_primers, desc(fwd))
+# add column names to tibble
+colnames(sample_tibble) <- c("stage","sample_primers","read_group","primers","fwd","rev") 
 
-sample_id_matching <- sample_tibble %>% dplyr::select(sample_id_com, sample_id) %>% dplyr::distinct() # get tibble of sample_id and matching sample_id_com
+sample_tibble_up <- 
+    sample_tibble %>%
+    # add "sample" from samplesheet
+    dplyr::left_join(
+      ., 
+      samplesheet_split %>% dplyr::select(sample_primers, sample),
+      by = "sample_primers"
+    ) %>%
+    dplyr::select(stage, sample, sample_primers, read_group, primers, fwd, rev) %>% 
+    dplyr::arrange(sample_primers, primers, desc(fwd))
 
 # reduce "input" (pre-split_loci) stage rows to one, changing pcr_primers to "combined" as reads have not been assigned by primer seq
-sample_tibble_noinput <- sample_tibble %>% 
+sample_tibble_noinput <- 
+    sample_tibble_up %>% 
     dplyr::filter(stage != "input") # remove "input" rows
 
-sample_tibble_input <- sample_tibble %>% 
+sample_tibble_input <- 
+    sample_tibble_up %>% 
     dplyr::filter(stage == "input") %>% 
-    dplyr::group_by(sample_id_com) %>% 
+    dplyr::group_by(sample) %>% 
     dplyr::slice(1) %>% # keep only one "input" row
     dplyr::ungroup() %>% 
     dplyr::mutate(
-        sample_id = sample_id_com, # change sample_id as pcr_primers not used
-        pcr_primers = "combined" # change pcr_primers as not used yet
+        sample_primers = sample, # change sample_primers to sample
+        primers = "combined" # change pcr_primers as not used yet
     )
 
 sample_tibble_altered <- rbind(sample_tibble_input, sample_tibble_noinput)
@@ -76,19 +84,18 @@ for (i in 1:length(rt_group)) { # loop through .csv and add values to tibble as 
     group_tibble <- rbind(group_tibble, new_csv)
 }
 
-group_tibble <- group_tibble %>%
-    dplyr::mutate(
-        sample_id = ifelse(
-            stringr::str_detect(sample_id, pcr_primers), # if sample_id contains pcr_primers...
-            sample_id, # keep same
-            paste0(sample_id,"_",pcr_primers) # else add pcr_primers to the end of sample_id
-            )
-        ) %>% # make sample_id consistent with "sample_id" + "pcr_primers" format
-    dplyr::left_join(., sample_id_matching, by = "sample_id") %>% # add sample_id_com to tibble
-    dplyr::select(stage, sample_id_com, sample_id, fcid, pcr_primers, pairs) %>% 
-    dplyr::arrange(sample_id, pcr_primers, desc(pairs))
+group_tibble_up <- 
+    group_tibble %>%
+    # add "sample" from samplesheet
+    dplyr::left_join(
+      ., 
+      samplesheet_split %>% dplyr::select(sample_primers, sample),
+      by = "sample_primers"
+    ) %>%
+    dplyr::select(stage, sample, sample_primers, read_group, primers, pairs) %>% 
+    dplyr::arrange(sample_primers, primers, desc(pairs))
 
-readr::write_csv(group_tibble, "group_tibble.csv") # for debugging
+readr::write_csv(group_tibble_up, "group_tibble.csv") # for debugging
 
 ## combine sample and group tibbles together
 stage_vec <- c(
@@ -113,30 +120,37 @@ stage_vec <- c(
     "filter_sample_taxon"
     )
 
-read_tracker_long <- sample_tibble_altered %>%
+read_tracker_long <- 
+    sample_tibble_altered %>%
     dplyr::select(-rev, pairs = fwd) %>% ### TODO: check fwd and rev counts are the same; for now assume and just use fwd as read pair count
-    rbind(., group_tibble) 
+    rbind(., group_tibble_up) 
     
-read_tracker_inputcol <- read_tracker_long %>% # pull out 
-    dplyr::filter(pcr_primers == "combined") %>% 
-    dplyr::select(sample_id_com, input = pairs)
+read_tracker_inputcol <- 
+    read_tracker_long %>% # pull out 
+    dplyr::filter(primers == "combined") %>% 
+    dplyr::select(sample, input = pairs)
 
-read_tracker_wide <- read_tracker_long %>% 
-    dplyr::filter(pcr_primers != "combined") %>% 
-    dplyr::left_join(., read_tracker_inputcol, by = "sample_id_com") %>% 
+read_tracker_wide <- 
+    read_tracker_long %>% 
+    dplyr::filter(primers != "combined") %>% 
+    dplyr::left_join(., read_tracker_inputcol, by = "sample") %>% 
     tidyr::pivot_wider(names_from = stage, values_from = pairs) %>%
-    dplyr::select(tidyselect::any_of(c(
-        "sample_id_com",
-        "sample_id",
-        "pcr_primers", 
-        "fcid", 
-        stage_vec
-    )))
+    dplyr::select(
+      tidyselect::any_of(
+        c(
+          "sample",
+          "sample_primers",
+          "primers", 
+          "read_group", 
+          stage_vec
+        )
+      )
+    )
 
 readr::write_csv(read_tracker_wide, "read_tracker.csv")
 readr::write_csv(read_tracker_long, "read_tracker_long.csv")
 
-# create colour vector for pcr_primers
+# create colour vector for primers
 wong_pal <- c(
     "grey40", # grey
     "#E69F00", # orange
@@ -149,16 +163,17 @@ wong_pal <- c(
     )
 
 ## plot read tracking by locus
-gg.read_tracker <- read_tracker_long %>% 
+gg.read_tracker <- 
+    read_tracker_long %>% 
     dplyr::mutate( 
         stage = forcats::fct_relevel(stage, stage_vec), # reorder x-axis
-        pcr_primers = forcats::fct_relevel(pcr_primers, "combined") # make sure "combined" is always first
+        primers = forcats::fct_relevel(primers, "combined") # make sure "combined" is always first
         ) %>% 
-    ggplot2::ggplot(aes(x = stage, y = pairs, fill=pcr_primers)) +
+    ggplot2::ggplot(aes(x = stage, y = pairs, fill = primers)) +
     geom_col() + # TODO: Add % retention labels to the top of each bar
     scale_y_continuous(label = scales::label_number(scale_cut = append(scales::cut_short_scale(), 1, 1))) +
     scale_fill_manual(values = wong_pal) +
-    facet_grid(fcid~.) +
+    facet_grid(read_group~.) +
     theme_bw() +
     theme(
         strip.background = element_rect(colour = "black", fill = "lightgray"),
@@ -174,15 +189,16 @@ gg.read_tracker <- read_tracker_long %>%
     labs(
         x = "Pipeline step",
         y = "Reads retained",
-        fill = "PCR primers"
-        )
+        fill = "Primers"
+    )
 
 pdf(file="read_tracker.pdf", width = 11, height = 8 , paper="a4r")
     print(gg.read_tracker)
 try(dev.off(), silent=TRUE)
 
 ### TODO: add a per-sample line graph output
-gg.read_tracker_sample <- read_tracker_wide %>% 
+gg.read_tracker_sample <- 
+    read_tracker_wide %>% 
     tidyr::pivot_longer(
         cols = input:filter_sample_taxon,
         names_to = "stage",
@@ -195,11 +211,11 @@ gg.read_tracker_sample <- read_tracker_wide %>%
                 pairs >= 1000 ~ 1
                 )
             ) %>% 
-    ggplot2::ggplot(aes(x = stage, y = pairs, colour = pcr_primers)) +
-    geom_line(aes(group = sample_id_com, alpha = alpha)) +
+    ggplot2::ggplot(aes(x = stage, y = pairs, colour = primers)) +
+    geom_line(aes(group = sample, alpha = alpha)) +
     scale_colour_manual(values = wong_pal[-1]) +
     scale_alpha_identity() +
-    facet_grid(fcid~pcr_primers) +
+    facet_grid(read_group~primers) +
     theme_bw() +
     theme(
         strip.background = element_rect(colour = "black", fill = "lightgray"),
@@ -215,12 +231,14 @@ gg.read_tracker_sample <- read_tracker_wide %>%
     labs(
         x = "Pipeline step",
         y = "Reads retained",
-        fill = "PCR primers"
+        fill = "Primers"
         )
 
 pdf(file="read_tracker_sample.pdf", width = 11, height = 8 , paper="a4r")
     print(gg.read_tracker_sample)
 try(dev.off(), silent=TRUE)
+
+
 
 ### TODO: Make variant of per-sample line graph that is normalised by % of input reads per sample 
 ## and add average across flow cell and locus

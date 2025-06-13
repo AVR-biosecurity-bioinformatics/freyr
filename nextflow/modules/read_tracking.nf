@@ -8,6 +8,7 @@ process READ_TRACKING {
     input:
     path(rt_samples)
     path(rt_group)
+    path(samplesheet_split)
 
     output:
     path("*.csv")
@@ -26,8 +27,9 @@ process READ_TRACKING {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    rt_samples =         "${rt_samples}"
-    rt_group =           "${rt_group}"
+    rt_samples =                "${rt_samples}"
+    rt_group =                  "${rt_group}"
+    samplesheet_split_file =    "${samplesheet_split}" 
     
     ## global variables
     projectDir = "$projectDir"

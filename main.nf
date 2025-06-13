@@ -403,19 +403,20 @@ workflow FREYR {
         ch_primer_params
     )
 
-    // //// combine read tracking grouped channels
-    // ch_read_tracker_grouped = DADA2.out.ch_read_tracker_grouped
-    //     .concat(FILTERING.out.ch_read_tracker_grouped)
+    //// combine read tracking grouped channels
+    ch_read_tracker_grouped = DADA2.out.ch_read_tracker_grouped
+        .concat(FILTERING.out.ch_read_tracker_grouped)
 
-    // //// subworkflow: create result summaries
-    // RESULT_SUMMARIES (
-    //     FILTERING.out.ch_seqtab_filtered,
-    //     TAXONOMY.out.ch_mergetax_output,
-    //     ch_primer_samdf,
-    //     ch_primer_params,
-    //     PROCESS_READS.out.ch_read_tracker_samples,
-    //     ch_read_tracker_grouped
-    // )
+    //// subworkflow: create result summaries
+    RESULT_SUMMARIES (
+        FILTERING.out.ch_seqtab_filtered,
+        TAXONOMY.out.ch_mergetax_output,
+        PARSE_INPUTS.out.samplesheet_split.first(),
+        PARSE_INPUTS.out.sample_metadata.first(),
+        ch_primer_params,
+        PROCESS_READS.out.ch_read_tracker_samples,
+        ch_read_tracker_grouped
+    )
     
 
     ///// VISUALISATION

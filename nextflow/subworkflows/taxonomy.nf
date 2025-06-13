@@ -21,15 +21,6 @@ workflow TAXONOMY {
 
     main:
 
-    // //// just keep fasta files for input
-    // ch_seqtab
-    //     .map { primers, read_group, seqtab, fasta -> 
-    //         [ primers, read_group, fasta ] }
-    //     .combine ( ch_primer_params, by: 0 )
-    //     .map { primers, read_group, fasta, primer_params -> 
-    //         [ primers, read_group, primer_params, fasta ] }
-    //     .set { ch_seqs_params }
-
     //// just keep fasta files for input
     ch_seqtab
         .map { primers, read_group, seqtab, fasta -> 

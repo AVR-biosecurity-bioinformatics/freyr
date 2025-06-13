@@ -77,10 +77,10 @@ summarise_phyloseq(ps_u) %>%
 
 ## output phyloseq and component data; from step_output_ps
 
-# save seqtab as wide tibble (rows = sample_id, cols = ASV name (hash), cells = abundance)
+# save seqtab as wide tibble (rows = sample_primers, cols = ASV name (hash), cells = abundance)
 seqtab_out_u <- phyloseq::otu_table(ps_u) %>%
     as("matrix") %>%
-    tibble::as_tibble(rownames = "sample_id")
+    tibble::as_tibble(rownames = "sample_primers")
 
 # save taxtab as long tibble (rows = ASV, cols = tax rankings)
 taxtab_out_u <- phyloseq::tax_table(ps_u) %>%
@@ -113,18 +113,20 @@ saveRDS(ps_u, paste0("ps_unfiltered.rds"))
 rank_cols <- colnames(phyloseq::tax_table(ps_u)) # only retrieve this once
 
 summarise_phyloseq(ps_u) %>%
-    tidyr::pivot_longer(cols = sample_names(ps_u), names_to="sample_id", values_to = "Abundance")%>%
-    dplyr::left_join(phyloseq::sample_data(ps_u) %>%
-                as("data.frame") %>%
-                dplyr::select(sample_id, fcid, pcr_primers))%>%
+    tidyr::pivot_longer(cols = sample_names(ps_u), names_to="sample_primers", values_to = "Abundance")%>%
+    dplyr::left_join(
+        phyloseq::sample_data(ps_u) %>%
+            as("data.frame") %>%
+            dplyr::select(sample_primers, read_group, primers)
+        ) %>%
     dplyr::mutate(dplyr::across(tidyselect::any_of(rank_cols), 
                                 ~ ifelse(!stringr::str_detect(.x, "__"), Abundance, NA_integer_))) %>% 
-    dplyr::group_by(sample_id, fcid, pcr_primers) %>%
+    dplyr::group_by(sample_primers, read_group, primers) %>%
     dplyr::summarise(dplyr::across(tidyselect::any_of(rank_cols),
                                     ~ sum(., na.rm = TRUE), .names = "classified_{.col}")) %>% 
     tidyr::pivot_longer(cols = tidyselect::starts_with("classified_"), names_to = "stage", values_to = "pairs") %>% 
     mutate(stage = stringr::str_to_lower(stage)) %>%
-    dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>%
+    dplyr::select(stage, sample_primers, read_group, primers, pairs) %>%
     readr::write_csv("ps_u_readsout.csv")
 
 ### filtered ----------------------------------------------------------------------------------------------------------
@@ -157,10 +159,10 @@ summarise_phyloseq(ps_f) %>%
 
 ## output phyloseq and component data; from step_output_ps
 
-# save seqtab as wide tibble (rows = sample_id, cols = ASV name (hash), cells = abundance)
+# save seqtab as wide tibble (rows = sample_primers, cols = ASV name (hash), cells = abundance)
 seqtab_out_f <- phyloseq::otu_table(ps_f) %>%
     as("matrix") %>%
-    tibble::as_tibble(rownames = "sample_id")
+    tibble::as_tibble(rownames = "sample_primers")
 
 # save taxtab as long tibble (rows = ASV, cols = tax rankings)
 taxtab_out_f <- phyloseq::tax_table(ps_f) %>%
@@ -191,12 +193,12 @@ saveRDS(ps_f, paste0("ps_filtered.rds"))
 
 ## read tracking output from filtered phyloseq
 phyloseq::sample_sums(ps_f) %>%
-    tibble::enframe(name = "sample_id", value = "pairs")%>%
+    tibble::enframe(name = "sample_primers", value = "pairs")%>%
     dplyr::left_join(phyloseq::sample_data(ps_f) %>%
                      as("data.frame") %>%
-                     dplyr::select(sample_id, fcid, pcr_primers)) %>% 
+                     dplyr::select(sample_primers, read_group, primers)) %>% 
     dplyr::mutate(stage = "filter_sample_taxon") %>% 
-    dplyr::select(stage, sample_id, fcid, pcr_primers, pairs) %>% 
+    dplyr::select(stage, sample_primers, read_group, primers, pairs) %>% 
     readr::write_csv("ps_f_readsout.csv")
     
 

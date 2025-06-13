@@ -295,7 +295,7 @@ melt_phyloseq <- function(ps) {
   df <- seqtab %>% 
     as("matrix") %>%
     data.table::as.data.table(keep.rownames = "seq_name") %>%
-    data.table::melt(id.vars = c("seq_name"), variable.name = "sample_id", 
+    data.table::melt(id.vars = c("seq_name"), variable.name = "sample_primers", 
                      value.name = "Abundance", variable.factor = FALSE)
   
   # Remove observations with no abundance
@@ -306,7 +306,7 @@ melt_phyloseq <- function(ps) {
     samdf <- phyloseq::sample_data(ps) %>%
       as("data.frame") %>% 
       data.table::as.data.table(keep.rownames = FALSE)
-    df <- df[samdf, on = .(sample_id = sample_id)]
+    df <- df[samdf, on = .(sample_primers = sample_primers)]
   }
   
   # Add the tax table if it exists
@@ -354,39 +354,42 @@ rareplot <- function(ps, step="auto", threshold=0){
             b <- data.frame(ASV = b[,1], count = rownames(b))
             b$count <- as.numeric(gsub("N", "",  b$count))
             return(b)
-        },.id="sample_id") %>%
-        left_join(
+        },.id="sample_primers") %>%
+        dplyr::left_join(
             phyloseq::sample_data(ps) %>%
                 as("matrix") %>%
                 tibble::as_tibble() %>%
-                dplyr::select(sample_id, fcid) %>%
+                dplyr::select(sample_primers, read_group) %>%
                 dplyr::distinct(),
-            by = "sample_id"
+            by = "sample_primers"
         )
     
     gg.rare <- rare %>%
         ggplot2::ggplot() +
-        geom_line(aes(x = count, y = ASV, group=sample_id), alpha=0.3)+
+        geom_line(aes(x = count, y = ASV, group=sample_primers), alpha=0.3)+
         geom_point(data = rare %>% 
-                    group_by(sample_id) %>% 
+                    group_by(sample_primers) %>% 
                     top_n(1, count),
                 aes(x = count, y = ASV, colour=count > threshold)) +
         scale_x_continuous(label = scales::label_number(scale_cut = append(scales::cut_short_scale(), 1, 1)))+
         scale_colour_manual(values=c("FALSE" = "#F8766D", "TRUE"="#619CFF"))+
-        facet_wrap(fcid~., scales="free", ncol=1)+
+        facet_wrap(read_group~., scales="free", ncol=1)+
         theme_bw()+
         theme(
-        strip.background = element_rect(colour = "black", fill = "lightgray"),
-        strip.text = element_text(size=9, family = ""),
-        plot.background = element_blank(),
-        text = element_text(size=9, family = ""),
-        axis.text = element_text(size=8, family = ""),
-        legend.position = "bottom",
-        panel.border = element_rect(colour = "black", fill=NA, size=0.5),
-        panel.grid = element_line(size = rel(0.5)),
-        ) + labs(x = "Sequence reads",
-            y = "Observed ASVs",
-            colour = "Above sample filtering theshold") 
+          strip.background = element_rect(colour = "black", fill = "lightgray"),
+          strip.text = element_text(size=9, family = ""),
+          plot.background = element_blank(),
+          text = element_text(size=9, family = ""),
+          axis.text = element_text(size=8, family = ""),
+          legend.position = "bottom",
+          panel.border = element_rect(colour = "black", fill=NA, size=0.5),
+          panel.grid = element_line(size = rel(0.5)),
+        ) + 
+        labs(
+          x = "Sequence reads",
+           y = "Observed ASVs",
+           colour = "Above sample filtering theshold"
+        ) 
     
     return(gg.rare)
 }

@@ -21,13 +21,13 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "pcr_primers",
+    "primers",
     "taxtab_file",
     "seqtab_file",
     "filters_file",
     "fasta_file",
-    "loci_params",
-    "samdf"
+    "samplesheet_split_file",
+    "sample_metadata_file"
 )
 lapply(nf_vars, nf_var_check)
 
@@ -40,7 +40,9 @@ filters <- readr::read_csv(filters_file)
 
 seqs_combined <- Biostrings::readDNAStringSet(fasta_file)
 
-samdf <- readr::read_csv(samdf, show_col_types = FALSE)
+samplesheet_split <- readr::read_csv(samplesheet_split_file, show_col_types = FALSE)
+
+sample_metadata <- readr::read_csv(sample_metadata_file, show_col_types = FALSE)
 
 ## check taxonomy, seqtab, filters, and fasta all have the same sequences, none are missing
 if(!setequal(seqtab_combined$seq_name, taxtab$seq_name)){
@@ -58,13 +60,10 @@ if(!setequal(seqtab_combined$seq_name, names(seqs_combined))){
 
 ### run R code
 
-## mutate samdf to add pcr_primers to sample_id, to make consistent with new seqtab format
-samdf_renamed <- 
-    samdf %>% 
-    dplyr::mutate(
-        sample_id_orig = sample_id, # save original sample_id as a new column
-        sample_id = paste0(sample_id,"_",pcr_primers) # mutate sample_id to add primer id at the end
-    )
+## create complete samplesheet with arbitrary metadata from original --samplesheet .csv
+samplesheet_complete <- 
+    samplesheet_split %>%
+    dplyr::left_join(., sample_metadata, by = dplyr::join_by("sample","read_group"))
 
 # create phyloseq-format otu_table (seqtab), ignoring filters -- ASV names are rows
 otutab_ps <-   
@@ -83,9 +82,9 @@ taxtab_ps <-
 
 # create sample information phyloseq object
 samples_ps <-
-    samdf_renamed %>%
+    samplesheet_complete %>%
     as.data.frame() %>%
-    magrittr::set_rownames(.$sample_id) %>%
+    magrittr::set_rownames(.$sample_primers) %>%
     phyloseq::sample_data()
 
 # create refseq object
@@ -105,16 +104,16 @@ ps_uf <-
 
 ### outputs -----------------------------------------------------------------------------
 
-# save sequences as .fasta file (with taxonomy in header, in format "seq_name|pcr_primers;Root;Kingdom;Phylum;Class;Order;Family;Genus;Species")
+# save sequences as .fasta file (with taxonomy in header, in format "seq_name|primers;Root;Kingdom;Phylum;Class;Order;Family;Genus;Species")
 seq_names_new <- 
     taxtab %>%
     # ensure sequence name order is same as the DSS object
     dplyr::arrange(factor(seq_name, levels = names(seqs_combined))) %>%
-    # add pcr_primers
-    dplyr::mutate(pcr_primers = pcr_primers, .after = seq_name) %>%
+    # add primers
+    dplyr::mutate(primers = primers, .after = seq_name) %>%
     # unite columns into a single header string per sequence
     tidyr::unite(col = "lineage", Root:Species, sep = ";") %>%
-    tidyr::unite(col = "id", c(seq_name, pcr_primers), sep = "|") %>%
+    tidyr::unite(col = "id", c(seq_name, primers), sep = "|") %>%
     tidyr::unite(col = "header", c(id, lineage), sep = ";") %>%
     dplyr::pull(header)
 
@@ -122,16 +121,16 @@ seqs_output <- seqs_combined
 
 names(seqs_output) <- seq_names_new
 
-write_fasta(seqs_output, paste0("asvs_unfiltered_", pcr_primers, ".fasta"))  
+write_fasta(seqs_output, paste0("asvs_unfiltered_", primers, ".fasta"))  
 
 # save seqtab (filters) as wide tibble (rows = seq_name, columns = sample_id)
-readr::write_csv(filters, paste0("filters_",pcr_primers,".csv"))
+readr::write_csv(filters, paste0("filters_",primers,".csv"))
 
 # save seqtab (data) as wide tibble (rows = seq_name, columns = sample_id)
 phyloseq::otu_table(ps_uf) %>%
     as("matrix") %>%
     tibble::as_tibble(rownames = "seq_name") %>%
-    readr::write_csv(., paste0("seqtab_unfiltered_",pcr_primers,".csv"))
+    readr::write_csv(., paste0("seqtab_unfiltered_",primers,".csv"))
 
 # save taxtab as tibble (rows = seq_name, columns = taxonomic ranks (Root -> Species))
 phyloseq::tax_table(ps_uf) %>%
@@ -141,23 +140,23 @@ phyloseq::tax_table(ps_uf) %>%
     dplyr::mutate( 
         dplyr::across(Root:Species, ~ dplyr::if_else(stringr::str_detect(.x, "^\\w__"), NA, .x))
     ) %>%
-    readr::write_csv(., paste0("taxtab_unfiltered_",pcr_primers,".csv"))
+    readr::write_csv(., paste0("taxtab_unfiltered_",primers,".csv"))
 
 # save samdf as tibble
 phyloseq::sample_data(ps_uf) %>%
     as("matrix") %>%
     tibble::as_tibble() %>%
-    readr::write_csv(., paste0("samdf_unfiltered_",pcr_primers,".csv"))
+    readr::write_csv(., paste0("samdf_unfiltered_",primers,".csv"))
 
 # export raw .csv from phyloseq object
 melt_phyloseq(ps_uf) %>%
-    readr::write_csv(., paste0("raw_unfiltered_",pcr_primers,".csv"))
+    readr::write_csv(., paste0("raw_unfiltered_",primers,".csv"))
 
 # export summary .csv from phyloseq object
 summarise_phyloseq(ps_uf) %>%
     dplyr::left_join(., filters, by = c("seq_name", "sequence")) %>%
     dplyr::relocate(seq_name, sequence, Root:Species, chimera_filter, length_filter, phmm_filter, frame_filter) %>%
-    readr::write_csv(., paste0("summary_unfiltered_",pcr_primers,".csv"))
+    readr::write_csv(., paste0("summary_unfiltered_",primers,".csv"))
 
 # export phyloseq object
-saveRDS(ps_uf, paste0("ps_unfiltered_",pcr_primers,".rds"))
+saveRDS(ps_uf, paste0("ps_unfiltered_",primers,".rds"))
