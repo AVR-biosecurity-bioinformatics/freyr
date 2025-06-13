@@ -1,16 +1,16 @@
 process TAX_BLAST {
     def module_name = "tax_blast"
-    tag "$pcr_primers; $fcid"
+    tag "$primers; $read_group"
     label "medium"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), val(loci_params), path(fasta)
+    tuple val(primers), val(read_group), path(fasta), val(process_params)
 
     output:
-    tuple val(pcr_primers), val(fcid), val(loci_params), path("*_blast.csv"),   emit: blast
-    tuple val(pcr_primers), val(fcid), path("*_blast_spp_low.rds"),             emit: blast_assignment
-    tuple val(pcr_primers), val(fcid), path("*_n_ranks.txt"),                   emit: n_ranks
+    tuple val(primers), val(read_group), path("*_blast.csv"),                     emit: blast
+    tuple val(primers), val(read_group), path("*_blast_spp_low.rds"),             emit: blast_assignment
+    tuple val(primers), val(read_group), path("*_n_ranks.txt"),                   emit: n_ranks
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -23,14 +23,13 @@ process TAX_BLAST {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    fcid =                  "${fcid}"
-    pcr_primers =           "${pcr_primers}"
+    read_group =            "${read_group}"
+    primers =               "${primers}"
     fasta =                 "${fasta}"
-    target_gene =           "${loci_params.target_gene}"
-    ref_fasta =             "${loci_params.ref_fasta}"
-    blast_min_identity =    "${loci_params.blast_min_identity}"
-    blast_min_coverage =    "${loci_params.blast_min_coverage}"
-    run_blast =             "${loci_params.run_blast}"
+    ref_fasta =             "${process_params.ref_fasta}"
+    blast_min_identity =    "${process_params.blast_min_identity}"
+    blast_min_coverage =    "${process_params.blast_min_coverage}"
+    run_blast =             "${process_params.run_blast}"
 
     ## global variables
     projectDir = "$projectDir"

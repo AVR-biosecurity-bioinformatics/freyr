@@ -16,12 +16,11 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "fcid",     
-    "pcr_primers",   
+    "read_group",     
+    "primers",   
     "fasta",
     "blast_list",  
     "tax",           
-    "target_gene",
     "idtaxa_db",  
     "ref_fasta"  
 )
@@ -90,7 +89,7 @@ if ( !is.null(blast) ){
 }
 
 # save joint object
-saveRDS(joint, paste0(fcid,"_",pcr_primers,"_joint.rds"))
+saveRDS(joint, paste0(read_group,"_",primers,"_joint.rds"))
 
 # make assignment plot
 if ( !is.null(joint) ) {
@@ -112,7 +111,7 @@ if ( !is.null(joint) ) {
         ggplot(aes(x=pident, fill=rank)) + 
         geom_histogram(colour="black", binwidth = 1, position = "stack") + 
         labs(
-            title = paste0(fcid, "  ", pcr_primers, " Top hit identity distribution"),
+            title = paste0(read_group, "  ", primers, " Top hit identity distribution"),
             subtitle = paste0("IDTAXA database:", idtaxa_db, "\nBLAST database:", ref_fasta),
             x = "BLAST top hit % identity",
             y = "ASVs"
@@ -133,7 +132,7 @@ if ( !is.null(joint) ) {
 } else { plot <- NULL }
 
 # write plot
-plot_filename <- paste0(fcid,"_",pcr_primers,"_taxonomic_assignment_summary.pdf")
+plot_filename <- paste0(read_group,"_",primers,"_taxonomic_assignment_summary.pdf")
 if ( !is.null(plot) ){
     pdf(file = plot_filename, width = 11, height = 8 , paper="a4r")
     print(plot)

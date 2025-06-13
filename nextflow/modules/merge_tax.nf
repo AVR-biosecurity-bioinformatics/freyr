@@ -1,14 +1,14 @@
 process MERGE_TAX {
     def module_name = "merge_tax"
-    tag "$pcr_primers"
+    tag "$primers"
     label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), path(taxtabs)
+    tuple val(primers), path(taxtabs)
 
     output:
-    tuple val(pcr_primers), path("*_merged_tax.csv"), emit: merged_tax
+    tuple val(primers), path("*_merged_tax.csv"), emit: merged_tax
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -21,8 +21,8 @@ process MERGE_TAX {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    pcr_primers =           "${pcr_primers}"
-    taxtabs =                "${taxtabs}"
+    primers =               "${primers}"
+    taxtabs =               "${taxtabs}"
     
     ## global variables
     projectDir = "$projectDir"

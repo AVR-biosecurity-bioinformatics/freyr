@@ -17,91 +17,124 @@ workflow TAXONOMY {
     take:
 
     ch_seqtab
-    ch_loci_params
-    ch_idtaxa_db_new
+    ch_primer_params
 
     main:
 
-    //// combine loci_params to seqtab
-    ch_seqtab
-        .map { pcr_primers, fcid, meta, seqtab, fasta -> 
-            [ pcr_primers, fcid, fasta ] }
-        .combine ( ch_loci_params, by: 0 )
-        .map { pcr_primers, fcid, fasta, loci_params -> 
-            [ pcr_primers, fcid, loci_params, fasta ] }
-        .set { ch_seqs_params }
+    // //// just keep fasta files for input
+    // ch_seqtab
+    //     .map { primers, read_group, seqtab, fasta -> 
+    //         [ primers, read_group, fasta ] }
+    //     .combine ( ch_primer_params, by: 0 )
+    //     .map { primers, read_group, fasta, primer_params -> 
+    //         [ primers, read_group, primer_params, fasta ] }
+    //     .set { ch_seqs_params }
 
-    //// use newly trained IDTAXA model, if it exists
-    if ( params.train_idtaxa ) {
-        ch_seqs_params
-            .combine ( ch_idtaxa_db_new, by: 0 ) // join by pcr_primers
-            .map { pcr_primers, fcid, loci_params, fasta, new_idtaxa ->
-                [ pcr_primers, fcid, loci_params + [ idtaxa_db: new_idtaxa ], fasta ] }
-            .set { ch_seqs_params }
-    }
+    //// just keep fasta files for input
+    ch_seqtab
+        .map { primers, read_group, seqtab, fasta -> 
+            [ primers, read_group, fasta ] }
+        .set { ch_fasta }
 
     //// split .fasta into chunks for taxonomic assignment
-    ch_seqs_params
+    ch_fasta
         .splitFasta (
             by: params.chunk_taxassign,
             file: true,
-            elem: 3
+            elem: 2
         )
         .set { ch_taxassign_input }
 
+
+    //// combine TAX_IDTAXA process params to input channel
+    ch_primer_params
+        .map { primers, primer_params ->
+            def process_params = primer_params.subMap('idtaxa_confidence', 'idtaxa_db') 
+            [ primers, process_params ] }
+        .set { ch_tax_idtaxa_params }
+    
+    ch_taxassign_input
+        .combine ( ch_tax_idtaxa_params, by: 0 )
+        .set { ch_tax_idtaxa_input }
+
     //// use IDTAXA to assign taxonomy
     TAX_IDTAXA ( 
-        ch_taxassign_input
+        ch_tax_idtaxa_input
     )
 
-    //// group IDTAXA assignment outputs by pcr_primers, fcid and loci_params
+    //// group IDTAXA assignment outputs by primers, read_group
     TAX_IDTAXA.out.tax
-        .groupTuple( by: [0,1,2] )
+        .groupTuple( by: [0,1] )
         .set { ch_idtaxa_tax }
 
     TAX_IDTAXA.out.ids
-        .groupTuple( by: [0,1,2] )
+        .groupTuple( by: [0,1] )
         .set { ch_idtaxa_ids }
+
+
+    //// combine TAX_BLAST process params to input channel 
+    ch_primer_params
+        .map { primers, primer_params ->
+            def process_params = primer_params.subMap('ref_fasta', 'blast_min_identity', 'blast_min_coverage', 'run_blast') 
+            [ primers, process_params ] }
+        .set { ch_tax_blast_params }
+    
+    ch_taxassign_input
+        .combine ( ch_tax_blast_params, by: 0 )
+        .set { ch_tax_blast_input }
 
     //// use blastn to assign taxonomy
     TAX_BLAST ( 
-        ch_taxassign_input
+        ch_tax_blast_input
     )
 
-    //// group BLAST assignment outputs by pcr_primers, fcid and loci_params
+    //// group BLAST assignment outputs by primers, read_group
     TAX_BLAST.out.blast
-        .groupTuple( by: [0,1,2] )
+        .groupTuple( by: [0,1] )
         .set { ch_blast_tax }
 
-    //// group BLAST "low stringency" assignment outputa by pcr_primers and fcid
+    //// group BLAST "low stringency" assignment outputa by primers
     TAX_BLAST.out.blast_assignment
         .groupTuple (by: [0,1] )
         .set { ch_blast_low }
 
+
     //// merge tax assignment outputs and filtered seqtab (pre-assignment)
-    ch_idtaxa_tax // pcr_primers, fcid, loci_params, tax
-        .join ( ch_blast_tax, by: [0,1,2] ) 
-        .set { ch_joint_tax_input } // pcr_primers, fcid, loci_params, tax, blast
+    ch_idtaxa_tax // primers, read_group, tax
+        .join ( ch_blast_tax, by: [0,1] ) 
+        .set { ch_joint_tax_input } // primers, read_group, tax, blast
 
     //// aggregate taxonomic assignment
-    JOINT_TAX ( ch_joint_tax_input )
+    JOINT_TAX ( 
+        ch_joint_tax_input
+    )
 
     //// group taxtab across flowcells (per locus)
     JOINT_TAX.out.joint
-        .map { pcr_primers, fcid, tax_tibble -> [ pcr_primers, tax_tibble ] }
-        .groupTuple ( by: 0 ) // group into tuples using pcr_primers
+        .map { primers, read_group, tax_tibble -> [ primers, tax_tibble ] }
+        .groupTuple ( by: 0 ) // group into tuples using primers
         .set { ch_mergetax_input }
 
     //// merge tax tables across flowcells
-    MERGE_TAX ( ch_mergetax_input )
+    MERGE_TAX ( 
+        ch_mergetax_input
+    )
 
     ch_mergetax_output = MERGE_TAX.out.merged_tax
 
-    //// create assignment_plot input merging filtered fasta, taxtab, and blast output
-    /// channel has one item per fcid x pcr_primer combo
-    ch_seqs_params // pcr_primers, fcid, loci_params, fasta
-        .join ( ch_blast_low, by: [0,1] ) // combine by pcr_primers, fcid 
-        .join ( JOINT_TAX.out.joint, by: [0,1] ) // combine by pcr_primers, fcid
+    //// get ASSIGNMENT_PLOT process params 
+    ch_primer_params
+        .map { primers, primer_params ->
+            def process_params = primer_params.subMap('idtaxa_db','ref_fasta') 
+            [ primers, process_params ] }
+        .set { ch_assignment_plot_params }
+    
+    //// create assignment_plot input merging filtered fasta, taxtab, blast output and process_params
+    /// channel has one item per read_group x pcr_primer combo
+    ch_fasta // primers, read_group, fasta
+        .join ( ch_blast_low, by: [0,1] ) // combine by primers, read_group 
+        .join ( JOINT_TAX.out.joint, by: [0,1] ) // combine by primers, read_group
+        .combine ( ch_assignment_plot_params, by: 0 )
         .set { ch_assignment_plot_input }
 
     //// do assignment plot
@@ -109,11 +142,20 @@ workflow TAXONOMY {
         ch_assignment_plot_input 
     )
 
+
+    //// get TAX_SUMMARY process params 
+    ch_primer_params
+        .map { primers, primer_params ->
+            def process_params = primer_params.subMap('locus','idtaxa_db','ref_fasta') 
+            [ primers, process_params ] }
+        .set { ch_tax_summary_params }
+
     /// generate taxonomic assignment summary per locus
-    ch_seqs_params // pcr_primers, fcid, loci_params, fasta
-        .join ( ch_idtaxa_tax, by: [0,1,2] ) // + tax_csv (list)
-        .join ( ch_idtaxa_ids, by: [0,1,2] ) // + "*_idtaxa_ids.rds" (list)
-        .join ( ASSIGNMENT_PLOT.out.joint, by: [0,1,2] ) // + "*_joint.rds"
+    ch_fasta // primers, read_group, fasta
+        .join ( ch_idtaxa_tax, by: [0,1] ) // + tax_csv (list)
+        .join ( ch_idtaxa_ids, by: [0,1] ) // + "*_idtaxa_ids.rds" (list)
+        .join ( ASSIGNMENT_PLOT.out.joint, by: [0,1] ) // + "*_joint.rds"
+        .combine ( ch_tax_summary_params, by: 0 )
         .set { ch_tax_summary_input }
 
     //// create taxonomic assignment summaries per locus x flowcell
@@ -123,7 +165,7 @@ workflow TAXONOMY {
 
     // create channel containing a single list of all TAX_SUMMARY outputs
     TAX_SUMMARY.out.csv
-        .map { pcr_primers, fcid, loci_params, tax_summary ->
+        .map { primers, read_group, tax_summary ->
             [ tax_summary ] } 
         .collect()
         .set { ch_tax_summaries } 

@@ -1,14 +1,14 @@
 process JOINT_TAX {
     def module_name = "joint_tax"
-    tag "$pcr_primers; $fcid"
+    tag "$primers; $read_group"
     label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), val(loci_params), path(tax, name: "idtaxa*.csv"), path(blast, name: "blast*.csv")
+    tuple val(primers), val(read_group), path(tax, name: "idtaxa*.csv"), path(blast, name: "blast*.csv")
     
     output:
-    tuple val(pcr_primers), val(fcid), path("*_joint.csv"), emit: joint
+    tuple val(primers), val(read_group), path("*_joint.csv"), emit: joint
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -21,9 +21,8 @@ process JOINT_TAX {
     
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    fcid =                  "${fcid}"
-    pcr_primers =           "${pcr_primers}"
-    target_gene =           "${loci_params.target_gene}"
+    read_group =            "${read_group}"
+    primers =               "${primers}"
     idtaxa_list =           "${tax}"
     blast_list =            "${blast}"
     

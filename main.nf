@@ -182,8 +182,6 @@ workflow FREYR {
     //// Create empty channels
     ch_read_tracker_grouped =   // read-tracking for grouped processes
         Channel.empty()      
-    ch_idtaxa_db_new = 
-        Channel.empty()
 
     //// read-in samplesheet and primer_params .csv files, validate their contents, and produce inputs for rest of pipeline
     PARSE_INPUTS ( 
@@ -350,12 +348,14 @@ workflow FREYR {
             params.train_idtaxa
         )
 
-        ch_idtaxa_db_new
-            .concat ( TRAIN_IDTAXA.out.model )
-            .set { ch_idtaxa_db_new }
-    } else {
-        ch_idtaxa_db_new = channel.value( "no_new_model" )
-    }
+        //// update primer_params with new models
+        ch_primer_params
+            .combine ( TRAIN_IDTAXA.out.model, by: 0 ) // join by primers
+            .map { primers, read_group, primer_params, fasta, new_idtaxa ->
+                [ primers, read_group, primer_params + [ idtaxa_db: new_idtaxa ], fasta ] }
+            .set { ch_primer_params }
+    
+    } 
 
     //// downsample reads if params.downsample is defined
     if ( params.downsample_reads ) {
@@ -397,12 +397,11 @@ workflow FREYR {
         PARSE_INPUTS.out.samplesheet_split.first()
     )
 
-    // //// subworkflow: assign taxonomy
-    // TAXONOMY (
-    //     DADA2.out.ch_seqtab,
-    //     ch_primer_params,
-    //     ch_idtaxa_db_new
-    // )
+    //// subworkflow: assign taxonomy
+    TAXONOMY (
+        DADA2.out.ch_seqtab,
+        ch_primer_params
+    )
 
     // //// combine read tracking grouped channels
     // ch_read_tracker_grouped = DADA2.out.ch_read_tracker_grouped
