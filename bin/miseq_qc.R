@@ -30,10 +30,13 @@ lapply(nf_vars, nf_var_check)
 
 if (!exists("read_group")) {stop("'read_group' not defined!")}
 
+# extract "fcid" from read-header read group
+fcid <- stringr::str_extract(read_group, "(?<=-)(\\S+)(?=__)", group = 1) 
+
 # convert miseq_dir to a path
 data_path <- base::normalizePath(miseq_dir)
 
-seq_dir <- paste0(data_path,"/",read_group)
+seq_dir <- paste0(data_path,"/",fcid)
   
 barcode_mismatch <- 1
 
