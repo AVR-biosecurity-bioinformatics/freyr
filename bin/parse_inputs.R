@@ -507,8 +507,8 @@ primer_params_da <-
 # get vector of unique primers values, undelimited from samplesheet
 ss_pp <- samplesheet_complete$primers %>% stringr::str_split(., ";") %>% unlist() %>% unique()
 
-if ( !setequal(primer_params_da$primers, ss_pp)){
-    stop(paste0("SAMPLESHEET/PRIMER PARAMS ERROR: 'primers' values in samplesheet ('",stringr::str_flatten(ss_pp, " / "),"') and primer_params ('",stringr::str_flatten(primer_params_da$primers, " / "),"') do not match."))
+if ( !all(ss_pp %in% primer_params_da$primers) ){
+    stop(paste0("SAMPLESHEET/PRIMER PARAMS ERROR: Not all 'primers' values in samplesheet ('",stringr::str_flatten(ss_pp, " / "),"') match those in primer_params ('",stringr::str_flatten(primer_params_da$primers, " / "),"')."))
 }
 
 ### replace primer params from .csv with those from the '--pp_*' pipeline parameters
