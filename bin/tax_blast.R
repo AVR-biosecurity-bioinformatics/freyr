@@ -71,10 +71,9 @@ db_name <-              basename(database) %>% stringr::str_remove("_\\.*$")
 ### run R code
 seqs <-  Biostrings::readDNAStringSet(fasta) %>% as.character() # read in fasta
 
+seqmap <- seqs %>% tibble::enframe(., name = "seq_name", value = "sequence")
 
 if (isTRUE(run_blast)) { # run BLAST if requested
-    
-    seqmap <- seqs %>% tibble::enframe(., name = "seq_name", value = "sequence")
     
     if ( length(seqs) > 0 ) { # if there are ASV sequences, run BLAST
         ## make low stringency, ident = 60, coverage = 80, then save

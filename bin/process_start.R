@@ -13,7 +13,7 @@ if (!exists("params_dict")) {
 invisible(library(stringr)) # load stringr for parsing
 
 params_list <- params_dict %>% # convert Groovy list format into R nested list
-                stringr::str_remove_all("\\[|\\]") %>% 
+                stringr::str_remove_all("^\\[|\\]$") %>% 
                 stringr::str_split_1(", ") %>% 
                 stringr::str_split(":")
 

@@ -18,6 +18,7 @@ nf_vars <- c(
     "params_dict",
     "samplesheet",
     "primer_params",
+    "pp_type",
     "seq_type",
     "paired",
     "subsample"
@@ -436,19 +437,9 @@ samplesheet_complete %>%
 
 ### validate primer_params content -------------------------------------------------------------------------------------
 
-# check primers is correctly formatted
-if (!all(stringr::str_detect(primer_params_df$primers, "^((?!__)[^\\s,;])+$"))){
-    stop(paste0(prpe, "'primers' values must not contain spaces, commas, semi-colons or two underscores in a row."))
-}
-
 # check none of the primer_params values contain spaces or commas 
 if (!all(stringr::str_detect(primer_params_df %>% unlist %>% unname, "^[^\\s,;]+$") %>% .[!is.na(.)] )){
     stop(paste0(prpe, "Primer parameters must not contain spaces, commas or semi-colons."))
-}
-
-# check primers column contains only unique values
-if (any(duplicated(primer_params_df$primers))) {
-    stop (paste0(prpe, "'primers' values are not unique!"))
 }
 
 # add missing columns with default values
@@ -502,19 +493,54 @@ primer_params_da <-
     # make every column characters, will convert later
     dplyr::mutate(dplyr::across(tidyselect::everything(), as.character))
 
+# use params_list from process_start.R to create a named vector of parameters and values
+params_vec <- 
+    sapply(
+        params_list,
+        function(x){
+            y <- x[2]
+            names(y) <- x[1]
+            return(y)
+        }
+    )
 
-## check primers values match between samplesheet and primer_params
-# get vector of unique primers values, undelimited from samplesheet
-ss_pp <- samplesheet_complete$primers %>% stringr::str_split(., ";") %>% unlist() %>% unique()
+if ( pp_type == "default" ){
+    # if pp_type == "default", check pp_primers, pp_locus, pp_for_primer_seq, pp_rev_primer_seq and pp_ref_fasta are all set
+    if ( any( 
+        params_vec["pp_primers"] == "null", 
+        params_vec["pp_locus"] == "null", 
+        params_vec["pp_for_primer_seq"] == "null", 
+        params_vec["pp_rev_primer_seq"] == "null", 
+        params_vec["pp_ref_fasta"] == "null" 
+    ) ) {
+        stop(paste0(ppe, "If '--primer_params' is unset, all of '--pp_primers', '--pp_locus', '--pp_for_primer_seq', '--pp_rev_primer_seq' and '--pp_ref_fasta' must be set to overwrite blank defaults."))
+    }
+    
+    # add primers to blank primer_params tibble
+    primer_names_new <- params_vec["pp_primers"] %>% stringr::str_split_1(., ";")
+    primer_params_da <- 
+        lapply(
+            primer_names_new,
+            function(x){ primer_params_da %>% dplyr::mutate(primers = x) }
+        ) %>%
+        dplyr::bind_rows()
+    
+} else if ( pp_type == "user" ){
+    
+    # if pp_type == "user", check pp_primers is unset 
+    if ( params_vec["pp_primers"] != "null"){
+        stop(paste0(ppe, "'--pp_primers' is set to '",params_vec["pp_primers"],"' but cannot be used in conjunction with '--primer_params'."))
+    }
 
-if ( !all(ss_pp %in% primer_params_da$primers) ){
-    stop(paste0("SAMPLESHEET/PRIMER PARAMS ERROR: Not all 'primers' values in samplesheet ('",stringr::str_flatten(ss_pp, " / "),"') match those in primer_params ('",stringr::str_flatten(primer_params_da$primers, " / "),"')."))
 }
 
 ### replace primer params from .csv with those from the '--pp_*' pipeline parameters
 # vector of primer parameters
 pp_vec <- 
     c(
+        "locus",
+        "for_primer_seq",
+        "rev_primer_seq",
         "max_primer_mismatch",
         "read_min_length",
         "read_max_length",
@@ -547,18 +573,8 @@ pp_vec <-
     ) %>%
     stringr::str_replace(., "^", "pp_")
 
-# use params_list from process_start.R to create a named vector of parameters and values
-params_vec <- 
-    sapply(
-        params_list,
-        function(x){
-            y <- x[2]
-            names(y) <- x[1]
-            return(y)
-        }
-    )
 
-# just the pp_ parameters 
+# just the pp_ parameters other than pp_primers
 params_pp <- params_vec[names(params_vec) %in% pp_vec]
 
 # remove parameters set to "null" (ie. unset)
@@ -609,7 +625,7 @@ if ( length(params_pp_nn) > 0 ){
                     )
                 )
             
-            message(paste0("Primer parameter '",p_name,"' has been updated to '",p_notag,"' for 'pcr_primer' value '",p_tag,"'."))
+            message(paste0("Primer parameter '",p_name,"' has been updated to '",p_notag,"' for 'primers' value '",p_tag,"'."))
         
         } else if ( stringr::str_detect(p_value, "^\\[\\S+\\][^\\[\\]\\;]+;\\[\\S+\\][^\\[\\]\\;]+(\\[\\S+\\][^\\[\\]\\;]+)*$") ) { # [A]1;B[2](;[C]3) -- two or more values, each with a primers tag
         
@@ -634,13 +650,13 @@ if ( length(params_pp_nn) > 0 ){
             primer_params_up <- 
                 primer_params_up %>%
                 dplyr::rows_update(
-                .,
-                p_tibble, 
-                by = "primers",
-                unmatched = "error"
+                  .,
+                  p_tibble, 
+                  by = "primers",
+                  unmatched = "error"
                 )
             
-            message(paste0("Primer parameter '",p_name,"' has been updated to '",stringr::str_flatten(p_notags, " / "),"' for 'pcr_primer' values '",stringr::str_flatten(p_tags, " / "),"', respectively."))
+            message(paste0("Primer parameter '",p_name,"' has been updated to '",stringr::str_flatten(p_notags, " / "),"' for 'primers' values '",stringr::str_flatten(p_tags, " / "),"', respectively."))
         
         } else {
             stop(paste0(ppe, "The value of parameter '--pp_",p_name,"' is misformatted: '", p_value,"'"))
@@ -665,7 +681,27 @@ primer_params_up <-
         )
     ) 
 
+
 ## parameter validation
+
+# check primers is correctly formatted
+if (!all(stringr::str_detect(primer_params_up$primers, "^((?!__)[^\\s,;])+$"))){
+    stop(paste0(prpe, "'primers' values must not contain spaces, commas, semi-colons or two underscores in a row."))
+}
+
+# check primers column contains only unique values
+if (any(duplicated(primer_params_up$primers))) {
+    stop (paste0(prpe, "'primers' values are not unique!"))
+}
+
+## check primers values match between samplesheet and primer_params
+# get vector of unique primers values, undelimited from samplesheet
+ss_pp <- samplesheet_complete$primers %>% stringr::str_split(., ";") %>% unlist() %>% unique()
+
+if ( !all(ss_pp %in% primer_params_up$primers) ){
+    stop(paste0("SAMPLESHEET/PRIMER PARAMS ERROR: Not all 'primers' values in samplesheet ('",stringr::str_flatten(ss_pp, " / "),"') match those in primer_params ('",stringr::str_flatten(primer_params_up$primers, " / "),"')."))
+}
+
 
 # if `idtaxa_db` is not provided and `params.train_idtaxa` is not true, throw error
 if ( any(primer_params_up$idtaxa_db %in% c("null",NA) ) && params.train_idtaxa %in% c("null","false") ) {
@@ -736,14 +772,19 @@ if (any(primer_params_up$read_trim_right %>% as.integer() %>% is.na()) || any(pr
     stop(paste0(prpe, "'read_trim_right' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$read_trim_right, " / "), "'."))
 }
 
-# check asv_min_length is an integer >= 1
+# check asv_min_length is an integer >= 0
 if (any(primer_params_up$asv_min_length %>% as.integer() %>% is.na()) || any(primer_params_up$asv_min_length %>% as.integer() < 0)){
-    stop(paste0(prpe, "'asv_min_length' must be an integer >= 1: '",stringr::str_flatten(primer_params_up$asv_min_length, " / "), "'."))
+    stop(paste0(prpe, "'asv_min_length' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$asv_min_length, " / "), "'."))
 }
 
-# check asv_max_length is an integer >= 1
-if (any(primer_params_up$asv_max_length %>% as.integer() %>% is.na()) || any(primer_params_up$asv_max_length %>% as.integer() < 0)){
-    stop(paste0(prpe, "'asv_max_length' must be an integer >= 1: '",stringr::str_flatten(primer_params_up$asv_max_length, " / "), "'."))
+# check asv_max_length is an integer >= 1 or 'Inf'
+for (i in 1:length(primer_params_up$asv_max_length) ) {
+    test_val <- primer_params_up$asv_max_length[i]
+    if ( test_val != "Inf" ){
+        if ( test_val %>% as.integer %>% is.na || test_val %>% as.integer < 1 ){
+            stop(paste0(prpe, "'asv_max_length' must be an integer >=1, or the string 'Inf': '",stringr::str_flatten(primer_params_up$asv_max_length, " / "), "'."))
+        }
+    }
 }
 
 # check concat_unmerged is a logical string

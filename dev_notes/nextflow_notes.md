@@ -158,3 +158,16 @@ New Horsham format:
         --pp_idtaxa_db /group/pathogens/IAWS/Personal/JackS/databases/coi/tarth_250307/idtaxa_model.rds \
         --pp_ref_fasta /group/pathogens/IAWS/Personal/JackS/databases/coi/tarth_250307/final_database.fasta \
         -resume
+
+Testing 'no primer_params' input
+
+    nextflow run . \
+        -profile basc_slurm,debug,test \
+        --primer_params false \
+        --pp_primers "fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4" \
+        --pp_locus "[fwhF2-fwhR2nDac]COI;[EIF3LminiF4-EIF3lminiR4]EIF3L" \
+        --pp_for_primer_seq "[fwhF2-fwhR2nDac]GGDACWGGWTGAACWGTWTAYCCHCC;[EIF3LminiF4-EIF3lminiR4]GATGCGYCGTTATGCYGATGC" \
+        --pp_rev_primer_seq "[fwhF2-fwhR2nDac]GTRATWGCHCCIGCTAADACHGG;[EIF3LminiF4-EIF3lminiR4]TTRAAYACTTCYARATCRCC" \
+        --pp_ref_fasta "[fwhF2-fwhR2nDac]./test_data/dual/reference/COI_hierarchial.fa.gz;[EIF3LminiF4-EIF3lminiR4]./test_data/dual/reference/EIF3L_hierarchial.fa.gz" \
+        --pp_idtaxa_db "[fwhF2-fwhR2nDac]./test_data/dual/reference/COI_idtaxa.rds;[EIF3LminiF4-EIF3lminiR4]./test_data/dual/reference/EIF3L_idtaxa.rds" \
+        --pp_phmm "[fwhF2-fwhR2nDac]./test_data/dual/reference/Bactrocera_COI.rds;[EIF3LminiF4-EIF3lminiR4]./test_data/dual/reference/Bactrocera_EIF3L.rds" 

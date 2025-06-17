@@ -128,8 +128,8 @@ include { TAXONOMY                                  } from './nextflow/subworkfl
 include { RESULT_SUMMARIES                          } from './nextflow/subworkflows/result_summaries'
 
 //// import modules
-include { PARSE_INPUTS                              } from './nextflow/modules/parse_inputs'
 include { DOWNSAMPLE_READS                          } from './nextflow/modules/downsample_reads'
+include { PARSE_INPUTS                              } from './nextflow/modules/parse_inputs'
 include { TRAIN_IDTAXA                              } from './nextflow/modules/train_idtaxa'
 
 //// utility processes for development and debugging
@@ -174,7 +174,14 @@ workflow FREYR {
 
     //// parse path channels
     ch_samplesheet_file = channel.fromPath( params.samplesheet, checkIfExists: true, type: 'file' )
-    ch_primer_params_file = channel.fromPath( params.primer_params, checkIfExists: true, type: 'file' )
+
+    if ( params.primer_params ){
+        ch_primer_params_file = channel.fromPath( params.primer_params, checkIfExists: true, type: 'file' )
+        ch_primer_params_type = "user"
+    } else {
+        ch_primer_params_file = channel.fromPath( "assets/primer_params_default.csv", checkIfExists: true, type: 'file' )
+        ch_primer_params_type = "default"
+    }
 
     //// parse subsample parameter
     ch_subsample = params.subsample ?: "false"
@@ -187,6 +194,7 @@ workflow FREYR {
     PARSE_INPUTS ( 
         ch_samplesheet_file, 
         ch_primer_params_file,
+        ch_primer_params_type,
         params.seq_type,
         params.paired,
         ch_subsample
@@ -242,90 +250,6 @@ workflow FREYR {
             [ header.primers, header ]
             }
         .set { ch_primer_params }
-
-
-    // //// parse samplesheets that contain locus-specific parameters
-    // if ( params.paired == true ) {
-    //     PARSE_INPUTS.out.samplesheet_split
-    //     .flatten ()
-    //     .splitCsv ( header: true )
-    //     .map { row -> 
-    //         def meta = row.subMap(
-    //             'sample_id','sample_name','extraction_rep','amp_rep',
-    //             'client_name','experiment_name','sample_type','collection_method',
-    //             'collection_location','latitude','longitude','environment','collection_date',
-    //             'operator_name','description','assay','extraction_method',
-    //             'amp_method','target_gene','pcr_primers','for_primer_seq',
-    //             'rev_primer_seq','index_plate','index_well','i7_index_id',
-    //             'i7_index','i5_index_id','i5_index','seq_platform',
-    //             'fcid','for_read_length','rev_read_length','seq_run_id',
-    //             'seq_id','seq_date','analysis_method','notes','max_primer_mismatch','read_min_length','read_max_length',
-    //             'read_max_ee','read_trunc_length','read_trim_left','read_trim_right',
-    //             'asv_min_length','asv_max_length','concat_unmerged','genetic_code','coding',
-    //             'phmm','idtaxa_db','ref_fasta','idtaxa_confidence',
-    //             'run_blast','blast_min_identity','blast_min_coverage','target_kingdom',
-    //             'target_phylum','target_class','target_order','target_family',
-    //             'target_genus','target_species','min_sample_reads','min_taxa_reads',
-    //             'min_taxa_ra'
-    //             )
-    //         [ meta, [ file(row.fwd, checkIfExists: true), file(row.rev, checkIfExists: true) ] ]  
-    //         }
-    //     .set { ch_sample_locus_reads }
-    // } else if ( params.paired == false ) {
-    // PARSE_INPUTS.out.samplesheet_split
-    //     .flatten ()
-    //     .splitCsv ( header: true )
-    //     .map { row -> 
-    //         def meta = row.subMap(
-    //             'sample_id','sample_name','extraction_rep','amp_rep',
-    //             'client_name','experiment_name','sample_type','collection_method',
-    //             'collection_location','latitude','longitude','environment','collection_date',
-    //             'operator_name','description','assay','extraction_method',
-    //             'amp_method','target_gene','pcr_primers','for_primer_seq',
-    //             'rev_primer_seq','index_plate','index_well','i7_index_id',
-    //             'i7_index','i5_index_id','i5_index','seq_platform',
-    //             'fcid','for_read_length','rev_read_length','seq_run_id',
-    //             'seq_id','seq_date','analysis_method','notes','max_primer_mismatch','read_min_length','read_max_length',
-    //             'read_max_ee','read_trunc_length','read_trim_left','read_trim_right',
-    //             'asv_min_length','asv_max_length','concat_unmerged','genetic_code','coding',
-    //             'phmm','idtaxa_db','ref_fasta','idtaxa_confidence',
-    //             'run_blast','blast_min_identity','blast_min_coverage','target_kingdom',
-    //             'target_phylum','target_class','target_order','target_family',
-    //             'target_genus','target_species','min_sample_reads','min_taxa_reads',
-    //             'min_taxa_ra'
-    //             )
-    //         [ meta, file(row.single, checkIfExists: true) ]  
-    //         }
-    //     .set { ch_sample_locus_reads }
-    // } else {
-    //     error " 'params.paired' must be 'true' or 'false'. "
-    // }
-
-    // //// create channel that links locus-specific samplesheets to pcr_primer key, in the format 'pcr_primers, csv_file'
-    // PARSE_INPUTS.out.samplesheet_split
-    //     .flatten()
-    //     .map { csv -> 
-    //         def csv_name = csv.getFileName().toString()
-    //         ( pcr_primers, rest ) = csv_name.split("__")
-    //         [ pcr_primers, csv ]
-    //         }
-    //     // .dump (tag: 'ch_primer_samdf')
-    //     .set { ch_primer_samdf }  
-
-    // //// get names and count of the multiplexed loci used
-    // PARSE_INPUTS.out.samplesheet_split
-    //     .flatten ()
-    //     .splitCsv ( header: true )
-    //     .map { row -> row.target_gene }
-    //     .unique ()
-    //     .toList ()
-    //     .set { ch_primer_names } // value channel; list
-
-    // ch_primer_names
-    //     .flatten ()
-    //     .count ()
-    //     .set { ch_primer_number } // value channel; integer
-
 
     //// get read_group values as channel
     ch_sample_primers_reads 

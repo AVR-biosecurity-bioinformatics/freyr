@@ -40,7 +40,7 @@ tax_input <-      readr::read_csv(tax)
 ### run R code
 
 # if blast output isn't NULL...
-if ( !is.null(blast) ){
+if ( nrow(blast_input) > 0 ){
 
     # convert blast 'resolve_ties="all"' output to 'resolve_ties="first"'
     blast <- blast_input %>%
