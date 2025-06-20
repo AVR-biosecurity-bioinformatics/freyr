@@ -1,1 +1,1 @@
-sample_id,sample_name,fcid,target_gene,pcr_primers,for_primer_seq,rev_primer_seq,read_dir,fwd,rev,extraction_rep,amp_rep,client_name,experiment_name,sample_type,collection_method,collection_location,latitude,longitude,environment,collection_date,operator_name,description,assay,extraction_method,amp_method,index_plate,index_well,i7_index_id,i7_index,i5_index_id,i5_index,seq_platform,for_read_length,rev_read_length,seq_run_id,seq_id,seq_date,analysis_method,notes
+sample,primers,read_group,read_dir,fwd,rev,single
