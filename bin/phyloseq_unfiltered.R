@@ -123,10 +123,10 @@ names(seqs_output) <- seq_names_new
 
 write_fasta(seqs_output, paste0("asvs_unfiltered_", primers, ".fasta"))  
 
-# save seqtab (filters) as wide tibble (rows = seq_name, columns = sample_id)
+# save seqtab (filters) as wide tibble (rows = seq_name, columns = sample_primers)
 readr::write_csv(filters, paste0("filters_",primers,".csv"))
 
-# save seqtab (data) as wide tibble (rows = seq_name, columns = sample_id)
+# save seqtab (data) as wide tibble (rows = seq_name, columns = sample_primers)
 phyloseq::otu_table(ps_uf) %>%
     as("matrix") %>%
     tibble::as_tibble(rownames = "seq_name") %>%

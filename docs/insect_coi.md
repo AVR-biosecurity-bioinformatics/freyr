@@ -1,17 +1,18 @@
 # Insect COI workflow for AgVic researchers
 
-#### by Jack Scanlan, updated 2025-06
+#### by Jack Scanlan, updated 2025-06**
 
 This tutorial will help you run `freyr` on the Agriculture Victoria BASC HPC system, for experiments utilising the 'freshwater' COI primers `fwhF2-fwhR2n` on mixed arthropod samples (focusing on insects).
 
 ## Prior to analysis
 
 The following are some assumptions that you need to make sure are met before you start this analysis:
+
 1. Samples have been sequenced with Illumina paired-end sequencing (eg. MiSeq or NovaSeq)
 2. You have used the `fwhF2-fwhR2n` primers to amplify the COI gene, with Illumina adapters added to the end of each amplicon, ie. amplicons have **not** been fragmented before adapters were added
 3. Your data is available, per sample, as gzipped FastQ files (with `.fastq.gz` or `.fq.gz` extensions), with forward and reverse reads in separate files, ie. **not** interleaved
 
---- 
+---
 
 ### Install `nextflow` in your home directory
 
@@ -61,7 +62,7 @@ cd $working_dir
 
 ### Make your samplesheet
 
-The samplesheet is a `.csv` file that conveys information to the pipeline about each sample. One row should be used per sample. A blank samplesheet can be found at `./inputs/samplesheet_blank.csv`. There are 8-9 required samplesheet columns (or 'fields'), listed in the table below. The rest of the fields are optional and can be used to specify additional metadata if you have it. 
+The samplesheet is a `.csv` file that conveys information to the pipeline about each sample. One row should be used per sample. A blank samplesheet can be found at `./inputs/samplesheet_blank.csv`. There are 8-9 required samplesheet columns (or 'fields'), listed in the table below. The rest of the fields are optional and can be used to specify additional metadata if you have it.
 
 | Field | Meaning | Requirements | Change to: |
 | --- | --- | --- | --- |
@@ -72,9 +73,9 @@ The samplesheet is a `.csv` file that conveys information to the pipeline about 
 | `fwd` | Exact path of the forward read file for this sample | Cannot be used in conjunction with `read_dir`; delete field if not using. | Up to you!  |
 | `rev` | Exact path of the reverse read file for this sample | Cannot be used in conjunction with `read_dir`; delete field if not using. | Up to you!  |
 
-The easiest way to specify the reads for each sample is to copy your read files into the `./data` directory and then put `./data` in the `read_dir` field for every row in the samplesheet. 
+The easiest way to specify the reads for each sample is to copy your read files into the `./data` directory and then put `./data` in the `read_dir` field for every row in the samplesheet. \
 
-> IMPORTANT NOTE: You must only use one of either `read_dir` OR `fwd` + `rev` in the samplesheet. Delete the fields/columns you're not using. 
+> IMPORTANT NOTE: You must only use one of either `read_dir` OR `fwd` + `rev` in the samplesheet. Delete the fields/columns you're not using.
 
 > NOTE: Paths for the `read_dir` and `fwd`/`rev` fields can be absolute or relative.
 
@@ -82,9 +83,9 @@ Once you have made your samplesheet `.csv` (it can have any name), upload it to 
 
 ### Make your primer parameters file
 
-The primer parameters (or `primer_params`) file is a `.csv` that conveys information to the pipeline about how to process amplicons derived from different PCR primers. One row should be used per primer pair. A 'default' file can be found at `./inputs/primer_params_default.csv` that contains defaults for 'typical' COI runs, although you should always make sure you don't need to change any of these. 
+The primer parameters (or `primer_params`) file is a `.csv` that conveys information to the pipeline about how to process amplicons derived from different PCR primers. One row should be used per primer pair. A 'default' file can be found at `./inputs/primer_params_default.csv` that contains defaults for 'typical' COI runs, although you should always make sure you don't need to change any of these.
 
-Every field in the `primer_params` file is currently required and must be specified, so don't remove any of the columns. 
+Every field in the `primer_params` file is currently required and must be specified, so don't remove any of the columns.
 
 For the purposes of this run, we only need to change a few fields in `primer_params_default.csv`:
 
@@ -99,9 +100,10 @@ Once you have made your primer parameters `.csv` (it can have any name), upload 
 
 ### Run pipeline
 
-You should always run `freyr` on BASC in a computational node, not a login node. There are two main ways to do this: 
-1. in an interactive shell using `sinteractive`, or 
-2. with a SLURM script using `sbatch`. 
+You should always run `freyr` on BASC in a computational node, not a login node. There are two main ways to do this:
+
+1. in an interactive shell using `sinteractive`, or
+2. with a SLURM script using `sbatch`.
 
 However, the commands to run the pipeline will remain the same for both options.  
 
@@ -127,7 +129,8 @@ NXF_VER=23.05.0-edge \
 ```
 
 The above code is doing the following:
--  `NXF_VER=23.05.0-edge` tells `nextflow` to run as version 23.05.0-edge, which is currently required for the pipeline to work correctly on BASC
+
+- `NXF_VER=23.05.0-edge` tells `nextflow` to run as version 23.05.0-edge, which is currently required for the pipeline to work correctly on BASC
 - `nextflow run .` tells `nextflow` to run the pipeline using files in the current directory
 - `--samplesheet` and `--primer_params` specify where your samplesheet and primer parameters files are; these can be relative or absolute paths, here we use relative paths
 - `-profile basc_slurm` tells `nextflow` to run using settings that make sense for BASC; in particular, it will spawn a new job for every process, making its computational execution very efficient, and will use `shifter` to run Docker containers for all the software tools
@@ -145,7 +148,6 @@ The above code is doing the following:
 | `--primer_n_trim` | Recognise N bases in reads when detecting primers | Can be `false` (default) or `true`; only use this if your sequencing data quality is very low |
 | `--subsample` | Reduce the number of input samples per `primers` x `read_group` combination to this number | Should be a number >=1; this is mainly used for development and debugging and should only be used if you're trying to quickly work out if you have the right parameters for a particular dataset |
 
-
 #### Using an interactive shell
 
 Running `freyr` in an interactive shell is only recommended to check that parameters are valid or to run a test dataset, since your terminal will need to remain open and connected to BASC for the duration of the run, which could be many hours on real data.
@@ -161,10 +163,9 @@ Once you have been allocated a computational node in the shell, run the commands
 
 #### Using a SLURM script
 
-SLURM scripts are the best way to run `freyr` for proper, large datasets, as your analysis will run on the server without needing interaction with your personal computer. BASC has a [good guide](http://users.basc.science.depi.vic.gov.au/jobs/slurm/sbatch/) to using `sbatch`, including a very useful [SLURM script generator](http://jsgen.basc.science.depi.vic.gov.au/). 
+SLURM scripts are the best way to run `freyr` for proper, large datasets, as your analysis will run on the server without needing interaction with your personal computer. BASC has a [good guide](http://users.basc.science.depi.vic.gov.au/jobs/slurm/sbatch/) to using `sbatch`, including a very useful [SLURM script generator](http://jsgen.basc.science.depi.vic.gov.au/).
 
 There is also a template SLURM script for running `freyr` on BASC available at [`./supplementary_scripts/basc_template.slurm`](/supplementary_scripts/basc/basc_template.slurm). 
-
 
 ### Optional: Running a test dataset
 
@@ -193,9 +194,9 @@ rm -rf ./output/modules/* ./output/run_info/* ./output/results/* ./work/*
 While `freyr` is running, something like the following will be displayed in the terminal (if in an interactive shell) or in the SLURM job output file (typically with a name like `slurm-*.out`):
 
 ```
-Nextflow 24.04.4 is available - Please consider updating your version to it
+Nextflow 25.05.0-edge is available - Please consider updating your version to it
 N E X T F L O W  ~  version 23.05.0-edge
-Launching `./main.nf` [boring_hypatia] DSL2 - revision: 226d236840
+Launching `./main.nf` [goofy_rubens] DSL2 - revision: 690caecd45
 
 
 :::::::::: :::::::::  :::::::::: :::   ::: :::::::::
@@ -210,19 +211,24 @@ Launching `./main.nf` [boring_hypatia] DSL2 - revision: 226d236840
 ~~~ freyr: Metabarcoding analysis for biosecurity and biosurveillance ~~~
  
 Core Nextflow options
-  runName        : boring_hypatia
+  runName        : goofy_rubens
   containerEngine: shifter
   launchDir      : /group/pathogens/IAWS/Personal/JackS/dev/freyr
   workDir        : /group/pathogens/IAWS/Personal/JackS/dev/freyr/work
   projectDir     : /group/pathogens/IAWS/Personal/JackS/dev/freyr
   userName       : js7t
-  profile        : basc_slurm,test
+  profile        : basc_slurm,test,debug
   configFiles    : 
 
 Main arguments
   samplesheet    : test_data/dual/samplesheet_read_dir.csv
   primer_params  : test_data/dual/primer_params.csv
-  slurm_account  : pathogens
+  miseq_internal : true
+  miseq_dir      : test_data/dual
+  slurm_account  : ngdsi
+
+Debugging options
+  rdata          : true
 
 Max job request options
   max_cpus       : 1
@@ -232,34 +238,40 @@ Max job request options
 !! Only displaying parameters that differ from the pipeline defaults !!
 ------------------------------------------------------
 executor >  slurm (1)
-[21/225c1a] process > FREYR:PARSE_INPUTS (Whole dataset) [  0%] 0 of 1
-[-        ] process > FREYR:SEQ_QC                       -
-[-        ] process > FREYR:SPLIT_LOCI                   -
-[-        ] process > FREYR:PRIMER_TRIM                  -
-[-        ] process > FREYR:READ_FILTER                  -
-[-        ] process > FREYR:FILTER_QUALPLOTS_PRE         -
-[-        ] process > FREYR:FILTER_QUALPLOTS_POST        -
-[-        ] process > FREYR:ERROR_MODEL_F                -
-[-        ] process > FREYR:ERROR_MODEL_R                -
-[-        ] process > FREYR:DENOISE1_F                   -
-[-        ] process > FREYR:DENOISE1_R                   -
-[-        ] process > FREYR:DADA_PRIORS_F                -
-[-        ] process > FREYR:DADA_PRIORS_R                -
-[-        ] process > FREYR:DENOISE2_F                   -
-[-        ] process > FREYR:DENOISE2_R                   -
-[-        ] process > FREYR:DADA_MERGEREADS              -
-[-        ] process > FREYR:FILTER_SEQTAB                -
-[-        ] process > FREYR:TAX_IDTAXA                   -
-[-        ] process > FREYR:TAX_BLAST                    -
-[-        ] process > FREYR:JOINT_TAX                    -
-[-        ] process > FREYR:MERGE_TAX                    -
-[-        ] process > FREYR:ASSIGNMENT_PLOT              -
-[-        ] process > FREYR:TAX_SUMMARY                  -
-[-        ] process > FREYR:TAX_SUMMARY_MERGE            -
-[-        ] process > FREYR:PHYLOSEQ_UNFILTERED          -
-[-        ] process > FREYR:PHYLOSEQ_FILTER              -
-[-        ] process > FREYR:PHYLOSEQ_MERGE               -
-[-        ] process > FREYR:READ_TRACKING                -
+[6d/1a415a] process > FREYR:PARSE_INPUTS (Whole dataset)         [  0%] 0 of 1
+[-        ] process > FREYR:PROCESS_READS:MISEQ_QC               -
+[-        ] process > FREYR:PROCESS_READS:FASTQC                 -
+[-        ] process > FREYR:PROCESS_READS:SPLIT_LOCI             -
+[-        ] process > FREYR:PROCESS_READS:PRIMER_TRIM            -
+[-        ] process > FREYR:PROCESS_READS:READ_FILTER            -
+[-        ] process > FREYR:PROCESS_READS:FILTER_QUALPLOTS_PRE   -
+[-        ] process > FREYR:PROCESS_READS:FILTER_QUALPLOTS_POST  -
+[-        ] process > FREYR:DADA2:ERROR_MODEL_F                  -
+[-        ] process > FREYR:DADA2:ERROR_MODEL_R                  -
+[-        ] process > FREYR:DADA2:DENOISE1_F                     -
+[-        ] process > FREYR:DADA2:DENOISE1_R                     -
+[-        ] process > FREYR:DADA2:PRIORS_F                       -
+[-        ] process > FREYR:DADA2:DENOISE2_F                     -
+[-        ] process > FREYR:DADA2:PRIORS_R                       -
+[-        ] process > FREYR:DADA2:DENOISE2_R                     -
+[-        ] process > FREYR:DADA2:MAKE_SEQTAB_PAIRED             -
+[-        ] process > FREYR:FILTERING:FILTER_CHIMERA             -
+[-        ] process > FREYR:FILTERING:FILTER_LENGTH              -
+[-        ] process > FREYR:FILTERING:FILTER_PHMM                -
+[-        ] process > FREYR:FILTERING:FILTER_FRAME               -
+[-        ] process > FREYR:FILTERING:MERGE_FILTERS              -
+[-        ] process > FREYR:TAXONOMY:TAX_IDTAXA                  -
+[-        ] process > FREYR:TAXONOMY:TAX_BLAST                   -
+[-        ] process > FREYR:TAXONOMY:JOINT_TAX                   -
+[-        ] process > FREYR:TAXONOMY:MERGE_TAX                   -
+[-        ] process > FREYR:TAXONOMY:ASSIGNMENT_PLOT             -
+[-        ] process > FREYR:TAXONOMY:TAX_SUMMARY                 -
+[-        ] process > FREYR:TAXONOMY:TAX_SUMMARY_MERGE           -
+[-        ] process > FREYR:RESULT_SUMMARIES:PHYLOSEQ_UNFILTERED -
+[-        ] process > FREYR:RESULT_SUMMARIES:ACCUMULATION_CURVE  -
+[-        ] process > FREYR:RESULT_SUMMARIES:PHYLOSEQ_FILTER     -
+[-        ] process > FREYR:RESULT_SUMMARIES:PHYLOSEQ_MERGE      -
+[-        ] process > FREYR:RESULT_SUMMARIES:READ_TRACKING       -
 
 ```
 
@@ -268,53 +280,60 @@ The bottom part of this output shows the status of each step of the pipeline (ca
 If the pipeline completes without error, you should see something like this:
 
 ```
-executor >  slurm (200)
-[8d/6936dd] process > FREYR:PARSE_INPUTS (Whole dataset) [100%] 1 of 1 ✔
-[43/879167] process > FREYR:SEQ_QC (K77JP)               [100%] 2 of 2 ✔
-[69/d0540f] process > FREYR:SPLIT_LOCI (fwhF2-fwhR2nD... [100%] 16 of 16 ✔
-[e1/505a7d] process > FREYR:PRIMER_TRIM (fwhF2-fwhR2n... [100%] 16 of 16 ✔
-[f9/162c9b] process > FREYR:READ_FILTER (fwhF2-fwhR2n... [100%] 16 of 16 ✔
-[5b/471d04] process > FREYR:FILTER_QUALPLOTS_PRE (K77... [100%] 16 of 16 ✔
-[44/bb8661] process > FREYR:FILTER_QUALPLOTS_POST (K7... [100%] 16 of 16 ✔
-[d8/bf502d] process > FREYR:ERROR_MODEL_F (EIF3LminiF... [100%] 4 of 4 ✔
-[33/a48ec1] process > FREYR:ERROR_MODEL_R (fwhF2-fwhR... [100%] 4 of 4 ✔
-[f2/8fe2d3] process > FREYR:DENOISE1_F (EIF3LminiF4-E... [100%] 16 of 16 ✔
-[cb/720064] process > FREYR:DENOISE1_R (fwhF2-fwhR2nD... [100%] 16 of 16 ✔
-[12/38a6a8] process > FREYR:DADA_PRIORS_F (EIF3LminiF... [100%] 4 of 4 ✔
-[b1/bd1abc] process > FREYR:DADA_PRIORS_R (fwhF2-fwhR... [100%] 4 of 4 ✔
-[24/39d9df] process > FREYR:DENOISE2_F (EIF3LminiF4-E... [100%] 16 of 16 ✔
-[22/0d3023] process > FREYR:DENOISE2_R (fwhF2-fwhR2nD... [100%] 16 of 16 ✔
-[0b/d2739f] process > FREYR:DADA_MERGEREADS (fwhF2-fw... [100%] 4 of 4 ✔
-[60/6b60e8] process > FREYR:FILTER_SEQTAB (fwhF2-fwhR... [100%] 4 of 4 ✔
-[8e/f6aca9] process > FREYR:TAX_IDTAXA (fwhF2-fwhR2nD... [100%] 4 of 4 ✔
-[49/1db6d7] process > FREYR:TAX_BLAST (fwhF2-fwhR2nDa... [100%] 4 of 4 ✔
-[0c/9280f5] process > FREYR:JOINT_TAX (fwhF2-fwhR2nDa... [100%] 4 of 4 ✔
-[e0/99d8c1] process > FREYR:MERGE_TAX (EIF3LminiF4-EI... [100%] 2 of 2 ✔
-[7c/830fbd] process > FREYR:ASSIGNMENT_PLOT (fwhF2-fw... [100%] 4 of 4 ✔
-[7f/8d1b8b] process > FREYR:TAX_SUMMARY (fwhF2-fwhR2n... [100%] 4 of 4 ✔
-[5d/5493c9] process > FREYR:TAX_SUMMARY_MERGE (Whole ... [100%] 1 of 1 ✔
-[78/4f02d3] process > FREYR:PHYLOSEQ_UNFILTERED (EIF3... [100%] 2 of 2 ✔
-[2b/be4016] process > FREYR:PHYLOSEQ_FILTER (EIF3Lmin... [100%] 2 of 2 ✔
-[8b/a2b001] process > FREYR:PHYLOSEQ_MERGE (Whole dat... [100%] 1 of 1 ✔
-[34/4c5996] process > FREYR:READ_TRACKING (Whole data... [100%] 1 of 1 ✔
-[2024-08-08T14:57:07.284919555+10:00] >> Pipeline finished SUCCESSFULLY after 5m 31s
-Completed at: 08-Aug-2024 14:57:08
-Duration    : 5m 32s
+executor >  slurm (216)
+[6d/1a415a] process > FREYR:PARSE_INPUTS (Whole dataset)                                              [100%] 1 of 1 ✔
+[4b/1fa863] process > FREYR:PROCESS_READS:MISEQ_QC (000000000-K739J__1)                               [100%] 2 of 2 ✔
+[0b/0a876c] process > FREYR:PROCESS_READS:FASTQC (K77JP_Mock2)                                        [100%] 8 of 8 ✔
+[bd/28ead2] process > FREYR:PROCESS_READS:SPLIT_LOCI (K77JP_Trap2_EIF3LminiF4-EIF3lminiR4)            [100%] 16 of 16 ✔
+[59/3b4973] process > FREYR:PROCESS_READS:PRIMER_TRIM (K77JP_Trap2_EIF3LminiF4-EIF3lminiR4)           [100%] 16 of 16 ✔
+[7b/d61555] process > FREYR:PROCESS_READS:READ_FILTER (K77JP_Trap2_EIF3LminiF4-EIF3lminiR4)           [100%] 16 of 16 ✔
+[2b/677c74] process > FREYR:PROCESS_READS:FILTER_QUALPLOTS_PRE (K77JP_Trap2_EIF3LminiF4-EIF3lminiR4)  [100%] 16 of 16 ✔
+[7c/822e26] process > FREYR:PROCESS_READS:FILTER_QUALPLOTS_POST (K77JP_Trap2_EIF3LminiF4-EIF3lminiR4) [100%] 16 of 16 ✔
+[3c/b4ad4c] process > FREYR:DADA2:ERROR_MODEL_F (fwhF2-fwhR2nDac; 000000000-K77JP__1)                 [100%] 4 of 4 ✔
+[88/a28e70] process > FREYR:DADA2:ERROR_MODEL_R (EIF3LminiF4-EIF3lminiR4; 000000000-K77JP__1)         [100%] 4 of 4 ✔
+[9c/6b9305] process > FREYR:DADA2:DENOISE1_F (K77JP_Trap1_fwhF2-fwhR2nDac)                            [100%] 16 of 16 ✔
+[27/1fa697] process > FREYR:DADA2:DENOISE1_R (K77JP_Trap2_EIF3LminiF4-EIF3lminiR4)                    [100%] 16 of 16 ✔
+[ec/3689b3] process > FREYR:DADA2:PRIORS_F (fwhF2-fwhR2nDac; 000000000-K77JP__1)                      [100%] 4 of 4 ✔
+[02/0a6407] process > FREYR:DADA2:DENOISE2_F (K77JP_Trap1_fwhF2-fwhR2nDac)                            [100%] 16 of 16 ✔
+[f5/26ea6c] process > FREYR:DADA2:PRIORS_R (EIF3LminiF4-EIF3lminiR4; 000000000-K77JP__1)              [100%] 4 of 4 ✔
+[78/6911ce] process > FREYR:DADA2:DENOISE2_R (K77JP_Trap2_EIF3LminiF4-EIF3lminiR4)                    [100%] 16 of 16 ✔
+[18/3b4307] process > FREYR:DADA2:MAKE_SEQTAB_PAIRED (EIF3LminiF4-EIF3lminiR4; 000000000-K739J__1)    [100%] 4 of 4 ✔
+[73/7f7edf] process > FREYR:FILTERING:FILTER_CHIMERA (EIF3LminiF4-EIF3lminiR4)                        [100%] 2 of 2 ✔
+[db/3f8ade] process > FREYR:FILTERING:FILTER_LENGTH (EIF3LminiF4-EIF3lminiR4)                         [100%] 2 of 2 ✔
+[79/4c188c] process > FREYR:FILTERING:FILTER_PHMM (EIF3LminiF4-EIF3lminiR4)                           [100%] 2 of 2 ✔
+[df/7721df] process > FREYR:FILTERING:FILTER_FRAME (EIF3LminiF4-EIF3lminiR4)                          [100%] 2 of 2 ✔
+[e4/7d4e66] process > FREYR:FILTERING:MERGE_FILTERS (EIF3LminiF4-EIF3lminiR4)                         [100%] 2 of 2 ✔
+[8d/c2adc3] process > FREYR:TAXONOMY:TAX_IDTAXA (fwhF2-fwhR2nDac; 000000000-K77JP__1)                 [100%] 4 of 4 ✔
+[0c/6ce163] process > FREYR:TAXONOMY:TAX_BLAST (fwhF2-fwhR2nDac; 000000000-K739J__1)                  [100%] 4 of 4 ✔
+[d0/fae64a] process > FREYR:TAXONOMY:JOINT_TAX (EIF3LminiF4-EIF3lminiR4; 000000000-K739J__1)          [100%] 4 of 4 ✔
+[59/710335] process > FREYR:TAXONOMY:MERGE_TAX (fwhF2-fwhR2nDac)                                      [100%] 2 of 2 ✔
+[c8/495a60] process > FREYR:TAXONOMY:ASSIGNMENT_PLOT (EIF3LminiF4-EIF3lminiR4; 000000000-K739J__1)    [100%] 4 of 4 ✔
+[8b/1b03e4] process > FREYR:TAXONOMY:TAX_SUMMARY (EIF3LminiF4-EIF3lminiR4; 000000000-K739J__1)        [100%] 4 of 4 ✔
+[f7/2435f6] process > FREYR:TAXONOMY:TAX_SUMMARY_MERGE (Whole dataset)                                [100%] 1 of 1 ✔
+[c4/db5c8e] process > FREYR:RESULT_SUMMARIES:PHYLOSEQ_UNFILTERED (fwhF2-fwhR2nDac)                    [100%] 2 of 2 ✔
+[c6/4bb480] process > FREYR:RESULT_SUMMARIES:ACCUMULATION_CURVE (EIF3LminiF4-EIF3lminiR4)             [100%] 2 of 2 ✔
+[a1/16f2fd] process > FREYR:RESULT_SUMMARIES:PHYLOSEQ_FILTER (fwhF2-fwhR2nDac)                        [100%] 2 of 2 ✔
+[83/f2051f] process > FREYR:RESULT_SUMMARIES:PHYLOSEQ_MERGE (Whole dataset)                           [100%] 1 of 1 ✔
+[0e/9e3059] process > FREYR:RESULT_SUMMARIES:READ_TRACKING (Whole dataset)                            [100%] 1 of 1 ✔
+[2025-06-23T11:03:04.820843603+10:00] >> Pipeline finished SUCCESSFULLY after 20m 9s
+Completed at: 23-Jun-2025 11:03:06
+Duration    : 20m 10s
 CPU hours   : 0.6
-Succeeded   : 200
+Succeeded   : 216
 ```
 
 At the end of the run, the pipeline will also produce two files in the `./output` directory: `report.html` and `timeline.html`. These detail the overall resource use of the pipeline and the time it took to run each process, respectively. If your run ends with an error, the `report.html` file will detail the error message at the top.
 
 ### Pipeline outputs
 
-Currently, the outputs of the pipeline are found in the `./output/modules` directory, organised by process name. Most of these are not relevant for the typical user; useful final outputs are listed and explained below. 
+Currently, the outputs of the pipeline are found in the `./output/modules` directory, organised by process name. Most of these are not relevant for the typical user; useful final outputs are listed and explained below.
 
 #### Sequences, abundances, and taxonomic assignment
 
-Inferred sequences (ASVs) are filtered per locus/primer pair using the parameters specified in the `primer_params` file. As such, there are both filtered and unfiltered output files, which are found in the `./output/modules/phyloseq_unfiltered` and `./output/modules/phyloseq_filter` directories, respectively. Files in these directories are separated by locus, which is useful if your PCR primers target different genes. In contrast, the `./output/modules/phyloseq_merge` directory contains filtered and unfiltered results merged across primer pairs, which is useful if all your primer pairs target the same gene (eg. tagging technical or biological replicates). 
+Inferred sequences (ASVs) are filtered per locus/primer pair using the parameters specified in the `primer_params` file. As such, there are both filtered and unfiltered output files, which are found in the `./output/modules/phyloseq_unfiltered` and `./output/modules/phyloseq_filter` directories, respectively. Files in these directories are separated by locus, which is useful if your PCR primers target different genes. In contrast, the `./output/modules/phyloseq_merge` directory contains filtered and unfiltered results merged across primer pairs, which is useful if all your primer pairs target the same gene (eg. tagging technical or biological replicates).
 
 All three of these directories contain the following types of files (where `*` is a variable part of the file name):
+
 - `asvs_*.fasta`: FASTA file of ASV sequences
 - `taxtab_*.csv`: taxonomic assignment of each ASV (name, no sequence) for every taxonomic rank
 - `summary_*.csv`: abundance of ASVs per sample (wide format), including sequence and taxonomic assignment
@@ -323,19 +342,18 @@ All three of these directories contain the following types of files (where `*` i
 - `raw_*.csv`: large file of sample-level abundance per ASV (long format), including samplesheet metadata, primer parameters, taxonomic assignment and sequence
 - `ps_*.rds`: R data files in the [`phyloseq`](https://joey711.github.io/phyloseq/) format
 
-Detailed taxonomic assignment information for the unfiltered ASV set, merged across primer pairs, can also be found in `./output/modules/tax_summary_merge` in the `taxonomic_assignment_summary.csv` file. This includes the ASV name, sequence, primer pair, taxonomic assignment confidence per rank, and the identity of the top BLAST hit in the reference database. 
+Detailed taxonomic assignment information for the unfiltered ASV set, merged across primer pairs, can also be found in `./output/modules/tax_summary_merge` in the `taxonomic_assignment_summary.csv` file. This includes the ASV name, sequence, primer pair, taxonomic assignment confidence per rank, and the identity of the top BLAST hit in the reference database.
 
 #### Visualisation and QC plots
 
 The `accumulation_curve` directory contains **accumulation curve plots** (`accumulation_curve_*.pdf`) that show ASV accumulation curves per sample for a particular primer pair. 
 
-**Taxonomic assignment plots** (`*_taxonomic_assignment_summary.pdf`) can be found in `./output/modules/assignment_plot` and show the relationship between IDTAXA taxonomic assignment level and % identity to the top BLAST hit in the database, per flowcell and PCR primer combination. 
+**Taxonomic assignment plots** (`*_taxonomic_assignment_summary.pdf`) can be found in `./output/modules/assignment_plot` and show the relationship between IDTAXA taxonomic assignment level and % identity to the top BLAST hit in the database, per flowcell and PCR primer combination.
 
 **ASV filtering plots** (`*_ASV_cleanup_summary.pdf`) can be found in `./output/modules/filter_seqtab` and show the number and abundance of sequences kept or filtered, within each flowcell and PCR primer combination.
 
-A **read tracking plot** (`read_tracker.pdf`) can be found in `./output/modules/read_tracking`. This shows the total number of reads, per flowcell, that make it through each step of the pipeline, including the final taxonomic and abundance filtering of ASVs. 
+A **read tracking plot** (`read_tracker.pdf`) can be found in `./output/modules/read_tracking`. This shows the total number of reads, per flowcell, that make it through each step of the pipeline, including the final taxonomic and abundance filtering of ASVs.
 
 **Read quality plots** per sample and primer pair can be found in `./output/modules/filter_qualplots`, that visualise quality before (`*_pre_qualplots.pdf`) and after (`*_post_qualplots.pdf`) read filtering and truncation. These show the distribution of base quality per position (top) and the cumulative number of expected errors per read for various quantiles (bottom).
 
-If the pipeline parameter `--miseq_internal` was set to `true` and the data directory had the correct MiSeq-output structure, there will be **additional QC plots** in `./output/modules/seq_qc` per flowcell. `*_flowcell_qc.pdf` has stats about the quality of the MiSeq runs, while `*_index_switching.pdf` shows a heat map of the calculated index switching rate per index combination. 
-
+If the pipeline parameter `--miseq_internal` was set to `true` and the data directory had the correct MiSeq-output structure, there will be **additional QC plots** in `./output/modules/seq_qc` per flowcell. `*_flowcell_qc.pdf` has stats about the quality of the MiSeq runs, while `*_index_switching.pdf` shows a heat map of the calculated index switching rate per index combination.
