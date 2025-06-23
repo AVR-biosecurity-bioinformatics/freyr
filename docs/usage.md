@@ -94,6 +94,7 @@ The primer parameters file tells the pipeline how to process amplicons derived f
 | `locus` | Required | Target locus/gene for primers | None (does not have to be unique) | No default, must be supplied |
 | `for_primer_seq` | Required | 5'-3' nucleotide sequence of the forward primer | [IUPAC characters](https://genome.ucsc.edu/goldenPath/help/iupac.html) only, of any case | No default, must be supplied |
 | `rev_primer_seq` | Required | 5'-3' nucleotide sequence of the reverse primer | [IUPAC characters](https://genome.ucsc.edu/goldenPath/help/iupac.html) only, of any case | No default, must be supplied |
+| `ref_fasta` | Required | A reference database of taxonomically classified sequences | A path, absolute or relative to the analysis directory | No default, must be supplied |
 | `max_primer_mismatch` | Optional | Maximum number of mismatches to allow when detecting primer sequences | Integer >= `0` | `0` |
 | `read_min_length` | Optional | Minimum allowed length of reads after primer-trimming | Integer >= `0` | `20` |
 | `read_max_length` | Optional | Maximum allowed length of reads after primer-trimming | Integer >= `0` or `Inf` | `Inf` |
@@ -108,7 +109,6 @@ The primer parameters file tells the pipeline how to process amplicons derived f
 | `coding` | Optional | Whether the amplicon is a coding sequence or not | `TRUE`/`T` or `FALSE`/`F` | `FALSE` |
 | `phmm` | Optional | A [profile Hidden Markov Model (PHMM)](https://github.com/shaunpwilkinson/aphid) of the amplicon | A path, absolute or relative to the analysis directory, or `NA` | `NA` |
 | `idtaxa_db` | Optional | A trained [`IDTAXA` model](https://rdrr.io/bioc/DECIPHER/man/LearnTaxa.html) of `ref_fasta` database | A path, absolute or relative to the analysis directory, or `NA` | `NA` |
-| `ref_fasta` | Required | A reference database of taxonomically classified sequences | A path, absolute or relative to the analysis directory | No default, must be supplied |
 | `idtaxa_confidence` | Optional | Minimum bootstrap confidence for `IDTAXA` classification | Integer `0`-`100` | `60` |
 | `run_blast` | Optional | Whether to run `BLAST` to complement `IDATAXA` classification | `TRUE`/`T` or `FALSE`/`F` | `FALSE` |
 | `blast_min_identity` | Optional | Minimum nucleotide identity (%) for `BLAST` taxonomic assignment | Integer `0`-`100` | `97` |
@@ -138,13 +138,13 @@ These options are either mandatory to use or frequently required. `--miseq_inter
 
 | Parameter | Description | Specification | Default value |
 | --- | --- | --- | --- |
-| `samplesheet` | Path to the samplesheet `.csv` file | Path, absolute or relative to the analysis directory | No default, must be specified |
-| `primer_params` | Path to the primer parameters `.csv` file | Path, absolute or relative to the analysis directory | No default, typically must be specified |
-| `seq_type` | Sequencing platform of input reads | `illumina`/`nanopore` | `illumina` |
-| `paired` | Whether reads are paired-end | Boolean (`true`/`false`) | `true` |
-| `train_idtaxa` | Whether to train an `IDTAXA` model from each reference database file | Boolean (`true`/`false`) | `false` |
-| `miseq_internal` | Whether data was generated using AgVic MiSeq platform | Boolean (`true`/`false`) | `false` |
-| `miseq_dir` | Path to AgVic MiSeq demultiplexed reads | Path, absolute or relative to the analysis directory | `null` |
+| `--samplesheet` | Path to the samplesheet `.csv` file | Path, absolute or relative to the analysis directory | No default, must be specified |
+| `--primer_params` | Path to the primer parameters `.csv` file | Path, absolute or relative to the analysis directory | No default, typically must be specified |
+| `--seq_type` | Sequencing platform of input reads | `illumina`/`nanopore` | `illumina` |
+| `--paired` | Whether reads are paired-end | Boolean (`true`/`false`) | `true` |
+| `--train_idtaxa` | Whether to train an `IDTAXA` model from each reference database file | Boolean (`true`/`false`) | `false` |
+| `--miseq_internal` | Whether data was generated using AgVic MiSeq platform | Boolean (`true`/`false`) | `false` |
+| `--miseq_dir` | Path to AgVic MiSeq demultiplexed reads | Path, absolute or relative to the analysis directory | `null` |
 
 ### Pipeline analysis options
 
@@ -152,14 +152,14 @@ These options generally will not need to be changed by regular users. `--primer_
 
 | Parameter | Description | Specification | Default value |
 | --- | --- | --- | --- |
-| `primer_error_rate` | Maximum error rate when detecting primers ([`cutadapt -e`](https://cutadapt.readthedocs.io/en/v4.7/reference.html#adapter-finding-options)) | Number >= `0` | `1` |
-| `primer_n_trim` | Recognise `N` bases in reads when detecting primers ([`cutadapt --match-read-wildcards`](https://cutadapt.readthedocs.io/en/v4.7/reference.html#adapter-finding-options)) | Boolean (`true`/`false`) | `false` |
-| `high_sensitivity` | Infer ASVs with `dada2` [pseudo-pooling](https://benjjneb.github.io/dada2/pseudo.html) mode | Boolean (`true`/`false`) | `true` |
-| `dada_band_size` | Set `BAND_SIZE` parameter for `dada2::dada()` | Integer | `16` |
-| `dada_homopolymer` | Set `HOMOPOLYMER_GAP_PENALTY` parameter for `dada2::dada()` | Integer < `0` | `null` |
-| `chimera_sample_frac` | Minimum fraction of samples in which a sequence must be flagged as a chimera to be classified a chimera (see [`dada2::isBimeraDenovoTable(minSampleFraction)`](https://rdrr.io/bioc/dada2/man/isBimeraDenovoTable.html)) | Number `0`-`1` | `0.9` |
-| `chunk_taxassign` | Number of sequences to be taxonomically assigned per process | Integer > `0` | `100` |
-| `accumulation_curve` | Generate accumulation curves per sample (can be slow for large datasets) | Boolean (`true`/`false`) | `true` |
+| `--primer_error_rate` | Maximum error rate when detecting primers ([`cutadapt -e`](https://cutadapt.readthedocs.io/en/v4.7/reference.html#adapter-finding-options)) | Number >= `0` | `1` |
+| `--primer_n_trim` | Recognise `N` bases in reads when detecting primers ([`cutadapt --match-read-wildcards`](https://cutadapt.readthedocs.io/en/v4.7/reference.html#adapter-finding-options)) | Boolean (`true`/`false`) | `false` |
+| `--high_sensitivity` | Infer ASVs with `dada2` [pseudo-pooling](https://benjjneb.github.io/dada2/pseudo.html) mode | Boolean (`true`/`false`) | `true` |
+| `--dada_band_size` | Set `BAND_SIZE` parameter for `dada2::dada()` | Integer | `16` |
+| `--dada_homopolymer` | Set `HOMOPOLYMER_GAP_PENALTY` parameter for `dada2::dada()` | Integer < `0` | `null` |
+| `--chimera_sample_frac` | Minimum fraction of samples in which a sequence must be flagged as a chimera to be classified a chimera (see [`dada2::isBimeraDenovoTable(minSampleFraction)`](https://rdrr.io/bioc/dada2/man/isBimeraDenovoTable.html)) | Number `0`-`1` | `0.9` |
+| `--chunk_taxassign` | Number of sequences to be taxonomically assigned per process | Integer > `0` | `100` |
+| `--accumulation_curve` | Generate accumulation curves per sample (can be slow for large datasets) | Boolean (`true`/`false`) | `true` |
 
 ### Primer parameter overrides
 
@@ -179,9 +179,9 @@ This can all get very complicated! When in doubt, just use a `--primer_params` f
 
 | Parameter | Description | Specification | Default value |
 | --- | --- | --- | --- |
-| `max_memory` | Maximum memory available for any individual process | Of the form `<number>.<MemoryUnit>` (see [here](https://www.nextflow.io/docs/latest/reference/stdlib-types.html#memoryunit)) | `128.GB` |
-| `max_cpus` | Maximum CPUs available for any individual process | Integer >= `1` | `16` |
-| `max_time` | Maximum time available for any individual process | Of the form `<number>.<DurationUnit>` (see [here](https://www.nextflow.io/docs/latest/reference/stdlib-types.html#duration)) | `240.h` |
+| `--max_memory` | Maximum memory available for any individual process | Of the form `<number>.<MemoryUnit>` (see [here](https://www.nextflow.io/docs/latest/reference/stdlib-types.html#memoryunit)) | `128.GB` |
+| `--max_cpus` | Maximum CPUs available for any individual process | Integer >= `1` | `16` |
+| `--max_time` | Maximum time available for any individual process | Of the form `<number>.<DurationUnit>` (see [here](https://www.nextflow.io/docs/latest/reference/stdlib-types.html#duration)) | `240.h` |
 
 You should be careful to set `--max_memory`,`--max_cpus` and/or `--max_time` appropriately for your computational environment. For example, if you're using a laptop with 64GB RAM and 16 CPU cores, you should set `--max_memory` to less than 64GB and `--max_cpus` to less than 16. In some cases, setting these too low may cause the pipeline to fail.
 
@@ -191,13 +191,13 @@ These parameters can help with debugging or configuring the pipeline.
 
 | Parameter | Description | Specification | Default value |
 | --- | --- | --- | --- |
-| `rdata` | Saves `.rda` RData files in the work directory of each R-scripted process, regardless of exit status | Boolean (`true`/`false`) | `false` |
-| `subsample` | Pseudorandomly reduce number of input samples per `read_group` x `primers` combination to this | Integer >= `1` | `null` |
-| `downsample` | Pseudorandomly reduce number of reads per input sample to this | Integer >= `1` | `null` |
+| `--rdata` | Saves an `.rda` RData file in the work directory of each R-scripted process, regardless of exit status | Boolean (`true`/`false`) | `false` |
+| `--subsample` | Pseudorandomly reduce number of input samples per `read_group` x `primers` combination to this | Integer >= `1` | `null` |
+| `--downsample` | Pseudorandomly reduce number of reads per input sample to this | Integer >= `1` | `null` |
 
 ## Profiles
 
-Nextflow uses [profiles](https://www.nextflow.io/docs/latest/config.html#config-profiles) to set collections of pipeline parameters all at once. This is useful to configure the pipeline for particular running situations (eg. cluster vs. laptop, real data vs. test data). Profiles are defined on the command line with the `-profile` flag. Multiple profiles can be used at once, separated by commas, but their ordering matters: later profiles override the settings of earlier profiles.
+Nextflow uses [profiles](https://www.nextflow.io/docs/latest/config.html#config-profiles) to set collections of pipeline parameters all at once. This is useful to configure the pipeline for particular running situations (eg. cluster vs. laptop, real data vs. test data). Profiles are defined on the command line with the `-profile` flag (note the single hyphen). Multiple profiles can be used at once, separated by commas, but their ordering matters: later profiles override the settings of earlier profiles.
 
 For example, to use both the `basc_slurm` profile (for running on BASC with the SLURM executor) and `test` profile (for running a minimal test dataset included with the pipeline), you would specify `-profile basc_slurm,test` when running the pipeline. Because `test` comes second, it overrides the max job request parameters (eg. `params.max_memory`) specified by `basc_slurm`, which is useful in this case because it will likely make job allocation through SLURM much faster.
 
