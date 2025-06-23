@@ -77,13 +77,13 @@ log.info paramsSummaryLog(workflow)
 // make it clear that samples are being subsampled
 if (params.subsample) {
     log.info "***"
-    log.info "NOTE: Input samples are being randomly subsampled to $params.subsample per primer x flowcell combination (params.subsample = $params.subsample)"
+    log.info "NOTE: Input samples are being pseudorandomly subsampled to $params.subsample per primer x flowcell combination (--subsample = $params.subsample)"
     log.info "***"
 }
 
 if (params.downsample_reads) {
     log.info "***"
-    log.info "NOTE: Input samples are being randomly downsampled to $params.downsample_reads reads (params.subsample = $params.downsample_reads)"
+    log.info "NOTE: Input samples are being pseudorandomly downsampled to $params.downsample_reads reads (--downsample_reads = $params.downsample_reads)"
     log.info "***"
 }
 
@@ -283,6 +283,7 @@ workflow FREYR {
 
     //// downsample reads if params.downsample is defined
     if ( params.downsample_reads ) {
+
         DOWNSAMPLE_READS (
             ch_sample_primers_reads,
             params.seq_type,

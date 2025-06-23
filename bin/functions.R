@@ -334,9 +334,9 @@ melt_phyloseq <- function(ps) {
 
 rareplot <- function(ps, step="auto", threshold=0){
   if(step == "auto"){
-    step <- round(median(phyloseq::sample_sums(ps)) / 100)
+    step <- ceiling(median(phyloseq::sample_sums(ps)) / 100)
   } else if (is.numeric(step)){
-    step <- as.numeric(round(step))
+    step <- as.numeric(ceiling(step))
   } else {
     stop("Step must be an integer or 'auto' ")
   }

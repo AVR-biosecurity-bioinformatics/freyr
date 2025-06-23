@@ -44,14 +44,14 @@ if [ $PAIRED == "true" ]; then
         -s $SEED \
         $FWD_READS \
         $DOWNSAMPLE_READS \
-        > "down_${FWD_READS}"
+        > "down_R1.fastq"
 
     ## reverse reads
     seqtk sample \
         -s $SEED \
         $REV_READS \
         $DOWNSAMPLE_READS \
-        > "down_${REV_READS}"
+        > "down_R2.fastq"
 
     
 elif [ $PAIRED == "false"  ] && [ $SEQ_TYPE == "nanopore" ]; then
@@ -61,7 +61,7 @@ elif [ $PAIRED == "false"  ] && [ $SEQ_TYPE == "nanopore" ]; then
         -s $SEED \
         $SINGLE_READS \
         $DOWNSAMPLE_READS \
-        > "down_${SINGLE_READS}"
+        > "down_R0.fastq"
 
 else 
     echo "PAIRED variable must be true or false"

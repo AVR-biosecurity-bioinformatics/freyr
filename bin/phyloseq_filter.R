@@ -47,9 +47,9 @@ if(target_genus == "NA"){ target_genus <- NA }
 if(target_species == "NA"){ target_species <- NA }
 
 # convert "NA" strings to true NA, or convert number strings to numeric
-if(min_sample_reads != "NA"){ min_sample_reads <- as.numeric(min_sample_reads) } else { min_sample_reads <- NA }
-if(min_taxa_reads != "NA"){ min_taxa_reads <- as.numeric(min_taxa_reads) } else { min_taxa_reads <- NA }
-if(min_taxa_ra != "NA"){ min_taxa_ra <- as.numeric(min_taxa_ra) } else { min_taxa_ra <- NA }
+if(min_sample_reads %in% c(0, "NA")){ min_sample_reads <- NA } else { min_sample_reads <- as.numeric(min_sample_reads) }
+if(min_taxa_reads %in% c(0, "NA")){ min_taxa_reads <- NA } else { min_taxa_reads <- as.numeric(min_taxa_reads) }  
+if(min_taxa_ra %in% c(0, "NA")){ min_taxa_ra <- NA } else { min_taxa_ra <- as.numeric(min_taxa_ra) } 
 
 quiet <- FALSE
 
@@ -177,13 +177,42 @@ ps_seqfiltered <- phyloseq::prune_taxa(taxa = seqs_passing, ps_taxfiltered)
 # Remove any taxa under read count or relative abundance thresholds
 ### TODO: Add comments explaining what is happening here
 if(!is.na(min_taxa_reads) & is.na(min_taxa_ra)){
-    ps_abfiltered <- phyloseq::transform_sample_counts(ps_seqfiltered, function(OTU, ab = min_taxa_reads){ ifelse(OTU <= ab,  0, OTU) })
+    ps_abfiltered <- 
+        phyloseq::transform_sample_counts(
+            ps_seqfiltered, 
+            function(OTU, ab = min_taxa_reads){ 
+                ifelse(OTU <= ab,  0, OTU) 
+            }
+        )
 } else if(is.na(min_taxa_reads) & !is.na(min_taxa_ra)){
-    ps_abfiltered <- phyloseq::transform_sample_counts(ps_seqfiltered, function(OTU, ab = min_taxa_ra ){ ifelse((OTU / sum(OTU)) <= ab,  0, OTU) })
+    ps_abfiltered <- 
+        phyloseq::transform_sample_counts(
+            ps_seqfiltered, 
+            function(OTU, ab = min_taxa_ra ){ 
+                if (sum(OTU) == 0){
+                    return(OTU)
+                } else {
+                    ifelse((OTU / sum(OTU)) <= ab,  0, OTU) 
+                }
+            }
+        )
 } else if (!is.na(min_taxa_reads) & !is.na(min_taxa_ra)){
-    ps_abfiltered <- ps_seqfiltered %>%
-        phyloseq::transform_sample_counts(function(OTU, ab = min_taxa_reads){ ifelse(OTU <= ab,  0, OTU) }) %>%
-        phyloseq::transform_sample_counts(function(OTU, ab = min_taxa_ra ){ ifelse((OTU / sum(OTU)) <= ab,  0, OTU) })
+    ps_abfiltered <- 
+        ps_seqfiltered %>%
+        phyloseq::transform_sample_counts(
+            function(OTU, ab = min_taxa_reads){ 
+                ifelse(OTU <= ab,  0, OTU) 
+            }
+        ) %>%
+        phyloseq::transform_sample_counts(
+            function(OTU, ab = min_taxa_ra ){ 
+                if (sum(OTU) == 0){
+                    return(OTU)
+                } else {
+                    ifelse((OTU / sum(OTU)) <= ab,  0, OTU) 
+                }
+            }
+        )
 } else {
     if (!quiet){message(paste0("No minimum abundance filters set - skipping this filter"))}
     ps_abfiltered <- ps_seqfiltered
