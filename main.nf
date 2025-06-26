@@ -332,6 +332,7 @@ workflow FREYR {
     ch_read_tracker_grouped = DADA2.out.ch_read_tracker_grouped
         .concat(FILTERING.out.ch_read_tracker_grouped)
 
+   
     //// subworkflow: create result summaries
     RESULT_SUMMARIES (
         FILTERING.out.ch_seqtab_filtered,

@@ -129,6 +129,13 @@
                     "help_text": "Generate accumulation curves for each sample per PCR primer pair. On large datasets, this can take a long time.",
                     "default": true
                 },
+                "merge_clusters": {
+                    "type": "string",
+                    "pattern": "^(central|lca|frequency|rank|abundance)$",
+                    "description": "Generate additional output files where each cluster of filtered ASVs is merged to one representative sequence, with its taxonomy assigned using this method.",
+                    "errorMessage": "Must be set to 'central', 'lca', 'frequency', 'rank' or 'abundance'.",
+                    "help_text": "Generate additional output files where each cluster of filtered ASVs is merged to one representative sequence, with its taxonomy assigned using this method. For details, see documentation."
+                },
                 "slurm_account": {
                     "type": "string",
                     "description": "Account to use when submitting SLURM jobs.",
@@ -233,6 +240,10 @@
                 "pp_blast_min_coverage": {
                     "type": "string",
                     "description": "Override for 'blast_min_coverage' primer parameter."
+                },
+                "pp_cluster_threshold": {
+                    "type": "string",
+                    "description": "Override for 'cluster_threshold' primer parameter."
                 },
                 "pp_target_kingdom": {
                     "type": "string",

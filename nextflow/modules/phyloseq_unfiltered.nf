@@ -5,7 +5,7 @@ process PHYLOSEQ_UNFILTERED {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(primers), path(taxtab), path(seqtab), path(filters), path(fasta), path(samplesheet_split), path(sample_metadata)
+    tuple val(primers), path(taxtab), path(seqtab), path(filters), path(fasta), path(samplesheet_split), path(sample_metadata), val(process_params)
 
     output:
     path("*.csv"),                                                                                 emit: csvs
@@ -30,6 +30,7 @@ process PHYLOSEQ_UNFILTERED {
     fasta_file =                "${fasta}"
     samplesheet_split_file =    "${samplesheet_split}"
     sample_metadata_file =      "${sample_metadata}"
+    cluster_threshold =         "${process_params.cluster_threshold}"
      
     ## global variables
     projectDir = "$projectDir"

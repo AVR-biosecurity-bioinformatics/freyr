@@ -5,9 +5,10 @@
 
 //// modules to import
 include { ACCUMULATION_CURVE                        } from '../modules/accumulation_curve'
-include { PHYLOSEQ_UNFILTERED                       } from '../modules/phyloseq_unfiltered'
+include { PHYLOSEQ_CLUSTERED                        } from '../modules/phyloseq_clustered'
 include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_filter'
 include { PHYLOSEQ_MERGE                            } from '../modules/phyloseq_merge'
+include { PHYLOSEQ_UNFILTERED                       } from '../modules/phyloseq_unfiltered'
 include { READ_TRACKING                             } from '../modules/read_tracking'
 
 
@@ -26,24 +27,31 @@ workflow RESULT_SUMMARIES {
 
     main:
 
-    // combine taxtables, seqtables, sample metadata and parameters by primers
+    //// combine PHYLOSEQ_UNFILTERED parameters to input channel
+    ch_primer_params
+        .map { primers, primer_params ->
+            def process_params = 
+                primer_params.subMap('cluster_threshold')
+            [ primers, process_params ] }
+        .set { ch_phyloseq_unfiltered_params } 
+
     ch_mergetax_output
         .join ( ch_seqtab_filtered, by: 0 )
         .combine ( ch_samplesheet_split )
         .combine ( ch_sample_metadata )
-        .set { ch_phyloseq_input } // primers, merged_tax, seqtab, filters, fasta, samplesheet_split, sample_metadata
+        .combine ( ch_phyloseq_unfiltered_params, by: 0 )
+        .set { ch_phyloseq_unfiltered_input } // primers, merged_tax, seqtab, filters, fasta, samplesheet_split, sample_metadata, process_params
 
     //// create phyloseq objects per locus; output unfiltered summary tables and accumulation curve plot
     PHYLOSEQ_UNFILTERED ( 
-        ch_phyloseq_input 
+        ch_phyloseq_unfiltered_input 
     )
-
 
     //// combine ACCUMULATION_CURVE parameters to input channel
     ch_primer_params
         .map { primers, primer_params ->
             def process_params = 
-            primer_params.subMap('min_sample_reads')
+                primer_params.subMap('min_sample_reads')
             [ primers, process_params ] }
         .set { ch_accumulation_curve_params } 
 
@@ -61,7 +69,7 @@ workflow RESULT_SUMMARIES {
     ch_primer_params
         .map { primers, primer_params ->
             def process_params = 
-            primer_params.subMap('target_kingdom','target_phylum','target_class','target_order','target_family','target_genus','target_species','min_sample_reads','min_taxa_reads','min_taxa_ra')
+                primer_params.subMap('target_kingdom','target_phylum','target_class','target_order','target_family','target_genus','target_species','min_sample_reads','min_taxa_reads','min_taxa_ra')
             [ primers, process_params ] }
         .set { ch_phyloseq_filter_params } 
 
@@ -75,16 +83,19 @@ workflow RESULT_SUMMARIES {
     )
 
 
+    //// merge each filtered ASV cluster into a single representative sequence
+    // PHYLOSEQ_CLUSTERED (
+
+    // )
+
     //// combine phyloseq outputs to merge across loci
     PHYLOSEQ_UNFILTERED.out.ps // val(primers), path("ps_unfiltered_*.rds")
-        .map { primers, ps, filters_tibble ->
-            [ ps ] }
+        .map { primers, ps, filters_tibble -> [ ps ] }
         .collect()
         .set { ch_ps_unfiltered }
 
     PHYLOSEQ_FILTER.out.ps // val(primers), path("ps_filtered_*.rds")
-        .map { primers, ps ->
-            [ ps ] }
+        .map { primers, ps -> [ ps ] }
         .collect()
         .set { ch_ps_filtered }
 

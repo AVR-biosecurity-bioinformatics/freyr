@@ -468,6 +468,7 @@ default_params <-
         run_blast = FALSE,
         blast_min_identity = 97,
         blast_min_coverage = 90,
+        cluster_threshold = NA_character_,
         target_kingdom = NA_character_,
         target_phylum = NA_character_,
         target_class = NA_character_,
@@ -560,6 +561,7 @@ pp_vec <-
         "run_blast",
         "blast_min_identity",
         "blast_min_coverage",
+        "cluster_threshold",
         "target_kingdom",
         "target_phylum",
         "target_class",
@@ -844,6 +846,16 @@ if (any(primer_params_up$blast_min_identity %>% as.integer() %>% is.na()) || !al
 # check blast_min_coverage is an integer 0-100
 if (any(primer_params_up$blast_min_coverage %>% as.integer() %>% is.na()) || !all(primer_params_up$blast_min_coverage %>% as.integer() %>% between(., 0, 100))){
     stop(paste0(prpe, "'blast_min_coverage' must be an integer between 0-100: '",stringr::str_flatten(primer_params_up$blast_min_coverage, " / "), "'."))
+}
+
+# check cluster_threshold is an integer 0-100 or NA
+# get elements of vector that can't be coerced to integer
+not_int <- primer_params_up$cluster_threshold[as.integer(primer_params_up$cluster_threshold) %>% suppressWarnings() %>% is.na() %>% which()]
+if (not_int %>% length() > 0){
+    # test if any remaining elements are not NA
+    if (any(!is.na(dplyr::na_if(not_int, "NA")))){
+        stop(paste0(prpe,"'cluster_threshold' must be an integer between 0-100, or NA: '",stringr::str_flatten(primer_params_up$cluster_threshold, " / "), "'."))
+    }
 }
 
 # NOTE: target_* fields should already be validated as lacking spaces or commas -- invalid taxa names should be ignored at this stage
