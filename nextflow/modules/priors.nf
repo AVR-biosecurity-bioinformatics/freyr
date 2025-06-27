@@ -1,14 +1,14 @@
 process PRIORS {
     def module_name = "priors"
-    tag "$pcr_primers; $fcid"
+    tag "$primers; $read_group"
     label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(direction), val(pcr_primers), val(fcid), path(priors)
+    tuple val(direction), val(primers), val(read_group), path(priors)
 
     output:   
-    tuple val(direction), val(pcr_primers), val(fcid), path("*_priors{F,R,S}.rds"),              emit: priors
+    tuple val(direction), val(primers), val(read_group), path("*_priors{F,R,S}.rds"),              emit: priors
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -22,8 +22,8 @@ process PRIORS {
     ### defining Nextflow environment variables as R variables
     ## input channel variables
     direction =         "${direction}"
-    fcid =              "${fcid}"
-    pcr_primers =       "${pcr_primers}"
+    read_group =        "${read_group}"
+    primers =           "${primers}"
     priors =            "${priors}"
     
     ## global variables

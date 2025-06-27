@@ -16,10 +16,9 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "fcid",
-    "pcr_primers",
+    "read_group",
+    "primers",
     "fasta",
-    "target_gene",
     "ref_fasta",
     "blast_min_identity",
     "blast_min_coverage",
@@ -32,11 +31,6 @@ lapply(nf_vars, nf_var_check)
 ### TODO: Do parameter parsing for ranks at an earlier stage, such as the parameter setup module
 
 ## check and define variables 
-target_gene <-          parse_nf_var_repeat(target_gene)
-ref_fasta <-            parse_nf_var_repeat(ref_fasta)
-blast_min_identity <-   parse_nf_var_repeat(blast_min_identity)
-blast_min_coverage <-   parse_nf_var_repeat(blast_min_coverage)
-run_blast <-            parse_nf_var_repeat(run_blast)
 
 quiet <-                FALSE # switch quiet off for now
 multithread <-          FALSE # multithreading switched off for now
@@ -66,7 +60,7 @@ if ( n_ranks == 8 ) {
     stop ("*** BLAST database contains more than 8 ranks--please set ranks explicitly using 'params.tax_ranks'! ***")
 }
 
-write(n_ranks, file = paste0(fcid, "_", pcr_primers,"_n_ranks.txt"))
+write(n_ranks, file = paste0(read_group, "_", primers,"_n_ranks.txt"))
 
 run_blast <-            as.logical(run_blast)
 database <-             normalizePath(ref_fasta)
@@ -77,10 +71,9 @@ db_name <-              basename(database) %>% stringr::str_remove("_\\.*$")
 ### run R code
 seqs <-  Biostrings::readDNAStringSet(fasta) %>% as.character() # read in fasta
 
+seqmap <- seqs %>% tibble::enframe(., name = "seq_name", value = "sequence")
 
 if (isTRUE(run_blast)) { # run BLAST if requested
-    
-    seqmap <- seqs %>% tibble::enframe(., name = "seq_name", value = "sequence")
     
     if ( length(seqs) > 0 ) { # if there are ASV sequences, run BLAST
         ## make low stringency, ident = 60, coverage = 80, then save
@@ -95,10 +88,10 @@ if (isTRUE(run_blast)) { # run BLAST if requested
             ranks = ranks, 
             delim = ";",
             resolve_ties="all"
-            )
+        )
 
         ## save BLAST output for assignment plot
-        saveRDS(blast_spp_low, paste0(fcid,"_",pcr_primers,"_blast_spp_low.rds"))
+        saveRDS(blast_spp_low, paste0(read_group,"_",primers,"_blast_spp_low.rds"))
 
         # filter by identity and coverage
         blast_spp <- 
@@ -156,11 +149,11 @@ if (isTRUE(run_blast)) { # run BLAST if requested
 
     # save NULL output for assignment plot
     blast_spp_low <- NULL
-    saveRDS(blast_spp_low, paste0(fcid,"_",pcr_primers,"_blast_spp_low.rds"))
+    saveRDS(blast_spp_low, paste0(read_group,"_",primers,"_blast_spp_low.rds"))
 
 }
 
 # save tibble
-readr::write_csv(blast_spp, paste0(fcid,"_",pcr_primers,"_",db_name,"_blast.csv"))
+readr::write_csv(blast_spp, paste0(read_group,"_",primers,"_",db_name,"_blast.csv"))
 
 # stop(" *** stopped manually *** ") ##########################################

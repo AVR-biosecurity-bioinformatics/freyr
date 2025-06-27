@@ -17,8 +17,8 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "fcid",
-    "pcr_primers",
+    "read_group",
+    "primers",
     "idtaxa_confidence",
     "idtaxa_db",
     "fasta"
@@ -26,9 +26,6 @@ nf_vars <- c(
 lapply(nf_vars, nf_var_check)
 
 ## check and define variables 
-idtaxa_confidence <-    parse_nf_var_repeat(idtaxa_confidence)
-idtaxa_db <-            parse_nf_var_repeat(idtaxa_db)
-
 return_ids <-           TRUE
 quiet <-                FALSE # switch quiet off for now
 multithread <-          FALSE # multithreading switched off for now
@@ -124,11 +121,11 @@ if(!all(tax %>% dplyr::select(-seq_name) %>% colnames()  %in% ranks)){
 }
 
 # write out tax .csv
-readr::write_csv(tax, paste0(fcid,"_",pcr_primers,"_",db_name,"_idtaxa_tax.csv"))
+readr::write_csv(tax, paste0(read_group,"_",primers,"_",db_name,"_idtaxa_tax.csv"))
 
 # Write out idtaxa objects
-saveRDS(tax, paste0(fcid,"_",pcr_primers,"_",db_name,"_idtaxa_tax.rds"))
-saveRDS(ids, paste0(fcid,"_",pcr_primers,"_",db_name,"_idtaxa_ids.rds"))
+saveRDS(tax, paste0(read_group,"_",primers,"_",db_name,"_idtaxa_tax.rds"))
+saveRDS(ids, paste0(read_group,"_",primers,"_",db_name,"_idtaxa_ids.rds"))
 
 # stop(" *** stopped manually *** ") ##########################################
 

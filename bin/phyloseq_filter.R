@@ -17,7 +17,7 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "pcr_primers",
+    "primers",
     "ps",
     "filters_tibble",
     "target_kingdom",
@@ -47,9 +47,9 @@ if(target_genus == "NA"){ target_genus <- NA }
 if(target_species == "NA"){ target_species <- NA }
 
 # convert "NA" strings to true NA, or convert number strings to numeric
-if(min_sample_reads != "NA"){ min_sample_reads <- as.numeric(min_sample_reads) } else { min_sample_reads <- NA }
-if(min_taxa_reads != "NA"){ min_taxa_reads <- as.numeric(min_taxa_reads) } else { min_taxa_reads <- NA }
-if(min_taxa_ra != "NA"){ min_taxa_ra <- as.numeric(min_taxa_ra) } else { min_taxa_ra <- NA }
+if(min_sample_reads %in% c(0, "NA")){ min_sample_reads <- NA } else { min_sample_reads <- as.numeric(min_sample_reads) }
+if(min_taxa_reads %in% c(0, "NA")){ min_taxa_reads <- NA } else { min_taxa_reads <- as.numeric(min_taxa_reads) }  
+if(min_taxa_ra %in% c(0, "NA")){ min_taxa_ra <- NA } else { min_taxa_ra <- as.numeric(min_taxa_ra) } 
 
 quiet <- FALSE
 
@@ -177,13 +177,42 @@ ps_seqfiltered <- phyloseq::prune_taxa(taxa = seqs_passing, ps_taxfiltered)
 # Remove any taxa under read count or relative abundance thresholds
 ### TODO: Add comments explaining what is happening here
 if(!is.na(min_taxa_reads) & is.na(min_taxa_ra)){
-    ps_abfiltered <- phyloseq::transform_sample_counts(ps_seqfiltered, function(OTU, ab = min_taxa_reads){ ifelse(OTU <= ab,  0, OTU) })
+    ps_abfiltered <- 
+        phyloseq::transform_sample_counts(
+            ps_seqfiltered, 
+            function(OTU, ab = min_taxa_reads){ 
+                ifelse(OTU <= ab,  0, OTU) 
+            }
+        )
 } else if(is.na(min_taxa_reads) & !is.na(min_taxa_ra)){
-    ps_abfiltered <- phyloseq::transform_sample_counts(ps_seqfiltered, function(OTU, ab = min_taxa_ra ){ ifelse((OTU / sum(OTU)) <= ab,  0, OTU) })
+    ps_abfiltered <- 
+        phyloseq::transform_sample_counts(
+            ps_seqfiltered, 
+            function(OTU, ab = min_taxa_ra ){ 
+                if (sum(OTU) == 0){
+                    return(OTU)
+                } else {
+                    ifelse((OTU / sum(OTU)) <= ab,  0, OTU) 
+                }
+            }
+        )
 } else if (!is.na(min_taxa_reads) & !is.na(min_taxa_ra)){
-    ps_abfiltered <- ps_seqfiltered %>%
-        phyloseq::transform_sample_counts(function(OTU, ab = min_taxa_reads){ ifelse(OTU <= ab,  0, OTU) }) %>%
-        phyloseq::transform_sample_counts(function(OTU, ab = min_taxa_ra ){ ifelse((OTU / sum(OTU)) <= ab,  0, OTU) })
+    ps_abfiltered <- 
+        ps_seqfiltered %>%
+        phyloseq::transform_sample_counts(
+            function(OTU, ab = min_taxa_reads){ 
+                ifelse(OTU <= ab,  0, OTU) 
+            }
+        ) %>%
+        phyloseq::transform_sample_counts(
+            function(OTU, ab = min_taxa_ra ){ 
+                if (sum(OTU) == 0){
+                    return(OTU)
+                } else {
+                    ifelse((OTU / sum(OTU)) <= ab,  0, OTU) 
+                }
+            }
+        )
 } else {
     if (!quiet){message(paste0("No minimum abundance filters set - skipping this filter"))}
     ps_abfiltered <- ps_seqfiltered
@@ -212,13 +241,13 @@ if(!quiet){message(phyloseq::nsamples(ps) - phyloseq::nsamples(ps_sampfiltered),
 
 # Export raw csv  - NOTE: This is memory intensive
 melt_phyloseq(ps_sampfiltered) %>% 
-    readr::write_csv(., paste0("raw_filtered_",pcr_primers,".csv"))
+    readr::write_csv(., paste0("raw_filtered_",primers,".csv"))
 
 # Export species level summary of filtered results
 summarise_phyloseq(ps_sampfiltered) %>%
-    readr::write_csv(., paste0("summary_filtered_",pcr_primers,".csv"))
+    readr::write_csv(., paste0("summary_filtered_",primers,".csv"))
 
-# save sequences as .fasta file (with taxonomy in header, in format "seq_name|pcr_primers;Root;Kingdom;Phylum;Class;Order;Family;Genus;Species")
+# save sequences as .fasta file (with taxonomy in header, in format "seq_name|primers;Root;Kingdom;Phylum;Class;Order;Family;Genus;Species")
 seqs_output <- phyloseq::refseq(ps_sampfiltered)
 
 seq_names_new <- 
@@ -227,17 +256,17 @@ seq_names_new <-
     tibble::as_tibble(rownames = "seq_name") %>%
     # ensure sequence name order is same as the DSS object
     dplyr::arrange(factor(seq_name, levels = names(seqs_output))) %>%
-    # add pcr_primers
-    dplyr::mutate(pcr_primers = pcr_primers, .after = seq_name) %>%
+    # add primers
+    dplyr::mutate(primers = primers, .after = seq_name) %>%
     # unite columns into a single header string per sequence
     tidyr::unite(col = "lineage", Root:Species, sep = ";") %>%
-    tidyr::unite(col = "id", c(seq_name, pcr_primers), sep = "|") %>%
+    tidyr::unite(col = "id", c(seq_name, primers), sep = "|") %>%
     tidyr::unite(col = "header", c(id, lineage), sep = ";") %>%
     dplyr::pull(header)
 
 names(seqs_output) <- seq_names_new
 
-write_fasta(seqs_output, paste0("asvs_unfiltered_", pcr_primers, ".fasta"))  
+write_fasta(seqs_output, paste0("asvs_unfiltered_", primers, ".fasta"))  
 
 ## output phyloseq and component data; from step_output_ps
 
@@ -268,10 +297,10 @@ samdf_out <- phyloseq::sample_data(ps_sampfiltered) %>%
     tibble::as_tibble()
 
 # Write out
-readr::write_csv(seqtab_out, paste0("seqtab_filtered_",pcr_primers,".csv"))
-readr::write_csv(taxtab_out, paste0("taxtab_filtered_",pcr_primers,".csv"))
-readr::write_csv(samdf_out, paste0("samdf_filtered_",pcr_primers,".csv"))
-saveRDS(ps_sampfiltered, paste0("ps_filtered_",pcr_primers,".rds"))
+readr::write_csv(seqtab_out, paste0("seqtab_filtered_",primers,".csv"))
+readr::write_csv(taxtab_out, paste0("taxtab_filtered_",primers,".csv"))
+readr::write_csv(samdf_out, paste0("samdf_filtered_",primers,".csv"))
+saveRDS(ps_sampfiltered, paste0("ps_filtered_",primers,".rds"))
 
 
 

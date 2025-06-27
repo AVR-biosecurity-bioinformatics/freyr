@@ -17,161 +17,106 @@ nf_vars <- c(
     "projectDir",
     "params_dict",
     "samplesheet",
-    "loci_params",
+    "primer_params",
+    "pp_type",
     "seq_type",
-    "paired"
+    "paired",
+    "subsample"
 )
 lapply(nf_vars, nf_var_check)
 
 ### process variables 
 
-# ## make relative paths absolute
-# # for samplesheet path
-# if ( stringr::str_starts(samplesheet, "\\./") ) {
-#     samplesheet <- stringr::str_replace(samplesheet, "\\.", launchDir)
-# } else if ( !stringr::str_starts(samplesheet, "/") ) {
-#     samplesheet <- paste0(launchDir,"/",samplesheet)
-# } else {
-#     samplesheet <- samplesheet
-# }
-
-# # for loci_params path
-# if ( stringr::str_starts(loci_params, "\\./") ) {
-#     loci_params <- stringr::str_replace(loci_params, "\\.", launchDir)
-# } else if ( !stringr::str_starts(loci_params, "/") ) {
-#     loci_params <- paste0(launchDir,"/",loci_params)
-# } else {
-#     loci_params <- loci_params
-# }
-
 ### run code
 
-# read in samplesheet
-samplesheet_df <- readr::read_csv(samplesheet, show_col_types = F, skip_empty_rows = TRUE, na = c("", "NA", " ")) %>%
+# read in samplesheet tibble
+samplesheet_df <- 
+    readr::read_csv(samplesheet, show_col_types = F, skip_empty_rows = TRUE, na = c("", "NA", " ")) %>%
     dplyr::select(!tidyselect::starts_with("...")) %>% # remove any blank columns that have been named "...X"
     dplyr::filter(dplyr::if_any(tidyselect::everything(), ~ !is.na(.))) # remove completely blank lines
 
-# pseudorandomly subsample samplesheet if params.subsample is defined
-# this is done per pcr_primer x fcid combination so expected combinations are (likely) retained
-set.seed(1)
-if (params.subsample != "null") {
-    samplesheet_df <- samplesheet_df %>% 
-    dplyr::group_by(pcr_primers, fcid) %>% 
-    dplyr::slice_sample(n = as.numeric(params.subsample), replace = F) %>%
-    dplyr::ungroup()
-}
-
-# read in loci parameters
-loci_params_df <- readr::read_csv(loci_params, show_col_types = F, skip_empty_rows = TRUE, na = c("", "NA", " ")) %>%
+# read in primer parameters tibble
+primer_params_df <- 
+    readr::read_csv(primer_params, show_col_types = F, skip_empty_rows = TRUE, na = c("", "NA", " ")) %>%
     dplyr::select(!tidyselect::starts_with("...")) %>% # remove any blank columns that have been named "...X"
     dplyr::filter(dplyr::if_any(tidyselect::everything(), ~ !is.na(.))) # remove completely blank lines
 
 ### validation of samplesheet content
 
-## add missing columns if not present, with default values
-# make default samplesheet
-samplesheet_default <- tibble::tibble( # create columns with NA values in a single row
-    sample_id = NA_character_,
-    sample_name = NA_character_,
-    extraction_rep = NA_character_,
-    amp_rep = NA_character_,
-    client_name = NA_character_,
-    experiment_name = NA_character_,
-    sample_type = NA_character_,
-    collection_method = NA_character_,
-    collection_location = NA_character_,
-    latitude = NA_integer_,
-    longitude = NA_integer_,
-    environment = NA_character_,
-    collection_date = NA_character_,
-    operator_name = NA_character_,
-    description = NA_character_,
-    assay = NA_character_,
-    extraction_method = NA_character_,
-    amp_method = NA_character_,
-    target_gene = NA_character_,
-    pcr_primers = NA_character_,
-    for_primer_seq = NA_character_,
-    rev_primer_seq = NA_character_,
-    index_plate = NA_character_,
-    index_well = NA_character_,
-    i7_index_id = NA_character_,
-    i7_index = NA_character_,
-    i5_index_id = NA_character_,
-    i5_index = NA_character_,
-    seq_platform = NA_character_,
-    fcid = NA_character_,
-    for_read_length = NA_integer_,
-    rev_read_length = NA_integer_,
-    seq_run_id = NA_character_,
-    seq_id = NA_character_,
-    seq_date = NA_character_,
-    analysis_method = NA_character_,
-    notes = NA_character_
-) 
+sse <- "SAMPLESHEET FILE ERROR: "
+prpe <- "PRIMER PARAMS FILE ERROR: "
+ppe <- "PIPELINE PARAMETER ERROR: "
 
-# combine defaults with input samplesheet
-samplesheet_df <- new_bind(samplesheet_default %>% filter(FALSE), samplesheet_df)
+### validate samplesheet contents ----------------------------------------------------------------------------------------
 
-# stop(" *** stopped manually *** ") ##########################################
 
-## validate contents of columns
-for (i in 1:length(samplesheet_df$sample_id)) { # check that sample_name is a subset of sample_id
-    if (!stringr::str_detect(samplesheet_df$sample_id[i], samplesheet_df$sample_name[i])) {
-        stop(paste0("SAMPLESHEET ERROR: 'sample_name' (",samplesheet_df$sample_name[i],") is not a subset of 'sample_id' (", samplesheet_df$sample_id[i],")!\n\t'sample_id' must be a unique combination of 'fcid' and 'sample_name'."))
-    }
+ssc <- colnames(samplesheet_df)
+
+# check required columns are present
+if( !any(c("sample", "primers") %in% ssc) ){
+    stop(paste0(sse, "Samplesheet must contain both of the fields 'sample' and 'primers'!"))
 }
 
-for (i in 1:length(samplesheet_df$sample_id)) { # check that sample_id starts with fcid
-    if (!stringr::str_starts(samplesheet_df$sample_id[i], samplesheet_df$fcid[i])) {
-        stop(paste0("SAMPLESHEET ERROR: 'sample_id' (", samplesheet_df$sample_id[i],") does not begin with 'fcid' (",samplesheet_df$fcid[i],")!\n\t'sample_id' must be a unique combination of 'fcid' and 'sample_name'."))
-    }
+read_col_which <- c("read_dir","fwd", "rev", "single")[which(c("read_dir","fwd", "rev", "single") %in% ssc)]
+
+if( ! (read_col_which == "read_dir" || setequal(read_col_which ,c("fwd","rev")) || read_col_which == "single" ) ){
+    stop(paste0(sse, "Samplesheet must contain only one of the following fields/field groups: 'read_dir'; 'fwd' AND 'rev'; or 'single'."))
 }
 
-if (any(duplicated(samplesheet_df$sample_id))) { # check that sample_id contains only unique values
-    stop("SAMPLESHEET ERROR: Some sample IDs are repeated!\n\tAll 'sample_id' values in samplesheet must be unique.") 
+# check if disallowed 'paired' and read column values
+if ( paired == "true" && read_col_which == "single" ){
+    stop(paste0(sse, "'single' column cannot be used with parameter '--paired'."))
+}
+
+if ( paired == "false" && setequal(read_col_which, c("fwd","rev"))){
+    stop(paste0(sse, "'fwd' and 'rev' cannot be used with '--paired false'."))
+}
+
+# check sample field is only unique values
+if (any(duplicated(samplesheet_df$sample))) { 
+    sample_duplicates <- samplesheet_df$sample[which(duplicated(samplesheet_df$sample))]
+    stop(paste0(sse, "The following 'sample' values are repeated: ",stringr::str_flatten(sample_duplicates, collapse = ", ") ,"\nAll 'sample' values in samplesheet must be unique."))
+} 
+
+## any spaces or commas in fields?
+# if 'read_group' is present, validate it too, otherwise just validate other columns
+if ("read_group" %in% ssc){
+    if ( any(c(samplesheet_df$sample, samplesheet_df$primers, samplesheet$read_group) %>% stringr::str_detect(., "^[^\\s,]+$", negate = T)) ){
+        stop(paste0(sse, "'sample', 'primers' and 'read_group' values must not contain spaces or commas."))
     } 
-
-# check that all primer names and sequences are identical for each sample
-if (nrow(samplesheet_df) != 1) { # checks fail if samplesheet only has one row
-    if (!any(duplicated(samplesheet_df$pcr_primers))) { stop("SAMPLESHEET ERROR: 'pcr_primers' varies between samples!\n\t'pcr_primers' contents must be the same for all samples.") } 
-    if (!any(duplicated(samplesheet_df$for_primer_seq))) { stop("SAMPLESHEET ERROR: 'for_primer_seq' varies between samples!\n\t'for_primer_seq' contents must be the same for all samples.") } 
-    if (!any(duplicated(samplesheet_df$rev_primer_seq))) { stop("SAMPLESHEET ERROR: 'rev_primer_seq' varies between samples!\n\t'rev_primer_seq' contents must be the same for all samples.") } 
+} else {
+    if ( any(c(samplesheet_df$sample, samplesheet_df$primers) %>% stringr::str_detect(., "^[^\\s,]+$", negate = T)) ){
+        stop(paste0(sse, "'sample' and 'primers'values must not contain spaces or commas."))
+    } 
 }
-# check that same number of target genes and primer names are defined as primer sequences
-if (
-    !identical(stringr::str_count(samplesheet_df$target_gene, ";"), stringr::str_count(samplesheet_df$for_primer_seq, ";")) |
-    !identical(stringr::str_count(samplesheet_df$target_gene, ";"), stringr::str_count(samplesheet_df$rev_primer_seq, ";"))
-    ) { stop("SAMPLESHEET ERROR: Mismatch between number of supplied target genes and primer sequences!") }
-if (
-    !identical(stringr::str_count(samplesheet_df$pcr_primers, ";"), stringr::str_count(samplesheet_df$for_primer_seq, ";")) |
-    !identical(stringr::str_count(samplesheet_df$pcr_primers, ";"), stringr::str_count(samplesheet_df$rev_primer_seq, ";"))
-    ) { stop("SAMPLESHEET ERROR: Mismatch between number of supplied primer pair names and primer sequences!") }
 
-# check if disallowed read column combinations are detected
-if ( paired == "true" & "single" %in% colnames(samplesheet_df) ) {
-    stop( "SAMPLESHEET ERROR: If data is paired-end, 'single' field cannot be used in the samplesheet.\n\tUse either 'fwd' and 'rev', or 'read_dir' to specify data locations." )
-} 
-
-if ( paired == "false" & ( "fwd" %in% colnames(samplesheet_df) | "rev" %in% colnames(samplesheet_df) ) ) {
-    stop( "SAMPLESHEET ERROR: If data is single-end, 'fwd' or 'rev' fields cannot be used in the samplesheet.\n\tUse either 'single', or 'read_dir' to specify data locations." )
-} 
-
-if ( 
-    ( "fwd" %in% colnames(samplesheet_df) & "single" %in% colnames(samplesheet_df) ) | 
-    ( "rev" %in% colnames(samplesheet_df) & "single" %in% colnames(samplesheet_df) ) | 
-    ( "read_dir" %in% colnames(samplesheet_df) & "fwd" %in% colnames(samplesheet_df) ) | 
-    ( "read_dir" %in% colnames(samplesheet_df) & "rev" %in% colnames(samplesheet_df) ) | 
-    ( "read_dir" %in% colnames(samplesheet_df) & "single" %in% colnames(samplesheet_df) ) 
-    ) { 
-    stop ("SAMPLESHEET ERROR: Disallowed combination of read file columns.\n\tSpecify read file locations using only one of: the read directory path ('read_dir'), paired-end direct read paths ('fwd' and 'rev'), or single-end direct read paths ('single').") 
+# validate read path fields (without validating reads themselves) -- no spaces or commas
+if ( read_col_which == "read_dir" ){
+    if (any(samplesheet_df$read_dir %>% stringr::str_detect(., "^[^\\s,]+$", negate = T))){
+        stop(paste0(sse, "'read_dir' values must not contains spaces or commas."))
     }
+} else if ( setequal(read_col_which ,c("fwd","rev")) ){
+    if (any(samplesheet_df$fwd %>% stringr::str_detect(., "^[^\\s,]+$", negate = T))){
+        stop(paste0(sse, "'fwd' values must not contains spaces or commas."))
+    }
+    if (any(samplesheet_df$rev %>% stringr::str_detect(., "^[^\\s,]+$", negate = T))){
+        stop(paste0(sse, "'rev' values must not contains spaces or commas."))
+    }
+} else if ( read_col_which == "single" ){
+    if (any(samplesheet_df$single %>% stringr::str_detect(., "^[^\\s,]+$", negate = T))){
+        stop(paste0(sse, "'single' values must not contains spaces or commas."))
+    }
+} else {
+    stop(paste0(sse, "Invalid read field"))
+}
+
 
 ### parse and/or detect read paths
-if ( "read_dir" %in% colnames(samplesheet_df) & paired == "true" ) { # if "read_dir" column exists in samplesheet
+if ( read_col_which == "read_dir" & paired == "true" ) { # if "read_dir" column is used and reads are paired
     ## try to find reads
     # convert read directory to absolute path
-    samplesheet_df <- samplesheet_df %>% 
+    samplesheet_df_rp <- 
+        samplesheet_df %>% 
         dplyr::mutate(
             read_dir = dplyr::case_when(
                 stringr::str_starts(read_dir, "/") ~ read_dir, # if already absolute path, leave it be
@@ -180,21 +125,23 @@ if ( "read_dir" %in% colnames(samplesheet_df) & paired == "true" ) { # if "read_
             )
         )
     reads_list = list() # create empty list
-    for (i in 1:length(samplesheet_df$read_dir)) { # loop through rows of samplesheet
-        i_readfiles <- list.files( # find full paths of files matching sample_id with a fastQ extension
-            path = samplesheet_df$read_dir[i],
-            pattern = paste0(samplesheet_df$sample_id[i],"(?:_[^\\s/]+)?\\.f(ast)?q(\\.gz)?$"),
+    for (i in 1:length(samplesheet_df_rp$read_dir)) { # loop through rows of samplesheet
+        i_readfiles <- list.files( # find full paths of files matching sample with a fastQ extension
+            path = samplesheet_df_rp$read_dir[i],
+            pattern = paste0(samplesheet_df_rp$sample[i],"(?:_[^\\s/]+)?\\.f(ast)?q(\\.gz)?$"),
             full.names = T, 
             recursive = T
             ) %>% unlist()
         # check exactly two read files are found
         if ( length(i_readfiles) != 2 ) { 
-            stop (paste0("SAMPLESHEET ERROR: Found ",length(i_readfiles)," read files matching '",samplesheet_df$sample_id[i],"' in '",samplesheet_df$read_dir[i],"' when 2 were expected.\n\tCheck you have filled out samplesheet correctly."))  
+            stop (paste0(sse, "Found ",length(i_readfiles)," read files matching '",samplesheet_df_rp$sample[i],"' in '",samplesheet_df_rp$read_dir[i],"' when 2 were expected.\n\tCheck you have filled out samplesheet correctly."))  
         }
         if (params.extension != "null") { # using params.extension if supplied
             message(paste0("Using 'params.extension' (",params.extension,") to find read files in supplied directories ('read_dir')."))
             # check read files match params.extension
-            if (any(stringr::str_detect(i_readfiles, pattern = paste0(params.extension,"$")))) { stop("SAMPLESHEET ERROR: Read files found in 'read_dir' do not match 'params.extension' file extension--check samplesheet and pipeline parameters.")}
+            if (any(stringr::str_detect(i_readfiles, pattern = paste0(params.extension,"$")))) { 
+                stop(paste0(sse, "Read files found in 'read_dir' do not match 'params.extension' file extension--check samplesheet and pipeline parameters."))
+            }
             # sort read files by text after extension
             ### TODO: do this
         } else { # not using params.extension
@@ -202,18 +149,19 @@ if ( "read_dir" %in% colnames(samplesheet_df) & paired == "true" ) { # if "read_
             i_readfiles <- stringr::str_sort(i_readfiles)
         }
         
-        reads_list[[i]] <- c(samplesheet_df$sample_id[i], i_readfiles) # append to list
+        reads_list[[i]] <- c(samplesheet_df_rp$sample[i], i_readfiles) # append to list
     }
     reads_df <- do.call(rbind, reads_list) # combine list into dataframe
-    colnames(reads_df) <- c("sample_id","fwd","rev") # name columns
-    reads_df <- reads_df %>% tibble::as_tibble() # convert to tibble
+    colnames(reads_df) <- c("sample","fwd","rev") # name columns
+    reads_df <- 
+        reads_df %>% tibble::as_tibble() # convert to tibble
     # add read paths to samplesheet
-    samplesheet_df <- samplesheet_df %>% 
-        dplyr::left_join(., reads_df, by = "sample_id") 
+    samplesheet_df_rp <- 
+        samplesheet_df_rp %>% dplyr::left_join(., reads_df, by = "sample") 
 
-} else if ( "fwd" %in% colnames(samplesheet_df) & "rev" %in% colnames(samplesheet_df) & paired == "true") { # if 'fwd' and 'rev' columns both exist...
+} else if ( setequal(read_col_which, c("fwd","rev"))) { # if 'fwd' and 'rev' columns both exist...
     # convert read paths to absolute paths
-    samplesheet_df <- samplesheet_df %>% 
+    samplesheet_df_rp <- samplesheet_df %>% 
         dplyr::mutate(
             across(
                 c(fwd, rev),
@@ -224,10 +172,10 @@ if ( "read_dir" %in% colnames(samplesheet_df) & paired == "true" ) { # if "read_
                 )
             )
         )
-} else if ( "read_dir" %in% colnames(samplesheet_df) & paired == "false" ) { # if "read_dir" column exists in samplesheet
+} else if ( read_col_which == "read_dir" & paired == "false" ) { # if "read_dir" column exists in samplesheet
     ## try to find reads
     # convert read directory to absolute path
-    samplesheet_df <- samplesheet_df %>% 
+    samplesheet_df_rp <- samplesheet_df %>% 
         dplyr::mutate(
             read_dir = dplyr::case_when(
                 stringr::str_starts(read_dir, "/") ~ read_dir, # if already absolute path, leave it be
@@ -236,21 +184,23 @@ if ( "read_dir" %in% colnames(samplesheet_df) & paired == "true" ) { # if "read_
             )
         )
     reads_list = list() # create empty list
-    for (i in 1:length(samplesheet_df$read_dir)) { # loop through rows of samplesheet
-        i_readfiles <- list.files( # find full paths of files matching sample_id with a fastQ extension
-            path = samplesheet_df$read_dir[i],
-            pattern = paste0(samplesheet_df$sample_id[i],"(?:_[^\\s/]+)?\\.f(ast)?q(\\.gz)?$"),
+    for (i in 1:length(samplesheet_df_rp$read_dir)) { # loop through rows of samplesheet
+        i_readfiles <- list.files( # find full paths of files matching sample with a fastQ extension
+            path = samplesheet_df_rp$read_dir[i],
+            pattern = paste0(samplesheet_df_rp$sample[i],"(?:_[^\\s/]+)?\\.f(ast)?q(\\.gz)?$"),
             full.names = T, 
             recursive = T
-            ) %>% unlist()
+        ) %>% unlist()
         # check exactly one read file is found per sample
         if ( length(i_readfiles) != 1 ) { 
-            stop (paste0("SAMPLESHEET ERROR: Found ",length(i_readfiles)," read files matching '",samplesheet_df$sample_id[i],"' in '",samplesheet_df$read_dir[i],"' when 1 was expected.\n\tCheck you have filled out samplesheet correctly."))  
+            stop (paste0(sse, "Found ",length(i_readfiles)," read files matching '",samplesheet_df_rp$sample[i],"' in '",samplesheet_df_rp$read_dir[i],"' when 1 was expected.\n\tCheck you have filled out samplesheet correctly."))  
         }
         if (params.extension != "null") { # using params.extension if supplied
             message(paste0("Using 'params.extension' (",params.extension,") to find read files in supplied directories ('read_dir')."))
             # check read files match params.extension
-            if (any(stringr::str_detect(i_readfiles, pattern = paste0(params.extension,"$")))) { stop("SAMPLESHEET ERROR: Read files found in 'read_dir' do not match 'params.extension' file extension--check samplesheet and pipeline parameters.")}
+            if (any(stringr::str_detect(i_readfiles, pattern = paste0(params.extension,"$")))) { 
+                stop(paste0(sse, "Read files found in 'read_dir' do not match 'params.extension' file extension--check samplesheet and pipeline parameters."))
+            }
             # sort read files by text after extension
             ### TODO: do this
         } else { # not using params.extension
@@ -258,20 +208,21 @@ if ( "read_dir" %in% colnames(samplesheet_df) & paired == "true" ) { # if "read_
             i_readfiles <- stringr::str_sort(i_readfiles)
         }
         
-        reads_list[[i]] <- c(samplesheet_df$sample_id[i], i_readfiles) # append to list
+        reads_list[[i]] <- c(samplesheet_df_rp$sample[i], i_readfiles) # append to list
     }
     reads_df <- do.call(rbind, reads_list) # combine list into dataframe
-    colnames(reads_df) <- c("sample_id","single") # name columns
-    reads_df <- reads_df %>% tibble::as_tibble() # convert to tibble
+    colnames(reads_df) <- c("sample","single") # name columns
+    reads_df <- 
+        reads_df %>% tibble::as_tibble() # convert to tibble
     # add read paths to samplesheet
-    samplesheet_df <- samplesheet_df %>% 
-        dplyr::left_join(., reads_df, by = "sample_id") 
+    samplesheet_df_rp <- 
+        samplesheet_df_rp %>% dplyr::left_join(., reads_df, by = "sample") 
 
-} else if (( "single" %in% colnames(samplesheet_df) & paired == "false")) { # if single reads only
+} else if (( read_col_which == "single" )) { # if single reads only
 # convert read paths to absolute paths
-    samplesheet_df <- samplesheet_df %>% 
+    samplesheet_df_rp <- samplesheet_df %>% 
         dplyr::mutate(
-            across(
+            dplyr::across(
                 c(single),
                 ~ dplyr::case_when(
                     stringr::str_starts(., "/") ~ ., # if already absolute path, leave it be
@@ -281,222 +232,638 @@ if ( "read_dir" %in% colnames(samplesheet_df) & paired == "true" ) { # if "read_
             )
         )
 } else {
-    stop ("SAMPLESHEET ERROR: Disallowed combination of samplesheet read columns and 'paired' pipeline parameter.")
+    stop (paste0(sse, "Invalid samplesheet read columns and 'paired' pipeline parameter."))
 }
-
-
 
 # check that read file paths are unique
-### TODO: make this a more informative error -- say which files are duplicated
 if (paired == "true") {
-    if (any(duplicated(samplesheet_df$fwd))) {stop ("SAMPLESHEET ERROR: At least two samples share the same forward read file in the samplesheet!")}
-    if (any(duplicated(samplesheet_df$rev))) {stop ("SAMPLESHEET ERROR: At least two samples share the same reverse read file in the samplesheet!")}
+    if (any(duplicated(samplesheet_df_rp$fwd))) {stop (paste0(sse, "At least two samples share the same forward read file in the samplesheet!"))}
+    if (any(duplicated(samplesheet_df_rp$rev))) {stop (paste0(sse, "At least two samples share the same reverse read file in the samplesheet!"))}
 } else if ( paired == "false" ) {
-    if (any(duplicated(samplesheet_df$single))) {stop ("SAMPLESHEET ERROR: At least two samples share the same read file in the samplesheet!")}
+    if (any(duplicated(samplesheet_df_rp$single))) {stop (paste0(sse, "At least two samples share the same read file in the samplesheet!"))}
 } else {
-    stop(paste0("PIPELINE PARAMETER ERROR: 'paired' = '", paired, "' but must be 'true' or 'false'."))
+    stop(paste0(ppe, "'paired' = '", paired, "' but must be 'true' or 'false'."))
 }
 
+### extract read_group from read headers
 
-## write parsed samplesheet to file
-readr::write_csv(samplesheet_df, "samplesheet_parsed.csv")
+# # example for MiSeq data
+# id_miseq <- "M01054:780:000000000-K77JP:1:2116:15731:20801 1:N:0:TGGCATGT+CCTTGTAG"
+# # novaseq
+# id_nova <- "A00878:92:HTFL5DRX2:2:2101:9272:1016 2:N:0:ACACGGGCCA+GTTGACCGTT"
+# # internal (converted) MGI example 
+# id_mgi_int <- "M:0:V350254379:4:C001R012:0:2065 1:N:0"
+# # raw MGI example
+# id_mgi_raw <- "V350231845L1C001R00100001249/1"
+# # above interpretable as: "M:0:V350231845:1:1249:1: 1:N:0"
+# # MinION format
+# id_minion <- "837ed09c-2662-426a-bac9-ba59af484392 runid=3639b6d214857c63e9ea16dcba8f6471fbee372c ch=365 start_time=2025-03-05T14:38:32.214861+11:00 flow_cell_id=FBA86592 basecall_gpu=NVIDIA_RTX_A2000_12GB protocol_group_id=20250305_Grains_COI sample_id= barcode=barcode01 barcode_alias=barcode01 parent_read_id=837ed09c-2662-426a-bac9-ba59af484392 basecall_model_version_id=dna_r10.4.1_e8.2_400bps_sup@v4.3.0"
 
 
-### validate loci_params content
+### extract read_group from read headers if not present
+if ("read_group" %in% colnames(samplesheet_df_rp)){
+  
+  if (any(samplesheet_df_rp$read_group %>% is.na())){
+        stop(paste0("Some values of 'read_group' are NA!"))
+  } else {
+        # keep as-is -- information given by user
+        samplesheet_df_rg <- samplesheet_df_rp
+  }
+
+} else {
+  
+    # extract read_group from read headers
+    samplesheet_df_rg <- samplesheet_df_rp %>% dplyr::mutate(read_group = NA)
+
+    ## loop through each sample
+    for ( i in 1:length(samplesheet_df_rg$sample)){
+        sample_i_name <- samplesheet_df_rg$sample[i]
+        if ( paired == "true"){
+            # if paired, use fwd read
+            read_path <- samplesheet_df_rg$fwd[i]
+        } else if ( paired == "false" ){
+            # if unpaired, use single read
+            read_path <- samplesheet_df_rg$single[i]
+        }
+        # sample 10 reads from read file
+        read_sampler <- ShortRead::FastqSampler(read_path, 10)
+        set.seed(1); read_yield <- ShortRead::yield(read_sampler)
+        close(read_sampler) # close connection to file
+        # get vector of headers
+        read_headers <- read_yield@id %>% as.character
+        
+        ## detect format of sequencer and parse header accordingly
+        # Illumina format (MiSeq or NovaSeq)
+        if ( all(stringr::str_detect(read_headers, "^[[:alnum:]]+:\\d+:[[:alnum:]-]+:\\d+:\\d+:\\d+:\\d+ [12]:[YN]:\\d+(:[[:alpha:]+]+)?$"))){
+        
+            message(paste0("Read header format for sample '",sample_i_name,"' detected as Illumina (MiSeq or NovaSeq)"))
+            if ( seq_type == "nanopore" ){
+                stop(paste0(ppe, "'--seq_type' given as 'nanopore', but read header format appears to be Illumina!"))
+            }
+            # get sample flowcell (3rd element from : delimited list)
+            sample_flowcell <- read_headers %>% stringr::str_split(., ":") %>% sapply(., `[`, 3) %>% unique()
+            # check exactly one flowcell ID found
+            if (length(sample_flowcell) != 1){
+                stop(paste0("Invalid flowcell detection for sample '",sample_i_name,"'"))
+            }
+            # get sample lane (4th element from : delimited list)
+            sample_lane <- read_headers %>% stringr::str_split(., ":") %>% sapply(., `[`, 4) %>% unique()
+            # check exactly one lane number found
+            if (length(sample_lane) != 1){
+                stop(paste0("Invalid lane detection for sample '",sample_i_name,"'"))
+            }
+            # combine flowcell and lane into a single 'read_group' string
+            sample_rg <- paste0(sample_flowcell,"__",sample_lane)
+        
+        # MGI internal format 
+        } else if ( all(stringr::str_detect(read_headers, "^[[:alnum:]]+:\\d+:[[:alnum:]-]+:\\d+:[[:alnum:]]+:\\d+:\\d+ [12]:[YN]:\\d+(:[[:alpha:]+]+)?$")) ) {
+        
+            message(paste0("Read header format for sample '",sample_i_name,"' detected as MGI (converted)"))
+            if ( seq_type == "nanopore" ){
+                stop(paste0(ppe, "'--seq_type' given as 'nanopore', but read header format appears to be MGI!"))
+            }
+            # get sample flowcell (3rd element from : delimited list)
+            sample_flowcell <- read_headers %>% stringr::str_split(., ":") %>% sapply(., `[`, 3) %>% unique()
+            # check exactly one flowcell ID found
+            if (length(sample_flowcell) != 1){
+                stop(paste0("Invalid flowcell detection for sample '",sample_i_name,"'"))
+            }
+            # get sample lane (4th element from : delimited list)
+            sample_lane <- read_headers %>% stringr::str_split(., ":") %>% sapply(., `[`, 4) %>% unique()
+            # check exactly one lane number found
+            if (length(sample_lane) != 1){
+                stop(paste0("Invalid lane detection for sample '",sample_i_name,"'"))
+            }
+            # combine flowcell and lane into a single 'read_group' string
+            sample_rg <- paste0(sample_flowcell,"__",sample_lane)
+            
+        # MGI raw format
+        } else if ( all(stringr::str_detect(read_headers, "^[[:alnum:]]+/[12]$")) ) {
+        
+            message(paste0("Read header format for sample '",sample_i_name,"' detected as MGI (native)"))
+            if ( seq_type == "nanopore" ){
+                stop(paste0(ppe, "'--seq_type' given as 'nanopore', but read header format appears to be MGI!"))
+            }
+            # get sample flowcell (3rd element from : delimited list)
+            sample_flowcell <- stringr::str_extract(read_headers, "^[[:alnum:]]+?(?=L)") %>% unique()
+            # check exactly one flowcell ID found
+            if (length(sample_flowcell) != 1){
+                stop(paste0("Invalid flowcell detection for sample '",sample_i_name,"'"))
+            }
+            # get sample lane (4th element from : delimited list)
+            sample_lane <- stringr::str_extract(read_headers, "(?<=L)\\d+") %>% unique()
+            # check exactly one lane number found
+            if (length(sample_lane) != 1){
+                stop(paste0("Invalid lane detection for sample '",sample_i_name,"'"))
+            }
+            # combine flowcell and lane into a single 'read_group' string
+            sample_rg <- paste0(sample_flowcell,"__",sample_lane)
+        
+        # ONT format
+        } else if ( all(stringr::str_detect(read_headers, " runid=[[:alnum:]]+")) && all(stringr::str_detect(read_headers, " flow_cell_id=[[:alnum:]]+"))  ) {
+        
+            message(paste0("Read header format for sample '",sample_i_name,"' detected as ONT"))
+            if ( seq_type != "nanopore" ){
+                stop(paste0(ppe, "'--seq_type' given as '",seq_type,"', but read header format appears to be ONT/'nanopore'!"))
+            }
+
+            # extract flowcell ID as read group (no lanes)
+            sample_rg <- stringr::str_extract(id_minion, "(?<=flow_cell_id=)[[:alnum:]]+(?=( |$))") %>% unique() %>% paste0(., "__1")
+            # check only one sample_rg extracted
+            if (length(sample_rg) != 1){
+                stop(paste0("Invalid flowcell detection for sample '",sample_i_name,"'"))
+            }
+        
+        } else {
+            stop(paste0("Read header format for sample '",sample_i_name,"' could not be parsed!"))
+        }
+        
+        # update samplesheet tibble with new read_group for this sample
+        samplesheet_df_rg <- 
+            samplesheet_df_rg %>%
+            dplyr::mutate(read_group = dplyr::if_else(sample == sample_i_name, sample_rg, read_group))
+        
+    }
+
+}
+
+# check if any 'read_group' values are still NA
+if (any(samplesheet_df_rg$read_group %>% is.na())){
+    stop(paste0(sse, "Not all 'read_group' values have been determined!"))
+}
+
+# pseudorandomly subsample samplesheet if params.subsample is defined
+# this is done per pcr_primer x read_group combination so expected combinations are (likely) retained
+if (subsample != "false") {
+    { set.seed(1); samplesheet_df_ss <- 
+        samplesheet_df_rg %>% 
+        dplyr::group_by(primers, read_group) %>% 
+        dplyr::slice_sample(n = as.numeric(subsample), replace = F) %>%
+        dplyr::ungroup() }
+} else {
+    samplesheet_df_ss <- samplesheet_df_rg
+}
+
+# enforce column order
+if ( paired == "true" ){
+    samplesheet_complete <- 
+        samplesheet_df_ss %>%
+        dplyr::relocate(sample, read_group, primers, read_dir, fwd, rev)
+} else {
+    samplesheet_complete <- 
+        samplesheet_df_ss %>%
+        dplyr::relocate(sample, read_group, primers, read_dir, single)
+}
+
+## create samplesheet outputs
+# create arbitrary metadata samplesheet -- keep only sample and read_group
+samplesheet_complete %>%
+    dplyr::select(-c(primers, read_dir, tidyselect::any_of(c("read_dir", "fwd", "rev", "single")))) %>%
+    readr::write_csv(., "sample_metadata.csv")
+
+# create samplesheet without 'sample_primers' field, for FASTQC channel
+samplesheet_complete %>%
+    dplyr::select(c(sample, read_group, primers, tidyselect::any_of(c("fwd","rev", "single")))) %>%
+    readr::write_csv(., "samplesheet_unsplit.csv")
+
+# split samplesheet by primers to generate samplesheet for split samples (without arbitrary metadata) -- main sample channel data
+samplesheet_complete %>%
+    dplyr::select(c(sample, read_group, primers, tidyselect::any_of(c("fwd","rev", "single")))) %>%
+    tidyr::separate_longer_delim(primers, delim = ";") %>%
+    dplyr::mutate(sample_primers = paste0(sample,"_",primers), .after = primers) %>%
+    readr::write_csv(., "samplesheet_split.csv")
+
+
+
+### validate primer_params content -------------------------------------------------------------------------------------
+
+# check none of the primer_params values contain spaces or commas 
+if (!all(stringr::str_detect(primer_params_df %>% unlist %>% unname, "^[^\\s,;]+$") %>% .[!is.na(.)] )){
+    stop(paste0(prpe, "Primer parameters must not contain spaces, commas or semi-colons."))
+}
 
 # add missing columns with default values
-default_params <- tibble::tibble(
-    pcr_primers = NA_character_,
-    target_gene = NA_character_,
-    max_primer_mismatch = 0,
-    read_min_length = 20,
-    read_max_length = Inf,
-    read_max_ee = 1,
-    read_trunc_length = 0,
-    read_trim_left = 0,
-    read_trim_right = 0,
-    asv_min_length = 0,
-    asv_max_length = Inf,
-    concat_unmerged = FALSE,
-    genetic_code = NA_character_,
-    coding = FALSE,
-    phmm = NA_character_,
-    idtaxa_db = NA_character_,
-    ref_fasta = NA_character_,
-    idtaxa_confidence = 60,
-    run_blast = FALSE,
-    blast_min_identity = 97,
-    blast_min_coverage = 90,
-    target_kingdom = NA_character_,
-    target_phylum = NA_character_,
-    target_class = NA_character_,
-    target_order = NA_character_,
-    target_family = NA_character_,
-    target_genus = NA_character_,
-    target_species = NA_character_,
-    min_sample_reads = 0,
-    min_taxa_reads = 0,
-    min_taxa_ra = 0
-)
-
-loci_params_df <- new_bind(default_params %>% filter(FALSE), loci_params_df) %>%
-  dplyr::mutate(across(everything(), as.character))%>%
-  dplyr::select(colnames(default_params))
-
-### replace parameters from '--loci_params' .csv file with those from the '--lp_*' flags
-# vector of loci parameters
-lp_vec <- c(
-    "max_primer_mismatch",
-    "read_min_length",
-    "read_max_length",
-    "read_max_ee",
-    "read_trunc_length",
-    "read_trim_left",
-    "read_trim_right",
-    "asv_min_length",
-    "asv_max_length",
-    "concat_unmerged",
-    "genetic_code",
-    "coding",
-    "phmm",
-    "idtaxa_db",
-    "ref_fasta",
-    "idtaxa_confidence",
-    "run_blast",
-    "blast_min_identity",
-    "blast_min_coverage",
-    "target_kingdom",
-    "target_phylum",
-    "target_class",
-    "target_order",
-    "target_family",
-    "target_genus",
-    "target_species",
-    "min_sample_reads",
-    "min_taxa_reads",
-    "min_taxa_ra"
-)
-
-# loop through parameters, changing those with lp_* not set to "null"
-for ( i in 1:length(lp_vec) ) {
-    lp <- lp_vec[i]
-    p <- get(paste0("params.lp_",lp))
-    if ( p == "null" ) { NULL } else {
-        if ( p %>% stringr::str_detect(pattern = "^<.+>.+$")) {
-        ## if multi-locus values given
-        # get the loci names
-        p_names <- stringr::str_extract_all(p, pattern = "(?<=\\<).+?(?=\\>)") %>% unlist
-        # get the new parameter values
-        p_vals <- stringr::str_extract_all(p, pattern = "(?<=\\>).+?((?=\\<)|$)") %>% unlist
-        # create a tibble of the new parameter values
-        p_df <- data.frame(p_names, p_vals) %>% 
-            tibble::as_tibble() %>% 
-            dplyr::mutate(across(everything(), as.character)) %>%
-            dplyr::rename("pcr_primers" = p_names, !!lp := p_vals) 
-        # update the original df with the new parameter values per locus
-        loci_params_df <- dplyr::rows_update(loci_params_df, p_df, by = "pcr_primers")
-        } else {
-            ## single value given, replace all old values with new value
-            loci_params_df <- loci_params_df %>%
-                dplyr::mutate_at( vars(lp), function(x) (x = p) )
-        }
-    }
-}
-
-# if `idtaxa_db` is not provided and `params.train_idtaxa` is not true, throw error
-if ( any(loci_params_df$idtaxa_db %in% c("null",NA) ) && params.train_idtaxa == "null" ) {
-    stop ("LOCI_PARAMS ERROR: One or more values of 'idtaxa_db' are missing and 'params.train_idtaxa' is set to 'null'.")
-    }
-
-# check pcr_primers column contains only unique values
-if (any(duplicated(loci_params_df$pcr_primers))) {
-    stop ("LOCI_PARAMS ERROR: 'pcr_primers' values are not unique!")
-    }
-
-# create split samplesheet for checking against loci_params
-samplesheet_split_check <- samplesheet_df %>% 
-    tidyr::separate_longer_delim(c(pcr_primers, target_gene, for_primer_seq, rev_primer_seq), delim = ";") 
-
-# check pcr_primers values match those in samplesheet
-if (!setequal(samplesheet_split_check$pcr_primers %>% unique(), loci_params_df$pcr_primers)) {
-    stop("LOCI_PARAMS ERROR: Samplesheet and loci_params do not share the same values of 'pcr_primers'!")
-}
-
-# check target_gene values match those in samplesheet
-if (!setequal(samplesheet_split_check$target_gene %>% unique(), loci_params_df$target_gene)) {
-    stop("LOCI_PARAMS ERROR: Samplesheet and loci_params do not share the same values of 'target_gene'!")
-}
-
-# convert run_blast, coding and concat_unmerged to logical values
-loci_params_df <- loci_params_df %>%
-    dplyr::mutate( ### NOTE: this assumes all columns are present in the data frame, but this might not always be true
-        run_blast = as.logical(run_blast),
-        coding = as.logical(coding),
-        concat_unmerged = dplyr::case_when(
-            concat_unmerged == "NA" ~ FALSE,
-            concat_unmerged %in% c("TRUE", "true") ~ TRUE,
-            concat_unmerged %in% c("FALSE", "false") ~ FALSE,
-            .default = FALSE
-        )
+default_params <- 
+    tibble::tibble(
+        primers = NA_character_,
+        locus = NA_character_,
+        for_primer_seq = NA_character_,
+        rev_primer_seq = NA_character_,
+        max_primer_mismatch = 0,
+        read_min_length = 20,
+        read_max_length = Inf,
+        read_max_ee = 1,
+        read_trunc_length = 0,
+        read_trim_left = 0,
+        read_trim_right = 0,
+        asv_min_length = 0,
+        asv_max_length = Inf,
+        concat_unmerged = FALSE,
+        genetic_code = NA_character_,
+        coding = FALSE,
+        phmm = NA_character_,
+        idtaxa_db = NA_character_,
+        ref_fasta = NA_character_,
+        idtaxa_confidence = 60,
+        run_blast = FALSE,
+        blast_min_identity = 97,
+        blast_min_coverage = 90,
+        target_kingdom = NA_character_,
+        target_phylum = NA_character_,
+        target_class = NA_character_,
+        target_order = NA_character_,
+        target_family = NA_character_,
+        target_genus = NA_character_,
+        target_species = NA_character_,
+        min_sample_reads = 0,
+        min_taxa_reads = 0,
+        min_taxa_ra = 0
     )
 
+# combine default values and supplied values
+primer_params_da <- 
+    primer_params_df %>% 
+    # add missing columns with default values (https://stackoverflow.com/a/53691922)
+    tibble::add_column(
+        ., 
+        !!!default_params[setdiff(names(default_params), names(.))]
+    ) %>%
+    # reorder columns
+    dplyr::relocate(tidyselect::all_of(names(default_params))) %>%
+    # make every column characters, will convert later
+    dplyr::mutate(dplyr::across(tidyselect::everything(), as.character))
+
+# use params_list from process_start.R to create a named vector of parameters and values
+params_vec <- 
+    sapply(
+        params_list,
+        function(x){
+            y <- x[2]
+            names(y) <- x[1]
+            return(y)
+        }
+    )
+
+if ( pp_type == "default" ){
+    # if pp_type == "default", check pp_primers, pp_locus, pp_for_primer_seq, pp_rev_primer_seq and pp_ref_fasta are all set
+    if ( any( 
+        params_vec["pp_primers"] == "null", 
+        params_vec["pp_locus"] == "null", 
+        params_vec["pp_for_primer_seq"] == "null", 
+        params_vec["pp_rev_primer_seq"] == "null", 
+        params_vec["pp_ref_fasta"] == "null" 
+    ) ) {
+        stop(paste0(ppe, "If '--primer_params' is unset, all of '--pp_primers', '--pp_locus', '--pp_for_primer_seq', '--pp_rev_primer_seq' and '--pp_ref_fasta' must be set to overwrite blank defaults."))
+    }
+    
+    # add primers to blank primer_params tibble
+    primer_names_new <- params_vec["pp_primers"] %>% stringr::str_split_1(., ";")
+    primer_params_da <- 
+        lapply(
+            primer_names_new,
+            function(x){ primer_params_da %>% dplyr::mutate(primers = x) }
+        ) %>%
+        dplyr::bind_rows()
+    
+} else if ( pp_type == "user" ){
+    
+    # if pp_type == "user", check pp_primers is unset 
+    if ( params_vec["pp_primers"] != "null"){
+        stop(paste0(ppe, "'--pp_primers' is set to '",params_vec["pp_primers"],"' but cannot be used in conjunction with '--primer_params'."))
+    }
+
+}
+
+### replace primer params from .csv with those from the '--pp_*' pipeline parameters
+# vector of primer parameters
+pp_vec <- 
+    c(
+        "locus",
+        "for_primer_seq",
+        "rev_primer_seq",
+        "max_primer_mismatch",
+        "read_min_length",
+        "read_max_length",
+        "read_max_ee",
+        "read_trunc_length",
+        "read_trim_left",
+        "read_trim_right",
+        "asv_min_length",
+        "asv_max_length",
+        "concat_unmerged",
+        "genetic_code",
+        "coding",
+        "phmm",
+        "idtaxa_db",
+        "ref_fasta",
+        "idtaxa_confidence",
+        "run_blast",
+        "blast_min_identity",
+        "blast_min_coverage",
+        "target_kingdom",
+        "target_phylum",
+        "target_class",
+        "target_order",
+        "target_family",
+        "target_genus",
+        "target_species",
+        "min_sample_reads",
+        "min_taxa_reads",
+        "min_taxa_ra"
+    ) %>%
+    stringr::str_replace(., "^", "pp_")
+
+
+# just the pp_ parameters other than pp_primers
+params_pp <- params_vec[names(params_vec) %in% pp_vec]
+
+# remove parameters set to "null" (ie. unset)
+params_pp_nn <- params_pp[!params_pp == "null"]
+
+# get vector of primers values
+primers_vec <- primer_params_da$primers
+
+# create new version of primer_params that will be updated through the loop
+primer_params_up <- primer_params_da
+
+if ( length(params_pp_nn) > 0 ){
+    ## loop through non-null parameters updating the primer_params tibble
+    for ( i in 1:length(params_pp_nn)) {
+        
+        # get name of parameter
+        p_name <- names(params_pp_nn[i]) %>% stringr::str_remove(., "^pp_")
+        # get value of parameter
+        p_value <- params_pp_nn[i] %>% unname()
+        
+        # check format and make changes to data frame accordingly 
+        if ( stringr::str_detect(p_value, "^[^\\[\\]\\;]+$")  ) { # 1 -- one value with no primers tag 
+        
+            # replace parameter with new value for all rows
+            primer_params_up <- 
+                primer_params_up %>% dplyr::mutate("{p_name}" := p_value)
+            
+            message(paste0("Primer parameter '",p_name,"' has been updated to '",p_value,"'."))
+        
+        } else if ( stringr::str_detect(p_value, "^\\[[^\\[\\]\\;]+\\][^\\[\\]\\;]+$") ) { # [A]1 -- one value with a primers tag 
+        
+            # get tag and non-tag parts of the parameter value
+            p_tag <- stringr::str_extract(p_value, "^\\[(\\S+)\\]", group = 1)
+            p_notag <- stringr::str_extract(p_value, "^\\[\\S+\\](\\S+)", group = 1)
+            
+            # check tag is a valid primers value
+            if ( !p_tag %in% primers_vec ){
+                stop(paste0(ppe, "The value of parameter '--pp_",p_name,"' does not have a valid primers tag: '", p_value,"'"))
+            }
+            
+            # replace parameter just for given primers value
+            primer_params_up <- 
+                primer_params_up %>%
+                dplyr::mutate(
+                    dplyr::across(
+                        {{p_name}},
+                        ~ dplyr::case_when(primers == p_tag ~ p_notag, .default = .)
+                    )
+                )
+            
+            message(paste0("Primer parameter '",p_name,"' has been updated to '",p_notag,"' for 'primers' value '",p_tag,"'."))
+        
+        } else if ( stringr::str_detect(p_value, "^\\[\\S+\\][^\\[\\]\\;]+;\\[\\S+\\][^\\[\\]\\;]+(\\[\\S+\\][^\\[\\]\\;]+)*$") ) { # [A]1;B[2](;[C]3) -- two or more values, each with a primers tag
+        
+            # split value into parts using semi-colons
+            p_value_split <-  stringr::str_split_1(p_value, ";")
+            
+            # extract tags from each part
+            p_tags <- stringr::str_extract(p_value_split, "\\[(\\S+)\\]", group = 1)
+            # extract true values from each part
+            p_notags <- stringr::str_extract(p_value_split, "\\[\\S+\\](\\S+)", group = 1)
+            
+            # check all tags are valid primers values
+            if ( !all(p_tags %in% primers_vec )) {
+                stop(paste0(ppe, "The value of parameter '--pp_",p_name,"' does not have one or more valid primers tags: '", p_value,"'"))
+            }
+            
+            # create tibble of parameter values ID'd by primers value
+            names(p_notags) <- p_tags
+            p_tibble <- tibble::enframe(p_notags, name = "primers", value = p_name)
+            
+            # update primer_params tibble with new values using primers as key
+            primer_params_up <- 
+                primer_params_up %>%
+                dplyr::rows_update(
+                  .,
+                  p_tibble, 
+                  by = "primers",
+                  unmatched = "error"
+                )
+            
+            message(paste0("Primer parameter '",p_name,"' has been updated to '",stringr::str_flatten(p_notags, " / "),"' for 'primers' values '",stringr::str_flatten(p_tags, " / "),"', respectively."))
+        
+        } else {
+            stop(paste0(ppe, "The value of parameter '--pp_",p_name,"' is misformatted: '", p_value,"'"))
+        }
+    }
+} else {
+    message("No primer parameters replaced.")
+}
+
 # convert phmm, idtaxa_db and ref_fasta paths to absolute paths
-loci_params_df <- loci_params_df %>% 
+primer_params_up <- 
+    primer_params_up %>% 
     dplyr::mutate(
-        across(
+        dplyr::across(
             c(phmm, idtaxa_db, ref_fasta), 
             ~ dplyr::case_when(
-                is.na(.) ~ ., # keep as NA if NA
+                is.na(.) | . == "NA" ~ ., # keep as NA if NA
                 stringr::str_starts(., "/") ~ ., # if already absolute path, leave it be
                 stringr::str_starts(., "\\./") ~ stringr::str_replace(., "^\\.", launchDir),  # replace "." with launchDir to produce absolute path
                 .default = stringr::str_replace(., "^", paste0(launchDir,"/")) # else lead with launchDir to produce absolute path
             )
         )
-    )
+    ) 
+
+
+## parameter validation
+
+# check primers is correctly formatted
+if (!all(stringr::str_detect(primer_params_up$primers, "^((?!__)[^\\s,;])+$"))){
+    stop(paste0(prpe, "'primers' values must not contain spaces, commas, semi-colons or two underscores in a row."))
+}
+
+# check primers column contains only unique values
+if (any(duplicated(primer_params_up$primers))) {
+    stop (paste0(prpe, "'primers' values are not unique!"))
+}
+
+## check primers values match between samplesheet and primer_params
+# get vector of unique primers values, undelimited from samplesheet
+ss_pp <- samplesheet_complete$primers %>% stringr::str_split(., ";") %>% unlist() %>% unique()
+
+if ( !all(ss_pp %in% primer_params_up$primers) ){
+    stop(paste0("SAMPLESHEET/PRIMER PARAMS ERROR: Not all 'primers' values in samplesheet ('",stringr::str_flatten(ss_pp, " / "),"') match those in primer_params ('",stringr::str_flatten(primer_params_up$primers, " / "),"')."))
+}
+
+
+# if `idtaxa_db` is not provided and `params.train_idtaxa` is not true, throw error
+if ( any(primer_params_up$idtaxa_db %in% c("null",NA) ) && params.train_idtaxa %in% c("null","false") ) {
+    stop (paste0(prpe, "One or more values of 'idtaxa_db' are missing and 'params.train_idtaxa' is set to 'null' or 'false'."))
+}
+
+# check locus, for_primer_seq and rev_primer_seq are not NA
+if (any(is.na(primer_params_up$locus))) {
+    stop(paste0(prpe, "One or more values of 'locus' are missing: '",stringr::str_flatten(primer_params_up$locus, " / "),"'."))
+}
+if (any(is.na(primer_params_up$for_primer_seq))) {
+    stop(paste0(prpe, "One or more values of 'for_primer_seq' are missing: '",stringr::str_flatten(primer_params_up$for_primer_seq, " / "),"'."))
+}
+if (any(is.na(primer_params_up$rev_primer_seq))) {
+    stop(paste0(prpe, "One or more values of 'rev_primer_seq' are missing: '",stringr::str_flatten(primer_params_up$rev_primer_seq, " / "),"'."))
+}
+
+# check for_primer_seq and rev_primer_seq are correctly formatted
+if (!all(stringr::str_detect(primer_params_up$for_primer_seq, "^[GATCRYMKSWHBVDNIgatcrymkswhbvdni]+$"))){
+    stop(paste0(prpe, "One or more values of 'for_primer_seq' contains non-IUPAC characters: '", stringr::str_flatten(primer_params_up$for_primer_seq, " / "),"'."))
+}
+if (!all(stringr::str_detect(primer_params_up$rev_primer_seq, "^[GATCRYMKSWHBVDNIgatcrymkswhbvdni]+$"))){
+    stop(paste0(prpe, "One or more values of 'rev_primer_seq' contains non-IUPAC characters: '", stringr::str_flatten(primer_params_up$rev_primer_seq, " / "),"'."))
+}
+
+# check that still none of the primer_params values contain spaces or commas 
+if (!all(stringr::str_detect(primer_params_up %>% unlist %>% unname, "^[^\\s,;]+$") %>% .[!is.na(.)] )){
+    stop(paste0(prpe, "Primer parameters must not contain spaces, commas or semi-colons."))
+}
+
+# check max_primer_mismatch is an integer >= 0
+if (any(primer_params_up$max_primer_mismatch %>% as.integer() %>% is.na()) || any(primer_params_up$max_primer_mismatch %>% as.integer() < 0)){
+    stop(paste0(prpe, "'max_primer_mismatch' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$max_primer_mismatch, " / "), "'."))
+}
+
+# check read_min_length is an integer >= 0
+if (any(primer_params_up$read_min_length %>% as.integer() %>% is.na()) || any(primer_params_up$read_min_length %>% as.integer() < 0)){
+    stop(paste0(prpe, "'read_min_length' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$read_min_length, " / "), "'."))
+}
+
+# check read_max_length is an integer >= 1 or 'Inf'
+for (i in 1:length(primer_params_up$read_max_length) ) {
+    test_val <- primer_params_up$read_max_length[i]
+    if ( test_val != "Inf" ){
+        if ( test_val %>% as.integer %>% is.na || test_val %>% as.integer < 1 ){
+            stop(paste0(prpe, "'read_max_length' must be an integer >=1, or the string 'Inf': '",stringr::str_flatten(primer_params_up$read_max_length, " / "), "'."))
+        }
+    }
+}
+
+# check read_max_ee is an integer >= 0
+if (any(primer_params_up$read_max_ee %>% as.integer() %>% is.na()) || any(primer_params_up$read_max_ee %>% as.integer() < 0)){
+    stop(paste0(prpe, "'read_max_ee' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$read_max_ee, " / "), "'."))
+}
+
+# check read_trunc_length is an integer >= 1
+if (any(primer_params_up$read_trunc_length %>% as.integer() %>% is.na()) || any(primer_params_up$read_trunc_length %>% as.integer() < 0)){
+    stop(paste0(prpe, "'read_trunc_length' must be an integer >= 1: '",stringr::str_flatten(primer_params_up$read_trunc_length, " / "), "'."))
+}
+
+# check read_trim_left is an integer >= 0
+if (any(primer_params_up$read_trim_left %>% as.integer() %>% is.na()) || any(primer_params_up$read_trim_left %>% as.integer() < 0)){
+    stop(paste0(prpe, "'read_trim_left' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$read_trim_left, " / "), "'."))
+}
+
+# check read_trim_right is an integer >= 0
+if (any(primer_params_up$read_trim_right %>% as.integer() %>% is.na()) || any(primer_params_up$read_trim_right %>% as.integer() < 0)){
+    stop(paste0(prpe, "'read_trim_right' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$read_trim_right, " / "), "'."))
+}
+
+# check asv_min_length is an integer >= 0
+if (any(primer_params_up$asv_min_length %>% as.integer() %>% is.na()) || any(primer_params_up$asv_min_length %>% as.integer() < 0)){
+    stop(paste0(prpe, "'asv_min_length' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$asv_min_length, " / "), "'."))
+}
+
+# check asv_max_length is an integer >= 1 or 'Inf'
+for (i in 1:length(primer_params_up$asv_max_length) ) {
+    test_val <- primer_params_up$asv_max_length[i]
+    if ( test_val != "Inf" ){
+        if ( test_val %>% as.integer %>% is.na || test_val %>% as.integer < 1 ){
+            stop(paste0(prpe, "'asv_max_length' must be an integer >=1, or the string 'Inf': '",stringr::str_flatten(primer_params_up$asv_max_length, " / "), "'."))
+        }
+    }
+}
+
+# check concat_unmerged is a logical string
+if ( !all(stringr::str_detect(toupper(primer_params_up$concat_unmerged), "^(TRUE|T|FALSE|F)$")) ){
+    stop(paste0(prpe, "'concat_unmerged' must be one of 'TRUE', 'T', 'FALSE' or 'F' (or lowercase versions): '",stringr::str_flatten(primer_params_up$concat_unmerged, " / "), "'."))
+}
+
+# check genetic code is a valid code from Biostrings::GENETIC_CODE_TABLE, or NA
+gc_valid <- c(Biostrings::GENETIC_CODE_TABLE$name2, Biostrings::GENETIC_CODE_TABLE$id, NA) %>% unique()
+if ( !all(primer_params_up$genetic_code %in% gc_valid) ){
+    stop(paste0(prpe, "'genetic_code' must be a 'name2' or 'id' value from Biostrings::GENETIC_CODE_TABLE: '",stringr::str_flatten(primer_params_up$genetic_code, " / "),"'."))
+}
+
+# check coding is a logical string
+if ( !all(stringr::str_detect(toupper(primer_params_up$coding), "^(TRUE|T|FALSE|F)$")) ){
+    stop(paste0(prpe, "'coding' must be one of 'TRUE', 'T', 'FALSE' or 'F' (or lowercase versions): '",stringr::str_flatten(primer_params_up$coding, " / "), "'."))
+}
 
 ## check phmm, idtaxa_db and ref_fasta are readable files
 # phmm path check 
-check_paths <- loci_params_df$phmm %>% unlist() # check phmm paths
+check_paths <- primer_params_up$phmm %>% unlist() # check phmm paths
 for(i in seq_along(check_paths)){ if (!is.na(check_paths[i])) {
     message (paste0("Checking 'phmm' path '",check_paths[i],"'..."))
     assertthat::is.readable(check_paths[i])} 
-    }
+}
 
 # idtaxa_db path check
-check_paths <- loci_params_df$idtaxa_db %>% unlist() # check idtaxa_db paths
+check_paths <- primer_params_up$idtaxa_db %>% unlist() # check idtaxa_db paths
 for(i in seq_along(check_paths)){ if (!is.na(check_paths[i])) {
     message (paste0("Checking 'idtaxa_db' path '",check_paths[i],"'..."))
     assertthat::is.readable(check_paths[i])} 
-    }
-
-# ref_fasta path check
-check_paths <- loci_params_df$ref_fasta %>% unlist() # check ref_fasta paths
-for(i in seq_along(check_paths)){ assertthat::is.readable(check_paths[i]) }
-
-## write parsed loci_parms to file
-readr::write_csv(loci_params_df, "loci_params_parsed.csv")
-
-
-### split samplesheet by primer and join to loci_params
-samplesheet_loci_params <- samplesheet_df %>%  # split samdf loci-relevant columns across new rows, then join samdf and params  
-    tidyr::separate_longer_delim(c(pcr_primers, for_primer_seq, rev_primer_seq, target_gene), delim = ";") %>% 
-    dplyr::left_join(., loci_params_df, by = c("pcr_primers", "target_gene"))
-
-readr::write_csv(samplesheet_loci_params, "samplesheet_loci_params.csv")
-
-### split joined samplesheet into one per primer pair
-split_slp <- split(samplesheet_loci_params, samplesheet_loci_params$pcr_primers) # split dfs by pcr_primers
-
-for ( I in 1:length(split_slp)) { # assign new dfs to new variables
-    new_df_name <- paste0(unique(split_slp[[I]]$pcr_primers),"__samplesheet")
-    assign(
-        paste0(unique(split_slp[[I]]$pcr_primers),"__samplesheet"),
-        split_slp[[I]]
-        )
-    readr::write_csv( # print dfs inside work dir; maybe publish?
-        x = get(new_df_name), 
-        file = sprintf("%s.csv",new_df_name)
-        )
 }
 
-# stop(" *** stopped manually *** ") ##########################################
+# ref_fasta path check
+check_paths <- primer_params_up$ref_fasta %>% unlist() # check ref_fasta paths
+for(i in seq_along(check_paths)){ 
+    message (paste0("Checking 'ref_fasta' path '",check_paths[i],"'..."))
+    assertthat::is.readable(check_paths[i]) 
+}
+
+##
+# check idtaxa_confidence is an integer 0-100
+if (any(primer_params_up$idtaxa_confidence %>% as.integer() %>% is.na()) || !all(primer_params_up$idtaxa_confidence %>% as.integer() %>% between(., 0, 100))){
+    stop(paste0(prpe, "'idtaxa_confidence' must be an integer between 0-100: '",stringr::str_flatten(primer_params_up$idtaxa_confidence, " / "), "'."))
+}
+
+# check run_blast is a logical string
+if ( !all(stringr::str_detect(toupper(primer_params_up$run_blast), "^(TRUE|T|FALSE|F)$")) ){
+    stop(paste0(prpe, "'run_blast' must be one of 'TRUE', 'T', 'FALSE' or 'F' (or lowercase versions): '",stringr::str_flatten(primer_params_up$run_blast, " / "), "'."))
+}
+
+# check blast_min_identity is an integer 0-100
+if (any(primer_params_up$blast_min_identity %>% as.integer() %>% is.na()) || !all(primer_params_up$blast_min_identity %>% as.integer() %>% between(., 0, 100))){
+    stop(paste0(prpe, "'blast_min_identity' must be an integer between 0-100: '",stringr::str_flatten(primer_params_up$blast_min_identity, " / "), "'."))
+}
+
+# check blast_min_coverage is an integer 0-100
+if (any(primer_params_up$blast_min_coverage %>% as.integer() %>% is.na()) || !all(primer_params_up$blast_min_coverage %>% as.integer() %>% between(., 0, 100))){
+    stop(paste0(prpe, "'blast_min_coverage' must be an integer between 0-100: '",stringr::str_flatten(primer_params_up$blast_min_coverage, " / "), "'."))
+}
+
+# NOTE: target_* fields should already be validated as lacking spaces or commas -- invalid taxa names should be ignored at this stage
+
+# check min_sample_reads is an integer >= 0
+if (any(primer_params_up$min_sample_reads %>% as.integer() %>% is.na()) || any(primer_params_up$min_sample_reads %>% as.integer() < 0)){
+    stop(paste0(prpe, "'min_sample_reads' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$min_sample_reads, " / "), "'."))
+}
+
+# check min_taxa_reads is an integer >= 0
+if (any(primer_params_up$min_taxa_reads %>% as.integer() %>% is.na()) || any(primer_params_up$min_taxa_reads %>% as.integer() < 0)){
+    stop(paste0(prpe, "'min_taxa_reads' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$min_taxa_reads, " / "), "'."))
+}
+
+# check min_taxa_ra is a number between 0-1
+if (any(primer_params_up$min_taxa_ra %>% as.numeric() %>% is.na()) || !all(primer_params_up$min_taxa_ra %>% as.numeric() %>% between(., 0, 1)) ){
+    stop(paste0(prpe, "'min_taxa_ra' must be a number between 0-1: '",stringr::str_flatten(primer_params_up$min_taxa_ra, " / "), "'."))
+}
+
+## write parsed primer_params to file
+readr::write_csv(primer_params_up, "primer_params_parsed.csv")
+
+# stop("stopped manually")

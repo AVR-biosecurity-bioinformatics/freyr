@@ -129,7 +129,7 @@ Run with shifter and slurm in BASC, with test data
 
     module load Java/17.0.6 shifter/22.02.1
 
-    NXF_VER=23.05.0-edge nextflow run . -profile basc_slurm,test
+    NXF_VER=23.05.0-edge nextflow run . -profile basc_slurm,test,debug
 
 Run test data with minimal samples:
 
@@ -148,3 +148,26 @@ Test with Horsham data (one flowcell, three primer pairs)
         --lp_idtaxa_db /group/pathogens/IAWS/Personal/JackS/databases/coi/tarth_250307/idtaxa_model.rds \
         --lp_ref_fasta /group/pathogens/IAWS/Personal/JackS/databases/coi/tarth_250307/final_database.fasta \
         -resume
+
+New Horsham format:
+
+    nextflow run . \
+        -profile basc_slurm,debug \
+        --samplesheet /group/pathogens/IAWS/Projects/NGDSI/Horsham/samplesheets/new_samplesheet_LM2TV.csv \
+        --primer_params /group/pathogens/IAWS/Projects/NGDSI/Horsham/analysis/primer_params.csv \
+        --pp_idtaxa_db /group/pathogens/IAWS/Personal/JackS/databases/coi/tarth_250307/idtaxa_model.rds \
+        --pp_ref_fasta /group/pathogens/IAWS/Personal/JackS/databases/coi/tarth_250307/final_database.fasta \
+        -resume
+
+Testing 'no primer_params' input
+
+    nextflow run . \
+        -profile basc_slurm,debug,test \
+        --primer_params false \
+        --pp_primers "fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4" \
+        --pp_locus "[fwhF2-fwhR2nDac]COI;[EIF3LminiF4-EIF3lminiR4]EIF3L" \
+        --pp_for_primer_seq "[fwhF2-fwhR2nDac]GGDACWGGWTGAACWGTWTAYCCHCC;[EIF3LminiF4-EIF3lminiR4]GATGCGYCGTTATGCYGATGC" \
+        --pp_rev_primer_seq "[fwhF2-fwhR2nDac]GTRATWGCHCCIGCTAADACHGG;[EIF3LminiF4-EIF3lminiR4]TTRAAYACTTCYARATCRCC" \
+        --pp_ref_fasta "[fwhF2-fwhR2nDac]./test_data/dual/reference/COI_hierarchial.fa.gz;[EIF3LminiF4-EIF3lminiR4]./test_data/dual/reference/EIF3L_hierarchial.fa.gz" \
+        --pp_idtaxa_db "[fwhF2-fwhR2nDac]./test_data/dual/reference/COI_idtaxa.rds;[EIF3LminiF4-EIF3lminiR4]./test_data/dual/reference/EIF3L_idtaxa.rds" \
+        --pp_phmm "[fwhF2-fwhR2nDac]./test_data/dual/reference/Bactrocera_COI.rds;[EIF3LminiF4-EIF3lminiR4]./test_data/dual/reference/Bactrocera_EIF3L.rds" 

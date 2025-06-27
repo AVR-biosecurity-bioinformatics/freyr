@@ -1,15 +1,15 @@
 process DENOISE {
     def module_name = "denoise"
-    tag "$pcr_primers; $meta.sample_id"
+    tag "$sample_primers"
     label "medium"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(direction), val(pcr_primers), val(fcid), val(meta), path(reads), path(errormodel), path(priors)
+    tuple val(direction), val(primers), val(read_group), val(sample), val(sample_primers), path(reads), path(errormodel), path(priors)
     val(n_pass)
 
     output:
-    tuple val(direction), val(pcr_primers), val(fcid), val(meta), path(reads), path("*_dada{1,2}{F,R,S}.rds"), emit: seq
+    tuple val(direction), val(primers), val(read_group), val(sample), val(sample_primers), path(reads), path("*_dada{1,2}{F,R,S}.rds"), emit: seq
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -24,9 +24,9 @@ process DENOISE {
     ### defining Nextflow environment variables as R variables
     ## input channel variables
     direction =         "${direction}"
-    fcid =              "${fcid}"
-    pcr_primers =       "${pcr_primers}"
-    sample_id =         "${meta.sample_id}"
+    read_group =        "${read_group}"
+    primers =           "${primers}"
+    sample_primers =    "${sample_primers}"
     reads =             "${reads}"
     errormodel =        "${errormodel}"
     n_pass =            "${n_pass}"

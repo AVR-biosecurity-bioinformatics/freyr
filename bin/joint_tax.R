@@ -13,17 +13,14 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "fcid",
-    "pcr_primers",
-    "target_gene",
+    "read_group",
+    "primers",
     "idtaxa_list",
     "blast_list"
 )
 lapply(nf_vars, nf_var_check)
 
 ## check and define variables 
-target_gene <-          parse_nf_var_repeat(target_gene)
-
 propagate_tax <-        TRUE
 
 ### run R code      
@@ -116,5 +113,5 @@ if(!all(idtaxa_output$seq_name %in% joint_assignment$seq_name)){
 }
 
 # Write tibble
-readr::write_csv(joint_assignment, paste0(fcid,"_",pcr_primers,"_joint.csv"))
+readr::write_csv(joint_assignment, paste0(read_group,"_",primers,"_joint.csv"))
 

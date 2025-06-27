@@ -63,18 +63,14 @@ cd $working_dir
 
 ### Make your samplesheet
 
-The samplesheet is a `.csv` file that conveys information to the pipeline about each sample. One row should be used per sample. A blank samplesheet can be found at `./inputs/samplesheet_blank.csv`. There are 8-9 required samplesheet columns (or 'fields'), listed in the table below. The rest of the fields are optional and can be used to specify additional metadata if you have it. 
+The samplesheet is a `.csv` file that conveys information to the pipeline about each sample. One row should be used per sample. A blank samplesheet can be found at `./inputs/samplesheet_blank.csv`. There are 8-9 required samplesheet columns (or 'fields'), listed in the table below. The rest of the fields are optional and can be used to specify additional metadata if you have it.
 
-| field | meaning | requirements | change to: |
+| Field | Meaning | Requirements | Change to: |
 | --- | --- | --- | --- |
-| `sample_id` | Unique sample ID | Currently must be `fcid` and `sample_name` separated by an underscore. If `read_dir` is used over `single`, it must be present at the start of the name of each read file. | Depends on data |
-| `sample_name` | Sample name | Has to be unique within a flowcell. See `sample_id`. | Depends on data |
-| `fcid` | Flowcell ID | One of the two core groupings within the pipeline, along with `pcr_primers`. See `sample_id`. | Depends on data  |
-| `target_gene` | Name of the target gene(s) amplified | Can specify multiple by separating with a semi-colon. | Name of your target gene (eg. `COI`)  |
-| `pcr_primers` | Name of the PCR primer pair(s) | Can specify multiple by separating with a semi-colon. | Name of your primer pair(s) (eg.`fwhF2-fwhR2n`) |
-| `for_primer_seq` | 5'-3' sequence of the forward primer(s) | Can specify multiple by separating with a semi-colon. | Your sequence (eg. `GGDACWGGWTGAACWGTWTAYCCHCC`)  |
-| `rev_primer_seq` | 5'-3' sequence of the reverse primer(s) | Can specify multiple by separating with a semi-colon. | Your sequence (eg. `GTRATWGCHCCDGCTARWACWGG`)  |
-| `read_dir` | Directory containing sequencing reads | If this is specified, the pipeline searches this directory (including subdirectories) for read files starting with `sample_id`. Cannot be used in conjunction with `single`; delete field if not using. | Up to you! |
+| `sample` | Unique sample ID | Must be unique within the samplesheet. If `read_dir` is used over `fwd`/`rev`/`single`, it must be present at the start of the name of each read file. | Depends on data |
+| `read_group` | Sequencing read group | If this is unknown, do not include this field and it will be automatically determined from the read headers of each sample. | Depends on data  |
+| `primers` | Name of the PCR primer pair(s) | Can specify multiple by separating with a semi-colon. Must be a subset of the values in the `--primer_params` file. Each sample can have a different value in this field if appropriate. | `fwhF2-fwhR2n` |
+| `read_dir` | Directory containing sequencing reads | If this is specified, the pipeline searches this directory (including subdirectories) for read files starting with `sample`. Cannot be used in conjunction with `fwd` and `rev`; delete field if not using. | Up to you! |
 | `single` | Exact path of the read file for this sample | Cannot be used in conjunction with `read_dir`; delete field if not using. | Up to you!  |
 
 The easiest way to specify the reads for each sample is to copy your read files into the `./data` directory and then put `./data` in the `read_dir` field for every row in the samplesheet. 

@@ -9,11 +9,8 @@
       "required": [
         "sample_id", 
         "sample_name", 
-        "target_gene", 
-        "pcr_primers", 
-        "for_primer_seq",
-        "rev_primer_seq", 
-        "fcid"
+        "fcid",
+        "pcr_primers"
         ],
       "properties": {
         "sample_id": {
@@ -26,6 +23,48 @@
             "type": "string",
             "pattern": "^[^\\s,]+$",
             "errorMessage": "Sample name must be unique within a flowcell, and cannot contain spaces or commas."
+        },
+        "fcid": {
+            "type": "string",
+            "pattern": "^[^\\s,]+$",
+            "errorMessage": "Flowcell ID must be provided, and cannot contain spaces or commas."
+        },
+        "pcr_primers": {
+            "type": "string",
+            "pattern": "^[^,]+$",
+            "errorMessage": "PCR primer name cannot contain spaces or commas; it may be a list of two or more items separated by a semi-colon (';')."
+        },
+        "read_dir": {
+            "type": "string",
+            "pattern": "^[^\\s,]+$",
+            "format": "directory-path",
+            "exists": true,
+            "description": "Path to directory/folder containing the FastQ read file(s)--paths without a preceding '/' will be considered relative. The pipeline will match files to samples based on 'sample_id' and the optional 'extension' pipeline parameter. Should not be used in conjunction with 'fwd', 'rev', or 'single'.",
+            "errorMessage": "Read directory path cannot contain spaces or commas."
+        },
+        "fwd": {
+            "type": "string",
+            "pattern": "^[^\\s,]+\\.f(ast)?q(\\.gz)?$",
+            "format": "file-path",
+            "exists": true,
+            "description": "Path of the forward read FastQ file--paths without a preceding '/' will be considered relative. Should not be used in conjunction with 'read_dir' or 'single'.",
+            "errorMessage": "FastQ file for forward reads cannot contain spaces or commas, and must have extension '.fastq', '.fq', '.fastq.gz' or '.fq.gz'."
+        },
+        "rev": {
+            "type": "string",
+            "pattern": "^[^\\s,]+\\.f(ast)?q(\\.gz)?$",
+            "format": "file-path",
+            "exists": true,
+            "description": "Path of the reverse read FastQ file--paths without a preceding '/' will be considered relative. Should not be used in conjunction with 'read_dir' or 'single'.",
+            "errorMessage": "FastQ file for reverse reads cannot contain spaces or commas, and must have extension '.fastq', '.fq', '.fastq.gz' or '.fq.gz'."
+        },
+        "single": {
+            "type": "string",
+            "pattern": "^[^\\s,]+\\.f(ast)?q(\\.gz)?$",
+            "format": "file-path",
+            "exists": true,
+            "description": "Path of the single-end read FastQ file--paths without a preceding '/' will be considered relative. Should not be used in conjunction with 'read_dir'.",
+            "errorMessage": "FastQ file for single-end reads cannot contain spaces or commas, and must have extension '.fastq', '.fq', '.fastq.gz' or '.fq.gz'."
         },
         "extraction_rep": {
             "type": "string",
@@ -119,26 +158,6 @@
             "pattern": "^[^,]+$",
             "errorMessage": "Amplification method cannot contain commas."
         },
-        "target_gene": {
-            "type": "string",
-            "pattern": "^[^\\s,]+$",
-            "errorMessage": "Target gene cannot contain spaces or commas; it may be a list of two or more items separated by a semi-colon (';')."
-        },
-        "pcr_primers": {
-            "type": "string",
-            "pattern": "^[^,]+$",
-            "errorMessage": "PCR primer name cannot contain spaces or commas; it may be a list of two or more items separated by a semi-colon (';')."
-        },
-        "for_primer_seq": {
-            "type": "string",
-            "pattern": "^[GATCRYMKSWHBVDNIgatcrymkswhbvdni;]+$",
-            "errorMessage": "Forward primer sequence must only contain IUPAC nucleotide characters ('GATCRYMKSWHBVDNI', upper or lower case) without spaces; it may be a list of two or more items separated by a semi-colon (';')."
-        },
-        "rev_primer_seq": {
-            "type": "string",
-            "pattern": "^[GATCRYMKSWHBVDNIgatcrymkswhbvdni;]+$",
-            "errorMessage": "Reverse primer sequence must only contain IUPAC nucleotide characters ('GATCRYMKSWHBVDNI', upper or lower case) without spaces; it may be a list of two or more items separated by a semi-colon (';')."
-        },
         "index_plate": {
             "type": ["string","number"],
             "pattern": "^[^,]+$",
@@ -173,11 +192,6 @@
             "type": "string",
             "pattern": "^[^,]+$",
             "errorMessage": "Sequencing platform cannot contain commas."
-        },
-        "fcid": {
-            "type": "string",
-            "pattern": "^[^\\s,]+$",
-            "errorMessage": "Flowcell ID must be provided, and cannot contain spaces or commas."
         },
         "for_read_length": {
             "type": "integer",
@@ -221,38 +235,6 @@
             "type": "string",
             "pattern": "^[^,]+$",
             "errorMessage": "Notes cannot contain commas."
-        },
-        "read_dir": {
-            "type": "string",
-            "pattern": "^[^\\s,]+$",
-            "format": "directory-path",
-            "exists": true,
-            "description": "Path to directory/folder containing the FastQ read file(s)--paths without a preceding '/' will be considered relative. The pipeline will match files to samples based on 'sample_id' and the optional 'extension' pipeline parameter. Should not be used in conjunction with 'fwd', 'rev', or 'single'.",
-            "errorMessage": "Read directory path cannot contain spaces or commas."
-        },
-        "fwd": {
-            "type": "string",
-            "pattern": "^[^\\s,]+\\.f(ast)?q(\\.gz)?$",
-            "format": "file-path",
-            "exists": true,
-            "description": "Path of the forward read FastQ file--paths without a preceding '/' will be considered relative. Should not be used in conjunction with 'read_dir' or 'single'.",
-            "errorMessage": "FastQ file for forward reads cannot contain spaces or commas, and must have extension '.fastq', '.fq', '.fastq.gz' or '.fq.gz'."
-        },
-        "rev": {
-            "type": "string",
-            "pattern": "^[^\\s,]+\\.f(ast)?q(\\.gz)?$",
-            "format": "file-path",
-            "exists": true,
-            "description": "Path of the reverse read FastQ file--paths without a preceding '/' will be considered relative. Should not be used in conjunction with 'read_dir' or 'single'.",
-            "errorMessage": "FastQ file for reverse reads cannot contain spaces or commas, and must have extension '.fastq', '.fq', '.fastq.gz' or '.fq.gz'."
-        },
-        "single": {
-            "type": "string",
-            "pattern": "^[^\\s,]+\\.f(ast)?q(\\.gz)?$",
-            "format": "file-path",
-            "exists": true,
-            "description": "Path of the single-end read FastQ file--paths without a preceding '/' will be considered relative. Should not be used in conjunction with 'read_dir'.",
-            "errorMessage": "FastQ file for single-end reads cannot contain spaces or commas, and must have extension '.fastq', '.fq', '.fastq.gz' or '.fq.gz'."
         }
       },
       "oneOf": [

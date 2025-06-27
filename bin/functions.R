@@ -295,7 +295,7 @@ melt_phyloseq <- function(ps) {
   df <- seqtab %>% 
     as("matrix") %>%
     data.table::as.data.table(keep.rownames = "seq_name") %>%
-    data.table::melt(id.vars = c("seq_name"), variable.name = "sample_id", 
+    data.table::melt(id.vars = c("seq_name"), variable.name = "sample_primers", 
                      value.name = "Abundance", variable.factor = FALSE)
   
   # Remove observations with no abundance
@@ -306,7 +306,7 @@ melt_phyloseq <- function(ps) {
     samdf <- phyloseq::sample_data(ps) %>%
       as("data.frame") %>% 
       data.table::as.data.table(keep.rownames = FALSE)
-    df <- df[samdf, on = .(sample_id = sample_id)]
+    df <- df[samdf, on = .(sample_primers = sample_primers)]
   }
   
   # Add the tax table if it exists
@@ -334,9 +334,9 @@ melt_phyloseq <- function(ps) {
 
 rareplot <- function(ps, step="auto", threshold=0){
   if(step == "auto"){
-    step <- round(median(phyloseq::sample_sums(ps)) / 100)
+    step <- ceiling(median(phyloseq::sample_sums(ps)) / 100)
   } else if (is.numeric(step)){
-    step <- as.numeric(round(step))
+    step <- as.numeric(ceiling(step))
   } else {
     stop("Step must be an integer or 'auto' ")
   }
@@ -344,27 +344,26 @@ rareplot <- function(ps, step="auto", threshold=0){
     otutab <- t(as(phyloseq::otu_table(ps), "matrix"))
   } else {
     otutab <- as(phyloseq::otu_table(ps), "matrix")
-    
-  }
+ }
   otutab <- otutab[rowSums(otutab) > 0, colSums(otutab) > 0]
   rare <- vegan::rarecurve(otutab, step=step, tidy=TRUE)%>%
-    dplyr::rename(sample_id = Site, count = Sample, ASV = Species) %>%
+    dplyr::rename(sample_primers = Site, count = Sample, ASV = Species) %>%
     dplyr::left_join(
-      data.frame(sample_id = phyloseq::sample_data(ps)$sample_id,
-                 fcid = phyloseq::sample_data(ps)$fcid),
-      by = "sample_id"
+      data.frame(sample_primers = phyloseq::sample_data(ps)$sample_primers,
+                 read_group = phyloseq::sample_data(ps)$read_group),
+      by = "sample_primers"
     )
   
   gg.rare <- rare %>%
     ggplot2::ggplot() +
-    geom_line(aes(x = count, y = ASV, group=sample_id), alpha=0.3)+
+    geom_line(aes(x = count, y = ASV, group=sample_primers), alpha=0.3)+
     geom_point(data = rare %>% 
-                 group_by(sample_id) %>% 
+                 group_by(sample_primers) %>% 
                  top_n(1, count),
                aes(x = count, y = ASV, colour=count > threshold)) +
     scale_x_continuous(label = scales::label_number(scale_cut = append(scales::cut_short_scale(), 1, 1)))+
     scale_colour_manual(values=c("FALSE" = "#F8766D", "TRUE"="#619CFF"))+
-    facet_wrap(fcid~., scales="free", ncol=1)+
+    facet_wrap(read_group~., scales="free", ncol=1)+
     theme_bw()+
     theme(
       strip.background = element_rect(colour = "black", fill = "lightgray"),

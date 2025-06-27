@@ -10,8 +10,7 @@
             "type": "object",
             "description": "Main arguments for the pipeline.",
             "required": [ 
-                "samplesheet", 
-                "loci_params" 
+                "samplesheet"
             ],
             "properties": {
                 "samplesheet": {
@@ -23,14 +22,14 @@
                     "errorMessage": "File must exist and be a CSV file with the extension '.csv'.",
                     "schema": "assets/schema_samplesheet.json"
                 },
-                "loci_params": {
+                "primer_params": {
                     "type": "string",
                     "format": "file-path",
                     "pattern": "^\\S+\\.csv$",
                     "exists": true,
-                    "description": "Path to comma-separated file containing parameters for each locus or PCR primer pair.",
+                    "description": "Path to comma-separated file containing parameters for each PCR primer pair.",
                     "errorMessage": "File must exist and be a CSV file with the extension '.csv'.",
-                    "schema": "assets/schema_loci_params.json"
+                    "schema": "assets/schema_primer_params.json"
                 },
                 "train_idtaxa": {
                     "type": "string",
@@ -138,126 +137,142 @@
                 }
             }
         },
-        "lp_override_options": {
-            "title": "Overrides for loci parameters (--loci_params)",
+        "pp_override_options": {
+            "title": "Overrides for primer parameters in given .csv file (--primer_params)",
             "type": "object",
-            "description": "Use to override loci parameters passed through the --loci_params .csv file. Different values for each primer pair can be set in the format 'A:val1,B:val2', where A and B are the primer pair names (ie. 'pcr_primers'.",
+            "description": "Use to override primer parameters passed through the --primer_params .csv file. Specific values for each primer pair can be set in the format '[A]val1;[B]val2', where A and B are the primer pair names (ie. 'primers').",
             "properties": {
-                "lp_max_primer_mismatch": {
+                "pp_primers": {
                     "type": "string",
-                    "description": "Override for 'max_primer_mismatch'."
+                    "description": "Override for 'primers' primer parameter. Only use without '--primer_params'."
                 },
-                "lp_read_min_length": {
+                "pp_locus": {
                     "type": "string",
-                    "description": "Override for 'read_min_length'."
+                    "description": "Override for 'locus' primer parameter. Only use without '--primer_params'."
                 },
-                "lp_read_max_length": {
+                "pp_for_primer_seq": {
                     "type": "string",
-                    "description": "Override for 'read_max_length'."
+                    "description": "Override for 'for_primer_seq' primer parameter. Only use without '--primer_params'."
                 },
-                "lp_read_max_ee": {
+                "pp_rev_primer_seq": {
                     "type": "string",
-                    "description": "Override for 'read_max_ee'."
+                    "description": "Override for 'rev_primer_seq' primer parameter. Only use without '--primer_params'."
+                },              
+                "pp_max_primer_mismatch": {
+                    "type": "string",
+                    "description": "Override for 'max_primer_mismatch' primer parameter."
                 },
-                "lp_read_trunc_length": {
+                "pp_read_min_length": {
                     "type": "string",
-                    "description": "Override for 'read_trunc_length'."
+                    "description": "Override for 'read_min_length' primer parameter."
                 },
-                "lp_read_trim_left": {
+                "pp_read_max_length": {
                     "type": "string",
-                    "description": "Override for 'read_trim_left'."
+                    "description": "Override for 'read_max_length' primer parameter."
                 },
-                "lp_read_trim_right": {
+                "pp_read_max_ee": {
                     "type": "string",
-                    "description": "Override for 'read_trim_right'."
+                    "description": "Override for 'read_max_ee' primer parameter."
                 },
-                "lp_asv_min_length": {
+                "pp_read_trunc_length": {
                     "type": "string",
-                    "description": "Override for 'asv_min_length'."
+                    "description": "Override for 'read_trunc_length' primer parameter."
                 },
-                "lp_asv_max_length": {
+                "pp_read_trim_left": {
                     "type": "string",
-                    "description": "Override for 'asv_max_length'."
+                    "description": "Override for 'read_trim_left' primer parameter."
                 },
-                "lp_concat_unmerged": {
+                "pp_read_trim_right": {
                     "type": "string",
-                    "description": "Override for 'concat_unmerged'."
+                    "description": "Override for 'read_trim_right' primer parameter."
                 },
-                "lp_genetic_code": {
+                "pp_asv_min_length": {
                     "type": "string",
-                    "description": "Override for 'genetic_code'."
+                    "description": "Override for 'asv_min_length' primer parameter."
                 },
-                "lp_coding": {
+                "pp_asv_max_length": {
                     "type": "string",
-                    "description": "Override for 'coding'."
+                    "description": "Override for 'asv_max_length' primer parameter."
                 },
-                "lp_phmm": {
+                "pp_concat_unmerged": {
                     "type": "string",
-                    "description": "Override for 'phmm'."
+                    "description": "Override for 'concat_unmerged' primer parameter."
                 },
-                "lp_idtaxa_db": {
+                "pp_genetic_code": {
                     "type": "string",
-                    "description": "Override for 'idtaxa_db'."
+                    "description": "Override for 'genetic_code' primer parameter."
                 },
-                "lp_ref_fasta": {
+                "pp_coding": {
                     "type": "string",
-                    "description": "Override for 'ref_fasta'."
+                    "description": "Override for 'coding' primer parameter."
                 },
-                "lp_idtaxa_confidence": {
+                "pp_phmm": {
                     "type": "string",
-                    "description": "Override for 'idtaxa_confidence'."
+                    "description": "Override for 'phmm' primer parameter."
                 },
-                "lp_run_blast": {
+                "pp_idtaxa_db": {
                     "type": "string",
-                    "description": "Override for 'run_blast'."
+                    "description": "Override for 'idtaxa_db' primer parameter."
                 },
-                "lp_blast_min_identity": {
+                "pp_ref_fasta": {
                     "type": "string",
-                    "description": "Override for 'blast_min_identity'."
+                    "description": "Override for 'ref_fasta' primer parameter."
                 },
-                "lp_blast_min_coverage": {
+                "pp_idtaxa_confidence": {
                     "type": "string",
-                    "description": "Override for 'blast_min_coverage'."
+                    "description": "Override for 'idtaxa_confidence' primer parameter."
                 },
-                "lp_target_kingdom": {
+                "pp_run_blast": {
                     "type": "string",
-                    "description": "Override for 'target_kingdom'."
+                    "description": "Override for 'run_blast' primer parameter."
                 },
-                "lp_target_phylum": {
+                "pp_blast_min_identity": {
                     "type": "string",
-                    "description": "Override for 'target_phylum'."
+                    "description": "Override for 'blast_min_identity' primer parameter."
                 },
-                "lp_target_class": {
+                "pp_blast_min_coverage": {
                     "type": "string",
-                    "description": "Override for 'target_class'."
+                    "description": "Override for 'blast_min_coverage' primer parameter."
                 },
-                "lp_target_order": {
+                "pp_target_kingdom": {
                     "type": "string",
-                    "description": "Override for 'target_order'."
+                    "description": "Override for 'target_kingdom' primer parameter."
                 },
-                "lp_target_family": {
+                "pp_target_phylum": {
                     "type": "string",
-                    "description": "Override for 'target_family'."
+                    "description": "Override for 'target_phylum' primer parameter."
                 },
-                "lp_target_genus": {
+                "pp_target_class": {
                     "type": "string",
-                    "description": "Override for 'target_genus'."
+                    "description": "Override for 'target_class' primer parameter."
                 },
-                "lp_target_species": {
+                "pp_target_order": {
                     "type": "string",
-                    "description": "Override for 'target_species'."
+                    "description": "Override for 'target_order' primer parameter."
                 },
-                "lp_min_sample_reads": {
+                "pp_target_family": {
                     "type": "string",
-                    "description": "Override for 'min_sample_reads'."
+                    "description": "Override for 'target_family' primer parameter."
                 },
-                "lp_min_taxa_reads": {
+                "pp_target_genus": {
                     "type": "string",
-                    "description": "Override for 'min_taxa_reads'."
+                    "description": "Override for 'target_genus' primer parameter."
                 },
-                "lp_min_taxa_ra": {
+                "pp_target_species": {
                     "type": "string",
-                    "description": "Override for 'min_taxa_ra'."
+                    "description": "Override for 'target_species' primer parameter."
+                },
+                "pp_min_sample_reads": {
+                    "type": "string",
+                    "description": "Override for 'min_sample_reads' primer parameter."
+                },
+                "pp_min_taxa_reads": {
+                    "type": "string",
+                    "description": "Override for 'min_taxa_reads' primer parameter."
+                },
+                "pp_min_taxa_ra": {
+                    "type": "string",
+                    "description": "Override for 'min_taxa_ra' primer parameter."
                 }
             }
         },

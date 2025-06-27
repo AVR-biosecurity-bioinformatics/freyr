@@ -138,7 +138,10 @@ cp /group/referencedata/mspd-db/metabarcoding/arthropod/imappests_coi_18_08_2020
 
 # Submitting jobs
 
-The parameters for the run are parsed along with the slurm script.
+
+## Create primer parameters file
+
+See [Usage](https://github.com/AVR-biosecurity-bioinformatics/freyr/blob/72-parameter-channels/docs/usage.md) for how to create a primer parameters file for your target loci
 
 
 ## Example 1: Single primer set
@@ -159,39 +162,8 @@ Paths to files can be relative to the submission location, or absolute paths
 ```
 # Submit slurm job - CHANGE EMAIL TO YOUR OWN EMAIL
 sbatch --mail-user=your.name@email.com --account=your.account supplementary_scripts/submit_slurm.sh \
---pcr_primers fwhF2-fwhR2n \
---for_primer_seq GGDACWGGWTGAACWGTWTAYCCHCC \
---rev_primer_seq GTRATWGCHCCDGCTARWACWGG \
---target_gene COI \
---max_primer_mismatch 0 \
---read_min_length 20 \
---read_max_length Inf \
---read_max_ee 1 \
---read_trunc_length 150 \
---read_trim_left 0 \
---read_trim_right 0 \
---asv_min_length 195 \
---asv_max_length 215 \
---concat_unmerged FALSE \
---genetic_code SGC4 \
---coding TRUE \
---phmm reference/folmer_fullength_model.rds \
---idtaxa_db reference/idtaxa_bftrimmed.rds \
---ref_fasta reference/insecta_hierarchial_bftrimmed.fa.gz \
---idtaxa_confidence 60 \
---run_blast TRUE \
---blast_min_identity 97 \
---blast_min_coverage 90 \
---target_kingdom Metazoa \
---target_phylum Arthropoda \
---target_class NA \
---target_order NA \
---target_family NA \
---target_genus NA \
---target_species NA \
---min_sample_reads 1000 \
---min_taxa_reads NA \
---min_taxa_ra 1e-4
+--primer_params primer_params.csv \
+--primers fwhF2-fwhR2n
 ```
 
 
@@ -209,159 +181,19 @@ Note, watch for the naming of the runParameters file, different versions of the 
 ```
 # Submit slurm job - CHANGE EMAIL TO YOUR OWN EMAIL
 sbatch --mail-user=your.name@email.com --account=your.account supplementary_scripts/submit_slurm.sh \
---sample_sheet 'data/K739J/SampleSheet_K739J.csv,data/JDYG3/SampleSheet_JDYG3.csv'  \
---run_parameters 'data/K739J/RunParameters.xml,data/JDYG3/runParameters.xml' \
+--samplesheet 'data/K739J/SampleSheet_K739J.csv,data/JDYG3/SampleSheet_JDYG3.csv'  \
+--primer_params primer_params.csv \
 --read_dir 'data/K739J/,data/JDYG3/' \
---pcr_primers fwhF2-fwhR2n \
---for_primer_seq GGDACWGGWTGAACWGTWTAYCCHCC \
---rev_primer_seq GTRATWGCHCCDGCTARWACWGG \
---target_gene COI \
---max_primer_mismatch 0 \
---read_min_length 20 \
---read_max_length Inf \
---read_max_ee 1 \
---read_trunc_length 150 \
---read_trim_left 0 \
---read_trim_right 0 \
---asv_min_length 195 \
---asv_max_length 215 \
---concat_unmerged FALSE \
---genetic_code SGC4 \
---coding TRUE \
---phmm reference/folmer_fullength_model.rds \
---idtaxa_db reference/idtaxa_bftrimmed.rds \
---ref_fasta reference/insecta_hierarchial_bftrimmed.fa.gz \
---idtaxa_confidence 60 \
---run_blast TRUE \
---blast_min_identity 97 \
---blast_min_coverage 90 \
---target_kingdom Metazoa \
---target_phylum Arthropoda \
---target_class NA \
---target_order NA \
---target_family NA \
---target_genus NA \
---target_species NA \
---min_sample_reads 1000 \
---min_taxa_reads NA \
---min_taxa_ra 1e-4
+--primers fwhF2-fwhR2n
+
 
 # Note: to resume a previous run, add --nextflow-resume
 
 ```
 
 
-## Example 3: Multiplexed primer sets
-
-Some metabarcoding assays amplify a sample with multiple primer sets, either in a multiplex, or seperately and then pooled together before indexing (poolplexed). In this case each fastq file will contain multiple primers.
-
-To handle this case, you need to provide the parameters for each primer seperated by a ; and encapsulated in a ''. This will enable the pipeline to demultiplex the multiplexed data into the seperate amplicons before further processing. Important! The parameters for each primer must be in the same order as defined in --pcr_primers.
-
-**You will need to change your email address and account code below, see [BASC account code lists](https://users.basc.science.depi.vic.gov.au/jobs/slurm/slurm_accounts/)**
-
-```
-# Multiple primers within each sample
-sbatch --mail-user=your.name@email.com --account=your.account supplementary_scripts/submit_slurm.sh \
---sample_sheet data/K739J/SampleSheet_K739J.csv \
---run_parameters data/K739J/RunParameters.xml \
---read_dir data/K739J/ \
---pcr_primers 'fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4' \
---for_primer_seq 'GGDACWGGWTGAACWGTWTAYCCHCC;GATGCGYCGTTATGCYGATGC' \
---rev_primer_seq 'GTRATWGCHCCIGCTAADACHGG;TTRAAYACTTCYARATCRCC' \
---target_gene 'COI;EIF3L' \
---max_primer_mismatch 0 \
---read_min_length 20 \
---read_max_length Inf \
---read_max_ee 1 \
---read_trunc_length 150 \
---read_trim_left 0 \
---read_trim_right 0 \
---asv_min_length '195;207' \
---asv_max_length '215;227' \
---concat_unmerged FALSE \
---genetic_code 'SGC4;SGC0' \
---coding TRUE \
---phmm 'reference/Bactrocera_COI.rds;reference/Bactrocera_EIF3L.rds' \
---idtaxa_db 'reference/COI_idtaxa.rds;reference/EIF3L_idtaxa.rds' \
---ref_fasta 'reference/COI_hierarchial.fa.gz;reference/EIF3L_hierarchial.fa.gz' \
---idtaxa_confidence 60 \
---run_blast TRUE \
---blast_min_identity 97 \
---blast_min_coverage 90 \
---target_kingdom Metazoa \
---target_phylum Arthropoda \
---target_class Insecta \
---target_order Diptera \
---target_family NA \
---target_genus NA \
---target_species NA \
---min_sample_reads 1000 \
---min_taxa_reads NA \
---min_taxa_ra 1e-4
-
-```
-
-## Example 4: Different primer sets per sample
-
-In other cases, each sample may only have a single primer set, but different samples within a run have different primers. For instance in this flow cell, all samples with fwh in their name use the fwhF2-fwhR2n primer set, while all samples with EIF in their name use the EIF3L primers.
-
-In this case, you can use string matching to assign specific primers and parameters to specific samples by placing the string you wish to match within square brackets, followed by the value you wish to add to those samples. Multiple match and value combinatiosn can be seperated by a comma
-
-For instance --pcr_primers '[COI]fwhF2-fwhR2n' will add the value fwhF2-fwhR2n to the pcr_primers parameter for only those samples with 'COI' in their sample name
-
-NOTE: You need to ensure that all samples are covered by the strings you input, as a sample missing parameters cannot be run through freyr
-
-**You will need to change your email address and account code below, see [BASC account code lists](https://users.basc.science.depi.vic.gov.au/jobs/slurm/slurm_accounts/)**
-
-```
-# Match primers and parameters to samples based on string matching
-sbatch --mail-user=your.name@email.com --account=your.account supplementary_scripts/submit_slurm.sh \
---sample_sheet data/K3DVL/SampleSheet_K3DVL.csv \
---run_parameters data/K3DVL/RunParameters.xml \
---read_dir data/K3DVL/ \
---pcr_primers '[fwh]fwhF2-fwhR2nDac,[EIF]EIF3LminiF4-EIF3lminiR4' \
---for_primer_seq '[fwh]GGDACWGGWTGAACWGTWTAYCCHCC,[EIF]GATGCGYCGTTATGCYGATGC' \
---rev_primer_seq '[fwh]GTRATWGCHCCIGCTAADACHGG,[EIF]TTRAAYACTTCYARATCRCC' \
---target_gene '[fwh]COI,[EIF]EIF3L' \
---max_primer_mismatch 0 \
---read_min_length 20 \
---read_max_length Inf \
---read_max_ee 1 \
---read_trunc_length 150 \
---read_trim_left 0 \
---read_trim_right 0 \
---asv_min_length '[fwh]195,[EIF]207' \
---asv_max_length '[fwh]215,[EIF]227' \
---concat_unmerged FALSE \
---genetic_code '[fwh]SGC4,SGC0' \
---coding TRUE \
---phmm '[fwh]reference/Bactrocera_COI.rds,[EIF]reference/Bactrocera_EIF3L.rds' \
---idtaxa_db '[fwh]reference/COI_idtaxa.rds,[EIF]reference/EIF3L_idtaxa.rds' \
---ref_fasta '[fwh]reference/COI_hierarchial.fa.gz,[EIF]reference/EIF3L_hierarchial.fa.gz' \
---idtaxa_confidence 60 \
---run_blast TRUE \
---blast_min_identity 97 \
---blast_min_coverage 90 \
---target_kingdom Metazoa \
---target_phylum Arthropoda \
---target_class NA \
---target_order NA \
---target_family NA \
---target_genus NA \
---target_species NA \
---min_sample_reads 1000 \
---min_taxa_reads NA \
---min_taxa_ra 1e-4
-
-```
-
-## Resuming failed runs
-
 **To resume a failed or paused run, add `--nextflow-resume` to the end of the command**
 
 
-## More complex setups
-
-For more complex setups, you can point the submission script to a premade freyr format sample sheet and loci parameters file
-
+For more complex setups or for external users, please see [Usage](https://github.com/AVR-biosecurity-bioinformatics/freyr/blob/72-parameter-channels/docs/usage.md)
 

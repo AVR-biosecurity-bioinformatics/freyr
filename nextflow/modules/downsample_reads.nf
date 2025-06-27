@@ -1,17 +1,17 @@
 process DOWNSAMPLE_READS {
     def module_name = "downsample_reads"
-    tag "$meta.pcr_primers; $meta.sample_id"
+    tag "$sample"
     label "small"
     container "staphb/seqtk:1.4"
 
     input:
-    tuple val(meta), path(reads)
+    tuple val(primers), val(read_group), val(sample), val(sample_primers), path(reads)
     val(seq_type)
     val(paired)
     val(downsample_reads)
 
     output:   
-    tuple val(meta), path("down*")            , emit: reads
+    tuple val(primers), val(read_group), val(sample), val(sample_primers), path("down_*"), emit: reads
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 

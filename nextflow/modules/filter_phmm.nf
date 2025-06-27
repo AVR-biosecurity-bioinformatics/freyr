@@ -1,15 +1,14 @@
 process FILTER_PHMM {
     def module_name = "filter_phmm"
-    tag "$pcr_primers"
+    tag "$primers"
     label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(meta), path(seqtab_tibble_list), path(fasta_list)
+    tuple val(primers), path(seqtab_tibble_list), path(fasta_list), val(process_params)
 
     output:
-    tuple val(pcr_primers), path("*_phmm_filter.csv"),      emit: tibble
-
+    tuple val(primers), path("*_phmm_filter.csv"),      emit: tibble
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -22,13 +21,13 @@ process FILTER_PHMM {
         
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    pcr_primers =           "${pcr_primers}"
+    primers =               "${primers}"
     seqtab_tibble_list =    "${seqtab_tibble_list}"
     fasta_list =            "${fasta_list}"
-    phmm =                  "${meta.phmm}"
-    for_primer_seq =        "${meta.for_primer_seq}"
-    rev_primer_seq =        "${meta.rev_primer_seq}"
-    coding =                "${meta.coding}"
+    phmm =                  "${process_params.phmm}"
+    for_primer_seq =        "${process_params.for_primer_seq}"
+    rev_primer_seq =        "${process_params.rev_primer_seq}"
+    coding =                "${process_params.coding}"
     
     ## global variables
     projectDir = "$projectDir"

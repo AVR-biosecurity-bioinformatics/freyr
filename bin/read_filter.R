@@ -20,10 +20,10 @@ nf_vars <- c(
     "read_trunc_length",
     "read_trim_left",
     "read_trim_right",
-    "sample_id",
-    "target_gene",
-    "pcr_primers",
-    "fcid",
+    "sample_primers",
+    "locus",
+    "primers",
+    "read_group",
     "seq_type",
     "paired"
 )
@@ -50,9 +50,9 @@ if ( paired == "true" & seq_type == "illumina" ) {
     # filter and trim paired-end reads
     res <- dada2::filterAndTrim(
         fwd = fwd_reads, 
-        filt = paste0(sample_id,"_",target_gene,"_",pcr_primers,"_filter_R1.fastq.gz"), # gets saved to working dir
+        filt = paste0(sample_primers,"_",locus,"_",primers,"_filter_R1.fastq.gz"), # gets saved to working dir
         rev = rev_reads, 
-        filt.rev = paste0(sample_id,"_",target_gene,"_",pcr_primers,"_filter_R2.fastq.gz"), # gets saved to working dir
+        filt.rev = paste0(sample_primers,"_",locus,"_",primers,"_filter_R2.fastq.gz"), # gets saved to working dir
         minLen = as.numeric(read_min_length), 
         maxLen = as.numeric(read_max_length), 
         maxEE = as.numeric(read_max_ee), 
@@ -71,7 +71,7 @@ if ( paired == "true" & seq_type == "illumina" ) {
     # filter and trim single-end reads
     res <- dada2::filterAndTrim(
         fwd = single_reads, 
-        filt = paste0(sample_id,"_",target_gene,"_",pcr_primers,"_filter_R0.fastq.gz"), # gets saved to working dir
+        filt = paste0(sample_primers,"_",locus,"_",primers,"_filter_R0.fastq.gz"), # gets saved to working dir
         minLen = as.numeric(read_min_length), 
         maxLen = as.numeric(read_max_length), 
         maxEE = as.numeric(read_max_ee), 
@@ -94,10 +94,10 @@ reads_out <- res %>%
     tibble::as_tibble() %>%
     dplyr::pull(reads.out)
 
-out_vector <- c("read_filter", sample_id, fcid, pcr_primers, reads_out, reads_out) 
+out_vector <- c("read_filter", sample_primers, read_group, primers, reads_out, reads_out) 
 
 rbind(out_vector) %>%
     tibble::as_tibble() %>%
-    readr::write_csv(paste0("read_filter_",sample_id,"_",pcr_primers,"_readsout.csv"), col_names = F)
+    readr::write_csv(paste0("read_filter_",sample_primers,"_",primers,"_readsout.csv"), col_names = F)
 
 # stop(" *** stopped manually *** ") ##########################################

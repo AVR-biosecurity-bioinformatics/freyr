@@ -14,7 +14,7 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "pcr_primers",
+    "primers",
     "taxtabs"
 )
 lapply(nf_vars, nf_var_check)
@@ -45,6 +45,6 @@ if(any(duplicated(tax_merged$seq_name))){
 }
 
 
-readr::write_csv(merged_tax, paste0(pcr_primers,"_merged_tax.csv"))
+readr::write_csv(merged_tax, paste0(primers,"_merged_tax.csv"))
 
 # stop(" *** stopped manually *** ") ##########################################

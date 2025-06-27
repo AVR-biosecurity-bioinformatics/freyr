@@ -7,7 +7,6 @@ process PARSE_INPUTS {
     input:
     path(samplesheet)
     path(primer_params)
-    val(pp_type)
     val(seq_type)
     val(paired)
     val(subsample)
@@ -31,7 +30,6 @@ process PARSE_INPUTS {
     ## input channel variables
     samplesheet =           "${samplesheet}"
     primer_params =         "${primer_params}"
-    pp_type =               "${pp_type}"
     seq_type =              "${seq_type}"
     paired =                "${paired}"
     subsample =             "${subsample}"

@@ -1,15 +1,15 @@
 process TAX_SUMMARY {
     def module_name = "tax_summary"
-    tag "$pcr_primers; $fcid"
+    tag "$primers; $read_group"
     label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), val(fcid), val(loci_params), path(fasta), path(tax, name: "idtaxa*.csv"), path(ids, name: "idtaxa*.rds"), path(joint)
+    tuple val(primers), val(read_group), path(fasta), path(tax, name: "idtaxa*.csv"), path(ids, name: "idtaxa*.rds"), path(joint), val(process_params)
 
     output:
-    tuple val(pcr_primers), val(fcid), val(loci_params), path("*_taxonomic_assignment_summary.rds"), emit: rds
-    tuple val(pcr_primers), val(fcid), val(loci_params), path("*_taxonomic_assignment_summary.csv"), emit: csv
+    tuple val(primers), val(read_group), path("*_taxonomic_assignment_summary.rds"), emit: rds
+    tuple val(primers), val(read_group), path("*_taxonomic_assignment_summary.csv"), emit: csv
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -22,15 +22,15 @@ process TAX_SUMMARY {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    pcr_primers =           "${pcr_primers}"
-    fcid =                  "${fcid}"   
+    primers =               "${primers}"
+    read_group =            "${read_group}"   
     fasta =                 "${fasta}"
     tax_list =              "${tax}"
     ids_list =              "${ids}"
     joint_file =            "${joint}"
-    target_gene =           "${loci_params.target_gene}"
-    idtaxa_db =             "${loci_params.idtaxa_db}"
-    ref_fasta =             "${loci_params.ref_fasta}"
+    locus =                 "${process_params.locus}"
+    idtaxa_db =             "${process_params.idtaxa_db}"
+    ref_fasta =             "${process_params.ref_fasta}"
       
     ## global variables
     projectDir = "$projectDir"

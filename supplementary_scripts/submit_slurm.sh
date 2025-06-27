@@ -46,61 +46,8 @@ if [ "x$SLURM_JOB_ID" == "x" ]; then
    exit 1
 fi
 
-# Define allowed arguments
-allowed_tool_args=( \
-    "sample_sheet" \
-    "run_parameters" \
-    "read_dir" \
-    "pcr_primers" \
-    "for_primer_seq" \
-    "rev_primer_seq" \
-    "target_gene" \
-    "max_primer_mismatch" \
-    "read_min_length" \
-    "read_max_length" \
-    "read_max_ee" \
-    "read_trunc_length" \
-    "read_trim_left" \
-    "read_trim_right" \
-    "asv_min_length" \
-    "asv_max_length" \
-    "concat_unmerged" \
-    "genetic_code" \
-    "coding" \
-    "phmm" \
-    "idtaxa_db" \
-    "ref_fasta" \
-    "idtaxa_confidence" \
-    "run_blast" \
-    "blast_min_identity" \
-    "blast_min_coverage" \
-    "target_kingdom" \
-    "target_phylum" \
-    "target_class" \
-    "target_order" \
-    "target_family" \
-    "target_genus" \
-    "target_species" \
-    "min_sample_reads" \
-    "min_taxa_reads" \
-    "min_taxa_ra"
-)
 
-allowed_nextflow_args=( \
-    "profile" \
-    "resume" \
-    "with-trace"
-)
-
-# Initialize tool values (associative array)
-declare -A tool_values
-nextflow_args=()
-
-# Initialize all allowed tool arguments with empty values
-for arg in "${allowed_tool_args[@]}"; do
-    tool_values["$arg"]=""
-done
-
+###### PARSE AND VALIDATE ARGUMENTS
 # Function to check if a parameter is allowed
 is_allowed() {
     local param="$1"
@@ -114,40 +61,47 @@ is_allowed() {
     return 1
 }
 
-# Parse and validate arguments
+# Define allowed arguments
+allowed_samplesheet_args=( \
+    "samplesheet" \
+    "primer_params" \
+    "read_dir" \
+    "primers"
+)
+
+# Initialize samplesheet values (associative array)
+declare -A samplesheet_values
+
+# Initialize all allowed tool arguments with empty values
+for arg in "${allowed_samplesheet_args[@]}"; do
+    samplesheet_values["$arg"]=""
+done
+
+
+
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
         --nextflow-*)
-            # Parse Nextflow-specific arguments
-            param="${1#--nextflow-}"  # Strip the prefix
-            if is_allowed "$param" "${allowed_nextflow_args[@]}"; then
-                if [[ "$#" -gt 1 && ! "$2" == --* ]]; then
-                    # Add parameter and value
-                    nextflow_args+=("--$param" "$2")
-                    shift  # Skip the value
-                else
-                    # Add parameter only
-                    nextflow_args+=("-$param")
-                fi
+            param="${1#--nextflow-}"  # Strip --nextflow- prefix
+            if [[ "$#" -gt 1 && ! "$2" == --* ]]; then
+                nextflow_args+=("--$param" "$2")
+                shift
             else
-                echo "Error: Invalid Nextflow argument --nextflow-$param"
-                exit 1
+                nextflow_args+=("--$param")
             fi
             ;;
         *)
-            # Parse arguments for the tool
-            param="${1#--}"  # Strip any leading "--" (optional)
-            if is_allowed "$param" "${allowed_tool_args[@]}"; then
+            param="${1#--}"
+            if is_allowed "$param" "${allowed_samplesheet_args[@]}"; then
                 if [[ "$#" -gt 1 && ! "$2" == --* ]]; then
-                    # Assign the value to the tool parameter
-                    tool_values["$param"]="$2"
-                    shift  # Skip the value
+                    samplesheet_values["$param"]="$2"
+                    shift
                 else
                     echo "Error: Missing value for $param"
                     exit 1
                 fi
             else
-                echo "Error: Invalid sample sheet creation argument $param"
+                echo "Error: Invalid Freyr argument --$param"
                 exit 1
             fi
             ;;
@@ -155,92 +109,126 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-# If samplesheet, run_parameters, and 
-if [[ -z "${tool_values["sample_sheet"]}" ]]; then
-  
-  log "sample_sheet not provided; searching for files..."
+###### LOCATE SAMPLESHEETS AND READ DIR IF NOT PROVIDED
+
+# Find samplesheet if not provided
+if [[ -z "${samplesheet_values["samplesheet"]}" ]]; then
+  log "samplesheet not provided; searching for files..."
   sample_sheets=$(find "${SLURM_SUBMIT_DIR}/data" -maxdepth 2 -name '*SampleSheet*.csv' -type f)
   if [[ -n "$sample_sheets" ]]; then
-      tool_values["sample_sheet"]="$(echo $sample_sheets | tr ' ' ',')"
+      samplesheet_values["samplesheet"]="$(echo $sample_sheets | tr ' ' ',')"
   else
       error_exit "No suitable sample sheets found" 4
   fi
 fi
 
-if [[ -z "${tool_values["run_parameters"]}" ]]; then
-  log "run_parameters not provided; searching for files..."
-  run_parameters=""
-  for sheet in ${tool_values["sample_sheet"]//,/ }; do
-      dir=$(dirname "$sheet")
-      params=$(find "$dir" -maxdepth 2 -name '*unParameters.xml' -type f)
-      run_parameters="${run_parameters}${params} "
-  done
-
-  if [[ -n "$run_parameters" ]]; then
-      tool_values["run_parameters"]="$(echo $run_parameters | tr ' ' ',')"
-  else
-      error_exit "No suitable run parameters found" 5
-  fi
-fi
-
-
-if [[ -z "${tool_values["read_dir"]}" ]]; then
-  log "read_dir not provided; searching for files..."
-  data_dirs=""
-  for sheet in ${tool_values["sample_sheet"]//,/ }; do
+# Find read_dir if not provided
+if [[ -z "${samplesheet_values["read_dir"]}" ]]; then
+  log "read_dir not provided; searching for directories..."
+  read_dir=""
+  for sheet in ${samplesheet_values["samplesheet"]//,/ }; do
       dir=$(dirname "$sheet")
       read_dir="${read_dir}${dir} "
   done
   
-  if [[ -n "read_dir" ]]; then
-      tool_values["read_dir"]="$(echo $read_dir | tr ' ' ',')"
+  if [[ -n "$read_dir" ]]; then
+      samplesheet_values["read_dir"]="$(echo $read_dir | tr ' ' ',')"
   else
       error_exit "No suitable read_dir found" 5
   fi
 fi
 
-# Convert tool values to ordered list
-tool_values_list=()
-for arg in "${allowed_tool_args[@]}"; do
-    tool_values_list+=("${tool_values[$arg]}")
+# Break if primers have not been provided
+if [[ -z "${samplesheet_values["primers"]}" ]]; then
+  error_exit "No primers provided (--primers)" 6
+fi
+
+# Copy primer params to inputs and break if not provided
+if [[ -f "${samplesheet_values["primer_params"]}" ]]; then
+    cp "${samplesheet_values["primer_params"]}" ./inputs/primer_params.csv
+else
+    error_exit "Primer params file not found: ${samplesheet_values["primer_params"]}" 6
+fi
+
+
+###### PARSE SAMPLESHEETS
+echo "Creating freyr samplesheet from miseq samplesheet"
+parse_miseq_samplesheet() {
+  local SampleSheet="$1"
+  local primers="$2"
+  local read_dir="$3"
+
+  if [ -z "$SampleSheet" ]; then
+    echo "Error: need to provide a MiSeq SampleSheet.csv file" >&2
+    return 1
+  fi
+
+  # Locate [Data] section
+  data_line=$(grep -n "^\[Data\]" "$SampleSheet" | cut -d: -f1)
+  if [ -z "$data_line" ]; then
+    echo "Error: [Data] section not found in $SampleSheet" >&2
+    return 1
+  fi
+
+  header_line=$((data_line + 1))
+  data_start=$((header_line + 1))
+
+  # Iterate through samples, remove fastqs if they dont have matching files
+  tail -n +"$data_start" "$SampleSheet" | cut -d',' -f1 | grep -v '^$' | while read -r sample; do
+    fwd_pattern="${read_dir}/*${sample}*_R1*.fastq.gz"
+    rev_pattern="${read_dir}/*${sample}*_R2*.fastq.gz"
+
+    fwd_file=$(ls $fwd_pattern 2>/dev/null | head -n 1)
+    rev_file=$(ls $rev_pattern 2>/dev/null | head -n 1)
+
+    if [[ -f "$fwd_file" && -f "$rev_file" ]]; then
+      # Extract actual FASTQ prefix from filename (before _R1)
+      fq_basename=$(basename "$fwd_file")
+      actual_sample=$(echo "$fq_basename" | sed -E 's/_R1.*//')
+      echo "${actual_sample},${primers},${read_dir}"
+    else
+      >&2 echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] Skipping sample '${sample}' – FASTQ file(s) missing"
+    fi
+  done
+}
+
+# Convert values values to ordered list
+samplesheet_values_list=()
+for arg in "${allowed_samplesheet_args[@]}"; do
+    samplesheet_values_list+=("${samplesheet_values[$arg]}")
 done
 
+mkdir -p ./inputs
+output_csv=./inputs/Sample_info.csv
+echo "sample,primers,read_dir" > "$output_csv"
+
+# Apply to all detected SampleSheets
+IFS=',' read -ra SHEETS <<< "${samplesheet_values["samplesheet"]}"
+IFS=',' read -ra READDIRS <<< "${samplesheet_values["read_dir"]}"
+for i in "${!SHEETS[@]}"; do
+  sheet="${SHEETS[$i]}"
+  dir="${READDIRS[$i]}"
+  primers="${samplesheet_values["primers"]}"
+
+  parse_miseq_samplesheet "$sheet" "$primers" "$dir" >> "$output_csv"
+done
+
+if [[ $(wc -l < "$output_csv") -le 1 ]]; then
+    error_exit "No valid samples found after FASTQ validation. Exiting." 7
+fi
+
 # Load modules
-#module load R/4.4.2-gfbf-2024a
 module load Java/17.0.6
 module load shifter/22.02.1
 
-# Check if resume is set
-for arg in "${nextflow_args[@]}"; do
-    if [[ "$arg" == "-resume" ]]; then
-        echo "Found '-resume' in nextflow_args"
-        resume=true
-        break
-    fi
-done
-
-if [[ "$resume" = true ]]; then
-  echo '-resume is set, restoring previous run'
-else 
-  echo 'resume is not set, starting run again'
-fi
-log "Running sample sheet creation with arguments: ${tool_values_list[@]}"
-shifter --image=jackscanlan/piperline-multi:0.0.1 -- Rscript supplementary_scripts/create_inputs.R "${tool_values_list[@]}"
-
-
-# Run Nextflow
-log "Running Nextflow with arguments: ${nextflow_args[@]}"
-# make sure you replace the square bracketed file names (including the brackets) with the names of the files you made earlier
+log "Running Nextflow with arguments: ${nextflow_args[*]}"
 NXF_VER=23.05.0-edge \
     nextflow run . \
     --samplesheet ./inputs/Sample_info.csv \
-    --loci_params ./inputs/loci_params.csv \
-    --slurm_account ${SLURM_JOB_ACCOUNT} \
+    --primer_params ./inputs/primer_params.csv \
+    --slurm_account "${SLURM_JOB_ACCOUNT}" \
     -profile basc_slurm,error1_backoff \
     "${nextflow_args[@]}"
-
-# once the dataset has run, clean up your analysis directory
-#rm -rf ${SLURM_SUBMIT_DIR}/output/modules/* ${SLURM_SUBMIT_DIR}/output/*.html ${SLURM_SUBMIT_DIR}/work/*
 
 # Output useful job stats
 /usr/local/bin/showJobStats.scr 

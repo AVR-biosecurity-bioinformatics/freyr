@@ -17,7 +17,7 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "pcr_primers",
+    "primers",
     "seqtab_tibble_list",
     "fasta_list",
     "asv_min_length",
@@ -55,7 +55,7 @@ seqtab_combined <-
             x %>%
             tidyr::pivot_longer(
                 cols = !seq_name,
-                names_to = "sample_id",
+                names_to = "sample_primers",
                 values_to = "abundance"
             )
         }
@@ -64,7 +64,7 @@ seqtab_combined <-
     dplyr::bind_rows() %>%
     # pivot wider, filling missing abundance with 0
     tidyr::pivot_wider(
-        names_from = sample_id,
+        names_from = sample_primers,
         values_from = abundance, 
         values_fill = 0
     )
@@ -101,4 +101,4 @@ out_tibble <-
     # make tibble of name, sequence, and whether it passed the length filter
     dplyr::select(-length, -pass_min, -pass_max)
 
-readr::write_csv(out_tibble, paste0(pcr_primers, "_length_filter.csv"))
+readr::write_csv(out_tibble, paste0(primers, "_length_filter.csv"))

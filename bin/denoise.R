@@ -10,9 +10,9 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 nf_vars <- c(
     "projectDir",
     "direction",
-    "fcid",
-    "pcr_primers",
-    "sample_id",
+    "read_group",
+    "primers",
+    "sample_primers",
     "reads",
     "errormodel",
     "n_pass",
@@ -62,7 +62,7 @@ if ( n_pass == "first" && priors == "NO_FILE" ) { # first pass condition; no pri
         HOMOPOLYMER_GAP_PENALTY = dada_homopolymer
     )
 
-    saveRDS(dada_output, paste0(sample_id,"_",pcr_primers,"_dada1",direction_short,".rds"))
+    saveRDS(dada_output, paste0(sample_primers,"_dada1",direction_short,".rds"))
 
 } else if ( n_pass == "second" && !priors == "NO_FILE" ) { # second pass condition; priors included
     # import priors
@@ -79,7 +79,7 @@ if ( n_pass == "first" && priors == "NO_FILE" ) { # first pass condition; no pri
         verbose = TRUE
     )
 
-    saveRDS(dada_output, paste0(sample_id,"_",pcr_primers,"_dada2",direction_short,".rds"))
+    saveRDS(dada_output, paste0(sample_primers,"_dada2",direction_short,".rds"))
 
 } else {
     stop(" 'n_pass' variable must be 'first' or 'second', and priors must be 'NO_FILE' or defined! ")

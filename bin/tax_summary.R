@@ -15,12 +15,12 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### check Nextflow environment variables
 nf_vars <- c(
     "projectDir",
-    "pcr_primers",
-    "fcid",
+    "primers",
+    "read_group",
     "tax_list",
     "ids_list",
     "joint_file",
-    "target_gene",
+    "locus",
     "idtaxa_db",
     "ref_fasta"
 )
@@ -87,8 +87,8 @@ idtaxa_summary <-
     dplyr::relocate(seq_name, sequence) %>%
      # add metadata
     dplyr::mutate(
-        pcr_primers = pcr_primers,
-        target_gene = target_gene,
+        primers = primers,
+        locus = locus,
         idtaxa_db = idtaxa_db,
         ref_fasta = ref_fasta,
     )
@@ -113,8 +113,8 @@ if(!is.null(joint)){
         dplyr::select(tidyselect::any_of(c(
             "seq_name",
             "sequence", 
-            "pcr_primers", 
-            "target_gene", 
+            "primers", 
+            "locus", 
             "idtaxa_db", 
             "ref_fasta", 
             "Root",
@@ -139,8 +139,8 @@ if(!is.null(joint)){
         dplyr::select(tidyselect::any_of(c(
             "seq_name",
             "sequence", 
-            "pcr_primers", 
-            "target_gene", 
+            "primers", 
+            "locus", 
             "idtaxa_db", 
             "ref_fasta", 
             "Root",
@@ -161,8 +161,8 @@ if(!is.null(joint)){
 }
 
 # write out
-readr::write_csv(summary_table, paste0(fcid,"_",pcr_primers,"_taxonomic_assignment_summary.csv"))
+readr::write_csv(summary_table, paste0(read_group,"_",primers,"_taxonomic_assignment_summary.csv"))
 
-saveRDS(summary_table, paste0(fcid,"_",pcr_primers,"_taxonomic_assignment_summary.rds"))
+saveRDS(summary_table, paste0(read_group,"_",primers,"_taxonomic_assignment_summary.rds"))
 
 # stop(" *** stopped manually *** ") ##########################################

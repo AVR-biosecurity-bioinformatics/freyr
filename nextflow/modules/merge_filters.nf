@@ -1,15 +1,15 @@
 process MERGE_FILTERS {
     def module_name = "merge_filters"
-    tag "$pcr_primers"
+    tag "$primers"
     label "small"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(pcr_primers), path(filter_tibble_list), path(seqtab_tibble_list), path(fasta_list)
-    val(fcid_list)
+    tuple val(primers), path(filter_tibble_list), path(seqtab_tibble_list), path(fasta_list)
+    path(samplesheet_split)
 
     output:
-    tuple val(pcr_primers), path("*_seqtab_combined.csv"), path("*_filters.csv"), path("*_seqs.fasta"),         emit: filtered
+    tuple val(primers), path("*_seqtab_combined.csv"), path("*_filters.csv"), path("*_seqs.fasta"),         emit: filtered
     path("*_ASV_cleanup.csv"),                                                                                  emit: cleanup
     path("*_asv_abundance.pdf"),                                                                                emit: abundance_plot
     path("*_asv_count.pdf"),                                                                                    emit: count_plot
@@ -26,11 +26,11 @@ process MERGE_FILTERS {
         
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    pcr_primers =           "${pcr_primers}"
+    primers =               "${primers}"
     filter_tibble_list =    "${filter_tibble_list}"
     seqtab_tibble_list =    "${seqtab_tibble_list}"
     fasta_list =            "${fasta_list}"
-    fcid_list =             "${fcid_list}"
+    samplesheet_split =     "${samplesheet_split}"
     
     ## global variables
     projectDir = "$projectDir"
