@@ -20,6 +20,7 @@ nf_vars <- c(
     "primers",
     "ps",
     "filters_tibble",
+    "cluster_threshold",
     "target_kingdom",
     "target_phylum",
     "target_class",
@@ -50,6 +51,8 @@ if(target_species == "NA"){ target_species <- NA }
 if(min_sample_reads %in% c(0, "NA")){ min_sample_reads <- NA } else { min_sample_reads <- as.numeric(min_sample_reads) }
 if(min_taxa_reads %in% c(0, "NA")){ min_taxa_reads <- NA } else { min_taxa_reads <- as.numeric(min_taxa_reads) }  
 if(min_taxa_ra %in% c(0, "NA")){ min_taxa_ra <- NA } else { min_taxa_ra <- as.numeric(min_taxa_ra) } 
+
+cluster_threshold <- suppressWarnings(as.integer(cluster_threshold))
 
 quiet <- FALSE
 
@@ -220,31 +223,82 @@ if(!is.na(min_taxa_reads) & is.na(min_taxa_ra)){
 
 #Remove all samples under the minimum read threshold 
 if(!is.na(min_sample_reads) || min_sample_reads > 0){
+
     if (all(phyloseq::sample_sums(ps_abfiltered)<min_sample_reads)) {
-        stop(paste0("ERROR: No samples contained reads above the minimum threshold of ", min_sample_reads, " -- consider lowering this value"))
-        }
+        stop(paste0("ERROR: No samples contained reads above the minimum threshold of ", min_sample_reads, " for primers '", primers, "' -- consider lowering this value"))
+    }
     
     ps_sampfiltered <- ps_abfiltered %>%
         phyloseq::prune_samples(phyloseq::sample_sums(.)>=min_sample_reads, .) %>% 
         phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
+
 } else if (min_sample_reads == 0 || is.na(min_sample_reads) ) {
+
     if (!quiet){message(paste0("No minimum sample reads filter set - skipping this filter"))}
+
     ps_sampfiltered <- ps_abfiltered %>%
         phyloseq::prune_samples(phyloseq::sample_sums(.)>=0,.) %>%
         phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
+
 }
 
 # Message how many were removed
 if(!quiet){message(phyloseq::nsamples(ps) - phyloseq::nsamples(ps_sampfiltered), " Samples and ", phyloseq::ntaxa(ps) - phyloseq::ntaxa(ps_sampfiltered), " ASVs dropped")}
 
-### output filtered results per locus; from step_output_summary()
+### cluster filtered sequences
+
+seqs <- ps_sampfiltered %>% phyloseq::refseq()
+
+if (cluster_threshold %>% is.na){
+  
+    # make clusters "NA" if threshold not given   
+    cluster_tibble <- 
+        tibble::as_tibble_col(names(seqs_combined), column_name = "seq_name") %>%
+        dplyr::mutate(cluster = NA_integer_)
+
+    # for export
+    clusters_out <- cluster_tibble
+
+} else {
+    set.seed <- 1; clusters <- DECIPHER::Clusterize(
+        seqs, 
+        cutoff = 1 - (cluster_threshold / 100),
+        invertCenters = TRUE,
+        # maxPhase1 = 1e5,
+        # maxPhase2 = 1e4,
+        # maxPhase3 = 1e4, 
+        # singleLinkage = FALSE,
+        # rareKmers = 100,
+        processors = 1
+    )
+
+    # for internal use
+    cluster_tibble <- 
+        clusters %>% 
+        tibble::as_tibble(rownames = "seq_name") %>%
+        dplyr::mutate(cluster = abs(cluster))
+
+    # for export
+    clusters_out <- 
+        clusters %>% 
+        tibble::as_tibble(rownames = "seq_name") 
+  
+}
+
+### output filtered results per primer pair; from step_output_summary()
 
 # Export raw csv  - NOTE: This is memory intensive
 melt_phyloseq(ps_sampfiltered) %>% 
+    tibble::as_tibble() %>%
+    dplyr::left_join(., cluster_tibble, by = "seq_name") %>% 
+    dplyr::relocate(cluster, .after = sequence) %>%
     readr::write_csv(., paste0("raw_filtered_",primers,".csv"))
 
 # Export species level summary of filtered results
 summarise_phyloseq(ps_sampfiltered) %>%
+    tibble::as_tibble() %>%
+    dplyr::left_join(., cluster_tibble, by = "seq_name") %>%
+    dplyr::relocate(cluster, .after = sequence) %>%
     readr::write_csv(., paste0("summary_filtered_",primers,".csv"))
 
 # save sequences as .fasta file (with taxonomy in header, in format "seq_name|primers;Root;Kingdom;Phylum;Class;Order;Family;Genus;Species")
@@ -273,12 +327,16 @@ write_fasta(seqs_output, paste0("asvs_unfiltered_", primers, ".fasta"))
 # save seqtab as wide tibble (rows = seq_name, cols = ASV name (hash), cells = abundance)
 seqtab_out <- phyloseq::otu_table(ps_sampfiltered) %>%
     as("matrix") %>%
-    tibble::as_tibble(rownames = "seq_name")
+    tibble::as_tibble(rownames = "seq_name") %>%
+    dplyr::left_join(., cluster_tibble, by = "seq_name") %>% 
+    dplyr::relocate(cluster, .after = seq_name)
 
 # save taxtab as long tibble (rows = ASV, cols = tax rankings)
 taxtab_out <- phyloseq::tax_table(ps_sampfiltered) %>%
     as("matrix") %>%
     tibble::as_tibble(rownames = "seq_name") %>%
+    dplyr::left_join(., cluster_tibble, by = "seq_name") %>% 
+    dplyr::relocate(cluster, .after = seq_name) %>%
     # convert propagated taxonomy to NA values
     dplyr::mutate( 
         dplyr::across(Root:Species, ~ dplyr::if_else(stringr::str_detect(.x, "^\\w__"), NA, .x))
@@ -286,7 +344,7 @@ taxtab_out <- phyloseq::tax_table(ps_sampfiltered) %>%
 
 # Check taxonomy table outputs
 ### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
-if(!all(colnames(taxtab_out) == c("seq_name", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
+if(!all(colnames(taxtab_out) == c("seq_name", "cluster", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
     message("Warning: Taxonomy table columns do not meet expectations for the staging database \n
             Database requires the columns: seq_name, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species ")
 }
@@ -297,11 +355,10 @@ samdf_out <- phyloseq::sample_data(ps_sampfiltered) %>%
     tibble::as_tibble()
 
 # Write out
+readr::write_csv(clusters_out, paste0("clusters_",primers,".csv"))
 readr::write_csv(seqtab_out, paste0("seqtab_filtered_",primers,".csv"))
 readr::write_csv(taxtab_out, paste0("taxtab_filtered_",primers,".csv"))
 readr::write_csv(samdf_out, paste0("samdf_filtered_",primers,".csv"))
 saveRDS(ps_sampfiltered, paste0("ps_filtered_",primers,".rds"))
-
-
 
 # stop(" *** stopped manually *** ") ##########################################

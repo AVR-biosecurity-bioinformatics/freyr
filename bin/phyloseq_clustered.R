@@ -18,290 +18,388 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 nf_vars <- c(
     "projectDir",
     "primers",
-    "ps",
-    "filters_tibble",
-    "target_kingdom",
-    "target_phylum",
-    "target_class",
-    "target_order",
-    "target_family",
-    "target_genus",
-    "target_species",
-    "min_sample_reads",
-    "min_taxa_reads",
-    "min_taxa_ra"
+    "seqtab_file",
+    "taxtab_file",
+    "samdf_file",
+    "raw_file",
+    "summary_file",
+    "ps_file",
+    "clusters_file",
+    "merge_clusters"
 )
 lapply(nf_vars, nf_var_check)
 
 ## check and define variables
-ps <- readRDS(ps)
-seq_filters <- readr::read_csv(filters_tibble)
+ps <- readRDS(ps_file)
 
-# convert "NA" strings to true NA
-if(target_kingdom == "NA"){ target_kingdom <- NA }
-if(target_phylum == "NA"){ target_phylum <- NA }
-if(target_class == "NA"){ target_class <- NA }
-if(target_order == "NA"){ target_order <- NA }
-if(target_family == "NA"){ target_family <- NA }
-if(target_genus == "NA"){ target_genus <- NA }
-if(target_species == "NA"){ target_species <- NA }
+seqtab_tibble <- readr::read_csv(seqtab_file)
 
-# convert "NA" strings to true NA, or convert number strings to numeric
-if(min_sample_reads %in% c(0, "NA")){ min_sample_reads <- NA } else { min_sample_reads <- as.numeric(min_sample_reads) }
-if(min_taxa_reads %in% c(0, "NA")){ min_taxa_reads <- NA } else { min_taxa_reads <- as.numeric(min_taxa_reads) }  
-if(min_taxa_ra %in% c(0, "NA")){ min_taxa_ra <- NA } else { min_taxa_ra <- as.numeric(min_taxa_ra) } 
+taxtab_tibble <- readr::read_csv(taxtab_file)
 
-quiet <- FALSE
+samdf_tibble <- readr::read_csv(samdf_file)
+
+raw_tibble <- readr::read_csv(raw_file)
+
+summary_tibble <- readr::read_csv(summary_file)
+
+clusters_tibble <- readr::read_csv(clusters_file)
+
+if (!merge_clusters %in% c("central","lca","frequency","rank","abundance")){
+    stop(paste0("'--merge_clusters' value must be one of: '",stringr::str_flatten(c("central","lca","frequency","rank","abundance"), " / "),"'!"))
+}
 
 ### run R code
 
-## from step_filter_phyloseq()
-# Taxonomic filtering
-taxtab <- phyloseq::tax_table(ps) %>%
-    as("matrix") %>% 
-    as.data.frame()
 
-# Check if any taxonomic filters are enabled
-ps_taxfiltered <- ps
-
-if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, target_family, target_genus, target_species), is.na))){
-
-    # Filter kingdom
-    if(!is.na(target_kingdom)){
-        if (any(stringr::str_detect(taxtab$Kingdom, target_kingdom))){
-        ps_taxfiltered <- ps_taxfiltered %>%
-            subset_taxa_new(
-                rank = "Kingdom",
-                value = target_kingdom
-            ) %>%
-            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
-        } else{
-        warning(paste0("No ASVs were assigned to the Kingdom", target_kingdom," - Check your target_kingdom parameter"))
-        }
-    }
-    # Filter phylum
-    if(!is.na(target_phylum)){
-        if (any(stringr::str_detect(taxtab$Phylum, target_phylum))){
-        ps_taxfiltered <- ps_taxfiltered %>%
-            subset_taxa_new(
-                rank = "Phylum",
-                value = target_phylum
-            ) %>%
-            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
-        } else{
-        warning(paste0("No ASVs were assigned to the Phylum", target_phylum," - Check your target_phylum parameter"))
-        }
-    }
-    # Filter class
-    if(!is.na(target_class)){
-        if (any(stringr::str_detect(taxtab$Class, target_class))){
-        ps_taxfiltered <- ps_taxfiltered %>%
-            subset_taxa_new(
-                rank = "Class",
-                value = target_class
-            ) %>%
-            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
-        } else{
-        warning(paste0("No ASVs were assigned to the Class", target_class," - Check your target_class parameter"))
-        }
-    }
-    # Filter order
-    if(!is.na(target_order)){
-        if (any(stringr::str_detect(taxtab$Order, target_order))){
-        ps_taxfiltered <- ps_taxfiltered %>%
-            subset_taxa_new(
-                rank = "Order",
-                value = target_order
-            ) %>%
-            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
-        } else{
-        warning(paste0("No ASVs were assigned to the Order", target_order," - Check your target_order parameter"))
-        }
-    }
-    # Filter family
-    if(!is.na(target_family)){
-        if (any(stringr::str_detect(taxtab$Family, target_family))){
-        ps_taxfiltered <- ps_taxfiltered %>%
-            subset_taxa_new(
-                rank = "Family",
-                value = target_family
-            ) %>%
-            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
-        } else{
-        warning(paste0("No ASVs were assigned to the Family", target_family," - Check your target_family parameter"))
-        }
-    }
-    # Filter genus
-    if(!is.na(target_genus)){
-        if (any(stringr::str_detect(taxtab$Genus, target_genus))){
-        ps_taxfiltered <- ps_taxfiltered %>%
-            subset_taxa_new(
-                rank = "Genus",
-                value = target_genus
-            ) %>%
-            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
-        } else{
-        warning(paste0("No ASVs were assigned to the Genus", target_genus," - Check your target_genus parameter"))
-        }
-    }
-    # Filter Species
-    if(!is.na(target_species)){
-        if (any(stringr::str_detect(taxtab$Species, target_species))){
-        ps_taxfiltered <- ps_taxfiltered %>%
-            subset_taxa_new(
-                rank = "Species",
-                value = target_species
-            ) %>%
-            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
-        } else{
-        warning(paste0("No ASVs were assigned to the Species", target_species," - Check your target_species parameter"))
-        }
-    }
-} else {
-    if (!quiet){message(paste0("No taxonomic filters set - skipping this filter"))}
-}
-
-## remove sequences that failed the sequence-level soft filters
-seqs_passing <- 
-    seq_filters %>%
-    dplyr::filter(
-        chimera_filter, 
-        length_filter,
-        phmm_filter,
-        frame_filter
-    ) %>%
-    dplyr::pull(seq_name)
-
-ps_seqfiltered <- phyloseq::prune_taxa(taxa = seqs_passing, ps_taxfiltered)
-
-# Remove any taxa under read count or relative abundance thresholds
-### TODO: Add comments explaining what is happening here
-if(!is.na(min_taxa_reads) & is.na(min_taxa_ra)){
-    ps_abfiltered <- 
-        phyloseq::transform_sample_counts(
-            ps_seqfiltered, 
-            function(OTU, ab = min_taxa_reads){ 
-                ifelse(OTU <= ab,  0, OTU) 
-            }
-        )
-} else if(is.na(min_taxa_reads) & !is.na(min_taxa_ra)){
-    ps_abfiltered <- 
-        phyloseq::transform_sample_counts(
-            ps_seqfiltered, 
-            function(OTU, ab = min_taxa_ra ){ 
-                if (sum(OTU) == 0){
-                    return(OTU)
-                } else {
-                    ifelse((OTU / sum(OTU)) <= ab,  0, OTU) 
-                }
-            }
-        )
-} else if (!is.na(min_taxa_reads) & !is.na(min_taxa_ra)){
-    ps_abfiltered <- 
-        ps_seqfiltered %>%
-        phyloseq::transform_sample_counts(
-            function(OTU, ab = min_taxa_reads){ 
-                ifelse(OTU <= ab,  0, OTU) 
-            }
+# check clusters are defined (ie. integers not NA)
+if ( !any(clusters_tibble$cluster %>% is.na) ){
+      
+    summary_clusters <- 
+        summary_tibble %>%
+        # remove cluster
+        dplyr::select(-cluster) %>%
+        # add marked cluster
+        dplyr::left_join(., clusters_tibble, by = "seq_name") %>%
+        # mark central sequences
+        dplyr::mutate(
+            central = dplyr::if_else(cluster < 0, TRUE, FALSE),
+            cluster = abs(cluster)
         ) %>%
-        phyloseq::transform_sample_counts(
-            function(OTU, ab = min_taxa_ra ){ 
-                if (sum(OTU) == 0){
-                    return(OTU)
-                } else {
-                    ifelse((OTU / sum(OTU)) <= ab,  0, OTU) 
-                }
-            }
-        )
-} else {
-    if (!quiet){message(paste0("No minimum abundance filters set - skipping this filter"))}
-    ps_abfiltered <- ps_seqfiltered
-}
+        dplyr::relocate(cluster, central, .after = sequence) %>%
+        # convert to long format 
+        tidyr::pivot_longer(
+            cols = !c(seq_name, sequence, cluster, central, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species),
+            names_to = "sample_primers",
+            values_to = "abundance"
+        ) %>%
+        # sum abundance within cluster for each sample
+        dplyr::group_by(cluster, sample_primers) %>%
+        dplyr::mutate(abundance = sum(abundance)) %>%
+        dplyr::ungroup()
 
-#Remove all samples under the minimum read threshold 
-if(!is.na(min_sample_reads) || min_sample_reads > 0){
-    if (all(phyloseq::sample_sums(ps_abfiltered)<min_sample_reads)) {
-        stop(paste0("ERROR: No samples contained reads above the minimum threshold of ", min_sample_reads, " -- consider lowering this value"))
-        }
+    # summary without abundance
+    seq_clusters <- 
+        summary_clusters %>%
+        dplyr::select(-c(sample_primers, abundance)) %>%
+        dplyr::distinct()
+
+    # keep central sequence, with taxonomy determined by parameter
+    # merge_clusters <- "central" # taxonomic assignment of central sequence
+    # merge_clusters <- "lca" # lowest common ancestor
+    # merge_clusters <- "frequency" # most common assignment, with tie-breaking by assignment with "lowest" hash name
+    # merge_clusters <- "rank" # lowest rank assignment, with tie-breaking by frequency then by hash name
+    # merge_clusters <- "abundance" # choose taxonomy of sequence with the highest read count across all samples
+
+    if ( merge_clusters == "central" ){
     
-    ps_sampfiltered <- ps_abfiltered %>%
-        phyloseq::prune_samples(phyloseq::sample_sums(.)>=min_sample_reads, .) %>% 
-        phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
-} else if (min_sample_reads == 0 || is.na(min_sample_reads) ) {
-    if (!quiet){message(paste0("No minimum sample reads filter set - skipping this filter"))}
-    ps_sampfiltered <- ps_abfiltered %>%
-        phyloseq::prune_samples(phyloseq::sample_sums(.)>=0,.) %>%
-        phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
+        ## keep taxonomic assignment of central sequence
+        summary_reps <- 
+            summary_clusters %>%
+            dplyr::filter(central == TRUE)
+
+    } else if ( merge_clusters == "lca" ){
+
+        ## assign taxonomy using the lowest common rank of all cluster members
+        summary_reps <- 
+            seq_clusters %>%
+            dplyr::group_by(cluster) %>%
+            # convert rank to NA if more than one value is present within cluster
+            dplyr::mutate(
+                dplyr::across(
+                    Root:Species,
+                    ~ ifelse(length(unique(.)) > 1, NA, .)
+                )
+            ) %>% 
+            dplyr::ungroup() %>%
+            # convert NA to double-underscore format
+            dplyr::mutate(
+                # unsure Root is always "Root"
+                Root = "Root",
+                # determine the lowest assigned rank, choosing the first true case
+                lowest_assignment = dplyr::case_when(
+                    is.na(Kingdom)  ~ paste0("R__",Root),
+                    is.na(Phylum)   ~ paste0("K__",Kingdom),
+                    is.na(Class)    ~ paste0("P__",Phylum),
+                    is.na(Order)    ~ paste0("C__",Class),
+                    is.na(Family)   ~ paste0("O__",Order),
+                    is.na(Genus)    ~ paste0("F__",Family),
+                    is.na(Species)  ~ paste0("G__",Genus),
+                    .default        = NA
+                ),
+                # replace NA ranks with the "G__Genus" format ('propagate')
+                dplyr::across(
+                    Kingdom:Species, 
+                    ~dplyr::case_when(
+                        is.na(.) & !is.na(lowest_assignment) ~ lowest_assignment, 
+                        .default = .
+                    )
+                )
+            ) %>%
+            dplyr::select(-lowest_assignment) %>% 
+            dplyr::filter(central == TRUE) %>%
+            # join back to long abundance data
+            dplyr::left_join(
+                ., 
+                summary_clusters %>% dplyr::select(seq_name, cluster, sample_primers, abundance), 
+                by = c("seq_name", "cluster")
+            )
+
+    } else if ( merge_clusters == "frequency" ) {
+
+        # assign taxonomy using most common taxonomic assignment, breaking ties with sequence hash 
+        summary_reps <-  
+            seq_clusters %>%
+            # replace rank columns with lineage string column
+            tidyr::unite(Root:Species, col = "lineage_string", sep = ";", remove = T) %>%
+            # count lineage strings within each cluster
+            dplyr::group_by(cluster, lineage_string) %>%
+            dplyr::mutate(count = n()) %>%
+            # replace lineage string of cluster with the lineage string of the highest count + lowest hash
+            dplyr::group_by(cluster) %>%
+            dplyr::arrange(desc(count), seq_name) %>% 
+            dplyr::mutate(lineage_string = first(lineage_string)) %>% 
+            dplyr::ungroup() %>%
+            # filter to central only
+            dplyr::select(-count) %>%
+            dplyr::filter(central == TRUE) %>%
+            # regenerate rank columns from lineage string
+            tidyr::separate(
+                col = lineage_string, 
+                into = c("Root", "Kingdom","Phylum", "Class", "Order", "Family", "Genus", "Species"), 
+                sep = ";", 
+                extra = "merge",
+                remove = T
+            ) %>% 
+            # join back to long abundance data
+            dplyr::left_join(
+                ., 
+                summary_clusters %>% dplyr::select(seq_name, cluster, sample_primers, abundance), 
+                by = c("seq_name", "cluster")
+            )
+    
+    } else if ( merge_clusters == "rank" ){
+    
+        # assign taxonomy using the lowest assignment level (eg. species over genus), breaking ties with frequency then sequence hash
+        summary_reps <- 
+            seq_clusters %>%
+            # get lowest assigned rank
+            dplyr::mutate(
+                lowest_assignment = dplyr::case_when(
+                    stringr::str_detect(Kingdom, "^R__")  ~ "8_Root",
+                    stringr::str_detect(Phylum, "^K__")  ~ "7_Kingdom",
+                    stringr::str_detect(Class, "^P__")  ~ "6_Phylum",
+                    stringr::str_detect(Order, "^C__")  ~ "5_Class",
+                    stringr::str_detect(Family, "^O__")  ~ "4_Order",
+                    stringr::str_detect(Genus, "^F__")  ~ "3_Family",
+                    stringr::str_detect(Species, "/")  ~ "2_Genus",
+                    .default  = "1_Species"
+                )
+            ) %>% 
+            # replace rank columns with lineage string column
+            tidyr::unite(Root:Species, col = "lineage_string", sep = ";", remove = T) %>%
+            # count lineage strings within each cluster
+            dplyr::group_by(cluster, lineage_string) %>%
+            dplyr::mutate(count = n()) %>%
+            # replace lineage string of cluster with the lineage string of the lowest assignment, then highest count, then lowest hash
+            dplyr::group_by(cluster) %>%
+            dplyr::arrange(lowest_assignment, desc(count), seq_name) %>% 
+            dplyr::mutate(lineage_string = first(lineage_string)) %>% 
+            dplyr::ungroup() %>%
+            # filter to central only
+            dplyr::select(-count, -lowest_assignment) %>%
+            dplyr::filter(central == TRUE) %>%
+            # regenerate rank columns from lineage string
+            tidyr::separate(
+                col = lineage_string, 
+                into = c("Root", "Kingdom","Phylum", "Class", "Order", "Family", "Genus", "Species"), 
+                sep = ";", 
+                extra = "merge",
+                remove = T
+            ) %>%
+            # join back to long abundance data
+            dplyr::left_join(
+                ., 
+                summary_clusters %>% dplyr::select(seq_name, cluster, sample_primers, abundance), 
+                by = c("seq_name", "cluster")
+            )
+
+    } else if ( merge_clusters == "abundance" ) {
+    
+        # assign taxonomy of sequence with the highest read count across all samples
+        # get total abundance per sequence
+        seqs_totalab <- 
+            summary_tibble %>%
+            # pivot longer
+            tidyr::pivot_longer(
+                cols = !c(seq_name, sequence, cluster, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species),
+                names_to = "sample_primers",
+                values_to = "abundance"
+            ) %>%
+            dplyr::group_by(seq_name) %>%
+            dplyr::mutate(abundance = sum(abundance)) %>% 
+            dplyr::ungroup() %>%
+            dplyr::select(seq_name, cluster, abundance) %>%
+            dplyr::distinct() 
+        
+        summary_reps <- 
+            seq_clusters %>%
+            # add total abundance to clusters with taxonomy
+            dplyr::left_join(., seqs_totalab, by = c("seq_name", "cluster")) %>%
+            # replace rank columns with lineage string column
+            tidyr::unite(Root:Species, col = "lineage_string", sep = ";", remove = T) %>%
+            # arrange by highest count within cluster (and hash of sequence to break ties) and replace lineage string
+            dplyr::group_by(cluster) %>%
+            dplyr::arrange(desc(abundance), seq_name) %>%
+            dplyr::mutate(lineage_string = first(lineage_string)) %>%
+            dplyr::ungroup() %>%
+            # filter to central only
+            dplyr::select(-abundance) %>%
+            dplyr::filter(central == TRUE) %>%
+            # regenerate rank columns from lineage string
+            tidyr::separate(
+                col = lineage_string, 
+                into = c("Root", "Kingdom","Phylum", "Class", "Order", "Family", "Genus", "Species"), 
+                sep = ";", 
+                extra = "merge",
+                remove = T
+            ) %>%
+            # join back to long abundance data
+            dplyr::left_join(
+                ., 
+                summary_clusters %>% dplyr::select(seq_name, cluster, sample_primers, abundance), 
+                by = c("seq_name", "cluster")
+            ) 
+
+    } else {
+        stop(paste0("Invalid value of '--merge_clusters': '",merge_clusters,"'"))
+    }
+
+    # regenerate summary tibble
+    summary_clustered <- 
+        summary_reps %>%
+        dplyr::select(-central) %>%
+        tidyr::pivot_wider(
+            names_from = sample_primers,
+            values_from = abundance,
+            values_fill = 0
+        )
+    
+    # make clustered seqtab
+    seqtab_clustered <- 
+        summary_clustered %>%
+        dplyr::select(-c(sequence, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species))
+
+    # make clustered taxtab
+    taxtab_clustered <- 
+        summary_clustered %>%
+        dplyr::select(seq_name, cluster, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species)
+
+    # make clustered raw
+    raw_meta <- 
+        raw_tibble %>%
+        dplyr::select(-c(seq_name, Abundance, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species, sequence, cluster)) %>%
+        dplyr::distinct()
+
+    raw_clustered <- 
+        summary_clustered %>%
+        tidyr::pivot_longer(
+            cols = !c(seq_name, sequence, cluster, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species),
+            names_to = "sample_primers",
+            values_to = "Abundance"
+        ) %>%
+        dplyr::filter(Abundance > 0) %>%
+        dplyr::left_join(., raw_meta, by = "sample_primers") %>%
+        dplyr::relocate(seq_name, sample_primers, Abundance, sample, read_group, primers, any_of(c("fwd", "rev", "single"))) %>%
+        dplyr::relocate(Root, Kingdom, Phylum, Class, Order, Family, Genus, Species, sequence, cluster, .after = last_col())
+
+    # create clustered phyloseq object
+    otutab_clustered_ps <- 
+        seqtab_clustered %>%
+        dplyr::select(-cluster) %>%
+        tibble::column_to_rownames(var = "seq_name") %>%
+        as.matrix() %>%
+        phyloseq::otu_table(taxa_are_rows = TRUE)
+
+    taxtab_clustered_ps <- 
+        taxtab_clustered %>%
+        dplyr::select(-cluster) %>%
+        tibble::column_to_rownames(var = "seq_name") %>%
+        as.matrix() %>%
+        phyloseq::tax_table()
+
+    ps_clustered <- 
+        phyloseq::phyloseq(
+            otutab_clustered_ps,
+            taxtab_clustered_ps,
+            phyloseq::sample_data(ps),
+            phyloseq::refseq(ps)[names(phyloseq::refseq(ps)) %in% seqtab_clustered$seq_name]
+        )
+
+    # save sequences as .fasta file (with taxonomy in header, in format "seq_name|primers;Root;Kingdom;Phylum;Class;Order;Family;Genus;Species")
+    seqs_output <- phyloseq::refseq(ps_clustered)
+
+    seq_names_new <- 
+        phyloseq::tax_table(ps_clustered) %>%
+        as("matrix") %>%
+        tibble::as_tibble(rownames = "seq_name") %>%
+        # ensure sequence name order is same as the DSS object
+        dplyr::arrange(factor(seq_name, levels = names(seqs_output))) %>%
+        # add primers
+        dplyr::mutate(primers = primers, .after = seq_name) %>%
+        # unite columns into a single header string per sequence
+        tidyr::unite(col = "lineage", Root:Species, sep = ";") %>%
+        tidyr::unite(col = "id", c(seq_name, primers), sep = "|") %>%
+        tidyr::unite(col = "header", c(id, lineage), sep = ";") %>%
+        dplyr::pull(header)
+
+    names(seqs_output) <- seq_names_new
+
+    write_fasta(seqs_output, paste0("asvs_clustered_", primers, ".fasta"))  
+
+    # Write out
+    readr::write_csv(raw_clustered, paste0("raw_clustered_",primers,".csv"))
+    readr::write_csv(summary_clustered, paste0("summary_clustered_",primers,".csv"))
+    readr::write_csv(seqtab_clustered, paste0("seqtab_clustered_",primers,".csv"))
+    readr::write_csv(taxtab_clustered, paste0("taxtab_clustered_",primers,".csv"))
+    readr::write_csv(samdf_tibble, paste0("samdf_clustered",primers,".csv"))
+    saveRDS(ps_clustered, paste0("ps_clustered_",primers,".rds"))
+    
+  
+} else if (all(clusters_tibble$cluster %>% is.na)){
+    
+    ## save inputs as outputs
+
+    # save sequences as .fasta file (with taxonomy in header, in format "seq_name|primers;Root;Kingdom;Phylum;Class;Order;Family;Genus;Species")
+    seqs_output <- phyloseq::refseq(ps)
+
+    seq_names_new <- 
+        phyloseq::tax_table(ps) %>%
+        as("matrix") %>%
+        tibble::as_tibble(rownames = "seq_name") %>%
+        # ensure sequence name order is same as the DSS object
+        dplyr::arrange(factor(seq_name, levels = names(seqs_output))) %>%
+        # add primers
+        dplyr::mutate(primers = primers, .after = seq_name) %>%
+        # unite columns into a single header string per sequence
+        tidyr::unite(col = "lineage", Root:Species, sep = ";") %>%
+        tidyr::unite(col = "id", c(seq_name, primers), sep = "|") %>%
+        tidyr::unite(col = "header", c(id, lineage), sep = ";") %>%
+        dplyr::pull(header)
+
+    names(seqs_output) <- seq_names_new
+
+    write_fasta(seqs_output, paste0("asvs_clustered_", primers, ".fasta"))  
+    
+    # write unmerged outputs
+    readr::write_csv(raw_tibble, paste0("raw_clustered_",primers,".csv"))
+    readr::write_csv(summary_tibble, paste0("summary_clustered_",primers,".csv"))
+    readr::write_csv(seqtab_tibble, paste0("seqtab_clustered_",primers,".csv"))
+    readr::write_csv(taxtab_tibble, paste0("taxtab_clustered_",primers,".csv"))
+    readr::write_csv(samdf_tibble, paste0("samdf_clustered",primers,".csv"))
+    saveRDS(ps, paste0("ps_clustered_",primers,".rds"))
+    
+} else {
+    stop(paste0("Clusters are a mixture of 'NA' and other values!"))
 }
-
-# Message how many were removed
-if(!quiet){message(phyloseq::nsamples(ps) - phyloseq::nsamples(ps_sampfiltered), " Samples and ", phyloseq::ntaxa(ps) - phyloseq::ntaxa(ps_sampfiltered), " ASVs dropped")}
-
-### output filtered results per locus; from step_output_summary()
-
-# Export raw csv  - NOTE: This is memory intensive
-melt_phyloseq(ps_sampfiltered) %>% 
-    readr::write_csv(., paste0("raw_filtered_",primers,".csv"))
-
-# Export species level summary of filtered results
-summarise_phyloseq(ps_sampfiltered) %>%
-    readr::write_csv(., paste0("summary_filtered_",primers,".csv"))
-
-# save sequences as .fasta file (with taxonomy in header, in format "seq_name|primers;Root;Kingdom;Phylum;Class;Order;Family;Genus;Species")
-seqs_output <- phyloseq::refseq(ps_sampfiltered)
-
-seq_names_new <- 
-    phyloseq::tax_table(ps_sampfiltered) %>%
-    as("matrix") %>%
-    tibble::as_tibble(rownames = "seq_name") %>%
-    # ensure sequence name order is same as the DSS object
-    dplyr::arrange(factor(seq_name, levels = names(seqs_output))) %>%
-    # add primers
-    dplyr::mutate(primers = primers, .after = seq_name) %>%
-    # unite columns into a single header string per sequence
-    tidyr::unite(col = "lineage", Root:Species, sep = ";") %>%
-    tidyr::unite(col = "id", c(seq_name, primers), sep = "|") %>%
-    tidyr::unite(col = "header", c(id, lineage), sep = ";") %>%
-    dplyr::pull(header)
-
-names(seqs_output) <- seq_names_new
-
-write_fasta(seqs_output, paste0("asvs_unfiltered_", primers, ".fasta"))  
-
-## output phyloseq and component data; from step_output_ps
-
-# save seqtab as wide tibble (rows = seq_name, cols = ASV name (hash), cells = abundance)
-seqtab_out <- phyloseq::otu_table(ps_sampfiltered) %>%
-    as("matrix") %>%
-    tibble::as_tibble(rownames = "seq_name")
-
-# save taxtab as long tibble (rows = ASV, cols = tax rankings)
-taxtab_out <- phyloseq::tax_table(ps_sampfiltered) %>%
-    as("matrix") %>%
-    tibble::as_tibble(rownames = "seq_name") %>%
-    # convert propagated taxonomy to NA values
-    dplyr::mutate( 
-        dplyr::across(Root:Species, ~ dplyr::if_else(stringr::str_detect(.x, "^\\w__"), NA, .x))
-    )
-
-# Check taxonomy table outputs
-### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
-if(!all(colnames(taxtab_out) == c("seq_name", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
-    message("Warning: Taxonomy table columns do not meet expectations for the staging database \n
-            Database requires the columns: seq_name, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species ")
-}
-
-# save samplesheet
-samdf_out <- phyloseq::sample_data(ps_sampfiltered) %>%
-    as("matrix") %>%
-    tibble::as_tibble()
-
-# Write out
-readr::write_csv(seqtab_out, paste0("seqtab_filtered_",primers,".csv"))
-readr::write_csv(taxtab_out, paste0("taxtab_filtered_",primers,".csv"))
-readr::write_csv(samdf_out, paste0("samdf_filtered_",primers,".csv"))
-saveRDS(ps_sampfiltered, paste0("ps_filtered_",primers,".rds"))
-
-
 
 # stop(" *** stopped manually *** ") ##########################################

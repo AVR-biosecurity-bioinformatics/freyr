@@ -69,7 +69,7 @@ workflow RESULT_SUMMARIES {
     ch_primer_params
         .map { primers, primer_params ->
             def process_params = 
-                primer_params.subMap('target_kingdom','target_phylum','target_class','target_order','target_family','target_genus','target_species','min_sample_reads','min_taxa_reads','min_taxa_ra')
+                primer_params.subMap('cluster_threshold','target_kingdom','target_phylum','target_class','target_order','target_family','target_genus','target_species','min_sample_reads','min_taxa_reads','min_taxa_ra')
             [ primers, process_params ] }
         .set { ch_phyloseq_filter_params } 
 
@@ -82,11 +82,20 @@ workflow RESULT_SUMMARIES {
         ch_phyloseq_filter_input
     )
 
+    if ( params.merge_clusters ){
+        
+        PHYLOSEQ_FILTER.out.csvs
+            .combine ( PHYLOSEQ_FILTER.out.ps, by: 0 )
+            .combine ( PHYLOSEQ_FILTER.out.clusters, by: 0)
+            .set { ch_phyloseq_clustered_input } // primers, seqtab, taxtab, samdf, raw, summary, ps, clusters
 
-    //// merge each filtered ASV cluster into a single representative sequence
-    // PHYLOSEQ_CLUSTERED (
-
-    // )
+        //// merge each filtered ASV cluster into a single representative sequence
+        PHYLOSEQ_CLUSTERED (
+            ch_phyloseq_clustered_input,
+            params.merge_clusters
+        )
+        
+    }
 
     //// combine phyloseq outputs to merge across loci
     PHYLOSEQ_UNFILTERED.out.ps // val(primers), path("ps_unfiltered_*.rds")
