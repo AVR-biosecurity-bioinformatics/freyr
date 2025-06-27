@@ -113,6 +113,7 @@ The primer parameters file tells the pipeline how to process amplicons derived f
 | `run_blast` | Optional | Whether to run `BLAST` to complement `IDATAXA` classification | `TRUE`/`T` or `FALSE`/`F` | `FALSE` |
 | `blast_min_identity` | Optional | Minimum nucleotide identity (%) for `BLAST` taxonomic assignment | Integer `0`-`100` | `97` |
 | `blast_min_coverage` | Optional | Minimum query coverage (%) for `BLAST` taxonomic assignment | Integer `0`-`100` | `90` |
+| `cluster_threshold` | Optional | ASV similarity clustering threshold (%) | Integer `0`-`100`, or `NA` | `NA` |
 | `target_kingdom` | Optional | Filter output ASVs to this taxonomic kingdom | A single valid taxon name | `NA` |
 | `target_phylum` | Optional | Filter output ASVs to this taxonomic phylum | A single valid taxon name | `NA` |
 | `target_class` | Optional | Filter output ASVs to this taxonomic class | A single valid taxon name | `NA` |
@@ -148,7 +149,7 @@ These options are either mandatory to use or frequently required. `--miseq_inter
 
 ### Pipeline analysis options
 
-These options generally will not need to be changed by regular users. `--primer_n_trim` can be used to retain more reads from low-quality sequencing runs. 
+These options generally will not need to be changed by regular users. 
 
 | Parameter | Description | Specification | Default value |
 | --- | --- | --- | --- |
@@ -160,6 +161,19 @@ These options generally will not need to be changed by regular users. `--primer_
 | `--chimera_sample_frac` | Minimum fraction of samples in which a sequence must be flagged as a chimera to be classified a chimera (see [`dada2::isBimeraDenovoTable(minSampleFraction)`](https://rdrr.io/bioc/dada2/man/isBimeraDenovoTable.html)) | Number `0`-`1` | `0.9` |
 | `--chunk_taxassign` | Number of sequences to be taxonomically assigned per process | Integer > `0` | `100` |
 | `--accumulation_curve` | Generate accumulation curves per sample (can be slow for large datasets) | Boolean (`true`/`false`) | `true` |
+| `--merge_clusters` | Produce additional outputs where each ASV cluster is merged into a single representative sequence; value determines how taxonomy of cluster is merged | `central`, `lca`, `frequency`, `rank` or `abundance` | `null` |
+
+`--primer_n_trim`, and increasing `--primer_error_rate`, can help to retain more reads from low-quality sequencing runs, but should only be used if necessary.
+
+The [primer parameter](#primer-parameters-file) `cluster_threshold` can be used to cluster ASVs derived from each primer into groups (ie. OTUs). This fills in the `cluster` column in some of the pipeline's output files but still retains information for each ASV. If `--merge_clusters` is set, the pipeline will produce some additional 'clustered' outputs where each cluster of (only filtered) ASVs is merged into a single representative sequence. The value of `--merge_clusters` determines how taxonomic information is merged within each cluster:
+
+- `central` directly uses the taxonomic assignment of the central/representative ASV
+- `lca` uses the lowest common ancestor of all ASVs, with some ranks unclassified if necessary
+- `frequency` uses the most common taxonomic assignment, with ties broken arbitrarily but reproducibly
+- `rank` uses the taxonomic assignment with the lowest rank (eg. species assignment preferred to genus assignment), with ties broken by the `frequency` method
+- `abundance` uses the taxonomic assignment of the ASV with the highest read abundance across the entire dataset
+
+> [!IMPORTANT] Cluster assignment labels (ie. `1, 2, 3...`) should not be compared between separate pipeline runs. They will also be different between the 'unfiltered' and 'filtered' outputs of Freyr. If unsure, we recommend users perform their own OTU clustering.
 
 ### Primer parameter overrides
 
@@ -173,7 +187,7 @@ Multiple specific values can be given by separating with `;`, although the value
 
 If `--primer_params` is unset, you can still run the pipeline as long as `--pp_primers`, `--pp_locus`, `--pp_for_primer_seq`, `--pp_rev_primer_seq` and `--pp_ref_fasta` are all set appropriately. However, we strongly recommend the use of `--primer_params` to simplify pipeline execution, especially when more than one primer pair is used. To prevent complications, `--pp_primers` cannot be used unless `--primer_params` is unset.
 
-This can all get very complicated! When in doubt, just use a `--primer_params` file!
+This can all get very complicated -- when in doubt, just use a `--primer_params` file!
 
 ### Specifying resource limits
 
