@@ -8,9 +8,10 @@ process PHYLOSEQ_FILTER {
     tuple val(primers), path(ps), path(filters_tibble), val(process_params)
 
     output:
-    path("*.csv"),                                                          emit: csvs
+    tuple val(primers), path("seqtab_filtered_*.csv"), path("taxtab_filtered_*.csv"), path("samdf_filtered_*.csv"), path("raw_filtered_*.csv"), path("summary_filtered_*.csv"), emit: csvs
     tuple val(primers), path("ps_filtered_*.rds"),                          emit: ps 
     path("*.fasta"),                                                        emit: asv_fasta
+    tuple val(primers), path("clusters_*.csv"), emit: clusters
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -26,6 +27,7 @@ process PHYLOSEQ_FILTER {
     primers =               "${primers}"
     ps =                    "${ps}"
     filters_tibble =        "${filters_tibble}"
+    cluster_threshold =     "${process_params.cluster_threshold}"
     target_kingdom =        "${process_params.target_kingdom}"
     target_phylum =         "${process_params.target_phylum}"
     target_class =          "${process_params.target_class}"

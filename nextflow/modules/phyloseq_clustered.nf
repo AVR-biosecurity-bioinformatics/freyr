@@ -1,16 +1,17 @@
-process PHYLOSEQ_UNFILTERED {
-    def module_name = "phyloseq_unfiltered"
+process PHYLOSEQ_CLUSTERED {
+    def module_name = "phyloseq_clustered"
     tag "$primers"
     label "phyloseq"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(primers), path(taxtab), path(seqtab), path(filters), path(fasta), path(samplesheet_split), path(sample_metadata), val(process_params)
+    tuple val(primers), path(seqtab), path(taxtab), path(samdf), path(raw), path(summary), path(ps), path(clusters)
+    val(merge_clusters)
 
     output:
-    tuple val(primers), path("seqtab_unfiltered_*.csv"), path("taxtab_unfiltered_*.csv"), path("samdf_unfiltered_*.csv"), path("raw_unfiltered_*.csv"), path("summary_unfiltered_*.csv"), emit: csvs
-    tuple val(primers), path("ps_unfiltered_*.rds"), path("filters_*.csv"),                        emit: ps 
-    path("asvs_unfiltered_*.fasta"),                                                               emit: asv_fasta
+    path("*.csv"),                                                          emit: csvs
+    tuple val(primers), path("ps_clustered_*.rds"),                         emit: ps 
+    path("asvs_clustered*.fasta"),                                          emit: asv_fasta
 
     publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
 
@@ -23,15 +24,16 @@ process PHYLOSEQ_UNFILTERED {
 
     ### defining Nextflow environment variables as R variables
     ## input channel variables
-    primers =                   "${primers}"
-    taxtab_file =               "${taxtab}"
-    seqtab_file =               "${seqtab}"
-    filters_file =              "${filters}"
-    fasta_file =                "${fasta}"
-    samplesheet_split_file =    "${samplesheet_split}"
-    sample_metadata_file =      "${sample_metadata}"
-    cluster_threshold =         "${process_params.cluster_threshold}"
-    
+    primers =               "${primers}"
+    seqtab_file =           "${seqtab}"
+    taxtab_file =           "${taxtab}"
+    samdf_file =            "${samdf}"
+    raw_file =              "${raw}"
+    summary_file =          "${summary}"
+    ps_file =               "${ps}"
+    clusters_file =         "${clusters}"
+    merge_clusters =        "${merge_clusters}"
+     
     ## global variables
     projectDir = "$projectDir"
     params_dict = "$params"
