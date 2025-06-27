@@ -175,6 +175,7 @@ The [primer parameter](#primer-parameters-file) `cluster_threshold` can be used 
 
 > [!IMPORTANT] Cluster assignment labels (ie. `1, 2, 3...`) should not be compared between separate pipeline runs. They will also be different between the 'unfiltered' and 'filtered' outputs of Freyr. If unsure, we recommend users perform their own OTU clustering.
 
+
 ### Primer parameter overrides
 
 Values in the primer parameters `.csv` file (given to `--primer_params`) can be overridden on the command line with pipeline parameters of the form `--pp_<name of primer parameter>`, eg. `--pp_max_primer_mismatch`. This allows users to easily change primer parameters between runs for exploratory purposes, without needing to modify the `--primer_params` file.

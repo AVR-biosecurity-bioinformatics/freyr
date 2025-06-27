@@ -31,7 +31,7 @@ process PHYLOSEQ_UNFILTERED {
     samplesheet_split_file =    "${samplesheet_split}"
     sample_metadata_file =      "${sample_metadata}"
     cluster_threshold =         "${process_params.cluster_threshold}"
-     
+    
     ## global variables
     projectDir = "$projectDir"
     params_dict = "$params"
