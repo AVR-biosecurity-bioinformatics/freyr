@@ -1,0 +1,9 @@
+sample,primers,read_dir,arbmeta1,arbmeta2
+K739J_Trap2,fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4,./assets/test_data/dual/K739J,A,C
+K739J_Trap1,fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4,./assets/test_data/dual/K739J,B,D
+K739J_Mock2,fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4,./assets/test_data/dual/K739J,A,C
+K739J_Mock1,fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4,./assets/test_data/dual/K739J,B,D
+K77JP_Mock1,fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4,./assets/test_data/dual/K77JP,A,C
+K77JP_Mock2,fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4,./assets/test_data/dual/K77JP,B,D
+K77JP_Trap1,fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4,./assets/test_data/dual/K77JP,A,C
+K77JP_Trap2,fwhF2-fwhR2nDac;EIF3LminiF4-EIF3lminiR4,./assets/test_data/dual/K77JP,B,D
