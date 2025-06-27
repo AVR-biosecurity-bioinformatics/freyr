@@ -7,7 +7,7 @@
 /work/
 /output/
 /inputs/
-/test_data/full_teph/
+/test/
 *.log
 .nextflow/
 *.log.[0-9]
