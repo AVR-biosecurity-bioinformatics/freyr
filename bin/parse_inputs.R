@@ -468,6 +468,7 @@ default_params <-
         run_blast = FALSE,
         blast_min_identity = 97,
         blast_min_coverage = 90,
+        cluster_threshold = NA_character_,
         target_kingdom = NA_character_,
         target_phylum = NA_character_,
         target_class = NA_character_,
@@ -560,6 +561,7 @@ pp_vec <-
         "run_blast",
         "blast_min_identity",
         "blast_min_coverage",
+        "cluster_threshold",
         "target_kingdom",
         "target_phylum",
         "target_class",
@@ -684,6 +686,72 @@ primer_params_up <-
 
 ## parameter validation
 
+# integer testing function
+testInteger <- function(x, allowInf = FALSE){
+    if (x == Inf && allowInf == TRUE){
+      return(TRUE)
+    } else if (x == Inf && allowInf == FALSE){
+      return(FALSE)
+    } else {
+      test <- all(x == as.integer(x))
+      if(test == TRUE){ 
+          return(TRUE) 
+      } else if (test == FALSE){ 
+          return(FALSE) 
+      } else {
+        return(FALSE)
+      }
+    }
+}
+
+# function for testing integer > min_val, < max_val
+integerTest <- function(test_vec, var_name, min_val, max_val = NA, allowInf = FALSE){
+  print(paste0("Testing ", var_name, ": ",  stringr::str_flatten(test_vec, " / ")))
+  # check inputs are integers
+  if (!rlang::is_integerish(min_val)){
+    stop("min_val isn't an integer")
+  }
+  if (!is.na(max_val)){
+    if (!rlang::is_integerish(max_val)){
+      stop("max_val isn't an integer or NA")
+    }  
+  }
+  # check if values are numeric 
+  if (any(as.numeric(test_vec) %>% suppressWarnings() %>% is.na)){
+    exit_status <- "error"
+  } else {
+    # test for integer
+    if (all(sapply(test_vec, testInteger, allowInf = allowInf))){
+      # test integer range depending on if max_val given
+      if (is.na(max_val)){
+        # test for >= min_val
+        if (!all(test_vec >= min_val)){
+          exit_status <- "error"
+        } else {
+          exit_status <- "passed"
+        }
+      } else {
+        # test for >= min_val, <= max_val
+        if (!all(between(as.numeric(test_vec), min_val, max_val))){
+          exit_status <- "error"
+        } else {
+          exit_status <- "passed"
+        }
+      }
+    } else {
+      exit_status <- "error"
+    }
+  }
+  if (exit_status == "error"){
+    if (is.na(max_val)){
+        stop(paste0(prpe, "'", var_name, "' must be an integer >= ", min_val, ": '", stringr::str_flatten(test_vec, " / "), "'."))
+    } else {
+        stop(paste0(prpe, "'", var_name, "' must be an integer >= ", min_val, " and <= ", max_val,": '", stringr::str_flatten(test_vec, " / "), "'."))
+    }
+  }
+}
+
+
 # check primers is correctly formatted
 if (!all(stringr::str_detect(primer_params_up$primers, "^((?!__)[^\\s,;])+$"))){
     stop(paste0(prpe, "'primers' values must not contain spaces, commas, semi-colons or two underscores in a row."))
@@ -733,59 +801,72 @@ if (!all(stringr::str_detect(primer_params_up %>% unlist %>% unname, "^[^\\s,;]+
 }
 
 # check max_primer_mismatch is an integer >= 0
-if (any(primer_params_up$max_primer_mismatch %>% as.integer() %>% is.na()) || any(primer_params_up$max_primer_mismatch %>% as.integer() < 0)){
-    stop(paste0(prpe, "'max_primer_mismatch' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$max_primer_mismatch, " / "), "'."))
-}
+integerTest(
+    primer_params_up$max_primer_mismatch, 
+    "max_primer_mismatch", 
+    0
+)
 
 # check read_min_length is an integer >= 0
-if (any(primer_params_up$read_min_length %>% as.integer() %>% is.na()) || any(primer_params_up$read_min_length %>% as.integer() < 0)){
-    stop(paste0(prpe, "'read_min_length' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$read_min_length, " / "), "'."))
-}
+integerTest(
+    primer_params_up$read_min_length, 
+    "read_min_length", 
+    0
+)
+
 
 # check read_max_length is an integer >= 1 or 'Inf'
-for (i in 1:length(primer_params_up$read_max_length) ) {
-    test_val <- primer_params_up$read_max_length[i]
-    if ( test_val != "Inf" ){
-        if ( test_val %>% as.integer %>% is.na || test_val %>% as.integer < 1 ){
-            stop(paste0(prpe, "'read_max_length' must be an integer >=1, or the string 'Inf': '",stringr::str_flatten(primer_params_up$read_max_length, " / "), "'."))
-        }
-    }
-}
+integerTest(
+    primer_params_up$read_max_length, 
+    "read_max_length", 
+    1,
+    Inf,
+    allowInf = TRUE
+)
 
 # check read_max_ee is an integer >= 0
-if (any(primer_params_up$read_max_ee %>% as.integer() %>% is.na()) || any(primer_params_up$read_max_ee %>% as.integer() < 0)){
-    stop(paste0(prpe, "'read_max_ee' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$read_max_ee, " / "), "'."))
-}
+integerTest(
+    primer_params_up$read_max_ee, 
+    "read_max_ee", 
+    0
+)
 
 # check read_trunc_length is an integer >= 1
-if (any(primer_params_up$read_trunc_length %>% as.integer() %>% is.na()) || any(primer_params_up$read_trunc_length %>% as.integer() < 0)){
-    stop(paste0(prpe, "'read_trunc_length' must be an integer >= 1: '",stringr::str_flatten(primer_params_up$read_trunc_length, " / "), "'."))
-}
+integerTest(
+    primer_params_up$read_trunc_length, 
+    "read_trunc_length", 
+    1
+)
 
 # check read_trim_left is an integer >= 0
-if (any(primer_params_up$read_trim_left %>% as.integer() %>% is.na()) || any(primer_params_up$read_trim_left %>% as.integer() < 0)){
-    stop(paste0(prpe, "'read_trim_left' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$read_trim_left, " / "), "'."))
-}
+integerTest(
+    primer_params_up$read_trim_left, 
+    "read_trim_left", 
+    0
+)
 
 # check read_trim_right is an integer >= 0
-if (any(primer_params_up$read_trim_right %>% as.integer() %>% is.na()) || any(primer_params_up$read_trim_right %>% as.integer() < 0)){
-    stop(paste0(prpe, "'read_trim_right' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$read_trim_right, " / "), "'."))
-}
+integerTest(
+    primer_params_up$read_trim_right, 
+    "read_trim_right", 
+    0
+)
 
 # check asv_min_length is an integer >= 0
-if (any(primer_params_up$asv_min_length %>% as.integer() %>% is.na()) || any(primer_params_up$asv_min_length %>% as.integer() < 0)){
-    stop(paste0(prpe, "'asv_min_length' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$asv_min_length, " / "), "'."))
-}
+integerTest(
+    primer_params_up$asv_min_length, 
+    "asv_min_length", 
+    0
+)
 
 # check asv_max_length is an integer >= 1 or 'Inf'
-for (i in 1:length(primer_params_up$asv_max_length) ) {
-    test_val <- primer_params_up$asv_max_length[i]
-    if ( test_val != "Inf" ){
-        if ( test_val %>% as.integer %>% is.na || test_val %>% as.integer < 1 ){
-            stop(paste0(prpe, "'asv_max_length' must be an integer >=1, or the string 'Inf': '",stringr::str_flatten(primer_params_up$asv_max_length, " / "), "'."))
-        }
-    }
-}
+integerTest(
+    primer_params_up$asv_max_length, 
+    "asv_max_length", 
+    0,
+    Inf,
+    allowInf = TRUE
+)
 
 # check concat_unmerged is a logical string
 if ( !all(stringr::str_detect(toupper(primer_params_up$concat_unmerged), "^(TRUE|T|FALSE|F)$")) ){
@@ -827,9 +908,12 @@ for(i in seq_along(check_paths)){
 
 ##
 # check idtaxa_confidence is an integer 0-100
-if (any(primer_params_up$idtaxa_confidence %>% as.integer() %>% is.na()) || !all(primer_params_up$idtaxa_confidence %>% as.integer() %>% between(., 0, 100))){
-    stop(paste0(prpe, "'idtaxa_confidence' must be an integer between 0-100: '",stringr::str_flatten(primer_params_up$idtaxa_confidence, " / "), "'."))
-}
+integerTest(
+    primer_params_up$idtaxa_confidence, 
+    "idtaxa_confidence", 
+    0,
+    100
+)
 
 # check run_blast is a logical string
 if ( !all(stringr::str_detect(toupper(primer_params_up$run_blast), "^(TRUE|T|FALSE|F)$")) ){
@@ -837,31 +921,62 @@ if ( !all(stringr::str_detect(toupper(primer_params_up$run_blast), "^(TRUE|T|FAL
 }
 
 # check blast_min_identity is an integer 0-100
-if (any(primer_params_up$blast_min_identity %>% as.integer() %>% is.na()) || !all(primer_params_up$blast_min_identity %>% as.integer() %>% between(., 0, 100))){
-    stop(paste0(prpe, "'blast_min_identity' must be an integer between 0-100: '",stringr::str_flatten(primer_params_up$blast_min_identity, " / "), "'."))
-}
+integerTest(
+    primer_params_up$blast_min_identity, 
+    "blast_min_identity", 
+    0,
+    100
+)
 
 # check blast_min_coverage is an integer 0-100
-if (any(primer_params_up$blast_min_coverage %>% as.integer() %>% is.na()) || !all(primer_params_up$blast_min_coverage %>% as.integer() %>% between(., 0, 100))){
-    stop(paste0(prpe, "'blast_min_coverage' must be an integer between 0-100: '",stringr::str_flatten(primer_params_up$blast_min_coverage, " / "), "'."))
+integerTest(
+    primer_params_up$blast_min_coverage, 
+    "blast_min_coverage", 
+    0,
+    100
+)
+
+## check cluster_threshold is an integer 0-100 or NA
+# get those that can be numeric
+is_num <- primer_params_up$cluster_threshold[!as.numeric(primer_params_up$cluster_threshold) %>% suppressWarnings() %>% is.na]
+# check if numeric elements are integer
+if (is_num %>% length() > 0){
+    int_test <- sapply(is_num, testInteger)
+    if (!all(int_test)){
+        stop(paste0(prpe,"'cluster_threshold' must be an integer between 0-100, or 'NA': ",stringr::str_flatten(primer_params_up$cluster_threshold, " / ")))
+    }
+}
+# get those that cannot be numeric
+not_num <- primer_params_up$cluster_threshold[as.numeric(primer_params_up$cluster_threshold) %>% suppressWarnings() %>% is.na]
+# check if non-numeric elements are NA
+if (not_num %>% length() > 0){
+    # test if any remaining elements are not NA
+    if (any(!is.na(dplyr::na_if(not_num, "NA")))){
+        stop(paste0(prpe,"'cluster_threshold' must be an integer between 0-100, or NA: '",stringr::str_flatten(primer_params_up$cluster_threshold, " / "), "'."))
+    }
 }
 
 # NOTE: target_* fields should already be validated as lacking spaces or commas -- invalid taxa names should be ignored at this stage
 
 # check min_sample_reads is an integer >= 0
-if (any(primer_params_up$min_sample_reads %>% as.integer() %>% is.na()) || any(primer_params_up$min_sample_reads %>% as.integer() < 0)){
-    stop(paste0(prpe, "'min_sample_reads' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$min_sample_reads, " / "), "'."))
-}
+integerTest(
+    primer_params_up$min_sample_reads, 
+    "min_sample_reads", 
+    0
+)
 
 # check min_taxa_reads is an integer >= 0
-if (any(primer_params_up$min_taxa_reads %>% as.integer() %>% is.na()) || any(primer_params_up$min_taxa_reads %>% as.integer() < 0)){
-    stop(paste0(prpe, "'min_taxa_reads' must be an integer >= 0: '",stringr::str_flatten(primer_params_up$min_taxa_reads, " / "), "'."))
-}
+integerTest(
+    primer_params_up$min_taxa_reads, 
+    "min_taxa_reads", 
+    0
+)
 
 # check min_taxa_ra is a number between 0-1
-if (any(primer_params_up$min_taxa_ra %>% as.numeric() %>% is.na()) || !all(primer_params_up$min_taxa_ra %>% as.numeric() %>% between(., 0, 1)) ){
-    stop(paste0(prpe, "'min_taxa_ra' must be a number between 0-1: '",stringr::str_flatten(primer_params_up$min_taxa_ra, " / "), "'."))
+if ( primer_params_up$min_taxa_ra %>% as.numeric %>% between(., 0, 1) %>% all %in% c(FALSE, NA)){
+    stop(paste0(prpe,"'min_taxa_ra' must be a number between 0-1: ",stringr::str_flatten(primer_params_up$min_taxa_ra, " / ")))
 }
+
 
 ## write parsed primer_params to file
 readr::write_csv(primer_params_up, "primer_params_parsed.csv")
