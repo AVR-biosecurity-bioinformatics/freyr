@@ -1,5 +1,5 @@
 process DENOISE {
-    def module_name = "denoise"
+    def process_name = "denoise"
     tag "$sample_primers"
     label "medium"
     container "jackscanlan/piperline-multi:0.0.1"
@@ -7,50 +7,36 @@ process DENOISE {
     input:
     tuple val(direction), val(primers), val(read_group), val(sample), val(sample_primers), path(reads), path(errormodel), path(priors)
     val(n_pass)
+    val(dada_band_size)
+    val(dada_homopolymer)
 
     output:
     tuple val(direction), val(primers), val(read_group), val(sample), val(sample_primers), path(reads), path("*_dada{1,2}{F,R,S}.rds"), emit: seq
 
-    publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy'
 
     // when: 
 
     script:
-    def module_script = "${module_name}.R"
-    def priors_path = priors.name != "NO_FILE" ? priors.name : "NO_FILE"
-    """
-    #!/usr/bin/env Rscript
-
-    ### defining Nextflow environment variables as R variables
-    ## input channel variables
-    direction =         "${direction}"
-    read_group =        "${read_group}"
-    primers =           "${primers}"
-    sample_primers =    "${sample_primers}"
-    reads =             "${reads}"
-    errormodel =        "${errormodel}"
-    n_pass =            "${n_pass}"
-    priors =            "${priors}"
-    
-    ## global variables
-    projectDir = "$projectDir"
-    params_dict = "$params"
-    
-    tryCatch({
-    ### source functions and themes, load packages, and import Nextflow params
-    ### from "bin/process_start.R"
-    sys.source("${projectDir}/bin/process_start.R", envir = .GlobalEnv)
-
-    ### run module code
-    sys.source(
-        "${projectDir}/bin/$module_script", # run script
-        envir = .GlobalEnv # this allows import of existing objects like projectDir
-    )
-    }, finally = {
-    ### save R environment for debugging
-    if ("${params.rdata}" == "true") { save.image(file = "${task.process}.rda") } 
-    })
-
+    // def priors_path = priors.name != "NO_FILE" ? priors.name : "NO_FILE"
     """
 
+    ${process_name}.R \
+        --process_name "$process_name" \
+        --projectDir "$projectDir" \
+        --cpus "$task.cpus" \
+        --rdata "$params.rdata" \
+        --reads "$reads" \
+        --sample_primers "$sample_primers" \
+        --primers "$primers" \
+        --read_group "$read_group" \
+        --direction "$direction" \
+        --errormodel "$errormodel" \
+        --n_pass "$n_pass" \
+        --priors "$priors" \
+        --dada_band_size "$dada_band_size" \
+        --dada_homopolymer "$dada_homopolymer"
+
+    """
+    
 }

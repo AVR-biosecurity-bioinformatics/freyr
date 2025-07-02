@@ -30,6 +30,10 @@ workflow DADA2 {
     //// create empty channels
     ch_read_tracker_grouped = Channel.empty()
 
+    //// parse dada2 channels
+    ch_dada_band_size = params.dada_band_size ?: "null"
+    ch_dada_homopolymer = params.dada_homopolymer ?: "null"
+
     //// populate read channels with branched processed_reads input channel
     processed_reads
         .branch { direction, primers, read_group, sample, sample_primers, reads ->
@@ -92,13 +96,17 @@ workflow DADA2 {
         //// first pass of denoising per flowcell, primer and sample
         DENOISE1_F (
             ch_denoise1_input_forward, 
-            "first" 
+            "first",
+            ch_dada_band_size,
+            ch_dada_homopolymer
         )
         
         //// denoise forward reads per flowcell, primer and sample
         DENOISE1_R ( 
             ch_denoise1_input_reverse, 
-            "first" 
+            "first",
+            ch_dada_band_size,
+            ch_dada_homopolymer
         )
 
         // high sensitivity mode condition
@@ -125,7 +133,9 @@ workflow DADA2 {
             //// run pseudo-pooled 2nd denoising with priors on forward reads
             DENOISE2_F ( 
                 ch_denoise2_input_forward, 
-                "second" 
+                "second",
+                ch_dada_band_size,
+                ch_dada_homopolymer
             )
 
             /// remove direction
@@ -155,7 +165,9 @@ workflow DADA2 {
             //// run pseudo-pooled 2nd denoising with priors on reverse reads
             DENOISE2_R ( 
                 ch_denoise2_input_reverse,
-                "second"
+                "second",
+                ch_dada_band_size,
+                ch_dada_homopolymer
             )
 
             /// remove direction
@@ -230,7 +242,9 @@ workflow DADA2 {
         //// first pass of denoising per flowcell, primer and sample
         DENOISE1_S ( 
             ch_denoise1_input_single, 
-            "first" 
+            "first",
+            ch_dada_band_size,
+            ch_dada_homopolymer
         )
 
         // high sensitivity mode condition
@@ -258,7 +272,9 @@ workflow DADA2 {
             //// run pseudo-pooled 2nd denoising with priors on forward reads
             DENOISE2_S ( 
                 ch_denoise2_input_single, 
-                "second" 
+                "second",
+                ch_dada_band_size,
+                ch_dada_homopolymer
             )
 
             // prepare single reads

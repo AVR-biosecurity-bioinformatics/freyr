@@ -77,7 +77,7 @@ log.info paramsSummaryLog(workflow)
 // make it clear that samples are being subsampled
 if (params.subsample) {
     log.info "***"
-    log.info "NOTE: Input samples are being pseudorandomly subsampled to $params.subsample per primer x flowcell combination (--subsample = $params.subsample)"
+    log.info "NOTE: Input samples are being pseudorandomly subsampled to $params.subsample per primer x read group combination (--subsample = $params.subsample)"
     log.info "***"
 }
 
