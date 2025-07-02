@@ -1,4 +1,30 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+reads_paths                 <- args$reads_paths
+read_min_length             <- args$read_min_length
+read_max_length             <- args$read_max_length
+read_max_ee                 <- args$read_max_ee
+read_trunc_length           <- args$read_trunc_length
+read_trim_left              <- args$read_trim_left
+read_trim_right             <- args$read_trim_right
+sample_primers              <- args$sample_primers
+locus                       <- args$locus
+primers                     <- args$primers
+read_group                  <- args$read_group
+seq_type                    <- args$seq_type
+paired                      <- args$paired
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "dada2",
@@ -9,25 +35,6 @@ process_packages <- c(
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "reads_paths",
-    "read_min_length",
-    "read_max_length",
-    "read_max_ee",
-    "read_trunc_length",
-    "read_trim_left",
-    "read_trim_right",
-    "sample_primers",
-    "locus",
-    "primers",
-    "read_group",
-    "seq_type",
-    "paired"
-)
-lapply(nf_vars, nf_var_check)
 
 ### process variables 
 # split reads_paths into individual file paths (or keep if single reads)
@@ -43,12 +50,10 @@ if ( paired == "true" ) {
 
 ### run R code
 
-set.seed(1)
-
 if ( paired == "true" & seq_type == "illumina" ) {
 
     # filter and trim paired-end reads
-    res <- dada2::filterAndTrim(
+    set.seed(1); res <- dada2::filterAndTrim(
         fwd = fwd_reads, 
         filt = paste0(sample_primers,"_",locus,"_",primers,"_filter_R1.fastq.gz"), # gets saved to working dir
         rev = rev_reads, 
@@ -69,7 +74,7 @@ if ( paired == "true" & seq_type == "illumina" ) {
 } else if ( paired == "false" & seq_type == "nanopore" ) {
 
     # filter and trim single-end reads
-    res <- dada2::filterAndTrim(
+    set.seed(1); res <- dada2::filterAndTrim(
         fwd = single_reads, 
         filt = paste0(sample_primers,"_",locus,"_",primers,"_filter_R0.fastq.gz"), # gets saved to working dir
         minLen = as.numeric(read_min_length), 
@@ -101,3 +106,8 @@ rbind(out_vector) %>%
     readr::write_csv(paste0("read_filter_",sample_primers,"_",primers,"_readsout.csv"), col_names = F)
 
 # stop(" *** stopped manually *** ") ##########################################
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})

@@ -1,4 +1,19 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+read_group          <- args$read_group
+miseq_dir           <- args$miseq_dir
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "dplyr",
@@ -19,16 +34,6 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### also flag index combos that have higher than average + (some stat)
 
 #### TODO: use index_switch_calc.txt in jack_notes to run same process but in bash, which should be much faster
-
-# check variables defined
-nf_vars <- c(
-    "projectDir",
-    "read_group",
-    "miseq_dir"
-)
-lapply(nf_vars, nf_var_check)
-
-if (!exists("read_group")) {stop("'read_group' not defined!")}
 
 # extract "fcid" from read-header read group
 fcid <- stringr::str_extract(read_group, "(?<=-)(\\S+)(?=__)", group = 1) 
@@ -227,3 +232,8 @@ pdf(file=paste0(read_group,"_index_switching.pdf"), width = 11, height = 8 , pap
 
 
 # stop(" *** stopped manually *** ") ##########################################
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})
