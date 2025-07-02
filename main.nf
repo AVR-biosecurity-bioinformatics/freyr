@@ -186,6 +186,9 @@ workflow FREYR {
     //// parse subsample parameter
     ch_subsample = params.subsample ?: "false"
 
+    //// parse extension parameter 
+    ch_extension = params.extension ?: "null"
+
     //// Create empty channels
     ch_read_tracker_grouped =   // read-tracking for grouped processes
         Channel.empty()      
@@ -197,7 +200,8 @@ workflow FREYR {
         ch_primer_params_type,
         params.seq_type,
         params.paired,
-        ch_subsample
+        ch_subsample,
+        ch_extension
     )
 
     //// create channel of just read files for PROCESS_READS

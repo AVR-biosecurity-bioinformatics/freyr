@@ -1,4 +1,26 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+samplesheet         <- args$samplesheet
+primer_params       <- args$primer_params
+pp_type             <- args$pp_type
+seq_type            <- args$seq_type
+paired              <- args$paired
+subsample           <- args$subsample
+extension           <- args$extension
+params              <- args$params
+launchDir           <- args$launchDir
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "dplyr",
@@ -11,21 +33,14 @@ process_packages <- c(
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
-### check Nextflow environment variables
-nf_vars <- c(
-    "launchDir",
-    "projectDir",
-    "params_dict",
-    "samplesheet",
-    "primer_params",
-    "pp_type",
-    "seq_type",
-    "paired",
-    "subsample"
-)
-lapply(nf_vars, nf_var_check)
+### process variables
 
-### process variables 
+# converts Groovy params list into a named R vector
+params_list <- 
+    params %>% 
+    stringr::str_remove_all("^\\[|\\]$") %>% 
+    stringr::str_split_1(", ") %>% 
+    stringr::str_split(":")
 
 ### run code
 
@@ -136,11 +151,11 @@ if ( read_col_which == "read_dir" & paired == "true" ) { # if "read_dir" column 
         if ( length(i_readfiles) != 2 ) { 
             stop (paste0(sse, "Found ",length(i_readfiles)," read files matching '",samplesheet_df_rp$sample[i],"' in '",samplesheet_df_rp$read_dir[i],"' when 2 were expected.\n\tCheck you have filled out samplesheet correctly."))  
         }
-        if (params.extension != "null") { # using params.extension if supplied
-            message(paste0("Using 'params.extension' (",params.extension,") to find read files in supplied directories ('read_dir')."))
+        if (extension != "null") { # using params.extension if supplied
+            message(paste0("Using '--extension' (",extension,") to find read files in supplied directories ('read_dir')."))
             # check read files match params.extension
-            if (any(stringr::str_detect(i_readfiles, pattern = paste0(params.extension,"$")))) { 
-                stop(paste0(sse, "Read files found in 'read_dir' do not match 'params.extension' file extension--check samplesheet and pipeline parameters."))
+            if (any(stringr::str_detect(i_readfiles, pattern = paste0(extension,"$")))) { 
+                stop(paste0(sse, "Read files found in 'read_dir' do not match '--extension' file extension--check samplesheet and pipeline parameters."))
             }
             # sort read files by text after extension
             ### TODO: do this
@@ -195,11 +210,11 @@ if ( read_col_which == "read_dir" & paired == "true" ) { # if "read_dir" column 
         if ( length(i_readfiles) != 1 ) { 
             stop (paste0(sse, "Found ",length(i_readfiles)," read files matching '",samplesheet_df_rp$sample[i],"' in '",samplesheet_df_rp$read_dir[i],"' when 1 was expected.\n\tCheck you have filled out samplesheet correctly."))  
         }
-        if (params.extension != "null") { # using params.extension if supplied
-            message(paste0("Using 'params.extension' (",params.extension,") to find read files in supplied directories ('read_dir')."))
+        if (extension != "null") { # using params.extension if supplied
+            message(paste0("Using '--extension' (",extension,") to find read files in supplied directories ('read_dir')."))
             # check read files match params.extension
-            if (any(stringr::str_detect(i_readfiles, pattern = paste0(params.extension,"$")))) { 
-                stop(paste0(sse, "Read files found in 'read_dir' do not match 'params.extension' file extension--check samplesheet and pipeline parameters."))
+            if (any(stringr::str_detect(i_readfiles, pattern = paste0(extension,"$")))) { 
+                stop(paste0(sse, "Read files found in 'read_dir' do not match '--extension' file extension--check samplesheet and pipeline parameters."))
             }
             # sort read files by text after extension
             ### TODO: do this
@@ -982,3 +997,9 @@ if ( primer_params_up$min_taxa_ra %>% as.numeric %>% between(., 0, 1) %>% all %i
 readr::write_csv(primer_params_up, "primer_params_parsed.csv")
 
 # stop("stopped manually")
+
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})
