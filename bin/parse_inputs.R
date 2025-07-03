@@ -16,7 +16,7 @@ seq_type            <- args$seq_type
 paired              <- args$paired
 subsample           <- args$subsample
 extension           <- args$extension
-params              <- args$params
+pp_params           <- args$pp_params
 launchDir           <- args$launchDir
 
 sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
@@ -36,8 +36,8 @@ invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn
 ### process variables
 
 # converts Groovy params list into a named R vector
-params_list <- 
-    params %>% 
+pp_params_list <- 
+    pp_params %>% 
     stringr::str_remove_all("^\\[|\\]$") %>% 
     stringr::str_split_1(", ") %>% 
     stringr::str_split(":")
@@ -512,7 +512,7 @@ primer_params_da <-
 # use params_list from process_start.R to create a named vector of parameters and values
 params_vec <- 
     sapply(
-        params_list,
+        pp_params_list,
         function(x){
             y <- x[2]
             names(y) <- x[1]
@@ -551,48 +551,9 @@ if ( pp_type == "default" ){
 }
 
 ### replace primer params from .csv with those from the '--pp_*' pipeline parameters
-# vector of primer parameters
-pp_vec <- 
-    c(
-        "locus",
-        "for_primer_seq",
-        "rev_primer_seq",
-        "max_primer_mismatch",
-        "read_min_length",
-        "read_max_length",
-        "read_max_ee",
-        "read_trunc_length",
-        "read_trim_left",
-        "read_trim_right",
-        "asv_min_length",
-        "asv_max_length",
-        "concat_unmerged",
-        "genetic_code",
-        "coding",
-        "phmm",
-        "idtaxa_db",
-        "ref_fasta",
-        "idtaxa_confidence",
-        "run_blast",
-        "blast_min_identity",
-        "blast_min_coverage",
-        "cluster_threshold",
-        "target_kingdom",
-        "target_phylum",
-        "target_class",
-        "target_order",
-        "target_family",
-        "target_genus",
-        "target_species",
-        "min_sample_reads",
-        "min_taxa_reads",
-        "min_taxa_ra"
-    ) %>%
-    stringr::str_replace(., "^", "pp_")
-
 
 # just the pp_ parameters other than pp_primers
-params_pp <- params_vec[names(params_vec) %in% pp_vec]
+params_pp <- params_vec[!names(params_vec) == "pp_primers"]
 
 # remove parameters set to "null" (ie. unset)
 params_pp_nn <- params_pp[!params_pp == "null"]

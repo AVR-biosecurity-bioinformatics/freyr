@@ -20,10 +20,10 @@ workflow FILTERING {
 
     main:
 
-    //// group all flowcells (per pcr primer pair) into a single element for filtering
+    //// group all flowcells (per primer pair) into a single element for filtering
     ch_seqtab
-        .map { pcr_primers, read_groups, seqtab_tibble, fasta -> 
-            [ pcr_primers, seqtab_tibble, fasta ] }
+        .map { primers, read_group, seqtab_tibble, fasta -> 
+            [ primers, seqtab_tibble, fasta ] }
         .groupTuple ( by: 0 )
         .set { ch_filter_input }
 
@@ -48,7 +48,7 @@ workflow FILTERING {
     ch_primer_params
         .map { primers, primer_params ->
             def process_params = 
-            primer_params.subMap('asv_min_length','asv_max_length')
+                primer_params.subMap('asv_min_length','asv_max_length')
             [ primers, process_params ] }
         .set { ch_filter_length_params } 
 
@@ -66,7 +66,7 @@ workflow FILTERING {
     ch_primer_params
         .map { primers, primer_params ->
             def process_params = 
-            primer_params.subMap('for_primer_seq','rev_primer_seq', 'coding', 'phmm')
+                primer_params.subMap('for_primer_seq','rev_primer_seq', 'coding', 'phmm')
             [ primers, process_params ] }
         .set { ch_filter_phmm_params } 
 
@@ -84,7 +84,7 @@ workflow FILTERING {
     ch_primer_params
         .map { primers, primer_params ->
             def process_params = 
-            primer_params.subMap('coding', 'genetic_code')
+                primer_params.subMap('coding', 'genetic_code')
             [ primers, process_params ] }
         .set { ch_filter_frame_params } 
 
@@ -98,13 +98,13 @@ workflow FILTERING {
     )
 
 
-    //// group filtering outputs (filters, setabs and fastas) by pcr_primers
+    //// group filtering outputs (filters, setabs and fastas) by primers
     FILTER_CHIMERA.out.tibble
-        .concat ( FILTER_LENGTH.out.tibble )
-        .concat ( FILTER_PHMM.out.tibble )
-        .concat ( FILTER_FRAME.out.tibble )
+        .mix ( FILTER_LENGTH.out.tibble )
+        .mix ( FILTER_PHMM.out.tibble )
+        .mix ( FILTER_FRAME.out.tibble )
         .groupTuple ( by: 0 )
-        .join ( ch_filter_input, by: 0 )
+        .combine ( ch_filter_input, by: 0 )
         .set { ch_merge_filters_input }
     
     //// merge filters together, create filter read tracking tibble, and create filter plots

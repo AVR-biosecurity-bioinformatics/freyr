@@ -10,7 +10,7 @@ process PRIORS {
     output:   
     tuple val(direction), val(primers), val(read_group), path("*_priors{F,R,S}.rds"),              emit: priors
 
-    publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${module_name}", mode: 'copy'
 
     // when: 
 

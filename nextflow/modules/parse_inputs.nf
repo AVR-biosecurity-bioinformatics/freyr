@@ -1,5 +1,8 @@
 process PARSE_INPUTS {
     def process_name = "parse_inputs"
+    def projDir = workflow.projectDir // redeclaring these two variables stops cache invalidation
+    def launDir = workflow.launchDir
+
     tag "Whole dataset"
     label "small"
     container "jackscanlan/piperline-multi:0.0.1"
@@ -12,6 +15,7 @@ process PARSE_INPUTS {
     val(paired)
     val(subsample)
     val(extension)
+    val(pp_params)
 
     output: 
     path("sample_metadata.csv"),                    emit: sample_metadata
@@ -28,10 +32,10 @@ process PARSE_INPUTS {
 
     ${process_name}.R \
         --process_name "$process_name" \
-        --projectDir "$projectDir" \
+        --projectDir "$projDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
-        --launchDir "$launchDir" \
+        --launchDir "$launDir" \
         --samplesheet "$samplesheet" \
         --primer_params "$primer_params" \
         --pp_type "$pp_type" \
@@ -39,7 +43,7 @@ process PARSE_INPUTS {
         --paired "$paired" \
         --subsample "$subsample" \
         --extension "$extension" \
-        --params "$params"
+        --pp_params "$pp_params"
 
     """
 }

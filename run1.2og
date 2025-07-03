@@ -1,0 +1,7 @@
+Jul-03 14:53:36.785 [main] DEBUG nextflow.cli.Launcher - $> nextflow -log run1.2og run . -profile basc_slurm,test,debug --subsample 1 -dump-hashes -resume
+Jul-03 14:53:37.393 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 23.05.0-edge
+Jul-03 14:53:37.433 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/home/js7t/.nextflow/plugins; core-plugins: nf-amazon@2.0.0,nf-azure@1.1.0,nf-codecommit@0.1.5,nf-console@1.0.6,nf-ga4gh@1.0.6,nf-google@1.7.4,nf-tower@1.5.13,nf-wave@0.9.0
+Jul-03 14:53:37.457 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Jul-03 14:53:37.458 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Jul-03 14:53:37.462 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.4.1 in 'deployment' mode
+Jul-03 14:53:37.484 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
