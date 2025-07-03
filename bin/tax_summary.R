@@ -1,4 +1,26 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+primers                     <- args$primers
+read_group                  <- args$read_group
+fasta                       <- args$fasta
+tax_list                    <- args$tax_list
+ids_list                    <- args$ids_list
+joint_file                  <- args$joint_file
+locus                       <- args$locus
+idtaxa_db                   <- args$idtaxa_db
+ref_fasta                   <- args$ref_fasta
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "Biostrings",
@@ -11,20 +33,6 @@ process_packages <- c(
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "primers",
-    "read_group",
-    "tax_list",
-    "ids_list",
-    "joint_file",
-    "locus",
-    "idtaxa_db",
-    "ref_fasta"
-)
-lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 # read in fasta as tibble
@@ -166,3 +174,8 @@ readr::write_csv(summary_table, paste0(read_group,"_",primers,"_taxonomic_assign
 saveRDS(summary_table, paste0(read_group,"_",primers,"_taxonomic_assignment_summary.rds"))
 
 # stop(" *** stopped manually *** ") ##########################################
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})

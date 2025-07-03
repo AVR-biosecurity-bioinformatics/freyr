@@ -1,4 +1,22 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+primers                     <- args$primers
+read_group                  <- args$read_group
+idtaxa_confidence           <- args$idtaxa_confidence
+idtaxa_db                   <- args$idtaxa_db
+fasta                       <- args$fasta
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "Biostrings",
@@ -13,17 +31,6 @@ process_packages <- c(
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "read_group",
-    "primers",
-    "idtaxa_confidence",
-    "idtaxa_db",
-    "fasta"
-)
-lapply(nf_vars, nf_var_check)
 
 ## check and define variables 
 return_ids <-           TRUE
@@ -129,3 +136,8 @@ saveRDS(ids, paste0(read_group,"_",primers,"_",db_name,"_idtaxa_ids.rds"))
 
 # stop(" *** stopped manually *** ") ##########################################
 
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})
