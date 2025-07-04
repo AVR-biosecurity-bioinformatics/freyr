@@ -11,7 +11,7 @@ process ASSIGNMENT_PLOT {
     path("*_taxonomic_assignment_summary.pdf"),                 emit: plot
     tuple val(primers), val(read_group), path("*_joint.rds"),   emit: joint
 
-    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when: 
 

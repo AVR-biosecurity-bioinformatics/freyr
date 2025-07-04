@@ -10,7 +10,7 @@ process JOINT_TAX {
     output:
     tuple val(primers), val(read_group), path("*_joint.csv"), emit: joint
 
-    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when: 
 

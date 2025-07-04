@@ -1,5 +1,5 @@
 process SPLIT_LOCI {
-    def module_name = "split_loci"
+    def process_name = "split_loci"
     tag "$sample_primers"
     label "medium"
     container "thatdnaguy/cutadapt:v4.7_02"
@@ -12,19 +12,17 @@ process SPLIT_LOCI {
     path("*_readsin.csv"),                                                                                  emit: input_counts
     path("*_readsout.csv"),                                                                                 emit: read_tracking
 
-    publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when: 
 
     script:
-    def module_script = "${module_name}.sh"
-
     def reads_paths = reads.join(";") // concatenate reads into a single string
     """
     #!/bin/bash
 
     ### run module code
-    bash ${module_name}.sh \
+    bash ${process_name}.sh \
         "${reads_paths}" \
         ${process_params.for_primer_seq} \
         ${process_params.rev_primer_seq} \

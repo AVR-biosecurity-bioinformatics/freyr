@@ -13,7 +13,7 @@ process PHYLOSEQ_FILTER {
     path("*.fasta"),                                                        emit: asv_fasta
     tuple val(primers), path("clusters_*.csv"), emit: clusters
 
-    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when: 
 

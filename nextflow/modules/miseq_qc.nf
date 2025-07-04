@@ -13,7 +13,7 @@ process MISEQ_QC {
     path("*_index_switching.pdf")
     path("*.csv")
 
-    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when:
 

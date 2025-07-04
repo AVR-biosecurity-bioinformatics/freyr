@@ -13,7 +13,7 @@ process PHYLOSEQ_CLUSTERED {
     tuple val(primers), path("ps_clustered_*.rds"),                         emit: ps 
     path("asvs_clustered*.fasta"),                                          emit: asv_fasta
 
-    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when: 
 

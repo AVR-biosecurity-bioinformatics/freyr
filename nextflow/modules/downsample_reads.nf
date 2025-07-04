@@ -1,5 +1,5 @@
 process DOWNSAMPLE_READS {
-    def module_name = "downsample_reads"
+    def process_name = "downsample_reads"
     tag "$sample"
     label "small"
     container "staphb/seqtk:1.4"
@@ -13,19 +13,17 @@ process DOWNSAMPLE_READS {
     output:   
     tuple val(primers), val(read_group), val(sample), val(sample_primers), path("down_*"), emit: reads
 
-    publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when: 
 
     script:
-    def module_script = "${module_name}.sh"
-
     def reads_paths = reads.join(";") // concatenate reads into a single string
     """
     #!/bin/bash
 
     ### run module code
-    bash ${module_name}.sh \
+    bash ${process_name}.sh \
         "${reads_paths}" \
         ${seq_type} \
         ${paired} \

@@ -10,7 +10,7 @@ process MERGE_TAX {
     output:
     tuple val(primers), path("*_merged_tax.csv"), emit: merged_tax
 
-    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when: 
 

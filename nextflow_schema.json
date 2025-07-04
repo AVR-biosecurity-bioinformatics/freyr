@@ -312,6 +312,13 @@
                     "description": "Randomly reduce the number of reads per input samples to at most this value.",
                     "errorMessage": "Must be an integer >=1 (or 'null').",
                     "help_text": "Useful to quickly test how the pipeline behaves with a particular dataset. Downsampling is pseudorandom (seed = 1), so should always reproduce the same subset of reads for the same inputs."
+                },
+                "debug_mode": {
+                    "type": "boolean",
+                    "description": "Saves all process outputs (ie. largely intermediate files) to 'output/modules'.",
+                    "errorMessage": "Must be set to 'true' or 'false'.",
+                    "help_text": "Saves all process outputs (ie. largely intermediate files) to 'output/modules'.",
+                    "default": false
                 }
             }
         },

@@ -1,5 +1,5 @@
 process FASTQC {
-    def module_name = "fastqc"
+    def process_name = "fastqc"
     tag "$sample"
     label "medium"
     container "staphb/fastqc:0.12.1"
@@ -12,19 +12,17 @@ process FASTQC {
     output:   
     path("*.html"),     emit: report
 
-    publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when: 
 
     script:
-    def module_script = "${module_name}.sh"
-
     def reads_paths = reads.join(";") // concatenate reads into a single string
     """
     #!/bin/bash
 
     ### run module code
-    bash ${module_name}.sh \
+    bash ${process_name}.sh \
         "${reads_paths}" \
         ${task.memory.mega} \
         ${seq_type} \

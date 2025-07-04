@@ -10,7 +10,7 @@ process FILTER_FRAME {
     output:
     tuple val(primers), path("*_frame_filter.csv"),       emit: tibble
 
-    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when: 
 

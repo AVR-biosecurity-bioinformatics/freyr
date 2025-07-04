@@ -12,7 +12,7 @@ process PHYLOSEQ_UNFILTERED {
     tuple val(primers), path("ps_unfiltered_*.rds"), path("filters_*.csv"),                        emit: ps 
     path("asvs_unfiltered_*.fasta"),                                                               emit: asv_fasta
 
-    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when: 
 

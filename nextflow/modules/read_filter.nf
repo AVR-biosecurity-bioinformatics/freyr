@@ -11,7 +11,7 @@ process READ_FILTER {
     tuple val(primers), val(read_group), val(sample), val(sample_primers), path("*_filter_R{0,1,2}.fastq.gz"),      emit: reads, optional: true
     path("*_readsout.csv"),                                                                                         emit: read_tracking
 
-    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when: 
 

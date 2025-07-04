@@ -11,7 +11,7 @@ process TAX_SUMMARY {
     tuple val(primers), val(read_group), path("*_taxonomic_assignment_summary.rds"), emit: rds
     tuple val(primers), val(read_group), path("*_taxonomic_assignment_summary.csv"), emit: csv
 
-    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when: 
 

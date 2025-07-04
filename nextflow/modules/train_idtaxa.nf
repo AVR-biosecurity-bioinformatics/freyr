@@ -11,7 +11,7 @@ process TRAIN_IDTAXA {
     output:   
     tuple val(primers), path("*_idtaxa_db.rds")             , emit: model
 
-    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when: 
 

@@ -12,7 +12,7 @@ process TAX_BLAST {
     tuple val(primers), val(read_group), path("*_blast_spp_low.rds"),             emit: blast_assignment
     tuple val(primers), val(read_group), path("*_n_ranks.txt"),                   emit: n_ranks
 
-    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when: 
 
