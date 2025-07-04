@@ -1,4 +1,20 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+rt_samples                  <- args$rt_samples
+rt_group                    <- args$rt_group
+samplesheet_split_file      <- args$samplesheet_split_file
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "dplyr",
@@ -13,15 +29,6 @@ process_packages <- c(
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "rt_samples",    
-    "rt_group",
-    "samplesheet_split_file" 
-)
-lapply(nf_vars, nf_var_check)
 
 ## check and define variables 
 rt_samples <- # convert Groovy to R list format
@@ -245,3 +252,8 @@ try(dev.off(), silent=TRUE)
 
 
 # stop(" *** stopped manually *** ") ##########################################
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})
