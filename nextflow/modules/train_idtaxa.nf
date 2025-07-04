@@ -13,6 +13,8 @@ process TRAIN_IDTAXA {
 
     publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
+    publishDir "${launchDir}/output/results/taxonomic_assignment", mode: 'copy'
+
     // when: 
 
     script:

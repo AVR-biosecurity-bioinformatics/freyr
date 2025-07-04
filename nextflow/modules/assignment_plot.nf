@@ -13,6 +13,9 @@ process ASSIGNMENT_PLOT {
 
     publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
+    publishDir "${launchDir}/output/results/taxonomic_assignment", pattern: '*_taxonomic_assignment_summary.pdf', mode: 'copy'
+
+
     // when: 
 
     script:

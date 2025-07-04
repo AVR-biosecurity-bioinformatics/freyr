@@ -25,6 +25,9 @@ process PARSE_INPUTS {
 
     publishDir "${launchDir}/output/modules/${process_name}",  mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
+    publishDir "${launchDir}/output/results/parsed_inputs", mode: 'copy'
+
+
     // when: 
 
     script:

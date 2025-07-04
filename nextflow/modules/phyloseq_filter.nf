@@ -15,6 +15,9 @@ process PHYLOSEQ_FILTER {
 
     publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
+    publishDir "${launchDir}/output/results/main_outputs/filtered", mode: 'copy'
+
+
     // when: 
 
     script:

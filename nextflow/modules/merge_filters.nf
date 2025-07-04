@@ -17,6 +17,11 @@ process MERGE_FILTERS {
 
     publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
+    publishDir "${launchDir}/output/results/sequence_filtering", pattern: '*_ASV_cleanup.csv', mode: 'copy'
+    publishDir "${launchDir}/output/results/sequence_filtering", pattern: '*_asv_abundance.pdf', mode: 'copy'
+    publishDir "${launchDir}/output/results/sequence_filtering", pattern: '*_asv_count.pdf', mode: 'copy'
+
+
     // when: 
 
     script:
