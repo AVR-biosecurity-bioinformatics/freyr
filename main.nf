@@ -299,9 +299,9 @@ workflow FREYR {
 
         //// update primer_params with new models
         ch_primer_params
-            .combine ( TRAIN_IDTAXA.out.model, by: 0 ) // join by primers
-            .map { primers, read_group, primer_params, fasta, new_idtaxa ->
-                [ primers, read_group, primer_params + [ idtaxa_db: new_idtaxa ], fasta ] }
+            .join ( TRAIN_IDTAXA.out.model, by: 0 ) // join by primers
+            .map { primers, primer_params, new_idtaxa ->
+                [ primers, primer_params + [ idtaxa_db: new_idtaxa ] ] }
             .set { ch_primer_params }
     
     } 
