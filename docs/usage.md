@@ -206,6 +206,7 @@ These parameters can help with debugging or configuring the pipeline.
 
 | Parameter | Description | Specification | Default value |
 | --- | --- | --- | --- |
+| `--debug_mode` | Saves all process outputs (ie. largely intermediate files) to `output/modules` | Boolean (`true`/`false`) | `false` |
 | `--rdata` | Saves an `.rda` RData file in the work directory of each R-scripted process, regardless of exit status | Boolean (`true`/`false`) | `false` |
 | `--subsample` | Pseudorandomly reduce number of input samples per `read_group` x `primers` combination to this | Integer >= `1` | `null` |
 | `--downsample` | Pseudorandomly reduce number of reads per input sample to this | Integer >= `1` | `null` |

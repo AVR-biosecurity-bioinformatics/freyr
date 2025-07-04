@@ -1,5 +1,5 @@
 process PRIMER_TRIM {
-    def module_name = "primer_trim"
+    def process_name = "primer_trim"
     tag "$sample_primers"
     label "medium"
     container "thatdnaguy/cutadapt:v4.7_02"
@@ -11,19 +11,17 @@ process PRIMER_TRIM {
     tuple val(primers), val(read_group), val(sample), val(sample_primers), path("*_trim_R{0,1,2}.fastq.gz"),    emit: reads
     path("*_readsout.csv"),                                                                                     emit: read_tracking
 
-    publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     // when: 
 
     script:
-    def module_script = "${module_name}.sh"
-
     def reads_paths = reads.join(";") // concatenate reads into a single string
     """
     #!/bin/bash
 
     ### run module code
-    bash ${module_name}.sh \
+    bash ${process_name}.sh \
         "${reads_paths}" \
         ${process_params.for_primer_seq} \
         ${process_params.rev_primer_seq} \

@@ -1,29 +1,34 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+primers                     <- args$primers
+filter_tibble_list          <- args$filter_tibble_list
+seqtab_tibble_list          <- args$seqtab_tibble_list
+fasta_list                  <- args$fasta_list
+samplesheet_split           <- args$samplesheet_split
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "Biostrings",
-    # "dada2",
     "dplyr",
     "ggplot2",
     "patchwork",
     "readr",
     "stringr",
-    # "taxreturn",
     "tibble",
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "primers",
-    "filter_tibble_list",
-    "seqtab_tibble_list",
-    "fasta_list",
-    "samplesheet_split"
-)
-lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 
@@ -43,8 +48,6 @@ fasta_list <-
     lapply(., Biostrings::readDNAStringSet)
 
 samplesheet_tibble <- readr::read_csv(samplesheet_split)
-
-# stop("stopped manually")
 
 ### run R code
 
@@ -112,7 +115,7 @@ seqtab_combined %>%
 seqs_names %>%
     tibble::deframe() %>%
     Biostrings::DNAStringSet() %>%
-    write_fasta(., paste0(primers,"_seqs.fasta"))
+    write_fasta(., paste0(primers,"_combseqs.fasta"))
 
 # get tibble of read_group and sample_primers
 sample_read_group <- 
@@ -435,3 +438,8 @@ filter_info %>%
         }
     )
 
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})

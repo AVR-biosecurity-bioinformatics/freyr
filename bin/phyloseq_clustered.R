@@ -1,4 +1,26 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+primers <- args$primers
+seqtab_file <- args$seqtab_file
+taxtab_file <- args$taxtab_file
+samdf_file <- args$samdf_file
+raw_file <- args$raw_file
+summary_file <- args$summary_file
+ps_file <- args$ps_file
+clusters_file <- args$clusters_file
+merge_clusters <- args$merge_clusters
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "Biostrings",
@@ -13,21 +35,6 @@ process_packages <- c(
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "primers",
-    "seqtab_file",
-    "taxtab_file",
-    "samdf_file",
-    "raw_file",
-    "summary_file",
-    "ps_file",
-    "clusters_file",
-    "merge_clusters"
-)
-lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 ps <- readRDS(ps_file)
@@ -403,3 +410,8 @@ if ( !any(clusters_tibble$cluster %>% is.na) ){
 }
 
 # stop(" *** stopped manually *** ") ##########################################
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})

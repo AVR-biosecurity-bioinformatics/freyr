@@ -1,5 +1,5 @@
 process NANOPLOT {
-    def module_name = "nanoplot"
+    def process_name = "nanoplot"
     tag "$sample"
     label "high"
     container "nanozoo/nanoplot:1.42.0--547049c"
@@ -12,19 +12,19 @@ process NANOPLOT {
     output:   
     path("*report.html"),     emit: report
 
-    publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+
+    publishDir "${launchDir}/output/results/qc/nanoplot", mode: 'copy'
 
     // when: 
 
     script:
-    def module_script = "${module_name}.sh"
-
     def reads_paths = reads.join(";") // concatenate reads into a single string
     """
     #!/bin/bash
 
     ### run module code
-    bash ${module_name}.sh \
+    bash ${process_name}.sh \
         "${reads_paths}" \
         ${sample} \
         ${seq_type} \

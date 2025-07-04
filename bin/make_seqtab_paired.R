@@ -1,4 +1,25 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+reads_F                     <- args$reads_F
+reads_R                     <- args$reads_R
+seqs_F                      <- args$seqs_F
+seqs_R                      <- args$seqs_R
+sample_primers              <- args$sample_primers
+primers                     <- args$primers
+read_group                  <- args$read_group
+concat_unmerged             <- args$concat_unmerged
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "dada2",
@@ -11,22 +32,11 @@ process_packages <- c(
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "read_group",
-    "primers",
-    "sample_primers",
-    "reads_F",
-    "reads_R",
-    "seqs_F",
-    "seqs_R",
-    "concat_unmerged"
-)
-lapply(nf_vars, nf_var_check)
-
-if ( is.na(concat_unmerged) || concat_unmerged == "NA" || !is.logical(concat_unmerged)){
+### process variables 
+if ( is.na(concat_unmerged) || concat_unmerged %in%  c("NA", "FALSE", "F")) {
     concat_unmerged <- FALSE
+} else {
+    concat_unmerged <- TRUE
 }
 
 ### run R code
@@ -80,8 +90,8 @@ seqs_R_extracted <- lapply(seqs_R_list, readRDS)
 names(seqs_R_extracted) <- sample_primers_list
 
 ## merge pairs, keeping unmerged reads only if concat_unmerged is TRUE
-if ( concat_unmerged ) {
-    mergers <- dada2::mergePairs(
+mergers <- 
+    dada2::mergePairs(
         dadaF = seqs_F_extracted,
         derepF = reads_F_list,
         dadaR = seqs_R_extracted,
@@ -89,20 +99,9 @@ if ( concat_unmerged ) {
         verbose = TRUE,
         minOverlap = 12,
         trimOverhang = TRUE,
-        returnRejects = TRUE
+        returnRejects = concat_unmerged
     )
-} else {
-    mergers <- dada2::mergePairs(
-        dadaF = seqs_F_extracted,
-        derepF = reads_F_list,
-        dadaR = seqs_R_extracted,
-        derepR= reads_R_list,
-        verbose = TRUE,
-        minOverlap = 12,
-        trimOverhang = TRUE,
-        returnRejects = FALSE
-    )
-}
+
 
 ## reformat mergers as a list with one element if there is only one sample
 if ( class(mergers) == "data.frame" ) {
@@ -205,3 +204,8 @@ readr::write_csv(seqtab_tibble, paste0(read_group, "_", primers, "_seqtab_tibble
 
 
 # stop(" *** stopped manually *** ") ##########################################
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})

@@ -1,29 +1,32 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+primers                     <- args$primers
+seqtab_tibble_list          <- args$seqtab_tibble_list
+fasta_list                  <- args$fasta_list
+asv_min_length              <- args$asv_min_length
+asv_max_length              <- args$asv_max_length
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "Biostrings",
-    # "dada2",
     "dplyr",
-    # "ggplot2",
-    # "patchwork",
     "readr",
     "stringr",
-    # "taxreturn",
     "tibble",
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "primers",
-    "seqtab_tibble_list",
-    "fasta_list",
-    "asv_min_length",
-    "asv_max_length"
-)
-lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 
@@ -37,11 +40,11 @@ fasta_list <-
     stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
     lapply(., Biostrings::readDNAStringSet)
 
-asv_min_length <-   parse_nf_var_repeat(asv_min_length) %>% as.numeric
-asv_max_length <-   parse_nf_var_repeat(asv_max_length) %>% as.numeric
+asv_min_length <-   as.numeric(asv_min_length) %>% suppressWarnings
+asv_max_length <-   as.numeric(asv_max_length) %>% suppressWarnings
 
-if(is.na(asv_min_length))   {asv_min_length <- NULL}
-if(is.na(asv_max_length))   {asv_max_length <- NULL}
+if(is.na(asv_min_length))   {asv_min_length <- -Inf}
+if(is.na(asv_max_length))   {asv_max_length <- Inf}
 
 ### run R code
 
@@ -102,3 +105,9 @@ out_tibble <-
     dplyr::select(-length, -pass_min, -pass_max)
 
 readr::write_csv(out_tibble, paste0(primers, "_length_filter.csv"))
+
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})

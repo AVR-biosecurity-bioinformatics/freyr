@@ -1,4 +1,24 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+primers                     <- args$primers
+read_group                  <- args$read_group
+fasta                       <- args$fasta
+ref_fasta                   <- args$ref_fasta
+blast_min_identity          <- args$blast_min_identity
+blast_min_coverage          <- args$blast_min_coverage
+run_blast                   <- args$run_blast
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "dada2",
@@ -12,19 +32,6 @@ process_packages <- c(
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "read_group",
-    "primers",
-    "fasta",
-    "ref_fasta",
-    "blast_min_identity",
-    "blast_min_coverage",
-    "run_blast"
-)
-lapply(nf_vars, nf_var_check)
 
 ### TODO: Add explicit taxonomic ranks option to loci parameters
 
@@ -157,3 +164,8 @@ if (isTRUE(run_blast)) { # run BLAST if requested
 readr::write_csv(blast_spp, paste0(read_group,"_",primers,"_",db_name,"_blast.csv"))
 
 # stop(" *** stopped manually *** ") ##########################################
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})

@@ -1,4 +1,31 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+primers                 <- args$primers
+ps                      <- args$ps
+filters_tibble          <- args$filters_tibble
+cluster_threshold       <- args$cluster_threshold
+target_kingdom          <- args$target_kingdom
+target_phylum           <- args$target_phylum
+target_class            <- args$target_class
+target_order            <- args$target_order
+target_family           <- args$target_family
+target_genus            <- args$target_genus
+target_species          <- args$target_species
+min_sample_reads        <- args$min_sample_reads
+min_taxa_reads          <- args$min_taxa_reads
+min_taxa_ra             <- args$min_taxa_ra
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "Biostrings",
@@ -13,26 +40,6 @@ process_packages <- c(
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "primers",
-    "ps",
-    "filters_tibble",
-    "cluster_threshold",
-    "target_kingdom",
-    "target_phylum",
-    "target_class",
-    "target_order",
-    "target_family",
-    "target_genus",
-    "target_species",
-    "min_sample_reads",
-    "min_taxa_reads",
-    "min_taxa_ra"
-)
-lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 ps <- readRDS(ps)
@@ -363,3 +370,8 @@ saveRDS(ps_sampfiltered, paste0("ps_filtered_",primers,".rds"))
 
 
 # stop(" *** stopped manually *** ") ##########################################
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})

@@ -1,4 +1,25 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+primers                     <- args$primers
+taxtab_file                 <- args$taxtab_file
+seqtab_file                 <- args$seqtab_file
+filters_file                <- args$filters_file
+fasta_file                  <- args$fasta_file
+samplesheet_split_file      <- args$samplesheet_split_file
+sample_metadata_file        <- args$sample_metadata_file
+cluster_threshold           <- args$cluster_threshold
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "Biostrings",
@@ -17,20 +38,6 @@ process_packages <- c(
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "primers",
-    "taxtab_file",
-    "seqtab_file",
-    "filters_file",
-    "fasta_file",
-    "samplesheet_split_file",
-    "sample_metadata_file",
-    "cluster_threshold"
-)
-lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 taxtab <- readr::read_csv(taxtab_file)
@@ -204,3 +211,9 @@ summarise_phyloseq(ps_uf) %>%
 
 # export phyloseq object
 saveRDS(ps_uf, paste0("ps_unfiltered_",primers,".rds"))
+
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})

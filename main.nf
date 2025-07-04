@@ -77,7 +77,7 @@ log.info paramsSummaryLog(workflow)
 // make it clear that samples are being subsampled
 if (params.subsample) {
     log.info "***"
-    log.info "NOTE: Input samples are being pseudorandomly subsampled to $params.subsample per primer x flowcell combination (--subsample = $params.subsample)"
+    log.info "NOTE: Input samples are being pseudorandomly subsampled to $params.subsample per primer x read group combination (--subsample = $params.subsample)"
     log.info "***"
 }
 
@@ -186,9 +186,30 @@ workflow FREYR {
     //// parse subsample parameter
     ch_subsample = params.subsample ?: "false"
 
+    //// parse extension parameter 
+    ch_extension = params.extension ?: "null"
+
     //// Create empty channels
     ch_read_tracker_grouped =   // read-tracking for grouped processes
         Channel.empty()      
+
+    //// create pp_* parameter map as input for PARSE_INPUTS
+    Channel.from(params)
+        .map { params_map ->
+            def pp_params = 
+                params_map.subMap(
+                    'pp_primers', 'pp_locus', 'pp_for_primer_seq', 'pp_rev_primer_seq', 
+                    'pp_max_primer_mismatch', 'pp_read_min_length', 'pp_read_max_length', 'pp_read_max_ee', 
+                    'pp_read_trunc_length', 'pp_read_trim_left', 'pp_read_trim_right', 'pp_asv_min_length', 
+                    'pp_asv_max_length', 'pp_concat_unmerged', 'pp_genetic_code', 'pp_coding', 
+                    'pp_phmm', 'pp_idtaxa_db', 'pp_ref_fasta', 'pp_idtaxa_confidence', 
+                    'pp_run_blast', 'pp_blast_min_identity', 'pp_blast_min_coverage', 'pp_cluster_threshold', 
+                    'pp_target_kingdom', 'pp_target_phylum', 'pp_target_class', 'pp_target_order', 
+                    'pp_target_family', 'pp_target_genus', 'pp_target_species', 'pp_min_sample_reads', 
+                    'pp_min_taxa_reads', 'pp_min_taxa_ra'
+                )
+            pp_params }
+        .set { ch_pp_params } 
 
     //// read-in samplesheet and primer_params .csv files, validate their contents, and produce inputs for rest of pipeline
     PARSE_INPUTS ( 
@@ -197,8 +218,14 @@ workflow FREYR {
         ch_primer_params_type,
         params.seq_type,
         params.paired,
-        ch_subsample
+        ch_subsample,
+        ch_extension,
+        ch_pp_params
     )
+
+    ch_samplesheet_split = PARSE_INPUTS.out.samplesheet_split.first()
+
+    ch_sample_metadata = PARSE_INPUTS.out.sample_metadata.first()
 
     //// create channel of just read files for PROCESS_READS
     if ( params.paired ){
@@ -223,16 +250,14 @@ workflow FREYR {
     
     //// create channel of read files with sample, read_group, primers and sample_primers
     if ( params.paired ){
-        PARSE_INPUTS.out.samplesheet_split
-            .flatten ()
+        ch_samplesheet_split
             .splitCsv ( header: true )
             .map { header -> 
                 [ header.primers, header.read_group, header.sample, header.sample_primers, [ file(header.fwd, checkIfExists: true), file(header.rev, checkIfExists: true) ] ] 
                 }
             .set { ch_sample_primers_reads }
     } else if ( !params.paired ) {
-        PARSE_INPUTS.out.samplesheet_split
-            .flatten ()
+        ch_samplesheet_split
             .splitCsv ( header: true )
             .map { header -> 
                 [ header.primers, header.read_group, header.sample, header.sample_primers, file(header.single, checkIfExists: true) ] 
@@ -274,9 +299,9 @@ workflow FREYR {
 
         //// update primer_params with new models
         ch_primer_params
-            .combine ( TRAIN_IDTAXA.out.model, by: 0 ) // join by primers
-            .map { primers, read_group, primer_params, fasta, new_idtaxa ->
-                [ primers, read_group, primer_params + [ idtaxa_db: new_idtaxa ], fasta ] }
+            .join ( TRAIN_IDTAXA.out.model, by: 0 ) // join by primers
+            .map { primers, primer_params, new_idtaxa ->
+                [ primers, primer_params + [ idtaxa_db: new_idtaxa ] ] }
             .set { ch_primer_params }
     
     } 
@@ -319,7 +344,7 @@ workflow FREYR {
         DADA2.out.ch_seqtab,
         ch_read_groups,
         ch_primer_params,
-        PARSE_INPUTS.out.samplesheet_split.first()
+        ch_samplesheet_split
     )
 
     //// subworkflow: assign taxonomy
@@ -337,8 +362,8 @@ workflow FREYR {
     RESULT_SUMMARIES (
         FILTERING.out.ch_seqtab_filtered,
         TAXONOMY.out.ch_mergetax_output,
-        PARSE_INPUTS.out.samplesheet_split.first(),
-        PARSE_INPUTS.out.sample_metadata.first(),
+        ch_samplesheet_split,
+        ch_sample_metadata,
         ch_primer_params,
         PROCESS_READS.out.ch_read_tracker_samples,
         ch_read_tracker_grouped

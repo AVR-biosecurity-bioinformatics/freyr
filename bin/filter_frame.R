@@ -1,11 +1,26 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+primers                     <- args$primers
+seqtab_tibble_list          <- args$seqtab_tibble_list
+fasta_list                  <- args$fasta_list
+coding                      <- args$coding
+genetic_code                <- args$genetic_code
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "Biostrings",
-    # "dada2",
     "dplyr",
-    # "ggplot2",
-    # "patchwork",
     "readr",
     "stringr",
     "taxreturn",
@@ -13,17 +28,6 @@ process_packages <- c(
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "primers",
-    "seqtab_tibble_list",
-    "fasta_list",
-    "coding",
-    "genetic_code"
-)
-lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 
@@ -37,8 +41,7 @@ fasta_list <-
     stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
     lapply(., Biostrings::readDNAStringSet)
 
-coding <-           parse_nf_var_repeat(coding) %>% as.logical
-genetic_code <-     parse_nf_var_repeat(genetic_code)
+coding <-           as.logical(coding)
 
 ### run R code
 
@@ -118,3 +121,9 @@ if(coding){
 }
 
 readr::write_csv(out_tibble, paste0(primers, "_frame_filter.csv"))
+
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})
