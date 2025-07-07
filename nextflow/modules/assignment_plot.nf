@@ -8,12 +8,12 @@ process ASSIGNMENT_PLOT {
     tuple val(primers), val(read_group), path(fasta), path(blast, name: "blast*.rds"), path(tax), val(process_params)
 
     output:
-    path("*_taxonomic_assignment_summary.pdf"),                 emit: plot
+    path("taxonomic_assignment_summary_*.pdf"),                 emit: plot
     tuple val(primers), val(read_group), path("*_joint.rds"),   emit: joint
 
     publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
-    publishDir "${launchDir}/output/results/taxonomic_assignment", pattern: '*_taxonomic_assignment_summary.pdf', mode: 'copy'
+    publishDir "${launchDir}/output/results/taxonomic_assignment", pattern: 'taxonomic_assignment_summary_*.pdf', mode: 'copy'
 
 
     // when: 

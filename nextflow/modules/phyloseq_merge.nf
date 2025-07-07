@@ -11,15 +11,12 @@ process PHYLOSEQ_MERGE {
     path(filtered_fastas, name: "filtered_*.fasta")
 
     output:
-    path("*.csv")
-    path("*.rds")
-    path("*.fasta")
-    path("*.nwk"),          optional: true
+    path("*{_filtered,_unfiltered}.{csv,rds,fasta}")
     path("*_readsout.csv"), emit: read_tracking
 
     publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
-    publishDir "${launchDir}/output/results/main_outputs/merged", mode: 'copy'
+    publishDir "${launchDir}/output/results/main_outputs/merged", pattern: '*{_filtered,_unfiltered}.{csv,rds,fasta}', mode: 'copy'
 
     // when: 
 

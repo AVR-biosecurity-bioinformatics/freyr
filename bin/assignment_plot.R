@@ -139,7 +139,7 @@ if ( !is.null(joint) ) {
 } else { plot <- NULL }
 
 # write plot
-plot_filename <- paste0(read_group,"_",primers,"_taxonomic_assignment_summary.pdf")
+plot_filename <- paste0("taxonomic_assignment_summary_",primers,"_",read_group,".pdf")
 if ( !is.null(plot) ){
     pdf(file = plot_filename, width = 11, height = 8 , paper="a4r")
     print(plot)

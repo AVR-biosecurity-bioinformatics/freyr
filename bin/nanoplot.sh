@@ -48,7 +48,7 @@ elif [ $PAIRED == "false"  ] && [ $SEQ_TYPE == "nanopore" ]; then
     NanoPlot \
         --fastq $SINGLE_READS \
         --tsv_stats \
-        --prefix $SAMPLE \
+        --prefix nanoplot_$SAMPLE \
         -o .
 
 else 

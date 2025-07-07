@@ -69,11 +69,11 @@ if(length(fc@parsedData)==0){
 }
 
 # write output tables
-readr::write_csv(savR::correctedIntensities(fc), paste0(read_group,"_correctedIntensities.csv"))
-readr::write_csv(savR::errorMetrics(fc), paste0(read_group, "_errorMetrics.csv"))
-readr::write_csv(savR::extractionMetrics(fc), paste0(read_group, "_extractionMetrics.csv"))
-readr::write_csv(savR::qualityMetrics(fc), paste0(read_group, "_qualityMetrics.csv"))
-readr::write_csv(savR::tileMetrics(fc), paste0(read_group, "_tileMetrics.csv"))
+readr::write_csv(savR::correctedIntensities(fc), paste0("correctedIntensities_",read_group,".csv"))
+readr::write_csv(savR::errorMetrics(fc), paste0("errorMetrics_",read_group,".csv"))
+readr::write_csv(savR::extractionMetrics(fc), paste0("extractionMetrics_",read_group,".csv"))
+readr::write_csv(savR::qualityMetrics(fc), paste0("qualityMetrics_",read_group,".csv"))
+readr::write_csv(savR::tileMetrics(fc), paste0("tileMetrics_",read_group,".csv"))
 
 # plot flowcell qc
 gg.avg_intensity <- 
@@ -89,7 +89,7 @@ gg.avg_intensity <-
     facet_wrap(~side, scales="free") +
     scale_fill_viridis_c()
 
-pdf(file=paste0(read_group,"_flowcell_qc.pdf"), width = 11, height = 8 , paper="a4r")
+pdf(file=paste0("flowcell_qc_",read_group,".pdf"), width = 11, height = 8 , paper="a4r")
 plot(gg.avg_intensity)
 savR::pfBoxplot(fc)
 for (lane in 1:fc@layout@lanecount) {
@@ -110,7 +110,7 @@ readspassing <-
     tidyr::pivot_wider(names_from = code,
                         values_from = reads)
 
-readr::write_csv(readspassing, paste0(read_group, "_readsPassing.csv"))
+readr::write_csv(readspassing, paste0("readsPassing_",read_group,".csv"))
 
 
 
@@ -226,7 +226,7 @@ gg.switch <-
     ", Contam rate: ", sprintf("%1.6f%%", res$contam_rate*100),
     ", Other reads: ", other_reads)) 
 
-pdf(file=paste0(read_group,"_index_switching.pdf"), width = 11, height = 8 , paper="a4r")
+pdf(file=paste0("index_switching_",read_group,".pdf"), width = 11, height = 8 , paper="a4r")
     plot(gg.switch)
     try(dev.off(), silent=TRUE)
 

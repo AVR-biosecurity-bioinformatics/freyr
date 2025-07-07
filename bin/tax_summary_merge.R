@@ -36,7 +36,7 @@ ts_merged <-
     dplyr::ungroup() %>%
     dplyr::arrange(seq_name)
 
-readr::write_csv(ts_merged,"taxonomic_assignment_summary.csv") # write to .csv
+readr::write_csv(ts_merged,"taxonomic_assignment_summary_combined.csv") # write to .csv
 
 # stop(" *** stopped manually *** ") ##########################################
 }, 

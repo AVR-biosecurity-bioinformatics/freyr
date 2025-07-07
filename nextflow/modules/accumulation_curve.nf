@@ -12,7 +12,7 @@ process ACCUMULATION_CURVE {
 
     publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     
-    publishDir "${launchDir}/output/results/main_outputs", mode: 'copy'
+    publishDir "${launchDir}/output/results/main_outputs/unfiltered", mode: 'copy'
 
     // when: 
 

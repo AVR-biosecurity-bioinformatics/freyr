@@ -169,9 +169,9 @@ if(!is.null(joint)){
 }
 
 # write out
-readr::write_csv(summary_table, paste0(read_group,"_",primers,"_taxonomic_assignment_summary.csv"))
+readr::write_csv(summary_table, paste0("taxonomic_assignment_summary_",primers,"_",read_group,".csv"))
 
-saveRDS(summary_table, paste0(read_group,"_",primers,"_taxonomic_assignment_summary.rds"))
+saveRDS(summary_table, paste0("taxonomic_assignment_summary_",primers,"_",read_group,".rds"))
 
 # stop(" *** stopped manually *** ") ##########################################
 }, 

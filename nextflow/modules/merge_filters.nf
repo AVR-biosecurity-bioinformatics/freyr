@@ -10,17 +10,12 @@ process MERGE_FILTERS {
 
     output:
     tuple val(primers), path("*_seqtab_combined.csv"), path("*_filters.csv"), path("*_combseqs.fasta"),         emit: filtered
-    path("*_ASV_cleanup.csv"),                                                                                  emit: cleanup
-    path("*_asv_abundance.pdf"),                                                                                emit: abundance_plot
-    path("*_asv_count.pdf"),                                                                                    emit: count_plot
+    path("{asv_cleanup,asv_abundance,asv_count}_*.{csv,pdf}"),                                                  emit: cleanup
     path("*_readsout.csv"),                                                                                     emit: read_tracking
 
     publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
-    publishDir "${launchDir}/output/results/sequence_filtering", pattern: '*_ASV_cleanup.csv', mode: 'copy'
-    publishDir "${launchDir}/output/results/sequence_filtering", pattern: '*_asv_abundance.pdf', mode: 'copy'
-    publishDir "${launchDir}/output/results/sequence_filtering", pattern: '*_asv_count.pdf', mode: 'copy'
-
+    publishDir "${launchDir}/output/results/sequence_filtering", pattern: '{asv_cleanup,asv_abundance,asv_count}_*.{csv,pdf}', mode: 'copy'
 
     // when: 
 

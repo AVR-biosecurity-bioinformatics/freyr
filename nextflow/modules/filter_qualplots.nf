@@ -9,7 +9,7 @@ process FILTER_QUALPLOTS {
     val(file_suffix)
 
     output:   
-    path("*_qualplots.pdf")                 , emit: plots, optional: true
+    path("qualplots_{pre,post}_*.pdf")                 , emit: plots
 
     publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 

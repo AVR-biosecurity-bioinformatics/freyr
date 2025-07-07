@@ -160,7 +160,7 @@ if ( paired == "true" & seq_type == "illumina" ){
     
     Qualplots <- (gg.Fqual + gg.Rqual) / (gg.Fee + gg.Ree)
 
-    ggsave(paste0(sample_primers,"_",locus,"_",file_suffix,"_qualplots.pdf"), Qualplots, width = 11, height = 8)
+    ggsave(paste0("qualplots_",file_suffix,"_",sample_primers,".pdf"), Qualplots, width = 11, height = 8)
 
 } else if ( paired == "false" & seq_type == "nanopore" ) {
 
@@ -231,7 +231,7 @@ if ( paired == "true" & seq_type == "illumina" ){
     
     Qualplots <- gg.Squal / gg.See
 
-    ggsave(paste0(sample_primers,"_",locus,"_",file_suffix,"_qualplots.pdf"), Qualplots, width = 11, height = 8)
+    ggsave(paste0("qualplots_",file_suffix,"_",sample_primers,".pdf"), Qualplots, width = 11, height = 8)
 
 
 

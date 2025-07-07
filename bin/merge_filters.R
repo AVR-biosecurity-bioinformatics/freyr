@@ -183,7 +183,7 @@ filter_info %>%
     lapply(
         ., 
         function(x){
-            readr::write_csv(x, paste0(unique(x$read_group), "_", unique(x$primers), "_ASV_cleanup.csv"))
+            readr::write_csv(x, paste0("asv_cleanup_",unique(x$read_group), "_", unique(x$primers), ".csv"))
         }
     )
 
@@ -375,7 +375,7 @@ filter_info %>%
                 subtitle = paste0("Flowcell: ", unique(x$read_group), "\nPCR primers: ", unique(x$primers))
             )
         
-        ggsave(paste0(unique(x$read_group), "_", unique(x$primers),"_asv_abundance.pdf"), gg.abundance, width = 8, height = 12)
+        ggsave(paste0("asv_abundance_",unique(x$read_group), "_", unique(x$primers),".pdf"), gg.abundance, width = 8, height = 12)
 
         }
     )
@@ -433,7 +433,7 @@ filter_info %>%
             patchwork::plot_layout(ncol = 1, guides = "collect") +
             patchwork::plot_annotation(title = "Unique ASVs", subtitle = paste0("Flowcell: ", unique(x$read_group), "\nPCR primers: ", unique(x$primers)))
         
-        ggsave(paste0(unique(x$read_group), "_", unique(x$primers),"_asv_count.pdf"), gg.n_asvs, width = 8, height = 12)
+        ggsave(paste0("asv_count_",unique(x$read_group), "_", unique(x$primers),".pdf"), gg.n_asvs, width = 8, height = 12)
 
         }
     )

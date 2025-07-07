@@ -8,12 +8,12 @@ process TAX_SUMMARY {
     tuple val(primers), val(read_group), path(fasta), path(tax, name: "idtaxa*.csv"), path(ids, name: "idtaxa*.rds"), path(joint), val(process_params)
 
     output:
-    tuple val(primers), val(read_group), path("*_taxonomic_assignment_summary.rds"), emit: rds
-    tuple val(primers), val(read_group), path("*_taxonomic_assignment_summary.csv"), emit: csv
+    tuple val(primers), val(read_group), path("taxonomic_assignment_summary_*.rds"), emit: rds
+    tuple val(primers), val(read_group), path("taxonomic_assignment_summary_*.csv"), emit: csv
 
     publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
-    publishDir "${launchDir}/output/results/taxonomic_assignment", pattern: '*_taxonomic_assignment_summary.csv', mode: 'copy'
+    publishDir "${launchDir}/output/results/taxonomic_assignment", pattern: 'taxonomic_assignment_summary_*.csv', mode: 'copy'
 
     // when: 
 

@@ -9,9 +9,7 @@ process MISEQ_QC {
     val(miseq_dir)
 
     output:
-    path("*_flowcell_qc.pdf")
-    path("*_index_switching.pdf")
-    path("*.csv")
+    path("*.{pdf,csv}")
 
     publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 

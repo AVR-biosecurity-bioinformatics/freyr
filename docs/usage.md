@@ -220,3 +220,51 @@ For example, to use both the `basc_slurm` profile (for running on BASC with the 
 Profiles for using [`docker`](https://www.docker.com/), [`apptainer`](https://apptainer.org/), [`singularity`](https://sylabs.io/singularity/), [`podman`](https://podman.io/) and [`shifter`](https://docs.nersc.gov/development/containers/shifter/) are all available, eg. `-profile shifter`. 
 
 You can create and use custom profiles by [writing your own](https://www.nextflow.io/docs/latest/config.html) Nextflow `.config` file and specifying it with `-c path/to/config/file` when running `freyr`. A tutorial on how to do this will be available soon.
+
+## Output files
+
+Output files can be found in `output/results`, which is created in the launch directory of the pipeline. Outputs are grouped into six subdirectories:
+
+### `main_outputs`
+
+This contains the major analytical output files of the pipeline, such as:
+
+- `raw_*.csv`: a 'long'-format table that has a single row per ASV/sample combination and contains columns for all ASV- and sample-level data. These files can be very big for large datasets.
+- `summary_*.csv`: a wider table that has a single row per ASV and one column for each `sample_primers` value.
+- `seqtab_*.csv`: a minimal 'sequence table' format table that contains sequence names, cluster IDs and per-sample abundance.
+- `taxtab_*.csv`: a minimal 'taxonomy table' format table that contains sequence names and the assigned taxonomy at each taxonomic rank.
+- `samdf_*.csv`: a samplesheet table for relevant samples (typically split by `primer` value)
+- `asvs_*.fasta`: FASTA files of ASV sequences, with the headers containing sequence names, `primer` value, and the assigned taxonomy as a string of ranks ('Root' through 'Species').
+- `ps_*.rds`: a [`phyloseq`](https://joey711.github.io/phyloseq/) R data object file that contains a combination of the `seqtab`, `taxtab`, `samdf` and `asvs` output files. 
+  - NOTE: `phyloseq` files do not contain cluster information. You can find clusters in the `raw`, `summary` and `seqtab` output files.
+
+`main_outputs/unfiltered` contains results per `primer` value for ASVs without any filtering applied at the ASV or sample level, such as PHMM, length, frameshift, chimera, taxononomy or minimum abundance filtering. If `--accumulation_curve` is used, this directory contains accumulation curve plots for each `primer` value (`accumulation_curve_*.pdf`).
+
+`main_outputs/filtered` contains results per `primer` value with all filtering criteria applied.
+
+`main_outputs/merged` contains results where ASVs from each `primer` value are merged together into combined files, for both unfiltered and filtered results.
+
+`main_outputs/clustered` contains filtered outputs where each ASV cluster (ie. OTU) is represented by a single sequence, with read abundance per sample within each cluster summed together. This will only be created if `--merge_clusters` is used.
+
+### `parsed_inputs`
+
+This contains 'parsed' input tables derived from `--samplesheet` and `--primer_params`, which contain fully resolved file paths, default values in the case of missing fields, and `read_group` determined from read files (if required). This includes metadata for each sample (`sample_metadata.csv`), a parsed primer parameters file (`primer_params_parsed.csv`), and samplesheets split by `primer` value (`samplesheet_split.csv`) and unsplit (`samplesheet_unsplit.csv`).
+
+### `qc`
+
+This contains quality control ('QC') outputs, including `fastqc` plots for input reads (`qc/fastqc`), `NanoPlot` reports for Nanopore data (`qc/nanoplot`), pre- and post-read quality filtering (`qc/read_filtering`), and MiSeq QC outputs (`qc/miseq_qc`, if `--miseq_internal` is used).
+
+### `sequence_filtering`
+
+This contains tables and plots that summarise the results of ASV filtering per `primer`/`read_group` combination. `asv_cleanup_*.csv` is tabular information, while `asv_abundance_*.pdf` and `asv_count_*.pdf` display the abundance and count of ASVs passing and failing each filter, respectively.
+
+### `taxonomic_assignment`
+
+This contains taxonomic assignment information for each ASV, within each `primer`/`read_group` combination (`taxonomic_assignment_summary_*.csv`) and combined across the entire run (`taxonomic_assignment_summary_combined.csv`).
+
+### `read_tracking`
+
+This contains summaries of numbers of reads per sample as they pass through each step of the pipeline. 
+
+
+> If `--debug_mode` is set, all process outputs, including intermediate files, will be published to `output/modules` -- this is not recommended for regular users as it can use a lot of storage space. 
