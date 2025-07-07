@@ -131,7 +131,8 @@ If required values are not provided in the primer parameters file, they must be 
 
 All pipeline parameters (passed to `nextflow` on the command line using a double-hyphen, eg. `--parameter1`) are optional except for `--samplesheet` and `--primer_params`. Technically, `--primer_params` *is* optional, but users must instead use a specific set of `--pp_*` [override parameters](#primer-parameter-overrides), which is only recommended for advanced users.
 
-> [!NOTE] `nextflow` considers parameters passed with no value (eg. `nextflow run . --parameter1`) to have their value set to `true`. Unset parameters without a default have a value of `null`. You can forcibly unset a parameter by passing `null`, although this will often throw an error.
+> [!NOTE]
+> `nextflow` considers parameters passed with no value (eg. `nextflow run . --parameter1`) to have their value set to `true`. Unset parameters without a default have a value of `null`. You can forcibly unset a parameter by passing `null`, although this will often throw an error.
 
 ### Input options
 
@@ -173,7 +174,8 @@ The [primer parameter](#primer-parameters-file) `cluster_threshold` can be used 
 - `rank` uses the taxonomic assignment with the lowest rank (eg. species assignment preferred to genus assignment), with ties broken by the `frequency` method
 - `abundance` uses the taxonomic assignment of the ASV with the highest read abundance across the entire dataset
 
-> [!IMPORTANT] Cluster assignment labels (ie. `1, 2, 3...`) should not be compared between separate pipeline runs. They will also be different between the 'unfiltered' and 'filtered' outputs of Freyr. If unsure, we recommend users perform their own OTU clustering.
+> [!IMPORTANT] 
+> Cluster assignment labels (ie. `1, 2, 3...`) should not be compared between separate pipeline runs. They will also be different between the 'unfiltered' and 'filtered' outputs of Freyr. If unsure, we recommend users perform their own OTU clustering.
 
 
 ### Primer parameter overrides
