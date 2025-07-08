@@ -189,7 +189,7 @@ The [primer parameter](#primer-parameters-file) `cluster_threshold` can be used 
 
 ### Primer parameter overrides
 
-Values in the primer parameters `.csv` file (given to `--primer_params`) can be overridden on the command line with pipeline parameters of the form `--pp_<name of primer parameter>`, eg. `--pp_max_primer_mismatch`. This allows users to easily change primer parameters between runs for exploratory purposes, without needing to modify the `--primer_params` file.
+Values in the [primer parameters](#primer-parameters-file) `.csv` file (given to `--primer_params`) can be overridden on the command line with pipeline parameters of the form `--pp_<name of primer parameter>`, eg. `--pp_max_primer_mismatch`. This allows users to change primer parameters between runs without needing to modify the `--primer_params` file.
 
 Override parameters can be used in a various ways. The simplest is to give a single value, which will be used to override that field for all rows in the `--primer_params` file, eg. `--pp_read_max_ee 2`.
 
@@ -219,7 +219,7 @@ These parameters can help with debugging or configuring the pipeline.
 | --- | --- | --- | --- |
 | `--debug_mode` | Saves all process outputs (ie. largely intermediate files) to `output/modules` | Boolean (`true`/`false`) | `false` |
 | `--rdata` | Saves an `.rda` RData file in the work directory of each R-scripted process, regardless of exit status | Boolean (`true`/`false`) | `false` |
-| `--subsample` | Pseudorandomly reduce number of input samples per `read_group` x `primers` combination to this | Integer >= `1` | `null` |
+| `--subsample` | Pseudorandomly reduce number of input samples per `read_group`/`primers` combination to this | Integer >= `1` | `null` |
 | `--downsample` | Pseudorandomly reduce number of reads per input sample to this | Integer >= `1` | `null` |
 
 ## Profiles
@@ -240,7 +240,7 @@ Output files can be found in `output/results`, which is created in the launch di
 
 This contains the major analytical output files of the pipeline, such as:
 
-- `raw_*.csv`: a 'long'-format table that has a single row per ASV/sample combination and contains columns for all ASV- and sample-level data. These files can be very big for large datasets.
+- `raw_*.csv`: a 'long'-format table that has a single row per ASV/`sample_primers` combination and contains columns for all ASV- and sample-level data. These files can be very big for large datasets.
 - `summary_*.csv`: a wider table that has a single row per ASV and one column for each `sample_primers` value.
 - `seqtab_*.csv`: a minimal 'sequence table' format table that contains sequence names, cluster IDs and per-sample abundance.
 - `taxtab_*.csv`: a minimal 'taxonomy table' format table that contains sequence names and the assigned taxonomy at each taxonomic rank.
