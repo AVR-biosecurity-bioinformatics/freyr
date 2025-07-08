@@ -1,4 +1,21 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+primers                     <- args$primers
+read_group                  <- args$read_group
+idtaxa_list                 <- args$idtaxa_list
+blast_list                  <- args$blast_list
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "dplyr",
@@ -9,16 +26,6 @@ process_packages <- c(
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "read_group",
-    "primers",
-    "idtaxa_list",
-    "blast_list"
-)
-lapply(nf_vars, nf_var_check)
 
 ## check and define variables 
 propagate_tax <-        TRUE
@@ -115,3 +122,8 @@ if(!all(idtaxa_output$seq_name %in% joint_assignment$seq_name)){
 # Write tibble
 readr::write_csv(joint_assignment, paste0(read_group,"_",primers,"_joint.csv"))
 
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})

@@ -1,4 +1,23 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+reads                       <- args$reads
+seqs                        <- args$seqs
+sample_primers              <- args$sample_primers
+primers                     <- args$primers
+read_group                  <- args$read_group
+concat_unmerged             <- args$concat_unmerged
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "dada2",
@@ -11,17 +30,6 @@ process_packages <- c(
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "read_group",
-    "primers",
-    "sample_primers",
-    "reads",
-    "seqs",
-    "concat_unmerged"
-)
-lapply(nf_vars, nf_var_check)
 
 ### run R code
 ## process sample IDs to name the read and seq lists
@@ -120,3 +128,8 @@ readr::write_csv(seqtab_tibble, paste0(read_group, "_", primers, "_seqtab_tibble
 
 
 # stop(" *** stopped manually *** ") ##########################################
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})

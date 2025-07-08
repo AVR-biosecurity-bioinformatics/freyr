@@ -1,29 +1,34 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+primers                     <- args$primers
+filter_tibble_list          <- args$filter_tibble_list
+seqtab_tibble_list          <- args$seqtab_tibble_list
+fasta_list                  <- args$fasta_list
+samplesheet_split           <- args$samplesheet_split
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "Biostrings",
-    # "dada2",
     "dplyr",
     "ggplot2",
     "patchwork",
     "readr",
     "stringr",
-    # "taxreturn",
     "tibble",
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "primers",
-    "filter_tibble_list",
-    "seqtab_tibble_list",
-    "fasta_list",
-    "samplesheet_split"
-)
-lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 
@@ -43,8 +48,6 @@ fasta_list <-
     lapply(., Biostrings::readDNAStringSet)
 
 samplesheet_tibble <- readr::read_csv(samplesheet_split)
-
-# stop("stopped manually")
 
 ### run R code
 
@@ -112,7 +115,7 @@ seqtab_combined %>%
 seqs_names %>%
     tibble::deframe() %>%
     Biostrings::DNAStringSet() %>%
-    write_fasta(., paste0(primers,"_seqs.fasta"))
+    write_fasta(., paste0(primers,"_combseqs.fasta"))
 
 # get tibble of read_group and sample_primers
 sample_read_group <- 
@@ -180,7 +183,7 @@ filter_info %>%
     lapply(
         ., 
         function(x){
-            readr::write_csv(x, paste0(unique(x$read_group), "_", unique(x$primers), "_ASV_cleanup.csv"))
+            readr::write_csv(x, paste0("asv_cleanup_",unique(x$read_group), "_", unique(x$primers), ".csv"))
         }
     )
 
@@ -372,7 +375,7 @@ filter_info %>%
                 subtitle = paste0("Flowcell: ", unique(x$read_group), "\nPCR primers: ", unique(x$primers))
             )
         
-        ggsave(paste0(unique(x$read_group), "_", unique(x$primers),"_asv_abundance.pdf"), gg.abundance, width = 8, height = 12)
+        ggsave(paste0("asv_abundance_",unique(x$read_group), "_", unique(x$primers),".pdf"), gg.abundance, width = 8, height = 12)
 
         }
     )
@@ -430,8 +433,13 @@ filter_info %>%
             patchwork::plot_layout(ncol = 1, guides = "collect") +
             patchwork::plot_annotation(title = "Unique ASVs", subtitle = paste0("Flowcell: ", unique(x$read_group), "\nPCR primers: ", unique(x$primers)))
         
-        ggsave(paste0(unique(x$read_group), "_", unique(x$primers),"_asv_count.pdf"), gg.n_asvs, width = 8, height = 12)
+        ggsave(paste0("asv_count_",unique(x$read_group), "_", unique(x$primers),".pdf"), gg.n_asvs, width = 8, height = 12)
 
         }
     )
 
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})

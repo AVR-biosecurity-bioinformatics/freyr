@@ -1,4 +1,20 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+primers                     <- args$primers
+ps_file                     <- args$ps_file
+min_sample_reads            <- args$min_sample_reads
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "Biostrings",
@@ -17,15 +33,6 @@ process_packages <- c(
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "primers",
-    "ps_file",
-    "min_sample_reads"
-)
-lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 ps <- readRDS(ps_file)
@@ -46,3 +53,8 @@ pdf(file=paste0("accumulation_curve_",primers,".pdf"), width = 11, height = 8 , 
 try(dev.off(), silent=TRUE)
 
 # stop(" *** stopped manually *** ") ##########################################
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})

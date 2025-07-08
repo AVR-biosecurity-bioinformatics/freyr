@@ -1,5 +1,5 @@
 process READ_TRACKING {
-    def module_name = "read_tracking"
+    def process_name = "read_tracking"
     tag "Whole dataset"
     label "small"
     // cache false 
@@ -16,40 +16,25 @@ process READ_TRACKING {
     path("read_tracker.pdf"),           emit: plot
     path("*.pdf")
 
-    publishDir "${projectDir}/output/modules/${module_name}", mode: 'copy'
+    publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+
+    publishDir "${launchDir}/output/results/read_tracking", mode: 'copy'
+
 
     // when: 
 
     script:
-    def module_script = "${module_name}.R"
     """
-    #!/usr/bin/env Rscript
-
-    ### defining Nextflow environment variables as R variables
-    ## input channel variables
-    rt_samples =                "${rt_samples}"
-    rt_group =                  "${rt_group}"
-    samplesheet_split_file =    "${samplesheet_split}" 
     
-    ## global variables
-    projectDir = "$projectDir"
-    params_dict = "$params"
-    
-    tryCatch({
-    ### source functions and themes, load packages, and import Nextflow params
-    ### from "bin/process_start.R"
-    sys.source("${projectDir}/bin/process_start.R", envir = .GlobalEnv)
-
-    ### run module code
-    sys.source(
-        "${projectDir}/bin/$module_script", # run script
-        envir = .GlobalEnv # this allows import of existing objects like projectDir
-    )
-    }, finally = {
-    ### save R environment for debugging
-    if ("${params.rdata}" == "true") { save.image(file = "${task.process}.rda") } 
-    })
-
+    ${process_name}.R \
+        --process_name "$process_name" \
+        --projectDir "$projectDir" \
+        --cpus "$task.cpus" \
+        --rdata "$params.rdata" \
+        --rt_samples "$rt_samples" \
+        --rt_group "$rt_group" \
+        --samplesheet_split_file "$samplesheet_split" 
+        
     """
 
 }

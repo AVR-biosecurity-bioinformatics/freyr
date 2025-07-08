@@ -1,4 +1,21 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+ps_unfiltered               <- args$ps_unfiltered
+ps_filtered                 <- args$ps_filtered
+unfiltered_fastas           <- args$unfiltered_fastas
+filtered_fastas             <- args$filtered_fastas
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "Biostrings",
@@ -13,16 +30,6 @@ process_packages <- c(
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "ps_unfiltered",
-    "ps_filtered",
-    "unfiltered_fastas",
-    "filtered_fastas"
-)
-lapply(nf_vars, nf_var_check)
 
 ## check and define variables
 ps_unfiltered <- # convert Groovy to R list format
@@ -203,3 +210,8 @@ phyloseq::sample_sums(ps_f) %>%
     
 
 # stop(" *** stopped manually *** ") ##########################################
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})

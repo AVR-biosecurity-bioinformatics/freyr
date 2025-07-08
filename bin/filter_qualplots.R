@@ -1,4 +1,25 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+reads_paths                 <- args$reads_paths
+sample_primers              <- args$sample_primers
+locus                       <- args$locus
+primers                     <- args$primers
+read_group                  <- args$read_group
+seq_type                    <- args$seq_type
+paired                      <- args$paired
+file_suffix                 <- args$file_suffix
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "dplyr",
@@ -11,20 +32,6 @@ process_packages <- c(
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
-
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "reads_paths",
-    "sample_primers",
-    "read_group",
-    "locus",
-    "primers",
-    "seq_type",
-    "paired",
-    "file_suffix"
-)
-lapply(nf_vars, nf_var_check)
 
 ### process variables 
 # split reads_paths into individual file paths (or keep if single reads)
@@ -153,7 +160,7 @@ if ( paired == "true" & seq_type == "illumina" ){
     
     Qualplots <- (gg.Fqual + gg.Rqual) / (gg.Fee + gg.Ree)
 
-    ggsave(paste0(sample_primers,"_",locus,"_",file_suffix,"_qualplots.pdf"), Qualplots, width = 11, height = 8)
+    ggsave(paste0("qualplots_",file_suffix,"_",sample_primers,".pdf"), Qualplots, width = 11, height = 8)
 
 } else if ( paired == "false" & seq_type == "nanopore" ) {
 
@@ -224,7 +231,7 @@ if ( paired == "true" & seq_type == "illumina" ){
     
     Qualplots <- gg.Squal / gg.See
 
-    ggsave(paste0(sample_primers,"_",locus,"_",file_suffix,"_qualplots.pdf"), Qualplots, width = 11, height = 8)
+    ggsave(paste0("qualplots_",file_suffix,"_",sample_primers,".pdf"), Qualplots, width = 11, height = 8)
 
 
 
@@ -234,3 +241,8 @@ if ( paired == "true" & seq_type == "illumina" ){
 }
 
 # stop(" *** stopped manually *** ") ##########################################
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})

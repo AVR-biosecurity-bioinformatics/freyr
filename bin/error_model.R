@@ -1,28 +1,34 @@
 #!/usr/bin/env Rscript
+tryCatch({
+
+args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
+
+cat("\nArguments to process:\n")
+str(args, no.list = T, nchar.max = 1E6)
+cat("\n")
+
+### process arguments 
+
+reads                       <- args$reads
+primers                     <- args$primers
+read_group                  <- args$read_group
+direction                   <- args$direction
+threads                     <- args$cpus
+
+sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+
 ### load only required packages
 process_packages <- c(
     "dada2",
     "ggplot2",
+    "magrittr",
     "readr",
     "stringr",
     NULL
 )
 invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
 
-### check Nextflow environment variables
-nf_vars <- c(
-    "projectDir",
-    "direction",
-    "read_group",
-    "primers",
-    "reads",
-    "threads"
-)
-lapply(nf_vars, nf_var_check)
-
-### run R code (from step_errormodel)
-set.seed(1)
-
+### run R code 
 if (!direction %in% c("forward","reverse","single")) { 
     stop(" Input reads direction needs to be 'forward', 'reverse' or 'single'! ")
 }
@@ -41,12 +47,8 @@ reads_list <- # convert input reads list from Groovy format to R format
     stringr::str_extract_all(
         reads, 
         pattern = "\\S+?\\.fastq\\.gz|\\S+?\\.fastq|\\S+?\\.fq\\.gz|\\S+?\\.fq" 
-        ) %>% 
+    ) %>% 
     unlist()
-
-# input_dir <- normalizePath(input_dir)
-# output <- normalizePath(output)
-# qc_dir <- normalizePath(qc_dir)
 
 if(direction == "forward"){
     message(paste0("Modelling forward read error rates for primers: ", primers, " and flowcell: ", read_group))
@@ -59,17 +61,16 @@ if(direction == "forward"){
 }
 
 ## Learn error rates 
-err <- dada2::learnErrors(
-        reads_list, 
-        multithread = as.numeric(threads), 
-        nbases = 1e8,
-        randomize = FALSE, 
-        # qualityType = "FastqQuality",
-        qualityType = "Auto",
-        verbose=TRUE
-        )
+set.seed(1); err <- dada2::learnErrors(
+    reads_list, 
+    multithread = as.numeric(threads), 
+    nbases = 1e8,
+    randomize = FALSE, 
+    # qualityType = "FastqQuality",
+    qualityType = "Auto",
+    verbose=TRUE
+)
     
-### TODO: increase nbases or use default (1e8)
 
 ## save output as .rds file
 saveRDS(err, paste0(read_group,"_",primers,"_errormodel",direction_short,".rds"))
@@ -85,3 +86,8 @@ pdf(paste0(read_group,"_", primers, "_", direction_short,"_errormodel.pdf"), wid
 try(dev.off(), silent=TRUE)
 
 # stop(" *** stopped manually *** ") ##########################################
+}, 
+finally = {
+    ### save R environment if script throws error code
+    if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
+})
