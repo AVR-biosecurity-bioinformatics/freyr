@@ -1,5 +1,14 @@
 # Usage
 
+## Table of contents
+
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Input files](#input-files)
+- [Pipeline parameters](#pipeline-parameters)
+- [Profiles](#profiles)
+- [Output files](#output-files)
+
 ## Installation
 
 Running Freyr requires the following software installed to your path:
@@ -110,7 +119,7 @@ The primer parameters file tells the pipeline how to process amplicons derived f
 | `phmm` | Optional | A [profile Hidden Markov Model (PHMM)](https://github.com/shaunpwilkinson/aphid) of the amplicon | A path, absolute or relative to the analysis directory, or `NA` | `NA` |
 | `idtaxa_db` | Optional | A trained [`IDTAXA` model](https://rdrr.io/bioc/DECIPHER/man/LearnTaxa.html) of `ref_fasta` database | A path, absolute or relative to the analysis directory, or `NA` | `NA` |
 | `idtaxa_confidence` | Optional | Minimum bootstrap confidence for `IDTAXA` classification | Integer `0`-`100` | `60` |
-| `run_blast` | Optional | Whether to run `BLAST` to complement `IDATAXA` classification | `TRUE`/`T` or `FALSE`/`F` | `FALSE` |
+| `run_blast` | Optional | Whether to run `BLAST` to complement `IDTAXA` classification | `TRUE`/`T` or `FALSE`/`F` | `FALSE` |
 | `blast_min_identity` | Optional | Minimum nucleotide identity (%) for `BLAST` taxonomic assignment | Integer `0`-`100` | `97` |
 | `blast_min_coverage` | Optional | Minimum query coverage (%) for `BLAST` taxonomic assignment | Integer `0`-`100` | `90` |
 | `cluster_threshold` | Optional | ASV similarity clustering threshold (%) | Integer `0`-`100`, or `NA` | `NA` |
@@ -166,7 +175,7 @@ These options generally will not need to be changed by regular users.
 
 `--primer_n_trim`, and increasing `--primer_error_rate`, can help to retain more reads from low-quality sequencing runs, but should only be used if necessary.
 
-The [primer parameter](#primer-parameters-file) `cluster_threshold` can be used to cluster ASVs derived from each primer into groups (ie. OTUs). This fills in the `cluster` column in some of the pipeline's output files but still retains information for each ASV. If `--merge_clusters` is set, the pipeline will produce some additional 'clustered' outputs where each cluster of (only filtered) ASVs is merged into a single representative sequence. The value of `--merge_clusters` determines how taxonomic information is merged within each cluster:
+The [primer parameter](#primer-parameters-file) `cluster_threshold` can be used to cluster ASVs derived from each primer into groups (ie. OTUs) using [`DECIPHER::Clusterize`](https://www.nature.com/articles/s41467-024-47371-9). This fills in the `cluster` column in some of the pipeline's output files but still retains information for each ASV. If `--merge_clusters` is set, the pipeline will produce some additional 'clustered' outputs where each cluster of (only filtered) ASVs is merged into a single representative sequence. The value of `--merge_clusters` determines how taxonomic information is merged within each cluster:
 
 - `central` directly uses the taxonomic assignment of the central/representative ASV
 - `lca` uses the lowest common ancestor of all ASVs, with some ranks unclassified if necessary
@@ -174,8 +183,8 @@ The [primer parameter](#primer-parameters-file) `cluster_threshold` can be used 
 - `rank` uses the taxonomic assignment with the lowest rank (eg. species assignment preferred to genus assignment), with ties broken by the `frequency` method
 - `abundance` uses the taxonomic assignment of the ASV with the highest read abundance across the entire dataset
 
-> [!IMPORTANT] 
-> Cluster assignment labels (ie. `1, 2, 3...`) should not be compared between separate pipeline runs. They will also be different between the 'unfiltered' and 'filtered' outputs of Freyr. If unsure, we recommend users perform their own OTU clustering.
+> [!WARNING]
+> Cluster assignment labels (ie. `1, 2, 3...`) should not be compared between separate pipeline runs. They will also be different between the 'unfiltered' and 'filtered' [output files](#output-files). If unsure, we recommend users perform their own OTU clustering using a method of their choice.
 
 
 ### Primer parameter overrides
@@ -219,7 +228,7 @@ Nextflow uses [profiles](https://www.nextflow.io/docs/latest/config.html#config-
 
 For example, to use both the `basc_slurm` profile (for running on BASC with the SLURM executor) and `test` profile (for running a minimal test dataset included with the pipeline), you would specify `-profile basc_slurm,test` when running the pipeline. Because `test` comes second, it overrides the max job request parameters (eg. `params.max_memory`) specified by `basc_slurm`, which is useful in this case because it will likely make job allocation through SLURM much faster.
 
-Profiles for using [`docker`](https://www.docker.com/), [`apptainer`](https://apptainer.org/), [`singularity`](https://sylabs.io/singularity/), [`podman`](https://podman.io/) and [`shifter`](https://docs.nersc.gov/development/containers/shifter/) are all available, eg. `-profile shifter`. 
+Profiles for using [`docker`](https://www.docker.com/), [`apptainer`](https://apptainer.org/), [`singularity`](https://sylabs.io/singularity/), [`podman`](https://podman.io/) and [`shifter`](https://docs.nersc.gov/development/containers/shifter/) are all available, eg. `-profile shifter`.
 
 You can create and use custom profiles by [writing your own](https://www.nextflow.io/docs/latest/config.html) Nextflow `.config` file and specifying it with `-c path/to/config/file` when running `freyr`. A tutorial on how to do this will be available soon.
 
@@ -237,10 +246,10 @@ This contains the major analytical output files of the pipeline, such as:
 - `taxtab_*.csv`: a minimal 'taxonomy table' format table that contains sequence names and the assigned taxonomy at each taxonomic rank.
 - `samdf_*.csv`: a samplesheet table for relevant samples (typically split by `primer` value)
 - `asvs_*.fasta`: FASTA files of ASV sequences, with the headers containing sequence names, `primer` value, and the assigned taxonomy as a string of ranks ('Root' through 'Species').
-- `ps_*.rds`: a [`phyloseq`](https://joey711.github.io/phyloseq/) R data object file that contains a combination of the `seqtab`, `taxtab`, `samdf` and `asvs` output files. 
-  - NOTE: `phyloseq` files do not contain cluster information. You can find clusters in the `raw`, `summary` and `seqtab` output files.
+- `ps_*.rds`: a [`phyloseq`](https://joey711.github.io/phyloseq/) R data object file that contains a combination of the `seqtab`, `taxtab`, `samdf` and `asvs` output files.
+  - **NOTE**: `phyloseq` files do not contain cluster information. You can find clusters in the `raw`, `summary` and `seqtab` output files.
 
-`main_outputs/unfiltered` contains results per `primer` value for ASVs without any filtering applied at the ASV or sample level, such as PHMM, length, frameshift, chimera, taxononomy or minimum abundance filtering. If `--accumulation_curve` is used, this directory contains accumulation curve plots for each `primer` value (`accumulation_curve_*.pdf`).
+`main_outputs/unfiltered` contains results per `primer` value for ASVs without any filtering applied at the ASV or sample level, such as PHMM, length, frameshift, chimera, taxononomy or minimum abundance filtering. Filter passing per ASV is found in the `filters_*.csv` file if users would like to apply a custom subset of filters. If `--accumulation_curve` is used, this directory contains accumulation curve plots for each `primer` value (`accumulation_curve_*.pdf`).
 
 `main_outputs/filtered` contains results per `primer` value with all filtering criteria applied.
 
@@ -250,7 +259,7 @@ This contains the major analytical output files of the pipeline, such as:
 
 ### `parsed_inputs`
 
-This contains 'parsed' input tables derived from `--samplesheet` and `--primer_params`, which contain fully resolved file paths, default values in the case of missing fields, and `read_group` determined from read files (if required). This includes metadata for each sample (`sample_metadata.csv`), a parsed primer parameters file (`primer_params_parsed.csv`), and samplesheets split by `primer` value (`samplesheet_split.csv`) and unsplit (`samplesheet_unsplit.csv`).
+This contains 'parsed' input tables derived from `--samplesheet` and `--primer_params`, which contain fully resolved file paths, default values for missing fields, and `read_group` determined from read files (if required). These include metadata for each sample (`sample_metadata.csv`), a parsed primer parameters file (`primer_params_parsed.csv`), and samplesheets both split by `primer` value (`samplesheet_split.csv`) and unsplit (`samplesheet_unsplit.csv`).
 
 ### `qc`
 
@@ -266,7 +275,6 @@ This contains taxonomic assignment information for each ASV, within each `primer
 
 ### `read_tracking`
 
-This contains summaries of numbers of reads per sample as they pass through each step of the pipeline. 
-
+This contains summaries of numbers of reads per sample as they pass through each step of the pipeline.
 
 > If `--debug_mode` is set, all process outputs, including intermediate files, will be published to `output/modules` -- this is not recommended for regular users as it can use a lot of storage space. 
