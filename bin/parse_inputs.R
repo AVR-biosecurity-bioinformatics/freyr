@@ -260,6 +260,37 @@ if (paired == "true") {
     stop(paste0(ppe, "'paired' = '", paired, "' but must be 'true' or 'false'."))
 }
 
+### remove empty read files from samplesheet
+if ( paired == "true" ){
+    # remove files with size 0
+    er_temp <- 
+        samplesheet_df_rp %>%
+        dplyr::mutate(
+            sizeF = file.info(fwd)$size,
+            sizeR = file.info(rev)$size
+        ) 
+    
+    samplesheet_df_er <- er_temp %>% dplyr::filter(sizeF > 0, sizeR > 0) %>%  dplyr::select(-sizeF, -sizeR)
+} else {
+    # remove files with size 0
+    samplesheet_df_er <- 
+        samplesheet_df_rp %>%
+        dplyr::mutate(
+            sizeS = file.info(single)$size
+        ) %>%
+        dplyr::filter(sizeS) %>%
+        dplyr::select(-sizeS)
+
+    samplesheet_df_er <- er_temp %>% dplyr::filter(sizeS > 0) %>%  dplyr::select(-sizeS)
+}
+
+if (nrow(samplesheet_df_er) == 0){
+  stop("ERROR: Removing empty read files from the samplesheet has removed all samples -- you have no data!")
+}
+
+
+
+
 ### extract read_group from read headers
 
 # # example for MiSeq data
@@ -276,19 +307,19 @@ if (paired == "true") {
 
 
 ### extract read_group from read headers if not present
-if ("read_group" %in% colnames(samplesheet_df_rp)){
+if ("read_group" %in% colnames(samplesheet_df_er)){
   
-  if (any(samplesheet_df_rp$read_group %>% is.na())){
+  if (any(samplesheet_df_er$read_group %>% is.na())){
         stop(paste0("Some values of 'read_group' are NA!"))
   } else {
         # keep as-is -- information given by user
-        samplesheet_df_rg <- samplesheet_df_rp
+        samplesheet_df_rg <- samplesheet_df_er
   }
 
 } else {
   
     # extract read_group from read headers
-    samplesheet_df_rg <- samplesheet_df_rp %>% dplyr::mutate(read_group = NA)
+    samplesheet_df_rg <- samplesheet_df_er %>% dplyr::mutate(read_group = NA)
 
     ## loop through each sample
     for ( i in 1:length(samplesheet_df_rg$sample)){
