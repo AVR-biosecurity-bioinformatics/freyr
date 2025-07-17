@@ -96,7 +96,7 @@ if (any(duplicated(samplesheet_df$sample))) {
 ## any spaces or commas in fields?
 # if 'read_group' is present, validate it too, otherwise just validate other columns
 if ("read_group" %in% ssc){
-    if ( any(c(samplesheet_df$sample, samplesheet_df$primers, samplesheet$read_group) %>% stringr::str_detect(., "^[^\\s,]+$", negate = T)) ){
+    if ( any(c(samplesheet_df$sample, samplesheet_df$primers, samplesheet_df$read_group) %>% stringr::str_detect(., "^[^\\s,]+$", negate = T)) ){
         stop(paste0(sse, "'sample', 'primers' and 'read_group' values must not contain spaces or commas."))
     } 
 } else {
