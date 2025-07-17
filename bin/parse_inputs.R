@@ -74,12 +74,12 @@ if( !any(c("sample", "primers") %in% ssc) ){
 
 read_col_which <- c("read_dir","fwd", "rev", "single")[which(c("read_dir","fwd", "rev", "single") %in% ssc)]
 
-if( ! (read_col_which == "read_dir" || setequal(read_col_which ,c("fwd","rev")) || read_col_which == "single" ) ){
+if( ! (setequal(read_col_which, "read_dir") || setequal(read_col_which ,c("fwd","rev")) || setequal(read_col_which, "single") ) ){
     stop(paste0(sse, "Samplesheet must contain only one of the following fields/field groups: 'read_dir'; 'fwd' AND 'rev'; or 'single'."))
 }
 
 # check if disallowed 'paired' and read column values
-if ( paired == "true" && read_col_which == "single" ){
+if ( paired == "true" && setequal(read_col_which, "single") ){
     stop(paste0(sse, "'single' column cannot be used with parameter '--paired'."))
 }
 
@@ -106,7 +106,7 @@ if ("read_group" %in% ssc){
 }
 
 # validate read path fields (without validating reads themselves) -- no spaces or commas
-if ( read_col_which == "read_dir" ){
+if ( setequal(read_col_which, "read_dir")  ){
     if (any(samplesheet_df$read_dir %>% stringr::str_detect(., "^[^\\s,]+$", negate = T))){
         stop(paste0(sse, "'read_dir' values must not contains spaces or commas."))
     }
@@ -117,7 +117,7 @@ if ( read_col_which == "read_dir" ){
     if (any(samplesheet_df$rev %>% stringr::str_detect(., "^[^\\s,]+$", negate = T))){
         stop(paste0(sse, "'rev' values must not contains spaces or commas."))
     }
-} else if ( read_col_which == "single" ){
+} else if ( setequal(read_col_which, "single")  ){
     if (any(samplesheet_df$single %>% stringr::str_detect(., "^[^\\s,]+$", negate = T))){
         stop(paste0(sse, "'single' values must not contains spaces or commas."))
     }
@@ -127,7 +127,7 @@ if ( read_col_which == "read_dir" ){
 
 
 ### parse and/or detect read paths
-if ( read_col_which == "read_dir" & paired == "true" ) { # if "read_dir" column is used and reads are paired
+if ( setequal(read_col_which, "read_dir")  & paired == "true" ) { # if "read_dir" column is used and reads are paired
     ## try to find reads
     # convert read directory to absolute path
     samplesheet_df_rp <- 
@@ -187,7 +187,7 @@ if ( read_col_which == "read_dir" & paired == "true" ) { # if "read_dir" column 
                 )
             )
         )
-} else if ( read_col_which == "read_dir" & paired == "false" ) { # if "read_dir" column exists in samplesheet
+} else if ( setequal(read_col_which, "read_dir")  & paired == "false" ) { # if "read_dir" column exists in samplesheet
     ## try to find reads
     # convert read directory to absolute path
     samplesheet_df_rp <- samplesheet_df %>% 
@@ -233,7 +233,7 @@ if ( read_col_which == "read_dir" & paired == "true" ) { # if "read_dir" column 
     samplesheet_df_rp <- 
         samplesheet_df_rp %>% dplyr::left_join(., reads_df, by = "sample") 
 
-} else if (( read_col_which == "single" )) { # if single reads only
+} else if ( setequal(read_col_which, "single") ) { # if single reads only
 # convert read paths to absolute paths
     samplesheet_df_rp <- samplesheet_df %>% 
         dplyr::mutate(
@@ -454,17 +454,17 @@ if (subsample != "false") {
 if ( paired == "true" ){
     samplesheet_complete <- 
         samplesheet_df_ss %>%
-        dplyr::relocate(sample, read_group, primers, read_dir, fwd, rev)
+        dplyr::relocate(tidyselect::any_of(c("sample", "read_group", "primers", "read_dir", "fwd", "rev")))
 } else {
     samplesheet_complete <- 
         samplesheet_df_ss %>%
-        dplyr::relocate(sample, read_group, primers, read_dir, single)
+        dplyr::relocate(tidyselect::any_of(c("sample", "read_group", "primers", "read_dir", "single")))
 }
 
 ## create samplesheet outputs
 # create arbitrary metadata samplesheet -- keep only sample and read_group
 samplesheet_complete %>%
-    dplyr::select(-c(primers, read_dir, tidyselect::any_of(c("read_dir", "fwd", "rev", "single")))) %>%
+    dplyr::select(-c(primers, tidyselect::any_of(c("read_dir", "fwd", "rev", "single")))) %>%
     readr::write_csv(., "sample_metadata.csv")
 
 # create samplesheet without 'sample_primers' field, for FASTQC channel
