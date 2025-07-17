@@ -91,6 +91,14 @@
                     "help_text": "Run DADA2 ASV inference in high-sensitivity mode, ie. use pseudo-pooling.",
                     "default": true
                 },
+                "prior_min_samples": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Minimum number of samples an ASV must be present in to be classfied as a 'prior' sequence when using high-sensitivity mode.",
+                    "errorMessage": "Must be an integer >0.",
+                    "help_text": "Minimum number of samples an ASV must be present in to be classfied as a 'prior' sequence when using high-sensitivity mode.",
+                    "default": 2
+                },
                 "dada_band_size": {
                     "type": "integer",
                     "description": "Set BAND_SIZE parameter for dada2::dada denoising function. For explanation, see dada2::setDadaOpt().",

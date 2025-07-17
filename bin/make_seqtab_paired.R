@@ -89,6 +89,10 @@ seqs_R_list <- # convert input sequences list from Groovy format to R format
 seqs_R_extracted <- lapply(seqs_R_list, readRDS)
 names(seqs_R_extracted) <- sample_primers_list
 
+if (unlist(seqs_F_extracted) %>% is.null || unlist(seqs_R_extracted) %>% is.null){
+    stop(paste0("\n***\nZero sequences made it through denoising for read group '",read_group,"' and primers '",primers,"'.\nConsider changing your read filtering parameters.\n***\n"))
+}
+
 ## merge pairs, keeping unmerged reads only if concat_unmerged is TRUE
 mergers <- 
     dada2::mergePairs(
@@ -105,8 +109,8 @@ mergers <-
 
 ## reformat mergers as a list with one element if there is only one sample
 if ( class(mergers) == "data.frame" ) {
-  mergers <- list(mergers)
-  names(mergers) <- sample_primers_list
+    mergers <- list(mergers)
+    names(mergers) <- sample_primers_list
 }
 
 ## TODO: write out unmerged reads? (pull from functions.R)
@@ -199,8 +203,6 @@ write_fasta(seq_DSS, file = paste0(read_group, "_", primers, "_seqs.fasta"))
 
 # save seqtab_tidy as .csv
 readr::write_csv(seqtab_tibble, paste0(read_group, "_", primers, "_seqtab_tibble.csv"))
-
-
 
 
 # stop(" *** stopped manually *** ") ##########################################

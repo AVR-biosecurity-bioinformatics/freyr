@@ -121,7 +121,10 @@ workflow DADA2 {
                 .set { ch_priors_f_pre }
 
             //// get priors for forward reads
-            PRIORS_F ( ch_priors_f_pre )
+            PRIORS_F ( 
+                ch_priors_f_pre,
+                params.prior_min_samples
+            )
 
             /// combine with forward read data channel
             ch_denoise1_input_forward
@@ -153,7 +156,10 @@ workflow DADA2 {
                 .set { ch_priors_r_pre }
 
             //// get priors for reverse reads
-            PRIORS_R ( ch_priors_r_pre )
+            PRIORS_R ( 
+                ch_priors_r_pre,
+                params.prior_min_samples
+            )
 
             /// combine with reverse read data channel
             ch_denoise1_input_reverse
@@ -259,7 +265,8 @@ workflow DADA2 {
 
             //// get priors for single reads
             PRIORS_S ( 
-                ch_priors_s_pre 
+                ch_priors_s_pre,
+                params.prior_min_samples
             )
             
             /// combine with single read data channel

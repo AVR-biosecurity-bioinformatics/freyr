@@ -55,48 +55,50 @@ if ( direction == "forward" ) { # recode read direction as "F" or "R"
     stop(" Input reads direction needs to be 'forward' or 'reverse'! ")
 }
 
-### run R code
-
-if ( n_pass == "first" && priors_file == "NO_FILE" ) { # first pass condition; no priors
-    priors <- character(0)
-
-    # run dada2
-    set.seed(1); dada_output <- dada2::dada(
-        derep = reads, 
-        err = errormodel, 
-        multithread = FALSE, 
-        priors = priors, 
-        selfConsist = FALSE, 
-        pool = FALSE, 
-        verbose = TRUE,
-        BAND_SIZE = dada_band_size,
-        HOMOPOLYMER_GAP_PENALTY = dada_homopolymer
-    )
-
-    saveRDS(dada_output, paste0(sample_primers,"_dada1",direction_short,".rds"))
-
-} else if ( n_pass == "second" && !priors_file == "NO_FILE" ) { # second pass condition; priors included
-    # import priors
-    priors <- readRDS(priors_file)
-
-    # run dada2
-    set.seed(1); dada_output <- dada2::dada(
-        derep = reads, 
-        err = errormodel, 
-        multithread = FALSE, 
-        priors = priors, 
-        selfConsist = FALSE, 
-        pool = FALSE, 
-        verbose = TRUE,
-        BAND_SIZE = dada_band_size,
-        HOMOPOLYMER_GAP_PENALTY = dada_homopolymer
-    )
-
-    saveRDS(dada_output, paste0(sample_primers,"_dada2",direction_short,".rds"))
-
+if ( n_pass == "first" ){
+    pass_short <- "1"
+} else if ( n_pass == "second" ){
+    pass_short <- "2"
 } else {
+    stop("'n_pass' is invalid")
+}
+
+# parse priors
+if ( priors_file == "NO_FILE" ){
+    priors <- character(0)
+} else {
+    priors <- readRDS(priors_file)
+}
+
+if ( ( n_pass == "first" && !identical(priors, character(0)) ) || ( n_pass == "second" && identical(priors, character(0)) ) ){
     stop(" 'n_pass' variable must be 'first' or 'second', and priors must be 'NO_FILE' or defined! ")
 }
+
+### run R code
+
+if ( file.size(reads) > 28 && !is.null(errormodel) ){
+
+    if ( is.null(priors) ){
+        priors <- character(0)
+    }
+    # run dada2
+    set.seed(1); dada_output <- dada2::dada(
+        derep = reads, 
+        err = errormodel, 
+        multithread = FALSE, 
+        priors = priors, 
+        selfConsist = FALSE, 
+        pool = FALSE, 
+        verbose = TRUE,
+        BAND_SIZE = dada_band_size,
+        HOMOPOLYMER_GAP_PENALTY = dada_homopolymer
+    )
+} else {
+    message("Denoising not possible due to empty reads and/or lack of error model")
+    dada_output <- NULL
+}
+
+saveRDS(dada_output, paste0(sample_primers,"_dada",pass_short,direction_short,".rds"))
 
 }, 
 finally = {
