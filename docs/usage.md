@@ -166,6 +166,7 @@ These options generally will not need to be changed by regular users.
 | `--primer_error_rate` | Maximum error rate when detecting primers ([`cutadapt -e`](https://cutadapt.readthedocs.io/en/v4.7/reference.html#adapter-finding-options)) | Number >= `0` | `1` |
 | `--primer_n_trim` | Recognise `N` bases in reads when detecting primers ([`cutadapt --match-read-wildcards`](https://cutadapt.readthedocs.io/en/v4.7/reference.html#adapter-finding-options)) | Boolean (`true`/`false`) | `false` |
 | `--high_sensitivity` | Infer ASVs with `dada2` [pseudo-pooling](https://benjjneb.github.io/dada2/pseudo.html) mode | Boolean (`true`/`false`) | `true` |
+| `--prior_min_samples` | Minimum number of samples an ASV must be present in to be classfied as a "prior" sequence with `--high_sensitivity` | Integer > `0` | `2` |
 | `--dada_band_size` | Set `BAND_SIZE` parameter for `dada2::dada()` | Integer | `16` |
 | `--dada_homopolymer` | Set `HOMOPOLYMER_GAP_PENALTY` parameter for `dada2::dada()` | Integer < `0` | `null` |
 | `--chimera_sample_frac` | Minimum fraction of samples in which a sequence must be flagged as a chimera to be classified a chimera (see [`dada2::isBimeraDenovoTable(minSampleFraction)`](https://rdrr.io/bioc/dada2/man/isBimeraDenovoTable.html)) | Number `0`-`1` | `0.9` |
