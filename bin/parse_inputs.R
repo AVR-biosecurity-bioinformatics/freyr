@@ -31,7 +31,7 @@ process_packages <- c(
     "tidyr",
     NULL
 )
-invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))
 
 ### process variables
 
