@@ -55,9 +55,9 @@ if(target_genus == "NA"){ target_genus <- NA }
 if(target_species == "NA"){ target_species <- NA }
 
 # convert "NA" strings to true NA, or convert number strings to numeric
-if(min_sample_reads %in% c(0, "NA")){ min_sample_reads <- NA } else { min_sample_reads <- as.numeric(min_sample_reads) }
-if(min_taxa_reads %in% c(0, "NA")){ min_taxa_reads <- NA } else { min_taxa_reads <- as.numeric(min_taxa_reads) }  
-if(min_taxa_ra %in% c(0, "NA")){ min_taxa_ra <- NA } else { min_taxa_ra <- as.numeric(min_taxa_ra) } 
+if(min_sample_reads %in% c(0, "NA", NA)){ min_sample_reads <- NA } else { min_sample_reads <- as.numeric(min_sample_reads) }
+if(min_taxa_reads %in% c(0, "NA", NA)){ min_taxa_reads <- NA } else { min_taxa_reads <- as.numeric(min_taxa_reads) }  
+if(min_taxa_ra %in% c(0, "NA", NA)){ min_taxa_ra <- NA } else { min_taxa_ra <- as.numeric(min_taxa_ra) } 
 
 cluster_threshold <- suppressWarnings(as.integer(cluster_threshold))
 
@@ -229,17 +229,17 @@ if(!is.na(min_taxa_reads) & is.na(min_taxa_ra)){
 }
 
 #Remove all samples under the minimum read threshold 
-if(!is.na(min_sample_reads) || min_sample_reads > 0){
+if(!is.na(min_sample_reads)){
 
-    if (all(phyloseq::sample_sums(ps_abfiltered)<min_sample_reads)) {
+    if (all(phyloseq::sample_sums(ps_abfiltered) < min_sample_reads)) {
         stop(paste0("ERROR: No samples contained reads above the minimum threshold of ", min_sample_reads, " for primers '", primers, "' -- consider lowering this value"))
     }
     
     ps_sampfiltered <- ps_abfiltered %>%
-        phyloseq::prune_samples(phyloseq::sample_sums(.)>=min_sample_reads, .) %>% 
+        phyloseq::prune_samples(phyloseq::sample_sums(.) >= min_sample_reads, .) %>% 
         phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
 
-} else if (min_sample_reads == 0 || is.na(min_sample_reads) ) {
+} else if (is.na(min_sample_reads) ) {
 
     if (!quiet){message(paste0("No minimum sample reads filter set - skipping this filter"))}
 
@@ -247,6 +247,8 @@ if(!is.na(min_sample_reads) || min_sample_reads > 0){
         phyloseq::prune_samples(phyloseq::sample_sums(.)>=0,.) %>%
         phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
 
+} else {
+    stop(paste0("--min_sample_reads value is '",min_sample_reads,"', which is not allowed."))
 }
 
 # Message how many were removed
