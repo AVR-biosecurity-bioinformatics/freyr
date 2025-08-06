@@ -31,7 +31,7 @@ process_packages <- c(
     "tidyr",
     NULL
 )
-invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))
 
 ### process variables
 
@@ -74,12 +74,12 @@ if( !any(c("sample", "primers") %in% ssc) ){
 
 read_col_which <- c("read_dir","fwd", "rev", "single")[which(c("read_dir","fwd", "rev", "single") %in% ssc)]
 
-if( ! (read_col_which == "read_dir" || setequal(read_col_which ,c("fwd","rev")) || read_col_which == "single" ) ){
+if( ! (setequal(read_col_which, "read_dir") || setequal(read_col_which ,c("fwd","rev")) || setequal(read_col_which, "single") ) ){
     stop(paste0(sse, "Samplesheet must contain only one of the following fields/field groups: 'read_dir'; 'fwd' AND 'rev'; or 'single'."))
 }
 
 # check if disallowed 'paired' and read column values
-if ( paired == "true" && read_col_which == "single" ){
+if ( paired == "true" && setequal(read_col_which, "single") ){
     stop(paste0(sse, "'single' column cannot be used with parameter '--paired'."))
 }
 
@@ -96,7 +96,7 @@ if (any(duplicated(samplesheet_df$sample))) {
 ## any spaces or commas in fields?
 # if 'read_group' is present, validate it too, otherwise just validate other columns
 if ("read_group" %in% ssc){
-    if ( any(c(samplesheet_df$sample, samplesheet_df$primers, samplesheet$read_group) %>% stringr::str_detect(., "^[^\\s,]+$", negate = T)) ){
+    if ( any(c(samplesheet_df$sample, samplesheet_df$primers, samplesheet_df$read_group) %>% stringr::str_detect(., "^[^\\s,]+$", negate = T)) ){
         stop(paste0(sse, "'sample', 'primers' and 'read_group' values must not contain spaces or commas."))
     } 
 } else {
@@ -106,7 +106,7 @@ if ("read_group" %in% ssc){
 }
 
 # validate read path fields (without validating reads themselves) -- no spaces or commas
-if ( read_col_which == "read_dir" ){
+if ( setequal(read_col_which, "read_dir")  ){
     if (any(samplesheet_df$read_dir %>% stringr::str_detect(., "^[^\\s,]+$", negate = T))){
         stop(paste0(sse, "'read_dir' values must not contains spaces or commas."))
     }
@@ -117,7 +117,7 @@ if ( read_col_which == "read_dir" ){
     if (any(samplesheet_df$rev %>% stringr::str_detect(., "^[^\\s,]+$", negate = T))){
         stop(paste0(sse, "'rev' values must not contains spaces or commas."))
     }
-} else if ( read_col_which == "single" ){
+} else if ( setequal(read_col_which, "single")  ){
     if (any(samplesheet_df$single %>% stringr::str_detect(., "^[^\\s,]+$", negate = T))){
         stop(paste0(sse, "'single' values must not contains spaces or commas."))
     }
@@ -127,7 +127,7 @@ if ( read_col_which == "read_dir" ){
 
 
 ### parse and/or detect read paths
-if ( read_col_which == "read_dir" & paired == "true" ) { # if "read_dir" column is used and reads are paired
+if ( setequal(read_col_which, "read_dir")  & paired == "true" ) { # if "read_dir" column is used and reads are paired
     ## try to find reads
     # convert read directory to absolute path
     samplesheet_df_rp <- 
@@ -187,7 +187,7 @@ if ( read_col_which == "read_dir" & paired == "true" ) { # if "read_dir" column 
                 )
             )
         )
-} else if ( read_col_which == "read_dir" & paired == "false" ) { # if "read_dir" column exists in samplesheet
+} else if ( setequal(read_col_which, "read_dir")  & paired == "false" ) { # if "read_dir" column exists in samplesheet
     ## try to find reads
     # convert read directory to absolute path
     samplesheet_df_rp <- samplesheet_df %>% 
@@ -233,7 +233,7 @@ if ( read_col_which == "read_dir" & paired == "true" ) { # if "read_dir" column 
     samplesheet_df_rp <- 
         samplesheet_df_rp %>% dplyr::left_join(., reads_df, by = "sample") 
 
-} else if (( read_col_which == "single" )) { # if single reads only
+} else if ( setequal(read_col_which, "single") ) { # if single reads only
 # convert read paths to absolute paths
     samplesheet_df_rp <- samplesheet_df %>% 
         dplyr::mutate(
@@ -260,6 +260,37 @@ if (paired == "true") {
     stop(paste0(ppe, "'paired' = '", paired, "' but must be 'true' or 'false'."))
 }
 
+### remove empty read files from samplesheet
+if ( paired == "true" ){
+    # remove files with size 0
+    er_temp <- 
+        samplesheet_df_rp %>%
+        dplyr::mutate(
+            sizeF = file.info(fwd)$size,
+            sizeR = file.info(rev)$size
+        ) 
+    
+    samplesheet_df_er <- er_temp %>% dplyr::filter(sizeF > 0, sizeR > 0) %>%  dplyr::select(-sizeF, -sizeR)
+} else {
+    # remove files with size 0
+    samplesheet_df_er <- 
+        samplesheet_df_rp %>%
+        dplyr::mutate(
+            sizeS = file.info(single)$size
+        ) %>%
+        dplyr::filter(sizeS) %>%
+        dplyr::select(-sizeS)
+
+    samplesheet_df_er <- er_temp %>% dplyr::filter(sizeS > 0) %>%  dplyr::select(-sizeS)
+}
+
+if (nrow(samplesheet_df_er) == 0){
+  stop("ERROR: Removing empty read files from the samplesheet has removed all samples -- you have no data!")
+}
+
+
+
+
 ### extract read_group from read headers
 
 # # example for MiSeq data
@@ -276,19 +307,19 @@ if (paired == "true") {
 
 
 ### extract read_group from read headers if not present
-if ("read_group" %in% colnames(samplesheet_df_rp)){
+if ("read_group" %in% colnames(samplesheet_df_er)){
   
-  if (any(samplesheet_df_rp$read_group %>% is.na())){
+  if (any(samplesheet_df_er$read_group %>% is.na())){
         stop(paste0("Some values of 'read_group' are NA!"))
   } else {
         # keep as-is -- information given by user
-        samplesheet_df_rg <- samplesheet_df_rp
+        samplesheet_df_rg <- samplesheet_df_er
   }
 
 } else {
   
     # extract read_group from read headers
-    samplesheet_df_rg <- samplesheet_df_rp %>% dplyr::mutate(read_group = NA)
+    samplesheet_df_rg <- samplesheet_df_er %>% dplyr::mutate(read_group = NA)
 
     ## loop through each sample
     for ( i in 1:length(samplesheet_df_rg$sample)){
@@ -423,17 +454,17 @@ if (subsample != "false") {
 if ( paired == "true" ){
     samplesheet_complete <- 
         samplesheet_df_ss %>%
-        dplyr::relocate(sample, read_group, primers, read_dir, fwd, rev)
+        dplyr::relocate(tidyselect::any_of(c("sample", "read_group", "primers", "read_dir", "fwd", "rev")))
 } else {
     samplesheet_complete <- 
         samplesheet_df_ss %>%
-        dplyr::relocate(sample, read_group, primers, read_dir, single)
+        dplyr::relocate(tidyselect::any_of(c("sample", "read_group", "primers", "read_dir", "single")))
 }
 
 ## create samplesheet outputs
 # create arbitrary metadata samplesheet -- keep only sample and read_group
 samplesheet_complete %>%
-    dplyr::select(-c(primers, read_dir, tidyselect::any_of(c("read_dir", "fwd", "rev", "single")))) %>%
+    dplyr::select(-c(primers, tidyselect::any_of(c("read_dir", "fwd", "rev", "single")))) %>%
     readr::write_csv(., "sample_metadata.csv")
 
 # create samplesheet without 'sample_primers' field, for FASTQC channel

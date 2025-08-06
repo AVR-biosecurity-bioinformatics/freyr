@@ -28,7 +28,7 @@ process_packages <- c(
     "tibble",
     NULL
 )
-invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))
 
 
 ### run R code
@@ -61,6 +61,29 @@ seqs_list <- # convert input sequences list from Groovy format to R format
 seqs_extracted <- lapply(seqs_list, readRDS)
 names(seqs_extracted) <- sample_primers_list
 
+# get names of NULL elements for sequences
+empty_seqs <- seqs_extracted[sapply(seqs_extracted, is.null)] %>% names
+
+# remove empty sequence elements
+seqs_pass <- seqs_extracted[!sapply(seqs_extracted, is.null)]
+
+# if either passing seq list is empty, throw error
+if (length(seqs_pass) == 0 ){
+    stop(paste0("\n***\nZero sequences made it through denoising for read group '",read_group,"' and primers '",primers,"'.\nConsider changing your read filtering parameters.\n***\n"))
+}
+
+# remove read files from list if there are NULL elements associated with them
+reads_pass <- reads_list[!names(reads_list) %in% empty_seqs]
+
+# if passing reads list is empty, throw error
+if (length(reads_pass) == 0){
+    stop(paste0("\n***\nZero reads made it through denoising for read group '",read_group,"' and primers '",primers,"'.\nConsider changing your read filtering parameters.\n***\n"))
+}
+
+# vector of samples that pass (ie. have data)
+sample_primers_pass <- sample_primers_list[!sample_primers_list %in% empty_seqs]
+sample_primers_fail <- sample_primers_list[sample_primers_list %in% empty_seqs]
+
 ## reformat seqs_extracted as a list with one element if there is only one sample
 if ( class(seqs_extracted) == "data.frame" ) {
   seqs_extracted <- list(seqs_extracted)
@@ -80,6 +103,8 @@ sapply(seqs_extracted, getN) %>%
     as.data.frame() %>% 
     magrittr::set_colnames("pairs") %>%
     tibble::rownames_to_column(var = "sample_primers") %>%
+    # add 0 abundance samples in with read counts of 0
+    tibble::add_row(sample_primers = sample_primers_fail, pairs = 0) %>%
     dplyr::mutate(
         read_group = read_group,
         primers = primers,
@@ -119,6 +144,10 @@ seqtab_tibble <-
     dplyr::select(-sequence) %>% # remove sequence
     tidyr::pivot_wider(names_from = sample_primers, values_from = abundance)
 
+# add 0 abundance samples to seqtab
+if (length(sample_primers_fail) > 0){
+    seqtab_tibble[sample_primers_fail] <- 0L
+}
 
 # save DSS as .fasta
 write_fasta(seq_DSS, file = paste0(read_group, "_", primers, "_seqs.fasta"))

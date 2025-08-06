@@ -26,7 +26,7 @@ process_packages <- c(
     "stringr",
     NULL
 )
-invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))
 
 ### run R code 
 if (!direction %in% c("forward","reverse","single")) { 
@@ -48,7 +48,11 @@ reads_list <- # convert input reads list from Groovy format to R format
         reads, 
         pattern = "\\S+?\\.fastq\\.gz|\\S+?\\.fastq|\\S+?\\.fq\\.gz|\\S+?\\.fq" 
     ) %>% 
-    unlist()
+    unlist() %>%
+    # remove empty read files
+    .[lapply(., file.size) > 28]
+
+
 
 if(direction == "forward"){
     message(paste0("Modelling forward read error rates for primers: ", primers, " and flowcell: ", read_group))
@@ -60,30 +64,40 @@ if(direction == "forward"){
     stop ("Read direction must be 'forward', 'reverse' or 'single'!")
 }
 
-## Learn error rates 
-set.seed(1); err <- dada2::learnErrors(
-    reads_list, 
-    multithread = as.numeric(threads), 
-    nbases = 1e8,
-    randomize = FALSE, 
-    # qualityType = "FastqQuality",
-    qualityType = "Auto",
-    verbose=TRUE
-)
-    
+if ( length(reads_list) > 0){
+    ## Learn error rates 
+    set.seed(1); err <- dada2::learnErrors(
+        reads_list, 
+        multithread = as.numeric(threads), 
+        nbases = 1e8,
+        randomize = FALSE, 
+        # qualityType = "FastqQuality",
+        qualityType = "Auto",
+        verbose=TRUE
+    )
+
+    ## write out errors for diagnostics
+    readr::write_csv(as.data.frame(err$trans), paste0(read_group,"_",primers,"_err",direction_short,"_observed_transitions.csv"))
+    readr::write_csv(as.data.frame(err$err_out), paste0(read_group,"_",primers,"_err",direction_short,"_inferred_errors.csv"))
+
+    ## output error plots to see how well the algorithm modelled the errors in the different runs
+    p1 <- dada2::plotErrors(err, nominalQ = TRUE) + ggtitle(paste0(primers, " ", read_group," ",direction," Reads"))
+
+} else {
+    err <- NULL
+    p1 <- ggplot() + theme_void() + annotate(geom = "text", label = paste0("Read group '",read_group,"'\ncontains no reads for primers '",primers,"'"), x = 5, y = 5)
+}
+
+
+# write plot
+pdf(paste0(read_group,"_", primers, "_", direction_short,"_errormodel.pdf"), width = 11, height = 8 , paper="a4r")
+        plot(p1)
+    try(dev.off(), silent=TRUE)
 
 ## save output as .rds file
 saveRDS(err, paste0(read_group,"_",primers,"_errormodel",direction_short,".rds"))
 
-## write out errors for diagnostics
-readr::write_csv(as.data.frame(err$trans), paste0(read_group,"_",primers,"_err",direction_short,"_observed_transitions.csv"))
-readr::write_csv(as.data.frame(err$err_out), paste0(read_group,"_",primers,"_err",direction_short,"_inferred_errors.csv"))
 
-## output error plots to see how well the algorithm modelled the errors in the different runs
-p1 <- dada2::plotErrors(err, nominalQ = TRUE) + ggtitle(paste0(primers, " ", read_group," ",direction," Reads"))
-pdf(paste0(read_group,"_", primers, "_", direction_short,"_errormodel.pdf"), width = 11, height = 8 , paper="a4r")
-    plot(p1)
-try(dev.off(), silent=TRUE)
 
 # stop(" *** stopped manually *** ") ##########################################
 }, 

@@ -28,7 +28,7 @@ process_packages <- c(
     "tidyr",
     NULL
 )
-invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))
 
 #### TODO: Pull stats from top of index_switching.pdf and print to a final run report
 ### also flag index combos that have higher than average + (some stat)

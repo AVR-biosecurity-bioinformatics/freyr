@@ -32,7 +32,7 @@ process_packages <- c(
     "stringr",
     NULL
 )
-invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))
 
 ## check and define variables
 # read in fasta as tibble

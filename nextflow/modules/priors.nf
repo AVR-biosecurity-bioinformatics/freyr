@@ -6,6 +6,7 @@ process PRIORS {
 
     input:
     tuple val(direction), val(primers), val(read_group), path(priors)
+    val(prior_min_samples)
 
     output:   
     tuple val(direction), val(primers), val(read_group), path("*_priors{F,R,S}.rds"),              emit: priors
@@ -25,7 +26,8 @@ process PRIORS {
         --primers "$primers" \
         --direction "$direction" \
         --read_group "$read_group" \
-        --priors "$priors" 
+        --priors "$priors" \
+        --prior_min_samples "$prior_min_samples" 
         
     """
     

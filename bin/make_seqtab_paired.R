@@ -30,7 +30,7 @@ process_packages <- c(
     "tibble",
     NULL
 )
-invisible(lapply(head(process_packages,-1), library, character.only = TRUE, warn.conflicts = FALSE))
+suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))
 
 ### process variables 
 if ( is.na(concat_unmerged) || concat_unmerged %in%  c("NA", "FALSE", "F")) {
@@ -89,13 +89,40 @@ seqs_R_list <- # convert input sequences list from Groovy format to R format
 seqs_R_extracted <- lapply(seqs_R_list, readRDS)
 names(seqs_R_extracted) <- sample_primers_list
 
+
+# get names of NULL elements for F and R sequences
+empty_seqs_F <- seqs_F_extracted[sapply(seqs_F_extracted, is.null)] %>% names
+empty_seqs_R <- seqs_R_extracted[sapply(seqs_R_extracted, is.null)] %>% names
+
+# remove empty sequence elements
+seqs_F_pass <- seqs_F_extracted[!sapply(seqs_F_extracted, is.null)]
+seqs_R_pass <- seqs_R_extracted[!sapply(seqs_R_extracted, is.null)]
+
+# if either passing seq list is empty, throw error
+if (length(seqs_F_pass) == 0 || length(seqs_R_pass) == 0){
+    stop(paste0("\n***\nZero sequences made it through denoising for read group '",read_group,"' and primers '",primers,"'.\nConsider changing your read filtering parameters.\n***\n"))
+}
+
+# remove read files from list if there are NULL elements associated with them
+reads_F_pass <- reads_F_list[!names(reads_F_list) %in% empty_seqs_F]
+reads_R_pass <- reads_R_list[!names(reads_R_list) %in% empty_seqs_R]
+
+# if either passing reads list is empty, throw error
+if (length(reads_F_pass) == 0 || length(reads_R_pass) == 0){
+    stop(paste0("\n***\nZero reads made it through denoising for read group '",read_group,"' and primers '",primers,"'.\nConsider changing your read filtering parameters.\n***\n"))
+}
+
+# vector of samples that pass (ie. have data)
+sample_primers_pass <- sample_primers_list[!sample_primers_list %in% c(empty_seqs_F, empty_seqs_R)]
+sample_primers_fail <- sample_primers_list[sample_primers_list %in% c(empty_seqs_F, empty_seqs_R)]
+
 ## merge pairs, keeping unmerged reads only if concat_unmerged is TRUE
 mergers <- 
     dada2::mergePairs(
-        dadaF = seqs_F_extracted,
-        derepF = reads_F_list,
-        dadaR = seqs_R_extracted,
-        derepR= reads_R_list,
+        dadaF = seqs_F_pass,
+        derepF = reads_F_pass,
+        dadaR = seqs_R_pass,
+        derepR= reads_R_pass,
         verbose = TRUE,
         minOverlap = 12,
         trimOverhang = TRUE,
@@ -105,8 +132,8 @@ mergers <-
 
 ## reformat mergers as a list with one element if there is only one sample
 if ( class(mergers) == "data.frame" ) {
-  mergers <- list(mergers)
-  names(mergers) <- sample_primers_list
+    mergers <- list(mergers)
+    names(mergers) <- sample_primers_pass
 }
 
 ## TODO: write out unmerged reads? (pull from functions.R)
@@ -120,8 +147,8 @@ if ( concat_unmerged ) {
             # Get index of unmerged reads in table
             unmerged_index <- which(!mergers[[i]]$accept)
             # Get the forward and reverse reads for those reads
-            unmerged_fwd <- seqs_F[[i]]$sequence[mergers[[i]]$forward[unmerged_index]]
-            unmerged_rev <- seqs_R[[i]]$sequence[mergers[[i]]$reverse[unmerged_index]]
+            unmerged_fwd <- seqs_F_pass[[i]]$sequence[mergers[[i]]$forward[unmerged_index]]
+            unmerged_rev <- seqs_R_pass[[i]]$sequence[mergers[[i]]$reverse[unmerged_index]]
             
             unmerged_concat <- paste0(unmerged_fwd, "NNNNNNNNNN", rc(unmerged_rev))
             
@@ -149,10 +176,13 @@ if ( class(mergers) == "list") {
 
 }
 
+# create readsout output table
 sapply(mergers, getN) %>% 
     as.data.frame() %>% 
     magrittr::set_colnames("pairs") %>%
     tibble::rownames_to_column(var = "sample_primers") %>%
+    # add 0 abundance samples in with read counts of 0
+    tibble::add_row(sample_primers = sample_primers_fail, pairs = 0) %>%
     dplyr::mutate(
         read_group = read_group,
         primers = primers,
@@ -193,6 +223,10 @@ seqtab_tibble <-
     dplyr::select(-sequence) %>% # remove sequence
     tidyr::pivot_wider(names_from = sample_primers, values_from = abundance)
 
+# add 0 abundance samples to seqtab
+if (length(sample_primers_fail) > 0){
+    seqtab_tibble[sample_primers_fail] <- 0L
+}
 
 # save DSS as .fasta
 write_fasta(seq_DSS, file = paste0(read_group, "_", primers, "_seqs.fasta"))
@@ -200,10 +234,8 @@ write_fasta(seq_DSS, file = paste0(read_group, "_", primers, "_seqs.fasta"))
 # save seqtab_tidy as .csv
 readr::write_csv(seqtab_tibble, paste0(read_group, "_", primers, "_seqtab_tibble.csv"))
 
-
-
-
 # stop(" *** stopped manually *** ") ##########################################
+
 }, 
 finally = {
     ### save R environment if script throws error code
