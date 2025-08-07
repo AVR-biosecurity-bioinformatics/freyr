@@ -71,16 +71,24 @@ seqs_uf <-
 # save combined fasta of filtered sequences
 write_fasta(seqs_uf, "asvs_unfiltered.fasta")
 
+gc()
+
 ## merge unfiltered phyloseq objects
 ps_u <- merge_phyloseq_new(ps_unfiltered)
+
+gc()
 
 ## output merged data tables 
 melt_phyloseq(ps_u) %>% 
   readr::write_csv(., paste0("raw_unfiltered.csv"))
 
+gc()
+
 # Export species level summary of unfiltered results
 summarise_phyloseq(ps_u) %>%
     readr::write_csv(., paste0("summary_unfiltered.csv"))
+
+gc()
 
 ## output phyloseq and component data; from step_output_ps
 
@@ -88,6 +96,8 @@ summarise_phyloseq(ps_u) %>%
 seqtab_out_u <- phyloseq::otu_table(ps_u) %>%
     as("matrix") %>%
     tibble::as_tibble(rownames = "sample_primers")
+
+gc()
 
 # save taxtab as long tibble (rows = ASV, cols = tax rankings)
 taxtab_out_u <- phyloseq::tax_table(ps_u) %>%
@@ -97,6 +107,8 @@ taxtab_out_u <- phyloseq::tax_table(ps_u) %>%
     dplyr::mutate( 
         dplyr::across(Root:Species, ~ dplyr::if_else(stringr::str_detect(.x, "^\\w__"), NA, .x))
     )
+
+gc()
 
 # Check taxonomy table outputs
 ### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
@@ -115,6 +127,8 @@ readr::write_csv(seqtab_out_u, paste0("seqtab_unfiltered.csv"))
 readr::write_csv(taxtab_out_u, paste0("taxtab_unfiltered.csv"))
 readr::write_csv(samdf_out_u, paste0("samdf_unfiltered.csv"))
 saveRDS(ps_u, paste0("ps_unfiltered.rds"))
+
+gc()
 
 ## read tracking output from unfiltered phyloseq
 rank_cols <- colnames(phyloseq::tax_table(ps_u)) # only retrieve this once
@@ -136,6 +150,8 @@ summarise_phyloseq(ps_u) %>%
     dplyr::select(stage, sample_primers, read_group, primers, pairs) %>%
     readr::write_csv("ps_u_readsout.csv")
 
+gc()
+
 ### filtered ----------------------------------------------------------------------------------------------------------
 
 # combine fasta DSS objects, removing redundant sequences
@@ -153,16 +169,24 @@ seqs_f <-
 # save combined fasta of filtered sequences
 write_fasta(seqs_f, "asvs_filtered.fasta")
 
+gc()
+
 ## merge filtered phyloseq objects
 ps_f <- merge_phyloseq_new(ps_filtered)
+
+gc()
 
 ## output merged raw data tables - NOTE: This is memory intensive
 melt_phyloseq(ps_f) %>% 
     readr::write_csv(., paste0("raw_filtered.csv"))
 
+gc()
+
 # Export species level summary of filtered results
 summarise_phyloseq(ps_f) %>%
     readr::write_csv(., paste0("summary_filtered.csv"))
+
+gc()
 
 ## output phyloseq and component data; from step_output_ps
 
@@ -198,6 +222,8 @@ readr::write_csv(taxtab_out_f, paste0("taxtab_filtered.csv"))
 readr::write_csv(samdf_out_f, paste0("samdf_filtered.csv"))
 saveRDS(ps_f, paste0("ps_filtered.rds"))
 
+gc()
+
 ## read tracking output from filtered phyloseq
 phyloseq::sample_sums(ps_f) %>%
     tibble::enframe(name = "sample_primers", value = "pairs")%>%
@@ -208,6 +234,8 @@ phyloseq::sample_sums(ps_f) %>%
     dplyr::select(stage, sample_primers, read_group, primers, pairs) %>% 
     readr::write_csv("ps_f_readsout.csv")
     
+
+gc()
 
 # stop(" *** stopped manually *** ") ##########################################
 }, 
