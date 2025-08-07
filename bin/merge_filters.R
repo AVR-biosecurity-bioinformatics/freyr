@@ -95,6 +95,9 @@ seqtab_combined <-
         values_fill = 0
     )
 
+rm(seqtab_list)
+gc()
+
 # combine fasta files together, removing redundancy, and convert to table
 seqs_names <-   
     fasta_list %>%
@@ -104,6 +107,9 @@ seqs_names <-
     dplyr::group_by(seq_name, sequence) %>%
     dplyr::slice(1) %>%
     dplyr::ungroup() 
+
+rm(fasta_list)
+gc()
 
 # add sequence to seqtab and export
 seqtab_combined %>%
@@ -187,6 +193,7 @@ filter_info %>%
         }
     )
 
+gc()
 
 ## export read tracking group tibble per flowcell (how many reads pass through each filter for each sample?)
 filter_tracking %>%
@@ -229,7 +236,7 @@ filter_tracking %>%
         }
     )
 
-
+gc()
 
 ### generate filtering plots
 
@@ -380,6 +387,8 @@ filter_info %>%
         }
     )
 
+gc()
+
 # generate and write one combined count plot per flowcell
 filter_info %>%
     lapply(
@@ -437,6 +446,8 @@ filter_info %>%
 
         }
     )
+
+gc()
 
 }, 
 finally = {

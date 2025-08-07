@@ -1,7 +1,7 @@
 process MERGE_FILTERS {
     def process_name = "merge_filters"
     tag "$primers"
-    label "small"
+    label "medium"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:

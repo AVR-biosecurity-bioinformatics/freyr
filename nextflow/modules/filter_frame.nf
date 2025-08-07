@@ -1,7 +1,7 @@
 process FILTER_FRAME {
     def process_name = "filter_frame"
     tag "$primers"
-    label "small"
+    label "medium"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
