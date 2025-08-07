@@ -260,6 +260,7 @@ merge_phyloseq_new <- function (arguments){
       names(x1) <- i
       merged.list <- c(merged.list, x1)
     }
+    gc()
   }
   names(merged.list) <- NULL
   return(do.call(phyloseq, merged.list))

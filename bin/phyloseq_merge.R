@@ -36,19 +36,9 @@ ps_unfiltered <- # convert Groovy to R list format
     stringr::str_extract_all(ps_unfiltered, pattern = "[^\\s,\\[\\]]+") %>% unlist()
 ps_unfiltered <- lapply(ps_unfiltered, readRDS) # read in phyloseq objects and store as list
 
-
-ps_filtered <- # convert Groovy to R list format
-    stringr::str_extract_all(ps_filtered, pattern = "[^\\s,\\[\\]]+") %>% unlist()
-ps_filtered <- lapply(ps_filtered, readRDS) # read in phyloseq objects and store as list
-
 # import fasta files
 unfiltered_seqs_list <- 
     unfiltered_fastas %>%
-    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
-    lapply(., Biostrings::readDNAStringSet)
-
-filtered_seqs_list <- 
-    filtered_fastas %>%
     stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
     lapply(., Biostrings::readDNAStringSet)
 
@@ -150,9 +140,25 @@ summarise_phyloseq(ps_u) %>%
     dplyr::select(stage, sample_primers, read_group, primers, pairs) %>%
     readr::write_csv("ps_u_readsout.csv")
 
+rm(ps_u)
+rm(ps_unfiltered)
+rm(seqs_uf)
+rm(seqtab_out_u)
+rm(taxtab_out_u)
+rm(samdf_out_u)
 gc()
 
 ### filtered ----------------------------------------------------------------------------------------------------------
+
+
+ps_filtered <- # convert Groovy to R list format
+    stringr::str_extract_all(ps_filtered, pattern = "[^\\s,\\[\\]]+") %>% unlist()
+ps_filtered <- lapply(ps_filtered, readRDS) # read in phyloseq objects and store as list
+
+filtered_seqs_list <- 
+    filtered_fastas %>%
+    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
+    lapply(., Biostrings::readDNAStringSet)
 
 # combine fasta DSS objects, removing redundant sequences
 seqs_f <- 
