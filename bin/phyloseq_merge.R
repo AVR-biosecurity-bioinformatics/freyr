@@ -118,18 +118,29 @@ readr::write_csv(taxtab_out_u, paste0("taxtab_unfiltered.csv"))
 readr::write_csv(samdf_out_u, paste0("samdf_unfiltered.csv"))
 saveRDS(ps_u, paste0("ps_unfiltered.rds"))
 
+rm(ps_unfiltered)
+rm(seqs_uf)
+rm(seqtab_out_u)
+rm(taxtab_out_u)
+rm(samdf_out_u)
 gc()
 
 ## read tracking output from unfiltered phyloseq
 rank_cols <- colnames(phyloseq::tax_table(ps_u)) # only retrieve this once
 
-summarise_phyloseq(ps_u) %>%
-    tidyr::pivot_longer(cols = sample_names(ps_u), names_to="sample_primers", values_to = "Abundance")%>%
-    dplyr::left_join(
-        phyloseq::sample_data(ps_u) %>%
-            as("data.frame") %>%
-            dplyr::select(sample_primers, read_group, primers)
-        ) %>%
+# try to save memory
+ps_u_summary <- summarise_phyloseq(ps_u)
+ps_u_samplenames <- sample_names(ps_u)
+ps_u_sampledata <- 
+    phyloseq::sample_data(ps_u) %>%
+    as("data.frame") %>%
+    dplyr::select(sample_primers, read_group, primers)
+rm(ps_u)
+gc()
+
+ps_u_summary %>%
+    tidyr::pivot_longer(cols = ps_u_samplenames, names_to="sample_primers", values_to = "Abundance")%>%
+    dplyr::left_join(ps_u_sampledata, by = "sample_primers") %>%
     dplyr::mutate(dplyr::across(tidyselect::any_of(rank_cols), 
                                 ~ ifelse(!stringr::str_detect(.x, "__"), Abundance, NA_integer_))) %>% 
     dplyr::group_by(sample_primers, read_group, primers) %>%
@@ -140,12 +151,9 @@ summarise_phyloseq(ps_u) %>%
     dplyr::select(stage, sample_primers, read_group, primers, pairs) %>%
     readr::write_csv("ps_u_readsout.csv")
 
-rm(ps_u)
-rm(ps_unfiltered)
-rm(seqs_uf)
-rm(seqtab_out_u)
-rm(taxtab_out_u)
-rm(samdf_out_u)
+rm(ps_u_summary)
+rm(ps_u_samplenames)
+rm(ps_u_sampledata)
 gc()
 
 ### filtered ----------------------------------------------------------------------------------------------------------
