@@ -123,7 +123,7 @@ workflow RESULT_SUMMARIES {
 
     // track reads and sequences across the pipeline
     READ_TRACKING ( 
-        ch_read_tracker_samples.collect(), 
+        ch_read_tracker_samples.collectFile(name: 'read_tracker_samples.csv'), 
         ch_read_tracker_grouped,
         ch_samplesheet_split
     )
