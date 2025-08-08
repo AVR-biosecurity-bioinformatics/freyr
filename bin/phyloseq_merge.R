@@ -137,17 +137,33 @@ ps_u_sampledata <-
     dplyr::select(sample_primers, read_group, primers)
 rm(ps_u)
 gc()
+message("Pre-readcount files created!")
 
-ps_u_summary %>%
-    tidyr::pivot_longer(cols = ps_u_samplenames, names_to="sample_primers", values_to = "Abundance")%>%
+ps_u_summary %>% 
+    dplyr::mutate(
+        dplyr::across(
+            tidyselect::all_of(ps_u_samplenames), 
+            ~ dplyr::na_if(., 0)
+        )
+    ) %>%
+    tidyr::pivot_longer(cols = ps_u_samplenames, names_to="sample_primers", values_to = "Abundance", values_drop_na = TRUE) %>%
     dplyr::left_join(ps_u_sampledata, by = "sample_primers") %>%
-    dplyr::mutate(dplyr::across(tidyselect::any_of(rank_cols), 
-                                ~ ifelse(!stringr::str_detect(.x, "__"), Abundance, NA_integer_))) %>% 
+    dplyr::mutate(
+        dplyr::across(
+            tidyselect::any_of(rank_cols), 
+            ~ ifelse(!stringr::str_detect(.x, "__"), Abundance, NA_integer_)
+        )
+    ) %>% 
     dplyr::group_by(sample_primers, read_group, primers) %>%
-    dplyr::summarise(dplyr::across(tidyselect::any_of(rank_cols),
-                                    ~ sum(., na.rm = TRUE), .names = "classified_{.col}")) %>% 
+    dplyr::summarise(
+        dplyr::across(
+            tidyselect::any_of(rank_cols),
+            ~ sum(., na.rm = TRUE),
+            .names = "classified_{.col}"
+        )
+    ) %>% 
     tidyr::pivot_longer(cols = tidyselect::starts_with("classified_"), names_to = "stage", values_to = "pairs") %>% 
-    mutate(stage = stringr::str_to_lower(stage)) %>%
+    dplyr::mutate(stage = stringr::str_to_lower(stage)) %>%
     dplyr::select(stage, sample_primers, read_group, primers, pairs) %>%
     readr::write_csv("ps_u_readsout.csv")
 

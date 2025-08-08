@@ -22,7 +22,7 @@ process PHYLOSEQ_MERGE {
 
     script:
     """
-    
+        
     ${process_name}.R \
         --process_name "$process_name" \
         --projectDir "$projectDir" \
