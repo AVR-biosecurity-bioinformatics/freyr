@@ -838,11 +838,11 @@ integerTest(
     0
 )
 
-# check read_trunc_length is an integer >= 1
+# check read_trunc_length is an integer >= 0
 integerTest(
     primer_params_up$read_trunc_length, 
     "read_trunc_length", 
-    1
+    0
 )
 
 # check read_trim_left is an integer >= 0
