@@ -362,7 +362,7 @@ if ("read_group" %in% colnames(samplesheet_df_er)){
             sample_rg <- paste0(sample_flowcell,"__",sample_lane)
         
         # MGI internal format 
-        } else if ( all(stringr::str_detect(read_headers, "^[[:alnum:]]+:\\d+:[[:alnum:]-]+:\\d+:\\d+:\\d+:\\d+ [12]:[YN]:\\d+((:[[:alpha:]+]+)|(:\\d+))?$")) ) {
+        } else if ( all(stringr::str_detect(read_headers, "^[[:alnum:]]+:\\d+:[[:alnum:]-]+:\\d+:[[:alnum:]]+:\\d+:\\d+ [12]:[YN]:\\d+((:[[:alpha:]+]+)|(:\\d+))?$")) ) {
         
             message(paste0("Read header format for sample '",sample_i_name,"' detected as MGI (converted)"))
             if ( seq_type == "nanopore" ){
