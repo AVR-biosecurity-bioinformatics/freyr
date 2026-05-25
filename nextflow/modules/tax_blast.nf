@@ -5,12 +5,12 @@ process TAX_BLAST {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(primers), val(read_group), path(fasta), val(process_params)
+    tuple val(primers), val(read_group), path(fasta), path(blast_tsv), val(process_params)
 
     output:
     tuple val(primers), val(read_group), path("*_blast.csv"),                     emit: blast
     tuple val(primers), val(read_group), path("*_blast_spp_low.rds"),             emit: blast_assignment
-    tuple val(primers), val(read_group), path("*_n_ranks.txt"),                   emit: n_ranks
+    // tuple val(primers), val(read_group), path("*_n_ranks.txt"),                   emit: n_ranks
 
     publishDir "${launchDir}/output/modules/${process_name}", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
@@ -27,7 +27,7 @@ process TAX_BLAST {
         --primers "$primers" \
         --read_group "$read_group" \
         --fasta "$fasta" \
-        --ref_fasta "$process_params.ref_fasta" \
+        --blast_tsv "$blast_tsv" \
         --blast_min_identity "$process_params.blast_min_identity" \
         --blast_min_coverage "$process_params.blast_min_coverage" \
         --run_blast "$process_params.run_blast"

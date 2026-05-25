@@ -4,6 +4,8 @@
 
 
 //// modules to import
+include { MAKE_BLAST_DATABASE                       } from '../modules/make_blast_database'
+include { RUN_BLAST                                 } from '../modules/run_blast'
 include { TAX_IDTAXA                                } from '../modules/tax_idtaxa'
 include { TAX_BLAST                                 } from '../modules/tax_blast'
 include { JOINT_TAX                                 } from '../modules/joint_tax'
@@ -63,18 +65,47 @@ workflow TAXONOMY {
         .set { ch_idtaxa_ids }
 
 
+    //// make channel for BLAST databases per ref_fasta
+    ch_primer_params
+        .map { primers, primer_params ->
+            def process_params = primer_params.subMap('ref_fasta') 
+            [ primers, process_params ] }
+        .set { ch_blast_db_params }
+
+    //// make BLAST database from ref_fasta
+    MAKE_BLAST_DATABASE (
+        ch_blast_db_params
+    )
+
+    //// combine BLAST database with BLAST parameters
+    ch_primer_params
+        .map { primers, primer_params ->
+            def process_params = primer_params.subMap('run_blast') 
+            [ primers, process_params ] }
+        .set { ch_run_blast_params }
+
+    ch_taxassign_input
+        .combine ( MAKE_BLAST_DATABASE.out.blast_db, by: 0 )
+        .combine ( ch_run_blast_params, by: 0 )
+        .set { ch_run_blast_input }
+
+    //// search ASVs against BLAST database
+    RUN_BLAST (
+        ch_run_blast_input
+    )
+
     //// combine TAX_BLAST process params to input channel 
     ch_primer_params
         .map { primers, primer_params ->
-            def process_params = primer_params.subMap('ref_fasta', 'blast_min_identity', 'blast_min_coverage', 'run_blast') 
+            def process_params = primer_params.subMap('blast_min_identity', 'blast_min_coverage', 'run_blast') 
             [ primers, process_params ] }
         .set { ch_tax_blast_params }
     
-    ch_taxassign_input
-        .combine ( ch_tax_blast_params, by: 0 )
+    RUN_BLAST.out.blast_tsv
+        .combine ( ch_tax_blast_params, by: 0)
         .set { ch_tax_blast_input }
 
-    //// use blastn to assign taxonomy
+    //// use BLAST results to assign taxonomy
     TAX_BLAST ( 
         ch_tax_blast_input
     )
@@ -88,7 +119,6 @@ workflow TAXONOMY {
     TAX_BLAST.out.blast_assignment
         .groupTuple (by: [0,1] )
         .set { ch_blast_low }
-
 
     //// merge tax assignment outputs and filtered seqtab (pre-assignment)
     ch_idtaxa_tax // primers, read_group, tax

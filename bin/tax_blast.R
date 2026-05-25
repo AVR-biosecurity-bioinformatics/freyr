@@ -12,7 +12,7 @@ cat("\n")
 primers                     <- args$primers
 read_group                  <- args$read_group
 fasta                       <- args$fasta
-ref_fasta                   <- args$ref_fasta
+blast_tsv                   <- args$blast_tsv
 blast_min_identity          <- args$blast_min_identity
 blast_min_coverage          <- args$blast_min_coverage
 run_blast                   <- args$run_blast
@@ -39,64 +39,122 @@ suppressPackageStartupMessages(invisible(lapply(process_packages, library, chara
 
 ## check and define variables 
 
-quiet <-                FALSE # switch quiet off for now
-multithread <-          FALSE # multithreading switched off for now
-
-# extract number of ranks from ref_fasta 
-if ( stringr::str_detect(ref_fasta, "\\.fa\\.gz$|\\.fasta\\.gz$") ) { # if compressed
-    n_ranks <- readr::read_lines(gzfile(ref_fasta), n_max = 1) %>% # pull first line of .fa.gz
-            stringr::str_extract(pattern = ";.*?$") %>% # extract the taxonomic rank information (including first ';')
-            stringr::str_count(pattern = "[^;]+") # count the number of ranks between the ';'
-} else if ( stringr::str_detect(ref_fasta, "\\.fa$|\\.fasta$") ) { # if uncompressed
-    n_ranks <- readr::read_lines(ref_fasta, n_max = 1) %>% # pull first line of .fa.gz
-            stringr::str_extract(pattern = ";.*?$") %>% # extract the taxonomic rank information (including first ';')
-            stringr::str_count(pattern = "[^;]+") # count the number of ranks between the ';'
-} else { # if extension is not expected
-    stop ("*** 'ref_fasta' (BLAST database) file must have '.fa(sta)' or '.fa(sta).gz' extension! ***")
-}
-# set ranks based on number of ranks (only works for 7 or 8 ranks)
-if ( n_ranks == 8 ) {
-    ranks <- c("Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
-    message("** BLAST database contains 8 ranks--setting to 'Root>>Species' **")
-} else if ( n_ranks == 7 ) {
-    ranks <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
-    message("** BLAST database contains 7 ranks--setting to 'Kingdom>>Species' **")
-} else if ( n_ranks < 7 ) {
-    stop ("*** BLAST database contains fewer than 7 ranks--please set ranks explicitly using 'params.tax_ranks'! ***")
-} else {
-    stop ("*** BLAST database contains more than 8 ranks--please set ranks explicitly using 'params.tax_ranks'! ***")
-}
-
-write(n_ranks, file = paste0(read_group, "_", primers,"_n_ranks.txt"))
-
+# set variables
 run_blast <-            as.logical(run_blast)
-database <-             normalizePath(ref_fasta)
-identity <-             as.numeric(blast_min_identity)
-coverage <-             as.numeric(blast_min_coverage)
-db_name <-              basename(database) %>% stringr::str_remove("_\\.*$")
+blast_min_identity <-   as.numeric(blast_min_identity)
+blast_min_coverage <-   as.numeric(blast_min_coverage)
 
-### run R code
-seqs <-  Biostrings::readDNAStringSet(fasta) %>% as.character() # read in fasta
+# get sequences
+seqmap <- 
+    Biostrings::readDNAStringSet(fasta) %>% 
+    as.character() %>%
+    tibble::enframe(., name = "seq_name", value = "sequence")
 
-seqmap <- seqs %>% tibble::enframe(., name = "seq_name", value = "sequence")
+# get blast output
+blast_out <- 
+    readr::read_tsv(
+        blast_tsv, 
+        col_names = c("qseqid","sseqid","stitle","pident","length","mismatch","gapopen","qstart","qend","qlen","sstart","send","slen","evalue","bitscore","qcovs")
+    )
 
+### run code
 if (isTRUE(run_blast)) { # run BLAST if requested
-    
-    if ( length(seqs) > 0 ) { # if there are ASV sequences, run BLAST
-        ## make low stringency, ident = 60, coverage = 80, then save
-        blast_spp_low <- taxreturn::blast_top_hit(
-            query = seqs,
-            db = database, 
-            identity = 60, 
-            coverage = 80, 
-            evalue = 1e06,
-            max_target_seqs = 5, 
-            max_hsp = 5, 
-            ranks = ranks, 
-            delim = ";",
-            resolve_ties="all"
-        )
 
+    if ( nrow(seqmap) > 0 ) { # if there are ASV sequences, run BLAST
+
+        # get ranks from blast output
+        db_rank_count <- blast_out$sseqid %>% stringr::str_count(., ";") %>% unique()
+
+        if (length(db_rank_count) != 1){
+        stop(paste0("*** Reference database records appear to have a variable number of taxonomic ranks for primers '",primers,"' ***"))
+        }
+
+        if (db_rank_count == 7){
+            ranks <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+            message("** BLAST database contains 7 ranks--setting to 'Kingdom>>Species' **")
+        } else if (db_rank_count == 8){
+            ranks <- c("Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+            message("** BLAST database contains 8 ranks--setting to 'Root>>Species' **")
+        } else if (db_rank_count < 7){
+            stop ("*** BLAST database contains fewer than 7 ranks -- please set ranks explicitly using 'params.tax_ranks'! ***")
+        } else {
+            stop ("*** BLAST database contains more than 8 ranks -- please set ranks explicitly using 'params.tax_ranks'! ***")
+        }
+
+        ## create low-stringency BLAST output
+        blast_spp_low <- 
+            blast_out %>% 
+            # convert "!?!?" back to spaces
+            dplyr::mutate(
+                sseqid = stringr::str_replace_all(sseqid, "\\!\\?\\!\\?", " "),
+                stitle = stringr::str_replace_all(stitle, "\\!\\?\\!\\?", " ")
+            ) %>% 
+            dplyr::filter(
+                !is.na(sseqid)
+            ) %>%
+            dplyr::mutate(
+                q_align = qend - qstart + 1, # Length of alignment between query and reference
+                q_len_adj = ifelse(qlen > slen, slen, qlen) # Handle case when query is longer than subject
+            ) %>%
+            dplyr::mutate(full_pident = (pident * length)/(length - q_align + q_len_adj)) %>%
+            # Handle rare cases where there are multiple identical scoring matches within a single subject sequence (I.e multiple 16s copies)
+            dplyr::group_by(qseqid, sseqid, stitle, qstart, qend, length, full_pident) %>%
+            dplyr::slice(1) %>% 
+            dplyr::ungroup() %>%
+            # Handle cases where there are multiple matches overlapping the same segment of a subject by picking the highest scoring hit
+            # This is common when paired end reads that do not overlap are joined together (i.e. with concat_unmerged in freyr)
+            dplyr::group_by(qseqid, sseqid, stitle) %>%
+            dplyr::group_modify(~{
+                if(nrow(.x) > 1){ # Don't check cases with single unique hits
+                    # Check if hits overlap the same region
+                    # setup the IRanges object from the input qstart and qend
+                    ir <- IRanges::IRanges(as.numeric(.x$qstart), as.numeric(.x$qend), names = .x$name)
+                    # find which hit ids overlap with each other
+                    ovrlp <- IRanges::findOverlaps(ir, drop.self = TRUE, drop.redundant = TRUE)
+                    # store id indices for further use
+                    hit1 <- queryHits(ovrlp)
+                    hit2 <- subjectHits(ovrlp)
+                    # width of overlaps between ids
+                    widths <- width(pintersect(ir[hit1], ir[hit2])) - 1
+                    # result
+                    overlaps <- data.frame(id1 = names(ir)[hit1], id2 = names(ir)[hit2], widths)
+                    # if the multiple hits are overlapping, get the best hit - otherwise leave them as they will have been handled correctly when summing full_pident
+                    if(nrow(overlaps) > 0){
+                        newdf <- list()
+                        for (i in 1:nrow(overlaps)){
+                            newdf[[i]] <- 
+                                .x %>%
+                                filter(as.character(name) %in% c(overlaps$id1[i], overlaps$id2[i])) %>%
+                                dplyr::top_n(1, bitscore) %>%
+                                dplyr::top_n(1, pident) %>%
+                                dplyr::top_n(1, qcovs)
+                        }
+                        return(newdf %>% bind_rows() %>% distinct())
+                    } else {
+                        return(.x)
+                    }
+                } else {
+                    return(.x)
+                }
+            }) %>%
+            dplyr::summarise(
+                pident = sum(full_pident), # Combine hit stats for multiple discontiguous matches
+                qcovs = unique(qcovs),
+                max_score = max(bitscore),
+                total_score = sum(bitscore),
+                evalue = min(evalue)
+            ) %>%
+            # low stringency filters
+            dplyr::filter(pident > 60, qcovs > 80) %>%
+            dplyr::ungroup() %>%
+            dplyr::group_by(qseqid) %>%
+            dplyr::top_n(1, total_score) %>%
+            dplyr::top_n(1, max_score) %>%
+            dplyr::top_n(1, qcovs) %>%
+            dplyr::top_n(1, pident) %>%
+            tidyr::separate(stitle, c("acc", ranks), ";", remove = TRUE) %>%
+            dplyr::ungroup()
+        
         ## save BLAST output for assignment plot
         saveRDS(blast_spp_low, paste0(read_group,"_",primers,"_blast_spp_low.rds"))
 
@@ -104,12 +162,12 @@ if (isTRUE(run_blast)) { # run BLAST if requested
         blast_spp <- 
             blast_spp_low %>%
             # filter by identity and coverage thresholds
-            dplyr::filter(pident >= identity, qcovs >= coverage) %>% 
+            dplyr::filter(pident >= blast_min_identity, qcovs >= blast_min_coverage) %>% 
             dplyr::group_by(qseqid) %>%
             # add end of species binomial
-            dplyr::mutate(spp = Species %>%
-                            stringr::str_remove("^.* ") %>%
-                            stringr::str_remove("^.*_")) %>%
+            dplyr::mutate(
+                spp = Species %>% stringr::str_remove("^.* ") %>% stringr::str_remove("^.*_")
+            ) %>%
             # create "/" for species name when multiple are best hits for one species, remove old Species name
             dplyr::reframe(spp = paste(sort(unique(spp)), collapse = "/"), Genus, pident, qcovs, max_score, total_score, evalue) %>%
             # create new binomial if its not present already
@@ -139,7 +197,7 @@ if (isTRUE(run_blast)) { # run BLAST if requested
     }
     
     # Check that output sequences match input
-    if(!all(blast_spp$seq_name %in% names(seqs))){
+    if(!all(blast_spp$seq_name %in% seqmap$seq_name)){
         stop("Number of ASVs classified does not match the number of input ASVs")
     }
         
@@ -161,7 +219,7 @@ if (isTRUE(run_blast)) { # run BLAST if requested
 }
 
 # save tibble
-readr::write_csv(blast_spp, paste0(read_group,"_",primers,"_",db_name,"_blast.csv"))
+readr::write_csv(blast_spp, paste0(read_group,"_",primers,"_blast.csv"))
 
 # stop(" *** stopped manually *** ") ##########################################
 }, 
