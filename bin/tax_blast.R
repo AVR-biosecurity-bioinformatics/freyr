@@ -58,7 +58,9 @@ blast_out <-
     )
 
 ### run code
-if (isTRUE(run_blast)) { # run BLAST if requested
+
+# check there are some BLAST hits and BLAST is requested
+if (nrow(blast_out) > 0 & isTRUE(run_blast)){
 
     if ( nrow(seqmap) > 0 ) { # if there are ASV sequences, run BLAST
 
@@ -106,25 +108,25 @@ if (isTRUE(run_blast)) { # run BLAST if requested
             dplyr::group_by(qseqid, sseqid, stitle) %>%
             dplyr::group_modify(~{
                 if(nrow(.x) > 1){ # Don't check cases with single unique hits
-                    # Check if hits overlap the same region
+                #browser()  
+                # Check if hits overlap the same region
                     # setup the IRanges object from the input qstart and qend
-                    ir <- IRanges::IRanges(as.numeric(.x$qstart), as.numeric(.x$qend), names = .x$name)
+                    ir <- IRanges::IRanges(as.numeric(.x$qstart), as.numeric(.x$qend))
                     # find which hit ids overlap with each other
                     ovrlp <- IRanges::findOverlaps(ir, drop.self = TRUE, drop.redundant = TRUE)
                     # store id indices for further use
                     hit1 <- queryHits(ovrlp)
                     hit2 <- subjectHits(ovrlp)
                     # width of overlaps between ids
-                    widths <- width(pintersect(ir[hit1], ir[hit2])) - 1
+                    widths <- width(IRanges::pintersect(ir[hit1], ir[hit2])) - 1
                     # result
-                    overlaps <- data.frame(id1 = names(ir)[hit1], id2 = names(ir)[hit2], widths)
+                    overlaps <- data.frame(id1 = hit1, id2 = hit2, widths)
                     # if the multiple hits are overlapping, get the best hit - otherwise leave them as they will have been handled correctly when summing full_pident
                     if(nrow(overlaps) > 0){
                         newdf <- list()
                         for (i in 1:nrow(overlaps)){
                             newdf[[i]] <- 
                                 .x %>%
-                                filter(as.character(name) %in% c(overlaps$id1[i], overlaps$id2[i])) %>%
                                 dplyr::top_n(1, bitscore) %>%
                                 dplyr::top_n(1, pident) %>%
                                 dplyr::top_n(1, qcovs)
@@ -147,16 +149,15 @@ if (isTRUE(run_blast)) { # run BLAST if requested
             # low stringency filters
             dplyr::filter(pident > 60, qcovs > 80) %>%
             dplyr::ungroup() %>%
+            # get top hit per query
             dplyr::group_by(qseqid) %>%
             dplyr::top_n(1, total_score) %>%
             dplyr::top_n(1, max_score) %>%
             dplyr::top_n(1, qcovs) %>%
             dplyr::top_n(1, pident) %>%
+            # each taxonomic rank in its own column
             tidyr::separate(stitle, c("acc", ranks), ";", remove = TRUE) %>%
             dplyr::ungroup()
-        
-        ## save BLAST output for assignment plot
-        saveRDS(blast_spp_low, paste0(read_group,"_",primers,"_blast_spp_low.rds"))
 
         # filter by identity and coverage
         blast_spp <- 
@@ -203,7 +204,7 @@ if (isTRUE(run_blast)) { # run BLAST if requested
         
 } else { 
 
-    # if BLAST not requested, produce blast_spp tibble full of NAs
+    # if BLAST not requested or there were no hits, produce blast_spp tibble full of NAs
     blast_spp <- 
         seqmap %>%
         dplyr::mutate(
@@ -212,11 +213,13 @@ if (isTRUE(run_blast)) { # run BLAST if requested
             blast_spp = NA_character_
         )   
 
-    # save NULL output for assignment plot
+    # NULL output for low stringency BLAST
     blast_spp_low <- NULL
-    saveRDS(blast_spp_low, paste0(read_group,"_",primers,"_blast_spp_low.rds"))
 
 }
+
+# save low stringecy blast output for assignment plot
+saveRDS(blast_spp_low, paste0(read_group,"_",primers,"_blast_spp_low.rds"))
 
 # save tibble
 readr::write_csv(blast_spp, paste0(read_group,"_",primers,"_blast.csv"))
