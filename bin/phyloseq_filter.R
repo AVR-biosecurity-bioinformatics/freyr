@@ -269,7 +269,7 @@ if (cluster_threshold %>% is.na){
     clusters_out <- cluster_tibble
 
 } else {
-    set.seed <- 1; clusters <- DECIPHER::Clusterize(
+    set.seed(1); clusters <- DECIPHER::Clusterize(
         seqs, 
         cutoff = 1 - (cluster_threshold / 100),
         invertCenters = TRUE,
