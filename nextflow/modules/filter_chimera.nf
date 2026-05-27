@@ -1,7 +1,7 @@
 process FILTER_CHIMERA {
     def process_name = "filter_chimera"
     tag "$primers"
-    label "medium"
+    label "very_high"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:

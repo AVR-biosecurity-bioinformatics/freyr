@@ -9,6 +9,7 @@ cat("\n")
 
 ### process arguments 
 
+cpus                        <- args$cpus
 primers                     <- args$primers
 seqtab_tibble_list          <- args$seqtab_tibble_list
 fasta_list                  <- args$fasta_list
@@ -113,7 +114,8 @@ seqtab_nochim <-
     dada2::removeBimeraDenovo(
   		seqtab_matrix, 
   		method = "consensus",
-        minSampleFraction = minSampleFraction
+        minSampleFraction = minSampleFraction,
+        multithread = as.integer(cpus)
     )
 
 # output table of which sequences passed or failed filter
