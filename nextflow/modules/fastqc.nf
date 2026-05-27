@@ -1,7 +1,7 @@
 process FASTQC {
     def process_name = "fastqc"
     tag "$sample"
-    label "medium"
+    label "small"
     container "staphb/fastqc:0.12.1"
 
     input:

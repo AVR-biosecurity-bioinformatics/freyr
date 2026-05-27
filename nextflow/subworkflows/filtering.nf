@@ -70,9 +70,13 @@ workflow FILTERING {
             [ primers, process_params ] }
         .set { ch_filter_phmm_params } 
 
-    ch_filter_input
+    //// special input channel for FILTER_PHMM to chunk .fasta input
+    ch_seqtab
+        .map { primers, read_group, seqtab_tibble, fasta -> [ primers, fasta ]}
+        .splitFasta ( by: 1000, file: true, elem: 1 )
         .combine ( ch_filter_phmm_params, by: 0 )
         .set { ch_filter_phmm_input }
+
 
     //// filter by PHMM
     FILTER_PHMM (

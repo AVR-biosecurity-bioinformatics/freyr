@@ -5,7 +5,7 @@ process MERGE_FILTERS {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(primers), path(filter_tibble_list), path(seqtab_tibble_list), path(fasta_list)
+    tuple val(primers), path(filter_tibble_list, name: 'input_filter*.csv'), path(seqtab_tibble_list), path(fasta_list, name: 'input_seqs*.fasta')
     path(samplesheet_split)
 
     output:

@@ -6,12 +6,13 @@ process READ_TRACKING {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    path(rt_samples)
-    path(rt_group)
+    path(rt_samples, name: 'sample*.csv')
+    path(rt_group, name: 'group*.csv')
     path(samplesheet_split)
 
     output:
-    path("*.csv")
+    path("sample_tibble.csv")
+    path("group_tibble.csv")
     path("read_tracker.csv"),           emit: csv
     path("read_tracker.pdf"),           emit: plot
     path("*.pdf")

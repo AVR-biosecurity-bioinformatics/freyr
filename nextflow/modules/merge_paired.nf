@@ -1,7 +1,7 @@
 process MERGE_PAIRED {
     def process_name = "merge_paired"
     tag "$sample_primers"
-    label "small"
+    label "medium"
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:

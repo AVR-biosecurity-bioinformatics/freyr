@@ -329,7 +329,7 @@ seq_names_new <-
 
 names(seqs_output) <- seq_names_new
 
-write_fasta(seqs_output, paste0("asvs_unfiltered_", primers, ".fasta"))  
+write_fasta(seqs_output, paste0("asvs_filtered_", primers, ".fasta"))  
 
 ## output phyloseq and component data; from step_output_ps
 

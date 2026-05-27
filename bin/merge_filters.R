@@ -66,6 +66,8 @@ filters_combined <-
         }
     ) %>%
     dplyr::bind_rows() %>%
+    # deduplicate because phmm_filter likely has multiple duplicates per sequence due to chunking implementation
+    dplyr::distinct() %>%
     tidyr::pivot_wider(names_from = filter, values_from = status)
 
 # export combined filters
