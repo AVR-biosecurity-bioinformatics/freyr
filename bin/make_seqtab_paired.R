@@ -61,7 +61,7 @@ seqtab <- dada2::makeSequenceTable(mergers_pass)
 seq_vec <- seqtab %>% dada2::getSequences()
 
 # sequences as hash
-hash_vec <- seq_vec %>% lapply(., rlang::hash) %>% unlist()
+hash_vec <- seq_vec %>% lapply(., digest::digest, algo = "sha256") %>% unlist()
 
 # named vector of sequences
 names(seq_vec) <- hash_vec

@@ -17,7 +17,7 @@ process MAKE_SEQTAB_PAIRED {
 
     script:
     """
-
+    
     ${process_name}.R \
         --process_name "$process_name" \
         --projectDir "$projectDir" \
