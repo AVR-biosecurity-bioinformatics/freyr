@@ -16,6 +16,7 @@ include { PRIORS as PRIORS_S                        } from '../modules/priors'
 include { DENOISE as DENOISE2_F                     } from '../modules/denoise'
 include { DENOISE as DENOISE2_R                     } from '../modules/denoise'
 include { DENOISE as DENOISE2_S                     } from '../modules/denoise'
+include { MERGE_PAIRED                              } from '../modules/merge_paired'
 include { MAKE_SEQTAB_PAIRED                        } from '../modules/make_seqtab_paired'
 include { MAKE_SEQTAB_SINGLE                        } from '../modules/make_seqtab_single'
 
@@ -199,13 +200,22 @@ workflow DADA2 {
 
         }
 
-        //// join F and R denoised outputs
+        //// join F and R denoised outputs per sample
         ch_denoised_f
             .join ( ch_denoised_r, by: [0,1,2,3] ) // join by primers, read_group, sample, sample_primers
             .map { primers, read_group, sample, sample_primers, readsF, seqF, readsR, seqR -> 
-                    [ primers, read_group, sample, sample_primers, readsF, readsR, seqF, seqR ] } 
-            .groupTuple ( by: [0,1] ) // group by primers, read_group
+                [ primers, read_group, sample, sample_primers, readsF, readsR, seqF, seqR ] } 
             .combine ( ch_concat_unmerged, by: 0 )
+            .set { ch_denoised_paired }
+
+        //// merge paired-end reads per sample
+        MERGE_PAIRED (
+            ch_denoised_paired
+        )
+
+        //// group merged sequences by read_group x primers
+        MERGE_PAIRED.out.mergers
+            .groupTuple ( by: [0,1] ) // group by primers, read_group
             .set { ch_seq_combined }
 
         //// merge paired-end reads per flowcell x locus combo
@@ -214,7 +224,7 @@ workflow DADA2 {
         )
 
         ch_read_tracker_grouped = 
-            ch_read_tracker_grouped.concat(MAKE_SEQTAB_PAIRED.out.read_tracking)
+            ch_read_tracker_grouped.concat(MERGE_PAIRED.out.read_tracking)
 
         ch_seqtab = MAKE_SEQTAB_PAIRED.out.seqtab
 
