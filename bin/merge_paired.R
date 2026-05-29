@@ -40,6 +40,9 @@ if ( is.na(concat_unmerged) || concat_unmerged %in%  c("NA", "FALSE", "F")) {
 }
 
 ### run R code
+
+### NOTE: this code was originally written for multiple samples but now is single-sample -- some of the parsing is unnecessary
+
 ## process sample IDs to name the read and seq lists
 ## NOTE: the format of this list is different: "[a,b,c]" not "a b c"
 sample_primers_list <-
@@ -98,52 +101,57 @@ empty_seqs_R <- seqs_R_extracted[sapply(seqs_R_extracted, is.null)] %>% names
 seqs_F_pass <- seqs_F_extracted[!sapply(seqs_F_extracted, is.null)]
 seqs_R_pass <- seqs_R_extracted[!sapply(seqs_R_extracted, is.null)]
 
-# if either passing seq list is empty, throw error
+# if either passing seq list is empty...
 if (length(seqs_F_pass) == 0 || length(seqs_R_pass) == 0){
-    stop(paste0("\n***\nZero sequences made it through denoising for read group '",read_group,"' and primers '",primers,"'.\nConsider changing your read filtering parameters.\n***\n"))
+    message("No sequence pairs input into process")
 }
 
 # remove read files from list if there are NULL elements associated with them
 reads_F_pass <- reads_F_list[!names(reads_F_list) %in% empty_seqs_F]
 reads_R_pass <- reads_R_list[!names(reads_R_list) %in% empty_seqs_R]
 
-# if either passing reads list is empty, throw error
+
+# if either passing reads list is empty...
 if (length(reads_F_pass) == 0 || length(reads_R_pass) == 0){
-    stop(paste0("\n***\nZero reads made it through denoising for read group '",read_group,"' and primers '",primers,"'.\nConsider changing your read filtering parameters.\n***\n"))
+    message("No read pairs input into process")
+    run_process <- FALSE
+} else {
+    run_process <- TRUE
 }
 
 # vector of samples that pass (ie. have data)
 sample_primers_pass <- sample_primers_list[!sample_primers_list %in% c(empty_seqs_F, empty_seqs_R)]
 sample_primers_fail <- sample_primers_list[sample_primers_list %in% c(empty_seqs_F, empty_seqs_R)]
 
-## merge pairs, keeping unmerged reads only if concat_unmerged is TRUE
-mergers <- 
-    dada2::mergePairs(
-        dadaF = seqs_F_pass,
-        derepF = reads_F_pass,
-        dadaR = seqs_R_pass,
-        derepR= reads_R_pass,
-        verbose = TRUE,
-        minOverlap = 12,
-        trimOverhang = TRUE,
-        returnRejects = concat_unmerged
-    )
+if (run_process){
 
-
-## reformat mergers as a list with one element if there is only one sample
-if ( class(mergers) == "data.frame" ) {
-    mergers <- list(mergers)
-    names(mergers) <- sample_primers_pass
-}
-
-## TODO: write out unmerged reads? (pull from functions.R)
-
-## concatenate unmerged reads
-if ( concat_unmerged ) {
-    message("concat_unmerged is set to TRUE - Concatenating unmerged forward and reverse reads")
-    mergers_rescued <- mergers
-    for(i in 1:length(mergers)) {
-        if(any(!mergers[[i]]$accept)){
+  ## merge pairs, keeping unmerged reads only if concat_unmerged is TRUE
+  mergers <- 
+      dada2::mergePairs(
+          dadaF = seqs_F_pass,
+          derepF = reads_F_pass,
+          dadaR = seqs_R_pass,
+          derepR= reads_R_pass,
+          verbose = TRUE,
+          minOverlap = 12,
+          trimOverhang = TRUE,
+          returnRejects = concat_unmerged
+      )
+  
+  ## reformat mergers as a list with one element if there is only one sample
+  if ( class(mergers) == "data.frame" ) {
+      mergers <- list(mergers)
+      names(mergers) <- sample_primers_pass
+  }
+  
+  ## TODO: write out unmerged reads? (pull from functions.R)
+  
+  ## concatenate unmerged reads
+  if ( concat_unmerged ) {
+      message("concat_unmerged is set to TRUE - Concatenating unmerged forward and reverse reads")
+      mergers_rescued <- mergers
+      for(i in 1:length(mergers)) {
+          if(any(!mergers[[i]]$accept)){
             # Get index of unmerged reads in table
             unmerged_index <- which(!mergers[[i]]$accept)
             # Get the forward and reverse reads for those reads
@@ -158,35 +166,59 @@ if ( concat_unmerged ) {
             mergers_rescued[[i]]$nindel[unmerged_index] <- 0
             mergers_rescued[[i]]$prefer[unmerged_index] <- NA
             mergers_rescued[[i]]$accept[unmerged_index] <- TRUE
-        } 
-    }
-    mergers <- mergers_rescued
-}
-
-# save number of merged reads per sample
-getN <- function(x) sum(dada2::getUniques(x))
-
-# create readsout output table
-sapply(mergers, getN) %>% 
-    as.data.frame() %>% 
-    magrittr::set_colnames("pairs") %>%
-    tibble::rownames_to_column(var = "sample_primers") %>%
-    # add 0 abundance samples in with read counts of 0
-    tibble::add_row(sample_primers = sample_primers_fail, pairs = 0) %>%
-    dplyr::mutate(
+          } 
+      }
+      mergers <- mergers_rescued
+  }
+  
+  # save number of merged reads per sample
+  getN <- function(x) sum(dada2::getUniques(x))
+  
+  # create readsout output table
+  sapply(mergers, getN) %>% 
+      as.data.frame() %>% 
+      magrittr::set_colnames("pairs") %>%
+      tibble::rownames_to_column(var = "sample_primers") %>%
+      # add 0 abundance samples in with read counts of 0
+      tibble::add_row(sample_primers = sample_primers_fail, pairs = 0) %>%
+      dplyr::mutate(
+          read_group = read_group,
+          primers = primers,
+          stage = "dada_mergereads"
+      ) %>%
+      dplyr::select(stage, sample_primers, read_group, primers, pairs) %>% 
+      readr::write_csv(., paste0("dada_mergereads_",sample_primers,"_readsout.csv"))
+  
+  # output mergers file as RDS
+  if (nrow(mergers[[1]]) > 0){
+      saveRDS(mergers, "mergers.rds")
+  } else {
+      out <- list(NULL)
+      names(out) <- sample_primers
+      saveRDS(out, "mergers.rds")
+  }
+  
+   
+} else {
+  
+    # create readsout output table
+    tibble::tibble(
+        pairs = 0,
+        sample_primers = sample_primers_fail,
         read_group = read_group,
-        primers = primers,
+        primers = primers, 
         stage = "dada_mergereads"
     ) %>%
     dplyr::select(stage, sample_primers, read_group, primers, pairs) %>% 
-    readr::write_csv(., paste0("dada_mergereads_",read_group,"_",primers,"_readsout.csv"))
+    readr::write_csv(., paste0("dada_mergereads_",sample_primers,"_readsout.csv"))
 
-# output mergers file as RDS
-if (nrow(mergers[[1]]) > 0){
-    saveRDS(mergers, "mergers.rds")
-} else {
-    saveRDS(NULL, "mergers.rds")
+    # output mergers file as RDS
+    out <- list(NULL)
+    names(out) <- sample_primers
+    saveRDS(out, "mergers.rds")
+    
 }
+
 
 # stop(" *** stopped manually *** ") ##########################################
 

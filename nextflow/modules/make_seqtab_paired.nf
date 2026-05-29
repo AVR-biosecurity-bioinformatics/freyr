@@ -5,7 +5,7 @@ process MAKE_SEQTAB_PAIRED {
     container "jackscanlan/piperline-multi:0.0.1"
 
     input:
-    tuple val(primers), val(read_group), val(sample), val(sample_primers), path(mergers_list, name: 'mergers*.rds')
+    tuple val(primers), val(read_group), val(sample), val(sample_primers), path(mergers_paths, name: 'mergers*.rds')
 
     output:
     tuple val(primers), val(read_group), path("*_seqtab_tibble.csv"), path("*_seqs.fasta"),    emit: seqtab
@@ -26,7 +26,7 @@ process MAKE_SEQTAB_PAIRED {
         --sample_primers "$sample_primers" \
         --primers "$primers" \
         --read_group "$read_group" \
-        --mergers_list "$mergers_list" 
+        --mergers_paths "$mergers_paths" 
 
     """
 

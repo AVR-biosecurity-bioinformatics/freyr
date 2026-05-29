@@ -9,7 +9,7 @@ cat("\n")
 
 ### process arguments 
 
-mergers_list                <- args$mergers_list
+mergers_paths               <- args$mergers_paths
 sample_primers              <- args$sample_primers
 primers                     <- args$primers
 read_group                  <- args$read_group
@@ -30,7 +30,7 @@ suppressPackageStartupMessages(invisible(lapply(process_packages, library, chara
 
 ### process variables 
 mergers_list <- 
-  mergers_list %>% 
+  mergers_paths %>% 
   # extract all runs of characters that aren't spaces, commas or square brackets
   stringr::str_extract_all(
     ., 
@@ -43,7 +43,8 @@ mergers_list <-
       readRDS(x)
     },
     USE.NAMES = F
-  ) 
+  ) #%>%
+  #unlist(., recursive = F)
 
 ### run R code
 # get names of NULL elements for F and R sequences
