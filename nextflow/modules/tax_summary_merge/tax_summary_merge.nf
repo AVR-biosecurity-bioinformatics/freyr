@@ -1,7 +1,7 @@
 process TAX_SUMMARY_MERGE {
     tag "Whole dataset"
     label "small"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/tax_summary_merge", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${launchDir}/output/results/taxonomic_assignment", mode: 'copy'
 

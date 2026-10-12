@@ -1,7 +1,7 @@
 process DOWNSAMPLE_READS {
     tag "$sample"
     label "small"
-    container "staphb/seqtk:1.4"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/downsample_reads", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:

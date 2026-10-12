@@ -1,7 +1,7 @@
 process TAX_IDTAXA {
     tag "$primers; $read_group"
     label "medium"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/tax_idtaxa", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:

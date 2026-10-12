@@ -1,7 +1,7 @@
 process TRAIN_IDTAXA {
     tag "Whole pipeline"
     label "high"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/process_name", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${launchDir}/output/results/taxonomic_assignment", mode: 'copy'
 

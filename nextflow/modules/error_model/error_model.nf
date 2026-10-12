@@ -1,7 +1,7 @@
 process ERROR_MODEL {
     tag "$primers; $read_group"
     label "high"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/error_model", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:

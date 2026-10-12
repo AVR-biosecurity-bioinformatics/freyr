@@ -1,7 +1,7 @@
 process FILTER_FRAME {
     tag "$primers"
     label "medium"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/filter_frame", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:

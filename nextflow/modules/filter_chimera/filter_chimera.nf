@@ -1,7 +1,7 @@
 process FILTER_CHIMERA {
     tag "$primers"
     label "very_high"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/filter_chimera", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:

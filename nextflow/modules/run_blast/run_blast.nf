@@ -1,7 +1,7 @@
 process RUN_BLAST {
     tag "$primers"
     label "medium"
-    container "ncbi/blast:2.17.0"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/run_blast", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:

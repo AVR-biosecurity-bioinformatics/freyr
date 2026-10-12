@@ -1,7 +1,7 @@
 process FASTQC {
     tag "$sample"
     label "small"
-    container "staphb/fastqc:0.12.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/fastqc", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${launchDir}/output/results/qc/fastqc", mode: 'copy'
 

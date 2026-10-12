@@ -1,7 +1,7 @@
 process MAKE_BLAST_DATABASE {
     tag "$primers"
     label "medium"
-    container "ncbi/blast:2.17.0"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/make_blast_database", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:

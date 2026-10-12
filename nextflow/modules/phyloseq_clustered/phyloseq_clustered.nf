@@ -1,7 +1,7 @@
 process PHYLOSEQ_CLUSTERED {
     tag "$primers"
     label "phyloseq"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/phyloseq_clustered", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${launchDir}/output/results/main_outputs/clustered", mode: 'copy'
 

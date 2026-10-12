@@ -1,7 +1,7 @@
 process NANOPLOT {
     tag "$sample"
     label "high"
-    container "nanozoo/nanoplot:1.42.0--547049c"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/nanoplot", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${launchDir}/output/results/qc/nanoplot", mode: 'copy'
 

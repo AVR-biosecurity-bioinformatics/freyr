@@ -1,7 +1,7 @@
 process ACCUMULATION_CURVE {
     tag "$primers"
     label "phyloseq"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/accumulation_curve", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${launchDir}/output/results/main_outputs/unfiltered", mode: 'copy'
 

@@ -1,7 +1,7 @@
 process MERGE_PAIRED {
     tag "$sample_primers"
     label "medium"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/merge_paired", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:

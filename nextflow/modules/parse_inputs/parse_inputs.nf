@@ -4,7 +4,7 @@ process PARSE_INPUTS {
 
     tag "Whole dataset"
     label "small"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
 
     input:
     path(samplesheet)

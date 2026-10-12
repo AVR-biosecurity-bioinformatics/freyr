@@ -1,7 +1,7 @@
 process PHYLOSEQ_FILTER {
     tag "$primers"
     label "phyloseq"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/phyloseq_filter", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${launchDir}/output/results/main_outputs/filtered", mode: 'copy'
 

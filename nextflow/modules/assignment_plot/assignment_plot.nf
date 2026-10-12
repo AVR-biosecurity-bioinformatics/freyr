@@ -1,7 +1,7 @@
 process ASSIGNMENT_PLOT {
     tag "$primers; $read_group"
     label "small"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/assignment_plot", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${launchDir}/output/results/taxonomic_assignment", pattern: 'taxonomic_assignment_summary_*.pdf', mode: 'copy'
 

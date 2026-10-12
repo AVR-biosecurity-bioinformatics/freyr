@@ -1,7 +1,7 @@
 process MAKE_SEQTAB_PAIRED {
     tag "$primers; $read_group"
     label "long"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/make_seqtab_paired", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:

@@ -1,7 +1,7 @@
 process SPLIT_LOCI {
     tag "$sample_primers"
     label "medium"
-    container "thatdnaguy/cutadapt:v4.7_02"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/split_loci", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:

@@ -1,7 +1,7 @@
 process FILTER_QUALPLOTS {
     tag "$sample_primers"
     label "small"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/filter_qualplots", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${launchDir}/output/results/qc/read_filtering", mode: 'copy'
 

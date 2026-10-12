@@ -1,7 +1,7 @@
 process MERGE_TAX {
     tag "$primers"
     label "small"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/merge_tax", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:

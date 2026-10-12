@@ -1,7 +1,7 @@
 process MAKE_SEQTAB_SINGLE {
     tag "$primers; $read_group"
     label "small"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/make_seqtab_single", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:

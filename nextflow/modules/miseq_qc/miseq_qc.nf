@@ -1,7 +1,7 @@
 process MISEQ_QC {
     tag "$read_group"
     label "small"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/miseq_qc", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${launchDir}/output/results/qc/miseq_qc", mode: 'copy'
 

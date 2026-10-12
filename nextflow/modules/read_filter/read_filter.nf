@@ -1,7 +1,7 @@
 process READ_FILTER {
     tag "$sample_primers"
     label "medium"
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/read_filter", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:

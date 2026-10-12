@@ -2,7 +2,7 @@ process READ_TRACKING {
     tag "Whole dataset"
     label "small"
     // cache false 
-    container "jackscanlan/piperline-multi:0.0.1"
+    conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/read_tracking", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${launchDir}/output/results/read_tracking", mode: 'copy'
     
