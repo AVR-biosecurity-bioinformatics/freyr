@@ -4,14 +4,14 @@
 
 
 //// modules to import
-include { FASTQC                                    } from '../modules/fastqc'
-include { NANOPLOT                                  } from '../modules/nanoplot'
-include { MISEQ_QC                                  } from '../modules/miseq_qc'
-include { SPLIT_LOCI                                } from '../modules/split_loci'
-include { PRIMER_TRIM                               } from '../modules/primer_trim'
-include { READ_FILTER                               } from '../modules/read_filter' 
-include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_PRE  } from '../modules/filter_qualplots'
-include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_POST } from '../modules/filter_qualplots'
+include { FASTQC                                    } from '../modules/fastqc/fastqc'
+include { NANOPLOT                                  } from '../modules/nanoplot/nanoplot'
+include { MISEQ_QC                                  } from '../modules/miseq_qc/miseq_qc'
+include { SPLIT_LOCI                                } from '../modules/split_loci/split_loci'
+include { PRIMER_TRIM                               } from '../modules/primer_trim/primer_trim'
+include { READ_FILTER                               } from '../modules/read_filter/read_filter' 
+include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_PRE  } from '../modules/filter_qualplots/filter_qualplots'
+include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_POST } from '../modules/filter_qualplots/filter_qualplots'
 
 workflow PROCESS_READS {
 

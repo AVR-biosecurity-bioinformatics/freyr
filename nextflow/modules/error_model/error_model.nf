@@ -1,0 +1,29 @@
+process ERROR_MODEL {
+    tag "$primers; $read_group"
+    label "high"
+    container "jackscanlan/piperline-multi:0.0.1"
+    publishDir "${launchDir}/output/modules/error_model", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+
+    input:
+    tuple val(direction), val(primers), val(read_group), path(reads)
+
+    output:   
+    tuple val(direction), val(primers), val(read_group), path("*_errormodel{F,R,S}.rds"),   emit: errormodel
+    path("*_errormodel.pdf"),                                           emit: plot
+
+    script:
+    """
+
+    error_model.R \
+        --process_name "error_model" \
+        --projectDir "$projectDir" \
+        --cpus "$task.cpus" \
+        --rdata "$params.rdata" \
+        --reads "$reads" \
+        --primers "$primers" \
+        --read_group "$read_group" \
+        --direction "$direction"
+
+    """
+    
+}

@@ -4,11 +4,11 @@
 
 
 //// modules to import
-include { FILTER_CHIMERA                            } from '../modules/filter_chimera'
-include { FILTER_FRAME                              } from '../modules/filter_frame'
-include { FILTER_LENGTH                             } from '../modules/filter_length'
-include { FILTER_PHMM                               } from '../modules/filter_phmm'
-include { MERGE_FILTERS                             } from '../modules/merge_filters'
+include { FILTER_CHIMERA                            } from '../modules/filter_chimera/filter_chimera'
+include { FILTER_FRAME                              } from '../modules/filter_frame/filter_frame'
+include { FILTER_LENGTH                             } from '../modules/filter_length/filter_length'
+include { FILTER_PHMM                               } from '../modules/filter_phmm/filter_phmm'
+include { MERGE_FILTERS                             } from '../modules/merge_filters/merge_filters'
 
 workflow FILTERING {
 

@@ -4,15 +4,15 @@
 
 
 //// modules to import
-include { MAKE_BLAST_DATABASE                       } from '../modules/make_blast_database'
-include { RUN_BLAST                                 } from '../modules/run_blast'
-include { TAX_IDTAXA                                } from '../modules/tax_idtaxa'
-include { TAX_BLAST                                 } from '../modules/tax_blast'
-include { JOINT_TAX                                 } from '../modules/joint_tax'
-include { MERGE_TAX                                 } from '../modules/merge_tax'
-include { ASSIGNMENT_PLOT                           } from '../modules/assignment_plot'
-include { TAX_SUMMARY                               } from '../modules/tax_summary'
-include { TAX_SUMMARY_MERGE                         } from '../modules/tax_summary_merge'
+include { MAKE_BLAST_DATABASE                       } from '../modules/make_blast_database/make_blast_database'
+include { RUN_BLAST                                 } from '../modules/run_blast/run_blast'
+include { TAX_IDTAXA                                } from '../modules/tax_idtaxa/tax_idtaxa'
+include { TAX_BLAST                                 } from '../modules/tax_blast/tax_blast'
+include { JOINT_TAX                                 } from '../modules/joint_tax/joint_tax'
+include { MERGE_TAX                                 } from '../modules/merge_tax/merge_tax'
+include { ASSIGNMENT_PLOT                           } from '../modules/assignment_plot/assignment_plot'
+include { TAX_SUMMARY                               } from '../modules/tax_summary/tax_summary'
+include { TAX_SUMMARY_MERGE                         } from '../modules/tax_summary_merge/tax_summary_merge'
 
 workflow TAXONOMY {
 
