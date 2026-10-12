@@ -37,7 +37,7 @@ workflow DADA2 {
 
     //// populate read channels with branched processed_reads input channel
     processed_reads
-        .branch { direction, primers, read_group, sample, sample_primers, reads ->
+        .branch { direction, _primers, _read_group, _sample, _sample_primers, _reads ->
             forward: direction == "forward"
             reverse: direction == "reverse"
             single: direction == "single"
@@ -59,13 +59,13 @@ workflow DADA2 {
 
         //// group reads into list for error modeling
         ch_processed_reads.forward
-            .map { direction, primers, read_group, sample, sample_primers, reads ->
+            .map { direction, primers, read_group, _sample, _sample_primers, reads ->
                 [ direction, primers, read_group, reads ] }
             .groupTuple( by: [0,1,2] )
             .set { ch_error_input_forward }
 
         ch_processed_reads.reverse
-            .map { direction, primers, read_group, sample, sample_primers, reads ->
+            .map { direction, primers, read_group, _sample, _sample_primers, reads ->
                 [ direction, primers, read_group, reads ]  }
             .groupTuple( by: [0,1,2] )
             .set { ch_error_input_reverse }
@@ -116,7 +116,7 @@ workflow DADA2 {
             
             /// forward reads
             DENOISE1_F.out.seq
-                .map { direction, primers, read_group, sample, sample_primers, reads, priors ->
+                .map { direction, primers, read_group, _sample, _sample_primers, _reads, priors ->
                     [ direction, primers, read_group, priors ] }
                 .groupTuple ( by: [0,1,2] )
                 .set { ch_priors_f_pre }
@@ -129,7 +129,7 @@ workflow DADA2 {
 
             /// combine with forward read data channel
             ch_denoise1_input_forward
-                .map { direction, primers, read_group, sample, sample_primers, reads, errormodel, priors -> // remove null priors
+                .map { direction, primers, read_group, sample, sample_primers, reads, errormodel, _priors -> // remove null priors
                     [ direction, primers, read_group, sample, sample_primers, reads, errormodel ] }
                 .combine ( PRIORS_F.out.priors, by: [0,1,2] )
                 .set { ch_denoise2_input_forward }
@@ -144,14 +144,14 @@ workflow DADA2 {
 
             /// remove direction
             DENOISE2_F.out.seq
-                .map { direction, primers, read_group, sample, sample_primers, reads, seqs ->
+                .map { _direction, primers, read_group, sample, sample_primers, reads, seqs ->
                     [ primers, read_group, sample, sample_primers, reads, seqs ] }
                 .set { ch_denoised_f }
 
 
             /// reverse reads
             DENOISE1_R.out.seq
-                .map { direction, primers, read_group, sample, sample_primers, reads, priors ->
+                .map { direction, primers, read_group, _sample, _sample_primers, _reads, priors ->
                     [ direction, primers, read_group, priors ] }
                 .groupTuple ( by: [0,1,2] )
                 .set { ch_priors_r_pre }
@@ -164,7 +164,7 @@ workflow DADA2 {
 
             /// combine with reverse read data channel
             ch_denoise1_input_reverse
-                .map { direction, primers, read_group, sample, sample_primers, reads, errormodel, priors -> // remove null priors
+                .map { direction, primers, read_group, sample, sample_primers, reads, errormodel, _priors -> // remove null priors
                     [ direction, primers, read_group, sample, sample_primers, reads, errormodel ] }
                 .combine ( PRIORS_R.out.priors, by: [0,1,2] )
                 .set { ch_denoise2_input_reverse }
@@ -179,7 +179,7 @@ workflow DADA2 {
 
             /// remove direction
             DENOISE2_R.out.seq
-                .map { direction, primers, read_group, sample, sample_primers, reads, seqs ->
+                .map { _direction, primers, read_group, sample, sample_primers, reads, seqs ->
                     [ primers, read_group, sample, sample_primers, reads, seqs ] }
                 .set { ch_denoised_r }  
 
@@ -188,13 +188,13 @@ workflow DADA2 {
             /// join F and R DENOISE1 outputs
             // prepare forward reads
             DENOISE1_F.out.seq
-                .map { direction, primers, read_group, sample, sample_primers, reads, seqs ->
+                .map { _direction, primers, read_group, sample, sample_primers, reads, seqs ->
                     [ primers, read_group, sample, sample_primers, reads, seqs ] }
                 .set { ch_denoised_f }
 
             // prepare reverse reads
             DENOISE1_R.out.seq
-                .map { direction, primers, read_group, sample, sample_primers, reads, seqs ->
+                .map { _direction, primers, read_group, sample, sample_primers, reads, seqs ->
                     [ primers, read_group, sample, sample_primers, reads, seqs ] }
                 .set { ch_denoised_r }
 
@@ -238,7 +238,7 @@ workflow DADA2 {
 
         //// group reads into list for error modeling
         ch_processed_reads.single
-            .map { direction, primers, read_group, sample, sample_primers, reads ->
+            .map { direction, primers, read_group, _sample, _sample_primers, reads ->
                 [ direction, primers, read_group, reads ]  }
             .groupTuple( by: [0,1,2] )
             .set { ch_error_input_single }
@@ -268,7 +268,7 @@ workflow DADA2 {
             //// group priors for each read file
             /// single reads
             DENOISE1_S.out.seq
-                .map { direction, primers, read_group, sample, sample_primers, reads, priors ->
+                .map { direction, primers, read_group, _sample, _sample_primers, _reads, priors ->
                         [ direction, primers, read_group, priors ] }
                 .groupTuple ( by: [0,1,2] )
                 .set { ch_priors_s_pre }
@@ -281,7 +281,7 @@ workflow DADA2 {
             
             /// combine with single read data channel
             ch_denoise1_input_single
-                .map { direction, primers, read_group, sample, sample_primers, reads, errormodel, priors -> // remove null priors
+                .map { direction, primers, read_group, sample, sample_primers, reads, errormodel, _priors -> // remove null priors
                         [ direction, primers, read_group, sample, sample_primers, reads, errormodel ] }
                 .combine ( PRIORS_S.out.priors, by: [0,1,2] )
                 .set { ch_denoise2_input_single }
@@ -296,7 +296,7 @@ workflow DADA2 {
 
             // prepare single reads
             DENOISE2_S.out.seq
-                .map { direction, primers, read_group, sample, sample_primers, reads, seqs ->
+                .map { _direction, primers, read_group, sample, sample_primers, reads, seqs ->
                         [ primers, read_group, sample, sample_primers, reads, seqs ] }
                 .groupTuple ( by: [0,1] ) // group by primers, read_group
                 .combine ( ch_concat_unmerged, by: 0 )
@@ -304,7 +304,7 @@ workflow DADA2 {
 
         } else { // don't run second denoising step with priors
             DENOISE1_S.out.seq
-                .map { direction, primers, read_group, sample, sample_primers, reads, seqs ->
+                .map { _direction, primers, read_group, sample, sample_primers, reads, seqs ->
                         [ primers, read_group, sample, sample_primers, reads, seqs ] }
                 .groupTuple ( by: [0,1] ) // group by primers, read_group
                 .combine ( ch_concat_unmerged, by: 0 )

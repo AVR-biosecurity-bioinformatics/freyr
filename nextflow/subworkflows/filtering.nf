@@ -14,7 +14,6 @@ workflow FILTERING {
 
     take:
     ch_seqtab
-    ch_read_groups
     ch_primer_params
     ch_samplesheet_split
 
@@ -22,7 +21,7 @@ workflow FILTERING {
 
     //// group all flowcells (per primer pair) into a single element for filtering
     ch_seqtab
-        .map { primers, read_group, seqtab_tibble, fasta -> 
+        .map { primers, _read_group, seqtab_tibble, fasta -> 
             [ primers, seqtab_tibble, fasta ] }
         .groupTuple ( by: 0 )
         .set { ch_filter_input }
@@ -30,7 +29,7 @@ workflow FILTERING {
 
     //// combine FILTER_CHIMERA parameters to input channel
     ch_primer_params
-        .map { primers, primer_params ->
+        .map { primers, _primer_params ->
             [ primers, [ 'chimera_sample_frac': params.chimera_sample_frac ] ] }
         .set { ch_filter_chimera_params } 
 
@@ -72,7 +71,7 @@ workflow FILTERING {
 
     //// special input channel for FILTER_PHMM to chunk .fasta input
     ch_seqtab
-        .map { primers, read_group, seqtab_tibble, fasta -> [ primers, fasta ]}
+        .map { primers, _read_group, _seqtab_tibble, fasta -> [ primers, fasta ]}
         .splitFasta ( by: 1000, file: true, elem: 1 )
         .combine ( ch_filter_phmm_params, by: 0 )
         .set { ch_filter_phmm_input }

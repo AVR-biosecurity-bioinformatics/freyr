@@ -270,7 +270,7 @@ workflow FREYR {
 
     //// get read_group values as channel
     ch_sample_primers_reads 
-        .map { primers, read_group, sample, sample_primers, reads -> read_group } 
+        .map { _primers, read_group, _sample, _sample_primers, _reads -> read_group } 
         .unique()
         .set { ch_read_groups }
     
@@ -334,7 +334,6 @@ workflow FREYR {
     //// subworkflow: apply soft filters to ASVs
     FILTERING (
         DADA2.out.ch_seqtab,
-        ch_read_groups,
         ch_primer_params,
         ch_samplesheet_split
     )

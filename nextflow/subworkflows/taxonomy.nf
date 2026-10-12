@@ -25,7 +25,7 @@ workflow TAXONOMY {
 
     //// just keep fasta files for input
     ch_seqtab
-        .map { primers, read_group, seqtab, fasta -> 
+        .map { primers, read_group, _seqtab, fasta -> 
             [ primers, read_group, fasta ] }
         .set { ch_fasta }
 
@@ -132,7 +132,7 @@ workflow TAXONOMY {
 
     //// group taxtab across flowcells (per locus)
     JOINT_TAX.out.joint
-        .map { primers, read_group, tax_tibble -> [ primers, tax_tibble ] }
+        .map { primers, _read_group, tax_tibble -> [ primers, tax_tibble ] }
         .groupTuple ( by: 0 ) // group into tuples using primers
         .set { ch_mergetax_input }
 
@@ -186,7 +186,7 @@ workflow TAXONOMY {
 
     // create channel containing a single list of all TAX_SUMMARY outputs
     TAX_SUMMARY.out.csv
-        .map { primers, read_group, tax_summary ->
+        .map { _primers, _read_group, tax_summary ->
             [ tax_summary ] } 
         .collect()
         .set { ch_tax_summaries } 
