@@ -40,52 +40,6 @@ def pipelineHeader(){
     """.stripIndent()
 }
 
-startupMessage()
-
-workflow.onComplete {
-    if ( workflow.success ) {
-      log.info "[$workflow.complete] >> Pipeline finished SUCCESSFULLY after $workflow.duration"
-    } else {
-      log.info "[$workflow.complete] >> Pipeline finished with ERRORS after $workflow.duration"
-    }
-    /*
-    TODO: use other metadata (https://www.nextflow.io/docs/latest/metadata.html) to display at the end of a run.
-    */
-
-}
-
-
-// Print help message, supply typical command line usage for the pipeline
-if (params.help) {
-//    log.info startupMessage()
-   log.info paramsHelp("nextflow run AVR-biosecurity-bioinformatics/freyr --samplesheet samplesheet.csv --primer_params primer_params.csv") // TODO: add typical commands for pipeline
-   exit 0
-}
-
-// check Nextflow version matches 23.05.0-edge, due to incompatibility of higher versions with Shifter
-if( !nextflow.version.matches('=23.05.0-edge') ) {
-    println " "
-    println "*** ERROR ~ This pipeline currently requires Nextflow version 23.05.0-edge -- You are running version ${nextflow.version}. ***"
-    error "*** Either: append 'NXF_VER=23.05.0-edge' to the front of the 'nextflow run' command, or run 'export NXF_VER=23.05.0-edge'. ***"
-}
-
-// Validate input parameters using schema
-validateParameters( parameters_schema: 'nextflow_schema.json' )
-
-// Print summary of supplied parameters (that differ from defaults)
-log.info paramsSummaryLog(workflow)
-// make it clear that samples are being subsampled
-if (params.subsample) {
-    log.info "***"
-    log.info "NOTE: Input samples are being pseudorandomly subsampled to $params.subsample per primer x read group combination (--subsample = $params.subsample)"
-    log.info "***"
-}
-
-if (params.downsample_reads) {
-    log.info "***"
-    log.info "NOTE: Input samples are being pseudorandomly downsampled to $params.downsample_reads reads (--downsample_reads = $params.downsample_reads)"
-    log.info "***"
-}
 
 
 /*
@@ -121,19 +75,19 @@ if (params.downsample_reads) {
 */
 
 //// import subworkflows
-include { PROCESS_READS                             } from './nextflow/subworkflows/process_reads'
+include { PROCESS_READS                             } from './nextflow/subworkflows/process_reads/'
 include { DADA2                                     } from './nextflow/subworkflows/dada2'
 include { FILTERING                                 } from './nextflow/subworkflows/filtering'
 include { TAXONOMY                                  } from './nextflow/subworkflows/taxonomy'
 include { RESULT_SUMMARIES                          } from './nextflow/subworkflows/result_summaries'
 
 //// import modules
-include { DOWNSAMPLE_READS                          } from './nextflow/modules/downsample_reads'
-include { PARSE_INPUTS                              } from './nextflow/modules/parse_inputs'
-include { TRAIN_IDTAXA                              } from './nextflow/modules/train_idtaxa'
+include { DOWNSAMPLE_READS                          } from './nextflow/modules/downsample_reads/downsample_reads'
+include { PARSE_INPUTS                              } from './nextflow/modules/parse_inputs/parse_inputs'
+include { TRAIN_IDTAXA                              } from './nextflow/modules/train_idtaxa/train_idtaxa'
 
 //// utility processes for development and debugging
-include { STOP                                      } from './nextflow/modules/stop'
+include { STOP                                      } from './nextflow/modules/stop/stop'
 
 
 /*
@@ -156,6 +110,44 @@ include { STOP                                      } from './nextflow/modules/s
 
 workflow FREYR {
 
+    startupMessage()
+
+    workflow.onComplete {
+        if ( workflow.success ) {
+            log.info "[$workflow.complete] >> Pipeline finished SUCCESSFULLY after $workflow.duration"
+        } else {
+            log.info "[$workflow.complete] >> Pipeline finished with ERRORS after $workflow.duration"
+        }
+        /*
+        TODO: use other metadata (https://www.nextflow.io/docs/latest/metadata.html) to display at the end of a run.
+        */
+
+    }
+
+    // Print help message, supply typical command line usage for the pipeline
+    if (params.help) {
+    //    log.info startupMessage()
+    log.info paramsHelp("nextflow run AVR-biosecurity-bioinformatics/freyr --samplesheet samplesheet.csv --primer_params primer_params.csv") // TODO: add typical commands for pipeline
+    exit 0
+    }
+
+    // Validate input parameters using schema
+    validateParameters( parameters_schema: 'nextflow_schema.json' )
+
+    // Print summary of supplied parameters (that differ from defaults)
+    log.info paramsSummaryLog(workflow)
+    // make it clear that samples are being subsampled
+    if (params.subsample) {
+        log.info "***"
+        log.info "NOTE: Input samples are being pseudorandomly subsampled to $params.subsample per primer x read group combination (--subsample = $params.subsample)"
+        log.info "***"
+    }
+
+    if (params.downsample_reads) {
+        log.info "***"
+        log.info "NOTE: Input samples are being pseudorandomly downsampled to $params.downsample_reads reads (--downsample_reads = $params.downsample_reads)"
+        log.info "***"
+    }
 
     //// check input option combinations are allowed
     if ( params.seq_type == "illumina" && params.paired ) {
