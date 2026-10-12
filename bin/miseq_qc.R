@@ -1,4 +1,6 @@
 #!/usr/bin/env Rscript
+.libPaths(.Library)
+
 tryCatch({
 
 args <- R.utils::commandArgs(asValues = TRUE, trailingOnly = TRUE)
