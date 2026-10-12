@@ -183,10 +183,10 @@ workflow FREYR {
 
     //// Create empty channels
     ch_read_tracker_grouped =   // read-tracking for grouped processes
-        Channel.empty()      
+        channel.empty()      
 
     //// create pp_* parameter map as input for PARSE_INPUTS
-    Channel.from(params)
+    channel.from(params)
         .map { params_map ->
             def pp_params = 
                 params_map.subMap(

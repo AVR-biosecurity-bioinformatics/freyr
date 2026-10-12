@@ -29,7 +29,7 @@ workflow DADA2 {
     main:
 
     //// create empty channels
-    ch_read_tracker_grouped = Channel.empty()
+    ch_read_tracker_grouped = channel.empty()
 
     //// parse dada2 channels
     ch_dada_band_size = params.dada_band_size ?: "null"

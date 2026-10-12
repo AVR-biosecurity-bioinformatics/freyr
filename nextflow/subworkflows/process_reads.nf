@@ -30,15 +30,15 @@ workflow PROCESS_READS {
     ch_paired = channel.value ( paired )
 
     if ( params.miseq_dir ) {
-        ch_miseq_dir = Channel.fromPath(params.miseq_dir).first()
+        ch_miseq_dir = channel.fromPath(params.miseq_dir).first()
     } else {
-        ch_miseq_dir = Channel.empty()
+        ch_miseq_dir = channel.empty()
     }
 
     //// create empty channels
-    ch_processed_fwd = Channel.empty()
-    ch_processed_rev = Channel.empty()
-    ch_processed_single = Channel.empty()
+    ch_processed_fwd = channel.empty()
+    ch_processed_rev = channel.empty()
+    ch_processed_single = channel.empty()
 
     //// run SEQ_QC per flow cell if data is internal MiSeq
     if ( params.miseq_internal == true ) {
