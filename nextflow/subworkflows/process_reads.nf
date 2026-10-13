@@ -6,7 +6,6 @@
 //// modules to import
 include { FASTQC                                    } from '../modules/fastqc/fastqc'
 include { NANOPLOT                                  } from '../modules/nanoplot/nanoplot'
-include { MISEQ_QC                                  } from '../modules/miseq_qc/miseq_qc'
 include { SPLIT_LOCI                                } from '../modules/split_loci/split_loci'
 include { PRIMER_TRIM                               } from '../modules/primer_trim/primer_trim'
 include { READ_FILTER                               } from '../modules/read_filter/read_filter' 
@@ -21,7 +20,6 @@ workflow PROCESS_READS {
     ch_primer_params
     seq_type 
     paired
-    ch_read_groups
 
 
     main:
@@ -39,19 +37,6 @@ workflow PROCESS_READS {
     ch_processed_fwd = channel.empty()
     ch_processed_rev = channel.empty()
     ch_processed_single = channel.empty()
-
-    //// run SEQ_QC per flow cell if data is internal MiSeq
-    //if ( params.miseq_internal == true ) {
-    //
-    //    if ( !ch_miseq_dir ) {
-    //        error "'--miseq_dir' must be specified when using '--miseq_internal'"
-    //    }
-    //
-    //    MISEQ_QC ( 
-    //        ch_read_groups,
-    //        ch_miseq_dir
-    //    ) 
-    //}
 
     //// run fastqc on input reads
     FASTQC (
@@ -180,9 +165,6 @@ workflow PROCESS_READS {
 
 
     emit:
-
     ch_processed_reads
     ch_read_tracker_samples
-
-
 }

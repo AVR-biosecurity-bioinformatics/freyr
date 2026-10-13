@@ -319,8 +319,7 @@ workflow FREYR {
         ch_process_reads_input,
         ch_primer_params,
         params.seq_type,
-        params.paired,
-        ch_read_groups
+        params.paired
     )
 
 
