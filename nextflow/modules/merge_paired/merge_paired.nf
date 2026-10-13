@@ -2,7 +2,7 @@ process MERGE_PAIRED {
     tag "$sample_primers"
     label "medium"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/merge_paired", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/modules/merge_paired", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
     tuple val(primers), val(read_group), val(sample), val(sample_primers), path(readsF), path(readsR), path(seqsF), path(seqsR), val(concat_unmerged)

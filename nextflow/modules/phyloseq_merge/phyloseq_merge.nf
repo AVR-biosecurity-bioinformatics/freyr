@@ -2,8 +2,8 @@ process PHYLOSEQ_MERGE {
     tag "Whole dataset"
     label "phyloseq"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/phyloseq_merge", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${launchDir}/output/results/main_outputs/merged", pattern: '*{_filtered,_unfiltered}.{csv,rds,fasta}', mode: 'copy'
+    publishDir "${params.outdir}/modules/phyloseq_merge", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/results/main_outputs/merged", pattern: '*{_filtered,_unfiltered}.{csv,rds,fasta}', mode: 'copy'
 
     input:
     path(ps_unfiltered)

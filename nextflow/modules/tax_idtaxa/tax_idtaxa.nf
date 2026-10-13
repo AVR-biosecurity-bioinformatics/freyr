@@ -2,7 +2,7 @@ process TAX_IDTAXA {
     tag "$primers; $read_group"
     label "medium"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/tax_idtaxa", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/modules/tax_idtaxa", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
     tuple val(primers), val(read_group), path(fasta), val(process_params)

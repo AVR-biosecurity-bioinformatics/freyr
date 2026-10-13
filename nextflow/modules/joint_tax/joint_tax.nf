@@ -2,7 +2,7 @@ process JOINT_TAX {
     tag "$primers; $read_group"
     label "small"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/joint_tax", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/modules/joint_tax", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
     tuple val(primers), val(read_group), path(tax, name: "idtaxa*.csv"), path(blast, name: "blast*.csv")

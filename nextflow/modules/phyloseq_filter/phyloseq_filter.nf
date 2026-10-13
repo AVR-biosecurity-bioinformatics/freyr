@@ -2,8 +2,8 @@ process PHYLOSEQ_FILTER {
     tag "$primers"
     label "phyloseq"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/phyloseq_filter", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${launchDir}/output/results/main_outputs/filtered", mode: 'copy'
+    publishDir "${params.outdir}/modules/phyloseq_filter", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/results/main_outputs/filtered", mode: 'copy'
 
     input:
     tuple val(primers), path(ps), path(filters_tibble), val(process_params)

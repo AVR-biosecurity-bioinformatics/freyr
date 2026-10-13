@@ -2,8 +2,8 @@ process NANOPLOT {
     tag "$sample"
     label "high"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/nanoplot", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${launchDir}/output/results/qc/nanoplot", mode: 'copy'
+    publishDir "${params.outdir}/modules/nanoplot", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/results/qc/nanoplot", mode: 'copy'
 
     input:
     tuple val(sample), path(reads)

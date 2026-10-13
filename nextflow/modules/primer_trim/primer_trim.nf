@@ -2,7 +2,7 @@ process PRIMER_TRIM {
     tag "$sample_primers"
     label "medium"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/primer_trim", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/modules/primer_trim", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
     tuple val(primers), val(read_group), val(sample), val(sample_primers), path(reads), val(process_params)

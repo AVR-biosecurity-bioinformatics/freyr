@@ -2,8 +2,8 @@ process READ_TRACKING {
     tag "Whole dataset"
     label "small"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/read_tracking", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${launchDir}/output/results/read_tracking", mode: 'copy'
+    publishDir "${params.outdir}/modules/read_tracking", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/results/read_tracking", mode: 'copy'
     
     input:
     path(rt_samples, name: 'sample*.csv')

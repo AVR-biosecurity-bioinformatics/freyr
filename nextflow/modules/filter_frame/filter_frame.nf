@@ -2,7 +2,7 @@ process FILTER_FRAME {
     tag "$primers"
     label "medium"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/filter_frame", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/modules/filter_frame", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
     tuple val(primers), path(seqtab_tibble_list), path(fasta_list), val(process_params)

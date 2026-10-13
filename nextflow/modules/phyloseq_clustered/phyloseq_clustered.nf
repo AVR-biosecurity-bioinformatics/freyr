@@ -2,8 +2,8 @@ process PHYLOSEQ_CLUSTERED {
     tag "$primers"
     label "phyloseq"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/phyloseq_clustered", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${launchDir}/output/results/main_outputs/clustered", mode: 'copy'
+    publishDir "${params.outdir}/modules/phyloseq_clustered", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/results/main_outputs/clustered", mode: 'copy'
 
     input:
     tuple val(primers), path(seqtab), path(taxtab), path(samdf), path(raw), path(summary), path(ps), path(clusters)

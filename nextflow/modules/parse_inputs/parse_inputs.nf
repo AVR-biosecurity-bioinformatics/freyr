@@ -1,6 +1,6 @@
 process PARSE_INPUTS {
-    publishDir "${launchDir}/output/modules/parse_inputs",  mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${launchDir}/output/results/parsed_inputs", mode: 'copy'
+    publishDir "${params.outdir}/modules/parse_inputs",  mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/results/parsed_inputs", mode: 'copy'
 
     tag "Whole dataset"
     label "small"

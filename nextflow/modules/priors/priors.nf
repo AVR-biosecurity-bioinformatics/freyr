@@ -2,7 +2,7 @@ process PRIORS {
     tag "$primers; $read_group"
     label "small"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/priors", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/modules/priors", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
     tuple val(direction), val(primers), val(read_group), path(priors)

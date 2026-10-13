@@ -2,8 +2,8 @@ process ASSIGNMENT_PLOT {
     tag "$primers; $read_group"
     label "small"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/assignment_plot", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${launchDir}/output/results/taxonomic_assignment", pattern: 'taxonomic_assignment_summary_*.pdf', mode: 'copy'
+    publishDir "${params.outdir}/modules/assignment_plot", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/results/taxonomic_assignment", pattern: 'taxonomic_assignment_summary_*.pdf', mode: 'copy'
 
     input:
     tuple val(primers), val(read_group), path(fasta), path(blast, name: "blast*.rds"), path(tax), val(process_params)

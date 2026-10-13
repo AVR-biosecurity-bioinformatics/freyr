@@ -2,7 +2,7 @@ process TAX_BLAST {
     tag "$primers; $read_group"
     label "medium"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/tax_blast", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/modules/tax_blast", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
     tuple val(primers), val(read_group), path(fasta), path(blast_tsv), val(process_params)

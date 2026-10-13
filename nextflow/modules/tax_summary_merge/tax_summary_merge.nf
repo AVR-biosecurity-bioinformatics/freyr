@@ -2,8 +2,8 @@ process TAX_SUMMARY_MERGE {
     tag "Whole dataset"
     label "small"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/tax_summary_merge", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${launchDir}/output/results/taxonomic_assignment", mode: 'copy'
+    publishDir "${params.outdir}/modules/tax_summary_merge", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/results/taxonomic_assignment", mode: 'copy'
 
     input:
     path(tax_summary_list)

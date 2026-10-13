@@ -2,8 +2,8 @@ process TRAIN_IDTAXA {
     tag "Whole pipeline"
     label "high"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/process_name", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${launchDir}/output/results/taxonomic_assignment", mode: 'copy'
+    publishDir "${params.outdir}/modules/process_name", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/results/taxonomic_assignment", mode: 'copy'
 
     input:
     tuple val(primers), path(ref_fasta)

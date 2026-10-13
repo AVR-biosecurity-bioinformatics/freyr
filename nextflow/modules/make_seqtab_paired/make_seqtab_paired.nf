@@ -2,7 +2,7 @@ process MAKE_SEQTAB_PAIRED {
     tag "$primers; $read_group"
     label "long"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/make_seqtab_paired", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/modules/make_seqtab_paired", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
     tuple val(primers), val(read_group), val(sample), val(sample_primers), path(mergers_paths, name: 'mergers*.rds')

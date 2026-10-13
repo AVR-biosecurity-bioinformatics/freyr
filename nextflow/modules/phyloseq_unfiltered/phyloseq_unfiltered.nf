@@ -2,8 +2,8 @@ process PHYLOSEQ_UNFILTERED {
     tag "$primers"
     label "phyloseq"
     conda "${moduleDir}/environment.yml"
-    publishDir "${launchDir}/output/modules/phyloseq_unfiltered", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${launchDir}/output/results/main_outputs/unfiltered", mode: 'copy'
+    publishDir "${params.outdir}/modules/phyloseq_unfiltered", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/results/main_outputs/unfiltered", mode: 'copy'
 
     input:
     tuple val(primers), path(taxtab), path(seqtab), path(filters), path(fasta), path(samplesheet_split), path(sample_metadata), val(process_params)
