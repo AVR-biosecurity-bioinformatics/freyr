@@ -39,7 +39,6 @@ process_packages <- c(
     "dplyr",
     "phyloseq",
     "readr",
-    "seqateurs",
     "stringr",
     "tibble",
     "data.table",

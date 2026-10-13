@@ -33,7 +33,6 @@ process_packages <- c(
     "readr",
     "S4Vectors",
     "stringr",
-    "taxreturn",
     "tibble",
     "tidyr",
     NULL

@@ -431,3 +431,430 @@ write_fasta <- function(x, file = "", compress = FALSE, quiet=FALSE) {
   if(!quiet){message("Wrote ", length(tmp), " sequences to ", file)}
   invisible(NULL)
 }
+
+# Summarise_index ---------------------------------------------------------
+
+#' Summarise index
+#'
+#' @param fq A path to a fastq file
+#' @param qualityType The quality encoding of the fastq file
+#'
+#' @return
+#' @export
+#' @import ShortRead
+#' @import tidyr
+#' @import dplyr
+#' @import stringr
+#'
+#' @examples
+summarise_index <- function(fq, qualityType = "Auto") {
+  fF <- ShortRead::FastqStreamer(fq)
+  on.exit(close(fF))
+
+  #Stream through fasta
+  while( length(suppressWarnings(fqF <- yield(fF, qualityType = qualityType)))) {
+    idF <- ShortRead::id(fqF)
+  }
+
+  # Check if index is present in fastq header
+  index_check <- stringr::str_extract(as.character(idF[[1]]), pattern="(?!:)(?:.(?!:))+$")
+  if(stringr::str_detect(index_check, "[A-Z]+[A-Z]")){
+    index <- stringr::str_extract(as.character(idF), pattern="(?!:)(?:.(?!:))+$") %>%
+      table() %>%
+      as.data.frame() %>%
+      tidyr::separate(col=1, into=c("index", "index2")) %>%
+      dplyr::arrange(desc(Freq))
+  } else{
+    warning(paste0("Index sequences were not present in fastq header for sample: ", fq))
+    index <- data.frame(index = NA_character_, index2=NA_character_, Freq = NA_integer_)
+  }
+  return(index)
+}
+
+# Get Qual Stats ----------------------------------------------------------
+
+#' Get qual stats
+#'
+#' @param input
+#' @param n The number of reads to sample
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_qual_stats <- function (input, n = 5e+05) {
+
+  statdf <- data.frame(Cycle = integer(0), Mean = numeric(0),
+                       Q25 = numeric(0), Q50 = numeric(0), Q75 = numeric(0),
+                       Cum = numeric(0), file = character(0))
+  anndf <- data.frame(minScore = numeric(0), label = character(0),
+                      rclabel = character(0), rc = numeric(0), file = character(0))
+  #Check files arent empty
+  fl <- input[file.size(input) > 28]
+  if (length(input) > length(fl)) {
+    message("Warning, the following files were empty: \n")
+    message(paste0(input[!input %in% fl], " \n"))
+  }
+  # Start loop
+  FIRST <- TRUE
+  for (f in fl[!is.na(fl)]) {
+    fq <- FastqFile(f)
+    rc <- countFastq(f)$records
+    close(fq)
+    coll <- QACollate(QAFastqSource(f, n=n), QAQualityByCycle())
+    srqa <- qa2(coll, BPPARAM=SerialParam(), verbose=FALSE)
+    df <- data.frame(srqa$QAQualityByCycle@values)
+    if (rc >= n) {
+      rclabel <- paste("Reads >= ", n)
+    }  else {      rclabel <- paste("Reads: ", rc)
+    }
+    means <- rowsum(df$Score * df$Count, df$Cycle)/rowsum(df$Count,  df$Cycle)
+
+    get_quant <- function(xx, yy, q) {
+      xx[which(cumsum(yy)/sum(yy) >= q)][[1]]
+    }
+    q25s <- by(df, df$Cycle, function(x) get_quant(x$Score, x$Count, 0.25), simplify = TRUE)
+    q50s <- by(df, df$Cycle, function(x) get_quant(x$Score, x$Count, 0.5), simplify = TRUE)
+    q75s <- by(df, df$Cycle, function(x) get_quant(x$Score, x$Count, 0.75), simplify = TRUE)
+    cums <- by(df, df$Cycle, function(x) sum(x$Count), simplify = TRUE)
+    if (!all(sapply(list(names(q25s), names(q50s), names(q75s), names(cums)), identical, rownames(means)))) {
+      stop("Calculated quantiles/means weren't compatible.")
+    }
+    if (FIRST) {
+      plotdf <- cbind(df, file = basename(f))
+      FIRST <- FALSE
+    } else {
+      plotdf <- rbind(plotdf, cbind(df, file = basename(f)))
+    }
+
+    statdf <- rbind(statdf, data.frame(Cycle = as.integer(rownames(means)),
+                                       Mean = means, Q25 = as.vector(q25s), Q50 = as.vector(q50s),
+                                       Q75 = as.vector(q75s), Cum = 10 * as.vector(cums)/rc,
+                                       file = basename(f)))
+    anndf <- rbind(anndf, data.frame(minScore = min(df$Score),
+                                     label = basename(f), rclabel = rclabel, rc = rc,
+                                     file = basename(f)))
+  }
+
+  anndf$minScore <- min(anndf$minScore)
+
+  get_ee <- function(Q){
+    ee <- 10^(-Q/ 10)
+    return(ee)
+  }
+
+
+  plotdf.summary <- aggregate(Count ~ Cycle + Score, plotdf, sum)
+  plotdf.summary$label <- paste(nrow(anndf), "files (aggregated)")
+  means <- rowsum(plotdf.summary$Score * plotdf.summary$Count, plotdf.summary$Cycle)/rowsum(plotdf.summary$Count, plotdf.summary$Cycle)
+  EEmeans <- get_ee(rowsum(plotdf.summary$Score * plotdf.summary$Count, plotdf.summary$Cycle)/rowsum(plotdf.summary$Count, plotdf.summary$Cycle))
+  q10s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_quant(x$Score, x$Count, 0.1), simplify = TRUE)
+  EE10s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_ee(get_quant(x$Score, x$Count, 0.1)), simplify = TRUE)
+  q25s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_quant(x$Score, x$Count, 0.25), simplify = TRUE)
+  EE25s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_ee(get_quant(x$Score, x$Count, 0.25)), simplify = TRUE)
+  q50s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_quant(x$Score, x$Count, 0.5), simplify = TRUE)
+  EE50s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_ee(get_quant(x$Score, x$Count, 0.50)), simplify = TRUE)
+  q75s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_quant(x$Score, x$Count, 0.75), simplify = TRUE)
+  EE75s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_ee(get_quant(x$Score, x$Count, 0.75)), simplify = TRUE)
+  q90s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_quant(x$Score, x$Count, 0.9), simplify = TRUE)
+  EE90s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_ee(get_quant(x$Score, x$Count, 0.9)), simplify = TRUE)
+  cums <- by(plotdf.summary, plotdf.summary$Cycle, function(x) sum(x$Count), simplify = TRUE)
+  statdf.summary <- data.frame(Cycle = as.integer(rownames(means)),
+                               QMean = means,
+                               EEmean = EEmeans,
+                               Q10 = as.vector(q10s),
+                               EE10 = as.vector(EE10s),
+                               Q25 = as.vector(q25s),
+                               EE25 = as.vector(EE25s),
+                               Q50 = as.vector(q50s),
+                               EE50 = as.vector(EE50s),
+                               Q75 = as.vector(q75s),
+                               EE75 = as.vector(EE75s),
+                               Q90 = as.vector(q90s),
+                               EE90 = as.vector(EE90s),
+                               reads = 10 * as.vector(cums)/rc)
+  attr(statdf.summary, "qsummary") <- "qsummary"
+  return(statdf.summary)
+}
+
+# Reformat hierarchy ------------------------------------------------------
+
+#' Reformat hierarchy
+#'
+#' @param x A DNAbin with names formatted Accession|taxid;taxonomy
+#' @param db A database file generated by `get_ncbi_taxonomy` or `get_ott_lineage`. Required if get_lineage is TRUE
+#' @param quiet Whether progress should be printed to console
+#' @param ranks The taxonomic ranks to return in the output names
+#' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected (Maximum available cores - 1), or provide a numeric vector to manually set the number of cores to use. Default is FALSE (single thread)
+#' This argument may alternatively be a 'cluster' object, in which case it is the user's responsibility to close the socket connection at the conclusion of the operation,
+#' for example by running parallel::stopCluster(cores).
+#'
+#' @return
+#' @export
+#' @import stringr
+#' @import dplyr
+#' @importFrom tidyr separate
+#' @importFrom tidyr unite
+#' @importFrom magrittr set_colnames
+#' @importFrom tibble as_tibble
+#' @importFrom ape as.DNAbin
+#' @importFrom methods is
+#'
+reformat_hierarchy <- function(x, db = NULL, quiet = FALSE,
+                               ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), multithread = FALSE) {
+  time <- Sys.time() # get time
+  # Convert to DNAbin
+  if (!methods::is(x, "DNAbin")) {
+    x <- ape::as.DNAbin(x)
+  }
+  if (missing(db)) {
+    stop("A taxonomic database needs to be provided, generate one with get_ncbi_taxonomy or get_ott_taxonomy")
+  }
+  if(attr(db, "type") == "ncbi"){
+    # Split current names
+    seqnames <- names(x) %>%
+      stringr::str_remove(";$") %>%
+      stringr::str_split_fixed(";", n = Inf) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|")%>%
+      dplyr::select(1:2, tail(names(.), 1)) %>%
+      magrittr::set_colnames(c("acc", "tax_id", "species")) %>%
+      dplyr::mutate(tax_id = suppressWarnings(as.numeric(tax_id)))
+
+    # Get lineage from taxid
+    lineage <- seqnames %>%
+      dplyr::left_join (db %>% dplyr::select(-species), by = "tax_id")  %>%
+      tidyr::unite(col = Acc, c(acc, tax_id), sep = "|") %>%
+      tidyr::unite(col = names, c(!!ranks), sep = ";")
+  } else if(attr(db, "type") == "OTT"){
+    lineage <- get_ott_lineage(x, db=db, ranks=ranks, multithread=multithread) %>%
+      tidyr::unite(col = names, c(!!ranks), sep = ";")
+  }
+
+  names(x) <- paste(lineage$Acc, lineage$names, "", sep = ";") %>%
+  stringr::str_remove(";$")
+  time <- Sys.time() - time
+  if (!quiet) (message(paste0("Reformatted annotations for ", length(x), " sequences in ", format(time, digits = 2))))
+  return(x)
+}
+
+
+#' Download NCBI taxdump
+#'
+#' @param dest_dir A directory to save the downloaded ncbi taxdump files. If empty a new folder in the working directory will be created
+#' @param include_synonyms Whether synonyms should be included in the database
+#' @param force Whether already downloaded files should be overwrittenget
+#'
+#' @return
+#' @export
+#' @importFrom readr read_tsv
+#' @importFrom utils untar
+#' @importFrom utils download.file
+#'
+#'
+get_ncbi_taxonomy <- function(dest_dir, include_synonyms = TRUE, force=FALSE) {
+  if(missing(dest_dir)){
+    dest_dir <- getwd()
+  }
+  tmp <- paste0(dest_dir,"/ncbi_taxdump")
+  if (!dir.exists(tmp)) {
+    dir.create(tmp) # Create first directory
+  }
+  if (force == TRUE | !file.exists(paste0(tmp, "/rankedlineage.dmp"))) {
+    message("Downloading NCBI taxonomy database")
+    fn <- "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz"
+    utils::download.file(fn, destfile = paste0(tmp, "/tmp.tar.gz"))
+    message("Extracting data\n")
+    test <- utils::untar(tarfile = paste0(tmp, "/tmp.tar.gz"), exdir = tmp)
+    if (!identical(test, 0L)) {
+      stop(cat(test))
+    }
+    file.remove(paste0(tmp, "/tmp.tar.gz"))
+  }
+  message("Building NCBI taxonomy data frame\n")
+
+  lin <- readr::read_tsv(paste0(tmp, "/rankedlineage.dmp"),
+                         col_names = c("tax_id", "tax_name", "species", "genus", "family", "order", "class", "phylum", "kingdom", "superkingdom"),
+                         col_types = ("i-c-c-c-c-c-c-c-c-c-")
+  )
+
+  # Remove synonyms
+  if (!include_synonyms) {
+    x <- scan(
+      file = paste0(tmp, "/names.dmp"), what = "", sep = "\n",
+      quiet = TRUE
+    )
+    syn <- x[grepl("synonym", x)]
+    syn <- strsplit(syn, split = "\t")
+    syn <- sapply(syn, function(s) s[c(1, 3)])
+    syn <- as.data.frame(t(syn), stringsAsFactors = FALSE)
+    syn[[1]] <- as.integer(syn[[1]])
+    colnames(syn) <- c("taxID", "name")
+    lin <- lin %>%
+      filter(!tax_id %in% syn[[1]])
+  }
+
+  message("Done\n")
+  attr(lin,'type') <- 'ncbi'
+  return(lin)
+}
+
+
+# train IDTAXA -----------------------------------------------------------
+
+#' Train IDTAXA
+#'
+#' @param x A DNAbin
+#' @param max_group_size The maximum size of any taxonomic group. This can be set to Inf (infinity) to allow for an unlimited number of sequences per group.
+#' @param max_iterations The number of iterations to conduct training for in order to identify  any training sequences whose assigned classifications completely disagree with their predicted classification.
+#' @param allow_group_removal  Whether sequences that are the last remaining representatives of an entire group in the training data can be removed.
+#' This can occur if the entire group appears to be misplaced in the taxonomic tree.
+#' @param orient Training sequences must all be in the same orientation. Set this to TRUE to reorient the sequences if you are unsure.
+#' @param get_lineage Get full taxonomic lineage using reformat_hierarchy if not already present.
+#' @param db A database file generated by `get_ncbi_taxonomy` or `get_ott_lineage`. Required if get_lineage is TRUE.
+#' @param quiet Whether progress should be printed to console.
+#'
+#' @return
+#' @export
+#' @import stringr
+#' @importFrom DECIPHER RemoveGaps
+#' @importFrom DECIPHER OrientNucleotides
+#' @importFrom DECIPHER LearnTaxa
+#'
+train_idtaxa <- function(x, max_group_size=10, max_iterations = 3,  allow_group_removal = TRUE, orient=FALSE,
+                          get_lineage=FALSE, db = NULL, quiet = FALSE) {
+  time <- Sys.time() # get time
+
+  #Reformat to complete taxonomic hierarchy
+  if(get_lineage & !is.null(db)){
+    seqs <- reformat_hierarchy(x, db=db, quiet=FALSE)
+  } else if(get_lineage &  is.null(db)){
+    stop("If get_lineage is TRUE, a db needs to be provided")
+  } else  (seqs <- x)
+
+  #Remove NA's
+  if(length(names(seqs)[stringr::str_detect(names(seqs), ";NA;")]) > 1){
+    remove <- names(seqs)[stringr::str_detect(names(seqs), ";NA;")]
+    subset <- seqs[!names(seqs) %in% remove]
+    message(paste0(length(seqs) - length(subset)," Sequences with NA's in taxonomy removed"))
+    seqs <- subset
+  }
+
+  # Convert to DNAstringset for DECIPHER
+  if(methods::is(seqs, "DNAbin")){
+    seqs <- DNAbin2DNAstringset(seqs)
+  }
+
+  # Remove gaps
+  if(!quiet){ message("Removing gaps")}
+  seqs <- DECIPHER::RemoveGaps(seqs)
+
+  if(orient){
+    if(!quiet){ message("Orienting sequences")}
+    seqs <- DECIPHER::OrientNucleotides(seqs)
+  }
+
+  # As taxonomies are encoded in the sequence names rather than a separate file, use:
+  taxid <- NULL
+
+  #Add Root Rank
+  names(seqs) <- names(seqs)  %>% stringr::str_replace(";[;]*", ";Root;")
+
+  # obtain the taxonomic assignments
+  groups <- names(seqs) # sequence names
+
+  # assume the taxonomy begins with 'Root;'
+  groups <- gsub("(.*)(Root;)", "\\2", groups) # extract the group label
+  groupCounts <- table(groups)
+  u_groups <- names(groupCounts) # unique groups
+
+  if (!quiet) {message(paste0(length(u_groups), " unique species"))}
+
+  # Pruning training set
+  remove <- logical(length(seqs))
+  for (i in which(groupCounts > max_group_size)) {
+    index <- which(groups==u_groups[i])
+    keep <- sample(length(index),
+                   max_group_size)
+    remove[index[-keep]] <- TRUE
+  }
+  if (!quiet) {message(paste0(sum(remove), " sequences pruned from over-represented groups"))}
+
+  # Training the classifier
+  probSeqsPrev <- integer() # suspected problem sequences from prior iteration
+
+  train <- seqs[!remove]
+  taxonomy <- gsub("(.*)(Root;)", "\\2", names(train))
+  remove <- logical(length(train))
+
+  for (i in seq_len(max_iterations)) {
+    if (!quiet) {message("Training iteration: ", i, "\n", sep="")}
+    # train the classifier
+    trainingSet <- DECIPHER::LearnTaxa(train[!remove], taxonomy[!remove], taxid)
+
+    # look for problem sequences
+    probSeqs <- trainingSet$problemSequences$Index
+    if (length(probSeqs)==0) {
+      if (!quiet) {message("No problem sequences remaining.\n")}
+      break
+    } else if (length(probSeqs)==length(probSeqsPrev) &&
+               all(probSeqsPrev==probSeqs)) {
+      if (!quiet) {message("Iterations converged.\n")}
+      break
+    }
+    if (i==max_iterations)
+      break
+    probSeqsPrev <- probSeqs
+
+    # remove any problem sequences
+    index <- which(!remove)[probSeqs]
+    remove[index] <- TRUE # remove all problem sequences
+    if (!allow_group_removal) {
+      # replace any removed groups
+      missing <- !(u_groups %in% groups[!remove])
+      missing <- u_groups[missing]
+      if (length(missing) > 0) {
+        index <- index[groups[index] %in% missing]
+        remove[index] <- FALSE # don't remove
+      }
+    }
+  }
+  if (!quiet) {message(paste0(sum(remove), " sequences removed"))}
+  if (!quiet) {message(paste0(length(probSeqs), " problem sequences remaining"))}
+
+  time <- Sys.time() - time
+  if (!quiet) (message(paste0("trained IDTAXA on ", length(x), " sequences in ", format(time, digits = 2))))
+  return(trainingSet)
+}
+
+
+#' Convert DNABin to DNAStringSet
+#'
+#' @param x a DNABin object
+#' @param remove_gaps Whether gaps should be removed
+#'
+#' @return
+#' @export
+#' @import purrr
+#' @importFrom Biostrings DNA_ALPHABET
+#' @importFrom Biostrings DNAStringSet
+#' @importFrom methods is
+#'
+DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
+  if(!methods::is(x, "DNAbin")){
+    stop("Input must be a DNAbin")
+  }
+  x %>%
+    as.list() %>%
+    as.character %>%
+    purrr::map(function(y){
+      y[!y %in% tolower(Biostrings::DNA_ALPHABET)] <- "N"
+      if(isTRUE(remove_gaps)){
+        y[y=="-"] <- ""
+      }
+      paste0(y, collapse="")
+    })%>%
+    unlist %>%
+    Biostrings::DNAStringSet()
+}
+

@@ -32,7 +32,6 @@ process_packages <- c(
     "dplyr",
     "ggplot2",
     "patchwork",
-    "seqateurs",
     "ShortRead",
     "stringr",
     "tidyr",
@@ -80,8 +79,8 @@ if ( paired == "true" & seq_type == "illumina" ){
         gg.Ree <- empty_plot
 
     } else {
-        Fquals <- seqateurs::get_qual_stats(fastqFs, n=n_reads)
-        Rquals <- seqateurs::get_qual_stats(fastqRs, n=n_reads)
+        Fquals <- get_qual_stats(fastqFs, n=n_reads)
+        Rquals <- get_qual_stats(fastqRs, n=n_reads)
             
         #Plot qualities
         gg.Fqual <- Fquals %>% 
@@ -194,7 +193,7 @@ if ( paired == "true" & seq_type == "illumina" ){
         gg.See <- empty_plot
     }
     
-    Squals <- seqateurs::get_qual_stats(fastqSs, n=n_reads)
+    Squals <- get_qual_stats(fastqSs, n=n_reads)
         
     #Plot qualities
     gg.Squal <- Squals %>% 

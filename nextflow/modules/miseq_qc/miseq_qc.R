@@ -29,7 +29,8 @@ process_packages <- c(
     "purrr",
     "readr",
     "savR",
-    "seqateurs",
+    "ShortRead"
+    "stringdist",
     "stringr",
     "tibble",
     "tidyr",
@@ -132,7 +133,7 @@ if(!any(stringr::str_detect(list.files(seq_dir, pattern="_R1_", full.names = TRU
 indices <- sort(list.files(seq_dir, pattern="_R1_", full.names = TRUE)) 
 indices <- indices[stringr::str_detect(indices, ".fastq.gz$")] %>%
     purrr::set_names() %>%
-    purrr::map(seqateurs::summarise_index) %>%
+    purrr::map(summarise_index) %>%
     dplyr::bind_rows(.id="Sample_Name")%>%
     dplyr::arrange(desc(Freq)) %>% 
     dplyr::mutate(Sample_Name = Sample_Name %>% 
@@ -205,7 +206,7 @@ switch_plot_dat <-
     })) %>%
     dplyr::mutate(index2 = purrr::map(index2, ~{
     index_list <- applied_indices$index2
-    index_dist <- stringdist::stringdist(.x,index_list) # stringdist is imported by seqateurs
+    index_dist <- stringdist::stringdist(.x,index_list) 
     # Remove those above barcode_mismatch threshold
     index_list <- index_list[index_dist <= barcode_mismatch]
     index_dist <- index_dist[index_dist <= barcode_mismatch]

@@ -33,7 +33,6 @@ process_packages <- c(
     "patchwork",
     "readr",
     "stringr",
-    "taxreturn",
     "tibble",
     NULL
 )

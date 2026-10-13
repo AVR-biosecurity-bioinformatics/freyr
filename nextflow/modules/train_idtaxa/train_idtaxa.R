@@ -30,7 +30,6 @@ process_packages <- c(
     "magrittr",
     "purrr",
     "stringr",
-    "taxreturn",
     "tibble",
     NULL
 )
@@ -54,7 +53,7 @@ if ( fasta_type == "formatted" ) {
 
 } else if ( fasta_type == "unformatted" ) {
 
-    db <- taxreturn::get_ncbi_taxonomy()
+    db <- get_ncbi_taxonomy()
     get_lineage <- TRUE
 
 } else {
@@ -65,7 +64,7 @@ if ( fasta_type == "formatted" ) {
 
 
 
-idtaxa_model <- taxreturn::train_idtaxa(
+idtaxa_model <- train_idtaxa(
     x = hierarchy, 
     max_group_size = 10, 
     max_iterations = 3, 

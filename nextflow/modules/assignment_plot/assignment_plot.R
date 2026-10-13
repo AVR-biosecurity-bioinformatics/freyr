@@ -33,8 +33,6 @@ process_packages <- c(
     "dplyr",
     "ggplot2",
     "readr",
-    "seqateurs",
-    "taxreturn",
     "tibble",
     NULL
 )

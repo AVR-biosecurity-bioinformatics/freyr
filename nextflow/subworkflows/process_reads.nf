@@ -41,17 +41,17 @@ workflow PROCESS_READS {
     ch_processed_single = channel.empty()
 
     //// run SEQ_QC per flow cell if data is internal MiSeq
-    if ( params.miseq_internal == true ) {
-
-        if ( !ch_miseq_dir ) {
-            error "'--miseq_dir' must be specified when using '--miseq_internal'"
-        }
-
-        MISEQ_QC ( 
-            ch_read_groups,
-            ch_miseq_dir
-        ) 
-    }
+    //if ( params.miseq_internal == true ) {
+    //
+    //    if ( !ch_miseq_dir ) {
+    //        error "'--miseq_dir' must be specified when using '--miseq_internal'"
+    //    }
+    //
+    //    MISEQ_QC ( 
+    //        ch_read_groups,
+    //        ch_miseq_dir
+    //    ) 
+    //}
 
     //// run fastqc on input reads
     FASTQC (
