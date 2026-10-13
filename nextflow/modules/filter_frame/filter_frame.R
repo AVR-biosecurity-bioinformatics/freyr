@@ -27,8 +27,9 @@ sys.source(functions_file, envir = .GlobalEnv)
 # Import phmm functions (formerly in taxreturn)
 phmm_functions_file <- Sys.which("phmm_functions.R")
 if (phmm_functions_file == "") {
-    stop("Could not find functions.R on PATH") 
+    stop("Could not find phmm_functions.R on PATH") 
 }
+sys.source(phmm_functions_file, envir = .GlobalEnv)
 
 ### load only required packages
 process_packages <- c(
@@ -139,52 +140,3 @@ finally = {
     ### save R environment if script throws error code
     if (args$rdata == "true") {save.image(file = paste0(args$process_name,".rda"))}
 })
-
-#' Filter sequences containing stop codons
-#'
-#' @param x Sequences in DNAStringset or DNAbin format
-#' @param genetic_code A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE
-#' @param tryrc Whether the reverse complemement should be evaluated if no frame without stop codons was found in the forward orientation.
-#' @param resolve_draws How draws should be resolved when multiple possible frames produce sequences with no stop codons.
-#' Options are "remove" to completely remove the sequence, or "majority" to pick the most common frame from the entire alignment.
-#'
-#' @return
-#' @export
-#' @importFrom ape as.DNAbin
-#' @importFrom Biostrings reverseComplement
-#' @importFrom DECIPHER RemoveGaps
-#' @importFrom methods is
-#'
-codon_filter <- function(x, genetic_code = NULL, tryrc=TRUE, resolve_draws="majority"){
-  if(is.null(genetic_code)){
-    stop("genetic_code must not be NULL, set to 'SGC4' for Invertebrate mitochondrial or see Biostrings::GENETIC_CODE_TABLE for other options")
-  }
-  # Convert to DNAStringSet
-  if (methods::is(x, "DNAbin")) {
-    x <- DNAbin2DNAstringset(x, remove_gaps=FALSE)
-    format <- "DNAbin"
-  } else if(methods::is(x, "DNAStringSet")){
-    format <- "DNAStringSet"
-  } else {
-    stop("x must be a DNAbin or DNAStringSet")
-  }
-
-  #Get reading frames
-  frames <- get_reading_frame(DECIPHER::RemoveGaps(x), genetic_code = genetic_code, tryrc = tryrc, resolve_draws = resolve_draws)
-
-  # Check if any sequences need RC (negative reading frame)
-  to_rc <- sign(frames)==-1
-  to_rc[is.na(to_rc)] <- FALSE
-  if (any(to_rc)){
-    message(sum(to_rc), " Sequences reverse complemented as no forward match was found")
-    x[to_rc] <- Biostrings::reverseComplement(x[to_rc])
-  }
-
-  if(format=="DNAbin"){
-    out <- ape::as.DNAbin(x[!is.na(frames)])
-  } else if(format=="DNAStringSet"){
-    out <- x[!is.na(frames)]
-  }
-  message(paste0(length(x) - length(out), " Sequences containing stop codons removed"))
-  return(out)
-}

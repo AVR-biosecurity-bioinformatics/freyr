@@ -23,7 +23,10 @@ dependencies:
   - r-vegan=2.7_5
   - r-ape=5.8_1
   - r-r.utils=2.13.0
-
+  - r-aphid=1.3.6
+  - r-future
+  - r-furrr
+  
   # Bioconductor
   - bioconductor-biostrings=2.78.0
   - bioconductor-shortread=1.68.0

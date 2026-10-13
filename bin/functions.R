@@ -858,3 +858,73 @@ DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
     Biostrings::DNAStringSet()
 }
 
+char2DNAbin <- function (x) {
+  dbytes <- as.raw(c(136, 24, 72, 40, 96, 144, 192, 48, 80,
+                     160, 112, 224, 176, 208, 240, 240, 4, 2))
+  indices <- c(65, 84, 71, 67, 83, 87, 82, 89, 75, 77, 66,
+               86, 72, 68, 78, 73, 45, 63)
+  vec <- raw(89)
+  vec[indices] <- dbytes
+  s2d1 <- function(s) vec[as.integer(charToRaw(s))]
+  out <- lapply(x, s2d1)
+  attr(out, "rerep.names") <- attr(x, "rerep.names")
+  attr(out, "rerep.pointers") <- attr(x, "rerep.pointers")
+  class(out) <- "DNAbin"
+  return(out)
+}
+
+#' DNAbin to char
+#'
+#' @param x A DNAbin object
+#'
+#' @return
+#' @export
+#'
+#' @examples
+DNAbin2char <- function(x){
+  cbytes <- as.raw(c(65, 84, 71, 67, 83, 87, 82, 89, 75, 77,
+                     66, 86, 72, 68, 78, 45, 63))
+  indices <- c(136, 24, 72, 40, 96, 144, 192, 48, 80, 160,
+               112, 224, 176, 208, 240, 4, 2)
+  vec <- raw(240)
+  vec[indices] <- cbytes
+  if (is.list(x)) {
+    out <- sapply(x, function(s) rawToChar(vec[as.integer(s)]))
+  } else {
+    out <- rawToChar(vec[as.integer(x)])
+  }
+  attr(out, "rerep.names") <- attr(x, "rerep.names")
+  attr(out, "rerep.pointers") <- attr(x, "rerep.pointers")
+  return(out)
+}
+
+# Multithread -------------------------------------------------------------
+#' Setup multithreading
+#'
+#' @param multithread Number of cores
+#' @param quiet Whether progress should be printed to console
+#'
+#' @return
+#' @import future
+#'
+#' @examples
+setup_multithread <- function(multithread, quiet=FALSE){
+  ncores <- future::availableCores()
+  if(isTRUE(multithread)){
+    cores <- ncores-1
+    if(!quiet){message("Multithreading with ", cores, " cores")}
+    future::plan(future::multisession, workers=cores)
+  } else if (is.numeric(multithread) & multithread > 1){
+    cores <- multithread
+    if(cores > ncores){
+      cores <- ncores
+      warning("The value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
+    }
+    if(!quiet){message("Multithreading with ", cores, " cores")}
+    future::plan(future::multisession, workers=cores)
+  } else if(isFALSE(multithread) | multithread==1){
+    future::plan(future::sequential)
+  } else (
+    stop("Multithread must be a logical or numeric vector of the numbers of cores to use")
+  )
+}

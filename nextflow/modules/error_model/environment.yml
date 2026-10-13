@@ -4,6 +4,7 @@ channels:
 
 dependencies:
   - r-base=4.5.3
+  - r-r.utils=2.13.0
 
   # Cran packages
   - r-dplyr=1.2.1

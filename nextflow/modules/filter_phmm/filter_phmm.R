@@ -28,7 +28,7 @@ sys.source(functions_file, envir = .GlobalEnv)
 # Import phmm functions (formerly in taxreturn)
 phmm_functions_file <- Sys.which("phmm_functions.R")
 if (phmm_functions_file == "") {
-    stop("Could not find functions.R on PATH") 
+    stop("Could not find phmm_functions.R on PATH") 
 }
 sys.source(phmm_functions_file, envir = .GlobalEnv)
 

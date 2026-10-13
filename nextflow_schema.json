@@ -10,9 +10,14 @@
             "type": "object",
             "description": "Main arguments for the pipeline.",
             "required": [ 
-                "samplesheet"
+                "samplesheet", "outdir"
             ],
             "properties": {
+                "outdir": {
+                    "type": "string",
+                    "default": "output",
+                    "description": "Directory where pipeline outputs are published"
+                },
                 "samplesheet": {
                     "type": "string",
                     "format": "file-path",

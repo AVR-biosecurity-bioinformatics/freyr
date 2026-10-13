@@ -354,54 +354,6 @@ codon_filter <- function(x, genetic_code = NULL, tryrc=TRUE, resolve_draws="majo
   return(out)
 }
 
-#' Codon entropy
-#'
-#' @param x Sequences in DNAStringset or DNAbin format
-#' @param genetic_code A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE
-#' @param tryrc Whether the reverse complemement should be evaluated if no frame without stop codons was found in the forward orientation.
-#' @param codon_filter Whether `taxreturn::codon_filter` should be run first to remove sequences containing stop codons or frameshifts.
-#' @param resolve_draws How draws should be resolved when multiple possible frames produce sequences with no stop codons.
-#' Options are "remove" to completely remove the sequence, or "majority" to pick the most common frame from the entire alignment.
-#' @param method the method employed to estimate entropy. see `?entropy::entropy` for more details
-#'
-#' @return
-#' @export
-#' @import purrr
-#' @importFrom entropy entropy
-#' @importFrom methods is
-#'
-#'
-codon_entropy <- function(x, genetic_code = NULL, tryrc = TRUE, codon_filter = TRUE, resolve_draws = "majority", method = "ML") {
-  if(is.null(genetic_code)){
-    stop("genetic_code must not be NULL, set to 'SGC4' for Invertebrate mitochondrial or see Biostrings::GENETIC_CODE_TABLE")
-  }
-  if (methods::is(x, "DNAbin")) {
-    x <- DNAbin2DNAstringset(x, remove_gaps=FALSE)
-  }
-  #Filter out sequences with stop codons
-  if(codon_filter){
-    x <- codon_filter(x, genetic_code = genetic_code, tryrc=tryrc)
-  }
-
-  #subset to the reading frame
-  pos <- get_reading_frame(x, genetic_code = genetic_code, tryrc = tryrc, resolve_draws = resolve_draws)
-
-  F_frames <-  as.character(subseq(x, start= pos))
-
-  ent <- vector("list", length=length(F_frames))
-  for (l in 1:length(F_frames)){
-    ent[[l]] <- c(
-      entropy::entropy(table(purrr::map_chr(seq(1, nchar(F_frames[l]), 3), function(i) substr(F_frames[l], i, i))), method=method),
-      entropy::entropy(table(purrr::map_chr(seq(2, nchar(F_frames[l]), 3), function(i) substr(F_frames[l], i, i))), method=method),
-      entropy::entropy(table(purrr::map_chr(seq(3, nchar(F_frames[l]), 3), function(i) substr(F_frames[l], i, i))), method=method)
-    )
-    names(ent[[l]]) <- c("pos1", "pos2", "pos3")
-  }
-  names(ent) <- names(x)
-  return(ent)
-}
-
-
 # kmer screening -------------------------------------------------------------
 #' Kmer screening function
 #'
@@ -523,355 +475,6 @@ subset_long_seq <- function(x, model, split_length, threshold=0.3, k=5, quiet=FA
   return(out)
 }
 
-# Prune group sizes -------------------------------------------------------
-#' Prune group sizes
-#'
-#' @param x A DNAbin or DNAStringset object
-#' @param max_group_size The maximum number of sequences with the same taxonomic annotation to keep
-#' @param dedup Whether sequences with identical taxonomic name and nucleotide bases sequences should be discarded first
-#' @param discardby How sequences from groups with size above max_group_size should be discarded.
-#' Options include "length" (Default) which will discard sequences from smallest to largest until the group is below max_group_size,
-#' "random" which will randomly pick sequences to discard until the group is below max_group_size.
-#' @param prefer A vector of sequence names that will be preferred when subsampling groups when discardby=random,
-#' or prefered when breaking ties in sequences of the same length when discardby=length. For instance high quality in-house sequences.
-#' @param quiet Whether progress should be printed to the console.
-#' @return
-#' @export
-#'
-#' @import dplyr
-#' @import stringr
-#' @importFrom tibble as_tibble
-#' @importFrom tidyr separate
-#' @importFrom openssl md5
-#' @importFrom ape as.DNAbin
-#' @importFrom ape base.freq
-#' @importFrom methods is
-#'
-prune_groups <- function(x, max_group_size = 5, dedup = TRUE, discardby = "length", prefer=NULL, quiet = FALSE) {
-  # Convert to DNAbin
-  if (!methods::is(x, "DNAbin")) {
-    x <- ape::as.DNAbin(x)
-    if (all(is.na(ape::base.freq(x)))) {stop("Error: Object is not coercible to DNAbin \n")}
-  }
-  if (!is.null(prefer) & !is.character(prefer)){
-    stop("prefer must be either NULL or a vector of sequence names to prefer")
-  }
-
-  # Remove duplicate sequences
-  if (dedup) {
-    dup <- length(x)
-    taxids <- names(x) %>%
-      stringr::str_remove("^.*;")
-
-    ## Consider taxonomic name and sequence identity in deduplication
-    hashes <- purrr::map2(x, taxids, ~{
-      openssl::md5(paste(c(.y, as.vector(.x)), collapse=""))
-    }) %>%
-      unlist()
-
-    # get list of all duplicated hashes
-    dupes <- unique(hashes[duplicated(hashes)])
-    remove <- logical(length(x))
-    for (i in 1:length(dupes)) {
-      index <- which(hashes %in% dupes[i])
-      # Check if in prefered - If so keep first element in the prefered
-      if (is.character(prefer) & any(names(x)[index] %in% prefer)){
-        keep <- index[names(x)[index] %in% prefer][1]
-      } else {
-        # otherwise just pick first element
-        keep <- index[1]
-      }
-      remove[index[!index %in% keep]] <- TRUE
-    }
-    x <- x[!remove]
-    if (!quiet) cat(paste0((dup - length(x)), " duplicate sequences removed \n"))
-  }
-
-  # Remove sequences from groups where more species names than max_group_size
-  groups <- names(x) %>%
-    stringr::str_split_fixed(";", n = 2) %>%
-    tibble::as_tibble(.name_repair = ~ c("acc", "taxon")) %>%
-    dplyr::pull(taxon) %>%
-    openssl::md5()
-  groupCounts <- table(groups) # Count number of seqs per group
-  u_groups <- names(groupCounts) # Get unique groups
-
-  remove <- logical(length(x))
-  # Random discarding
-  if (discardby == "random") {
-    for (i in which(groupCounts > max_group_size)) {
-      index <- which(groups == u_groups[i])
-      # Deal with prefered
-      if (is.character(prefer) & any(names(x)[index] %in% prefer)){
-        in_pref <- index[names(x)[index] %in% prefer]
-        # Check if can sample just from prefered, or need a mix of the two
-        if(in_pref >= max_group_size){
-          keep <- sample(
-            x = in_pref,
-            size = max_group_size,
-            replace = FALSE
-          )
-        } else{
-          to_sample <- max_group_size - length(in_pref)
-          keep <- c(in_pref,
-                    sample(
-                      x = index[-in_pref],
-                      size = to_sample,
-                      replace = FALSE
-                    ))
-        }
-      } else {
-        # otherwise just take random sample
-        keep <- sample(
-          x = index,
-          size = max_group_size,
-          replace = FALSE
-        )
-      }
-      remove[index[-keep]] <- TRUE
-    }
-    # length discarding
-  } else if (discardby == "length") {
-    for (i in which(groupCounts > max_group_size)) {
-      index <- which(groups == u_groups[i])
-      rem <- sapply(x[index], function(s) length(s) - sum(s == as.raw(c(4)))) # Get lengths
-      names(rem) <- index
-      rem <- sort(rem, decreasing = TRUE)
-
-      # deal with prefered
-      if (is.character(prefer) & any(names(x)[index] %in% prefer)){
-        in_pref <- index[names(x)[index] %in% prefer]
-        non_pref <- index[!names(x)[index] %in% prefer]
-
-        # Get the minimum length of sequences that are being dropped
-        min_len <- min(rem[1:max_group_size])
-
-        # Check if there are mixed prefered and non prefered at that length
-        mixed_pref <- rem[names(rem) %in% in_pref] == min_len
-        mixed_pref <- names(mixed_pref)[mixed_pref]
-        mixed_non_pref <- rem[names(rem) %in% non_pref] == min_len
-        mixed_non_pref <- names(mixed_non_pref)[mixed_non_pref]
-
-        if((length(mixed_pref) > 0) & (length(mixed_pref) > 0)){
-          # re-sort vector to prefer
-          sample_from <- as.integer(c(names(rem)[rem > min_len], mixed_pref, mixed_non_pref, names(rem)[rem < min_len]))
-          keep <- as.integer(sample_from[1:max_group_size])
-        } else {
-          # otherwise just take the longest
-          keep <- as.integer(names(rem[1:max_group_size]))
-        }
-      } else{
-        keep <- as.integer(names(rem[1:max_group_size]))
-      }
-      remove[index[!index %in% keep]] <- TRUE
-    }
-  }
-  x <- x[!remove]
-  if (!quiet) cat(paste0(sum(remove), " sequences pruned from over-represented groups"))
-  return(x)
-}
-
-# Mixed clusters -----------------------------------------------------
-#' Get mixed clusters
-#'
-#' @description Cluster sequences at a certain taxonomic similarity, and find clusters that contain mixed taxonomic names,
-#' @description Note, it is recommended to set a unique seed using set.seed()
-#' @param x	 A DNAbin list object whose names include NCBItaxonomic identification numbers.
-#' @param db A taxonomic database from `get_ncbi_taxonomy` or `get_ott_lineage`
-#' @param rank The taxonomic rank to check clusters at, accepts a character such as "order", or vector of characters such as c("species", "genus").
-#' If "all", the clusters will be checked at all taxonomic ranks available.
-#' @param threshold numeric between 0 and 1 giving the OTU identity cutoff for clustering. Defaults to 0.97.
-#' @param rngseed (Optional) A single integer value passed to set.seed, which is used to fix a seed for reproducibly random number generation for the kmeans clustering.
-#' If set to FALSE, then no fiddling with the RNG seed is performed, and it is up to the user to appropriately call set.seed beforehand to achieve reproducible results.
-#' @param confidence The minimum confidence value for a mixed cluster to be flagged. For example, if confidence = 0.8 (the default value)
-#'  a cluster will only be flagged if the taxonomy of a sequence within the cluster differs from at least four other independent sequences in its cluster.
-#'  @param nstart how many random sets should be chosen for `kmeans`, It is recommended to set the value of nstart to at least 20.
-#'  While this can increase computation time, it can improve clustering accuracy considerably.
-#' @param return What type of data about the data should be returned. Options include:
-#' Consensus - The consensus taxonomy for each cluster and associated confidence level
-#' All - Return all taxa in mixed clusters and their sequence accession numbers
-#' Count - Return counts of all taxa within each cluster
-#' @param k integer giving the k-mer size used to generate the input matrix for k-means clustering.
-#' @param quiet logical indicating whether progress should be printed to the console.
-#' @param ... further arguments to pass to kmer::otu.
-#'
-#' @return
-#' @export
-#' @import dplyr
-#' @importFrom kmer otu
-#' @importFrom tibble rownames_to_column
-#' @importFrom methods as
-#' @examples
-#' \dontrun{
-#' seqs <- ape::read.FASTA("test.fa.gz")
-#'
-#' # NCBI taxonomy
-#' mixed <- get_mixed_clusters(seqs, db, rank="species", threshold=0.99, confidence=0.8, quiet=FALSE)
-#'
-#' # OTT taxonomy
-#' seqs <- map_to_ott(
-#' seqs, dir="ott3.2", from="ncbi",
-#' resolve_synonyms=TRUE, filter_bads=TRUE, remove_na = TRUE, quiet=FALSE
-#' )
-#'
-#' mixed <- get_mixed_clusters(
-#' seqs, db, rank="species",
-#' threshold=0.99, confidence=0.6, quiet=FALSE
-#' )
-#' }
-#'
-get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed = FALSE, confidence = 0.8, return = "consensus", k=5, quiet = FALSE, ...) {
-  if(missing(x)) {stop("Error: x is required")}
-
-  #Check inputs
-  if(!is.numeric(threshold) | !dplyr::between(threshold, 0,1)) { stop("Threshold must be a numeric between 0 and 1")}
-  if(!is.numeric(confidence) | !dplyr::between(confidence, 0,1)) { stop("Confidence must be a numeric between 0 and 1")}
-  rank <- tolower(rank)
-  return <- tolower(return)
-  if(!return %in% c("consensus", "all", "counts")){stop("Return must be one of: 'consensus', 'all', or 'counts'")}
-  if (methods::as(rngseed, "logical")) {
-    set.seed(rngseed)
-    if (!quiet) {
-      message("`set.seed(", rngseed, ")` was used to initialize repeatable random subsampling.")
-      message("Please record this for your records so others can reproduce.")
-      message("Try `set.seed(", rngseed, "); .Random.seed` for the full vector",
-              sep = "")
-    }
-  } else if (!quiet) {message("You set `rngseed` to FALSE. Make sure you've set & recorded\n",
-                              " the random seed of your session for reproducibility.\n",
-                              "See `?set.seed`\n")}
-
-  #Get lineage
-  if(attr(db, "type")  == "ncbi"){
-    source <- "ncbi"
-    lineage <- taxreturn::get_ncbi_lineage(x = x, db = db)
-  } else if(attr(db, "type")  == "OTT"){
-    source <- "OTT"
-    lineage <- taxreturn::get_ott_lineage(x = x, db = db)
-  } else (stop("db type is not supported"))
-
-  # Cluster OTUS
-  if (is.null(attr(x, "OTU"))) {
-    if (!quiet) {cat(paste0("Clustering OTUs at ", (threshold*100), "%  similarity \n"))}
-    otus <- kmer::otu(x, k=k , threshold = threshold, ...)
-  } else {
-    if (!quiet) {cat("Obtaining OTU membership from input object\n")}
-    otus <- attr(x, "OTU")
-    stopifnot(length(x) == length(otus))
-  }
-  if(length(unique(otus))==1) {
-    warning("Only one unique cluster")
-    return(NULL)
-  }
-  if (!quiet) {cat("Comparing lineage metadata within OTUs\n")}
-
-  # Get mixed clusters
-  find_mixed <- function(y, return) {
-    # Ensure no duplicated accessions+names to bias confidence
-    hashes <- paste0(gsub("\\|.*$", "\\1", names(y)), y)
-    yu <- y[!duplicated(hashes)]
-    if (length(unique(yu)) < 2) {
-      return(NULL)
-    }
-    # Tabulate taxon names
-    tab <- sort(table(yu), decreasing = TRUE)
-
-    if(return == "consensus"){
-      consensus <- names(tab)[1]
-      consensus_taxid <- gsub("^.*\\|", "\\1", names(y)[y==consensus][1])
-      mixed <- y != consensus #potential misannotated
-      mixedu <- yu != consensus
-      nu <- length(mixedu)
-
-      #Check if there is a clear consensus
-      if (tab[1] == tab[2]){
-        consensus <- NA
-        consensus_taxid <- NA
-      }
-      res <- data.frame(listed = y[mixed],
-                        consensus = rep(consensus, sum(mixed)),
-                        consensus_taxid = rep(consensus_taxid,sum(mixed)),
-                        confidence = sum(!mixedu)/nu, cluster_size = nu,
-                        stringsAsFactors = FALSE)  %>%
-        tibble::rownames_to_column("Acc")
-    } else if (return=="counts"){
-      res <- data.frame(tax_name = names(tab),
-                        count =as.numeric(tab), stringsAsFactors = FALSE)
-    } else if (return=="all"){
-      res <- data.frame(Acc =  gsub("\\|.*$", "\\1", names(y)),
-                        tax_id = gsub("^.*\\|", "\\1", names(y)),
-                        listed = as.character(y), stringsAsFactors = FALSE)
-    }
-
-    return(res)
-  }
-
-  # Loop over rank
-  results <- vector("list", length=length(rank))
-  for (i in 1:length(rank)){
-    lins <- lineage %>%
-      dplyr::select(!!rank[i]) %>%
-      dplyr::pull(!!rank[i])
-    if(length(lins[is.na(lins)]) >0 & !quiet){warning("ignoring ", length(lins[is.na(lins)]), " sequence/s with no taxonomic data for ", rank[i])}
-    names(lins) <- lineage$Acc
-    f <- as.factor(otus[!is.na(lins)])
-    lins <- lins[!is.na(lins)]
-
-    splitlist <- split(lins, f)
-    splitlist <- splitlist[tabulate(f) > 2]
-
-    mixedtab <- lapply(splitlist, find_mixed, return)
-    mixedtab <- mixedtab[!vapply(mixedtab, is.null, logical(1))]
-    if (length(mixedtab) == 0) {
-      if (!quiet) {cat("No mixed clusters at", rank[i],   "rank \n")}
-      results[[i]] <-  as.data.frame(NULL)
-    } else if (length(mixedtab) > 0){
-
-      mixedtab <- dplyr::bind_rows(mixedtab, .id="cluster")
-      if(rank[i] == "species"){
-        if(return == "consensus"){
-          #Return binomials if species rank is selected
-          mixedtab <- mixedtab %>%
-            dplyr::left_join(lineage %>% dplyr::select(Acc, genus), by="Acc") %>%
-            dplyr::mutate(consensus_taxid = as.numeric(na_if(consensus_taxid, "NA"))) %>%
-            dplyr::left_join(db %>% dplyr::select(consensus_taxid = tax_id, consensus_genus = genus), by="consensus_taxid") %>%
-            dplyr::mutate(listed = paste0(genus, " ", listed),
-                          consensus  = paste0(consensus_genus," ", consensus)) %>%
-            dplyr::select(-genus, -consensus_genus)
-        } else if(return == "all"){
-          mixedtab <- mixedtab %>%
-            dplyr::left_join(lineage %>%
-                               dplyr::select(Acc, genus) %>%
-                               tidyr::separate(Acc, into=c("Acc", "tax_id"), sep="\\|"), by=c("Acc", "tax_id")) %>%
-            dplyr::mutate(listed = paste0(genus, " ", listed)) %>%
-            dplyr::select(-genus)
-        }
-      }
-      if(return == "consensus"){
-        mixedtab <- mixedtab[mixedtab$confidence >= confidence, ]
-      }
-      if (nrow(mixedtab) == 0) {
-        if (!quiet) {cat("No mixed clusters at", rank[i],   "rank \n")}
-        results[[i]] <-  as.data.frame(NULL)
-      } else if(nrow(mixedtab) > 0 ) {
-        if(return == "consensus"){
-          mixedtab <- mixedtab[order(mixedtab$confidence, decreasing = TRUE), ]
-        }
-        if (!quiet) {cat("identified", length(unique(mixedtab$cluster)), "mixed clusters at", rank[i],   "rank \n")}
-        results[[i]] <-  mixedtab %>%
-          dplyr::mutate(rank = rank[i],
-                        threshold = threshold) %>%
-          dplyr::mutate_if(is.factor, as.character)
-
-      }
-    }
-  }
-
-  out <- dplyr::bind_rows(results)
-  if (nrow(out)==0) {
-    return(NULL)
-  } else (return(out))
-}
 
 #' Get primer binding position
 #'
@@ -999,4 +602,122 @@ get_binding_position <- function (primer, model, tryrc = TRUE, quiet = FALSE, mi
     out <- data.frame(primer = input, start = matchF, end = matchR, score=score)
   }
   return(out)
+}
+
+
+#' Subset PHMM
+#' Modified from Cameron Nugent's COIL package https://github.com/CNuge/coil/blob/master/R/subset_PHMM.r
+#' @param x A profile hidden Markov model (a "PHMM" object) generated by the aphid R package.
+#' @param primers A character vector of length 2 contaning the forward and reverse primer sequences.
+#' @param positions A numeric vector of length 2 containing the start and end position for model trimming. Used only if primers = NULL.
+#' @param trimprimers logical indicating whether the primer-binding sites should be removed from the sequences in the returned model. Used only if positions = NULL.
+#' @param min_score Minimum score for the viterbi alignment.
+#' @param quiet Whether to print progress to console.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+subset_model <- function(x, primers=NULL, positions=NULL, trimprimers=FALSE, min_score=10, quiet=FALSE){
+
+  # Check inputs
+  if (is.numeric(positions) & length(positions) == 2){
+    start_bind <- sort(positions)[1]
+    end_bind <- sort(positions)[2]
+  } else if (is.null(positions) & (is.character(primers) & length(primers)== 2)){
+    Fprimer <- primers[1]
+    Rprimer <- primers[2]
+
+    Fbind <-  get_binding_position(Fprimer, model=x, tryRC=TRUE, quiet=quiet, min_score = min_score)
+    Rbind <-  get_binding_position(Rprimer, model=x, tryRC=TRUE, quiet=quiet, min_score = min_score)
+    if(isTRUE(trimprimers)){
+      start_bind <- Fbind$end + 1
+      end_bind <- Rbind$start - 1
+      if(!quiet){message("Primer binding positions will be trimmed from model")}
+    } else if(isFALSE(trimprimers)){
+      start_bind <- Fbind$start
+      end_bind <- Rbind$end
+    } else{
+      stop("trimprimers must be either TRUE or FALSE")
+    }
+
+  } else if (is.null(positions) & is.null(primers)){
+    stop("A value must be provided to either positions or primers")
+  } else if(is.null(primers) & (!is.numeric(positions) | !length(positions) == 2) ){
+    stop("positions must be a numeric vector of length 2 containing the start and end position for model trimming")
+  } else if(is.null(positions) & (!is.character(primers) | !length(primers) == 2) ){
+    stop("primers must be a character vector of length 2, with the forward primer as the first element, and reverse primer as the second element")
+  } else if(!is.null(primers) & !is.null(positions)){
+    stop("Only one of primers or positions can be entered at a time")
+  } else {
+    stop("A value must be provided to either positions or primers")
+  }
+  if(is.na(start_bind) & is.numeric(end_bind)){
+    stop(paste0("Could not find binding position for Forward primer: ", Fprimer))
+  } else if(is.na(end_bind) & is.numeric(start_bind)){
+    stop(paste0("Could not find binding position for Reverse primer: ", Rprimer))
+  } else if(is.na(start_bind) & is.na(end_bind)){
+    stop(paste0("Could not find binding position for Forward primer: ", Fprimer, " and Reverse primer: ", Rprimer))
+  }
+  # Check that positions are right
+  if(end_bind < start_bind){
+    stop("Index error, end position must match or exceed the start position.")
+  }
+  if(end_bind > x$size){
+    stop(paste0("Index error, end position out of bounds. Input PHMM only has a length of: ", x$size))
+  }
+
+  #get the map positions for subsetting the alignment-based fields
+  map_start <- x$map[[start_bind]]
+  map_end <- x$map[[end_bind]]
+
+  #subset to get the new inserts
+  new_inserts <- x$inserts[map_start:map_end]
+
+  #subset to get the new insert lengths
+  new_insert_lengths <- x$insertlengths[map_start:map_end]
+  #reindex the insert length labels
+  if(!is.null(new_insert_lengths)){
+    names(new_insert_lengths) <- 0:(length(new_insert_lengths)-1)
+  }
+  #subset the mask
+  new_mask <- x$mask[map_start:map_end]
+  #subset the map
+  new_map <- x$map[start_bind:end_bind]
+
+  #set the first remaining map entry equal to one,
+  #make the necessary relative adjustment to all other positions
+  new_map <- new_map-(new_map[1]-1)
+  #reindex the labels
+  if(!is.null(new_map)){
+    names(new_map) <- 1:(length(new_map))
+  }
+
+  #Subset the A and E matrixies, reindex the positions
+  #A is 0 indexed, E is 1 indexed
+  new_A <- x$A[,start_bind:end_bind]
+  colnames(new_A) <- 0:(length(colnames(new_A))-1)
+  new_E <- x$E[,start_bind:end_bind]
+  colnames(new_E) <- 1:length(colnames(new_A))
+
+  #Create the new PHMM object
+  newPHMM = structure(list(name = x$name,
+                           description = x$description,
+                           size = (end_bind - start_bind)+1,
+                           alphabet = x$alphabet,
+                           A = new_A,
+                           E = new_E,
+                           qa = x$qa,
+                           qe = x$qe,
+                           inserts = new_inserts,
+                           insertlengths = new_insert_lengths,
+                           map = new_map,
+                           date = x$date,
+                           nseq = x$nseq,
+                           weights = x$weights,
+                           reference = x$reference,
+                           mask = new_mask
+  ), class =  "PHMM")
+  message(paste0("PHMM model subset to ", newPHMM$size, " base pairs"))
+  return(newPHMM)
 }

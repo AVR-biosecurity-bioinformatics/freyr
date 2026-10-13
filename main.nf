@@ -112,23 +112,21 @@ workflow FREYR {
 
     startupMessage()
 
-    workflow.onComplete {
-        if ( workflow.success ) {
-            log.info "[$workflow.complete] >> Pipeline finished SUCCESSFULLY after $workflow.duration"
+    workflow.onComplete = {
+        if (workflow.success) {
+            log.info "[${workflow.complete}] >> Pipeline finished SUCCESSFULLY after ${workflow.duration}"
         } else {
-            log.info "[$workflow.complete] >> Pipeline finished with ERRORS after $workflow.duration"
+            log.info "[${workflow.complete}] >> Pipeline finished with ERRORS after ${workflow.duration}"
         }
         /*
         TODO: use other metadata (https://www.nextflow.io/docs/latest/metadata.html) to display at the end of a run.
         */
-
     }
 
     // Print help message, supply typical command line usage for the pipeline
     if (params.help) {
-    //    log.info startupMessage()
-    log.info paramsHelp("nextflow run AVR-biosecurity-bioinformatics/freyr --samplesheet samplesheet.csv --primer_params primer_params.csv") // TODO: add typical commands for pipeline
-    exit 0
+        log.info paramsHelp("nextflow run AVR-biosecurity-bioinformatics/freyr --samplesheet samplesheet.csv --primer_params primer_params.csv") // TODO: add typical commands for pipeline
+        exit 0
     }
 
     // Validate input parameters using schema
