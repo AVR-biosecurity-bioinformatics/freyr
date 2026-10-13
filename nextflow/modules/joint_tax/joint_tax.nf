@@ -15,7 +15,6 @@ process JOINT_TAX {
     
     ${moduleDir}/joint_tax.R \
         --process_name "joint_tax" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \

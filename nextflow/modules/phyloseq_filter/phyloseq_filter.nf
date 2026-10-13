@@ -17,9 +17,8 @@ process PHYLOSEQ_FILTER {
     script:
     """
      
-    phyloseq_filter.R \
+    ${moduleDir}/phyloseq_filter.R \
         --process_name "phyloseq_filter" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \

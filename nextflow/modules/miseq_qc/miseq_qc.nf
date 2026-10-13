@@ -17,7 +17,6 @@ process MISEQ_QC {
 
     ${moduleDir}/miseq_qc.R \
         --process_name "miseq_qc" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --read_group "$read_group" \

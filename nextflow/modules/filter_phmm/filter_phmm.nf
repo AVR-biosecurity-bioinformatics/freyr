@@ -15,7 +15,6 @@ process FILTER_PHMM {
     
     ${moduleDir}/filter_phmm.R \
         --process_name "filter_phmm" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \

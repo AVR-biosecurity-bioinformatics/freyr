@@ -20,7 +20,12 @@ seq_type                    <- args$seq_type
 paired                      <- args$paired
 file_suffix                 <- args$file_suffix
 
-sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+# Import functions
+functions_file <- Sys.which("functions.R")
+if (functions_file == "") {
+    stop("Could not find functions.R on PATH") 
+}
+sys.source(functions_file, envir = .GlobalEnv)
 
 ### load only required packages
 process_packages <- c(

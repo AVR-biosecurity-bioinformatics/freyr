@@ -15,7 +15,12 @@ primers                     <- args$primers
 ps_file                     <- args$ps_file
 min_sample_reads            <- args$min_sample_reads
 
-sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+# Import functions
+functions_file <- Sys.which("functions.R")
+if (functions_file == "") {
+    stop("Could not find functions.R on PATH") 
+}
+sys.source(functions_file, envir = .GlobalEnv)
 
 ### load only required packages
 process_packages <- c(
@@ -34,13 +39,7 @@ process_packages <- c(
     "vegan",
     NULL
 )
-
-# Import functions
-functions_file <- Sys.which("functions.R")
-if (functions_file == "") {
-    stop("Could not find functions.R on PATH") 
-}
-sys.source(functions_file, envir = .GlobalEnv)
+suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))
 
 ## check and define variables
 ps <- readRDS(ps_file)

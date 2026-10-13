@@ -21,7 +21,12 @@ ps_file <- args$ps_file
 clusters_file <- args$clusters_file
 merge_clusters <- args$merge_clusters
 
-sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+# Import functions
+functions_file <- Sys.which("functions.R")
+if (functions_file == "") {
+    stop("Could not find functions.R on PATH") 
+}
+sys.source(functions_file, envir = .GlobalEnv)
 
 ### load only required packages
 process_packages <- c(

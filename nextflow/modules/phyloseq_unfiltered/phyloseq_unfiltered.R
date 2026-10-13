@@ -20,7 +20,12 @@ samplesheet_split_file      <- args$samplesheet_split_file
 sample_metadata_file        <- args$sample_metadata_file
 cluster_threshold           <- args$cluster_threshold
 
-sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+# Import functions
+functions_file <- Sys.which("functions.R")
+if (functions_file == "") {
+    stop("Could not find functions.R on PATH") 
+}
+sys.source(functions_file, envir = .GlobalEnv)
 
 ### load only required packages
 process_packages <- c(

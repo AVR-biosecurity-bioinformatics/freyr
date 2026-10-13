@@ -16,7 +16,6 @@ process MERGE_PAIRED {
      
     ${moduleDir}/merge_paired.R \
         --process_name "merge_paired" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --sample_primers "$sample_primers" \

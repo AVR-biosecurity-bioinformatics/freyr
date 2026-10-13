@@ -15,7 +15,6 @@ process FILTER_FRAME {
     
     ${moduleDir}/filter_frame.R \
         --process_name "filter_frame" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \

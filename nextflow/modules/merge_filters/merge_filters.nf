@@ -14,15 +14,11 @@ process MERGE_FILTERS {
     path("{asv_cleanup,asv_abundance,asv_count}_*.{csv,pdf}"),                                                  emit: cleanup
     path("*_readsout.csv"),                                                                                     emit: read_tracking
 
-
-    // when: 
-
     script:
     """
     
     ${moduleDir}/merge_filters.R \
         --process_name "merge_filters" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \

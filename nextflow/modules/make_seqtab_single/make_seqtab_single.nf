@@ -16,7 +16,6 @@ process MAKE_SEQTAB_SINGLE {
 
     ${moduleDir}/make_seqtab_single.R \
         --process_name "make_seqtab_single" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --sample_primers "$sample_primers" \

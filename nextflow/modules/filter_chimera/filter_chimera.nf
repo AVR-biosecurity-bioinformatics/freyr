@@ -15,7 +15,6 @@ process FILTER_CHIMERA {
     
     ${moduleDir}/filter_chimera.R \
         --process_name "filter_chimera" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \

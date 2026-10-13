@@ -15,7 +15,6 @@ process ACCUMULATION_CURVE {
     """
     ${moduleDir}/accumulation_curve.R \
         --process_name "accumulation_curve" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \

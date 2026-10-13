@@ -19,7 +19,6 @@ process DENOISE {
 
     ${moduleDir}/denoise.R \
         --process_name "denoise" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --reads "$reads" \

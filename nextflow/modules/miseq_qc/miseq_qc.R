@@ -14,7 +14,12 @@ cat("\n")
 read_group          <- args$read_group
 miseq_dir           <- args$miseq_dir
 
-sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+# Import functions
+functions_file <- Sys.which("functions.R")
+if (functions_file == "") {
+    stop("Could not find functions.R on PATH") 
+}
+sys.source(functions_file, envir = .GlobalEnv)
 
 ### load only required packages
 process_packages <- c(

@@ -16,7 +16,6 @@ process FILTER_LENGTH {
     
     ${moduleDir}/filter_length.R \
         --process_name "filter_length" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \

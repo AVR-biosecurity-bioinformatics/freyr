@@ -17,7 +17,6 @@ process ASSIGNMENT_PLOT {
     
     ${moduleDir}/assignment_plot.R \
         --process_name "assignment_plot" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \

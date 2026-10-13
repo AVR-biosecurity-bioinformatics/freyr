@@ -16,7 +16,6 @@ process ERROR_MODEL {
 
     ${moduleDir}/error_model.R \
         --process_name "error_model" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --reads "$reads" \

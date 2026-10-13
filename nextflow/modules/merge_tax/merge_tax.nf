@@ -15,7 +15,6 @@ process MERGE_TAX {
     
     ${moduleDir}/merge_tax.R \
         --process_name "merge_tax" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \

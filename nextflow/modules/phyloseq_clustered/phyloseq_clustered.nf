@@ -19,7 +19,6 @@ process PHYLOSEQ_CLUSTERED {
     
     ${moduleDir}/phyloseq_clustered.R \
         --process_name "phyloseq_clustered" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \

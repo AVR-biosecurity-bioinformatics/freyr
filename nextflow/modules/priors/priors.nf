@@ -17,7 +17,6 @@ process PRIORS {
     
     ${moduleDir}/priors.R \
         --process_name "priors" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \

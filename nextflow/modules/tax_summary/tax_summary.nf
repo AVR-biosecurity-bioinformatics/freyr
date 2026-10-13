@@ -17,7 +17,6 @@ process TAX_SUMMARY {
     
     ${moduleDir}/tax_summary.R \
         --process_name "tax_summary" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \

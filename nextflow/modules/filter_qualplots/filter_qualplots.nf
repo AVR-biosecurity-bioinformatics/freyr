@@ -19,7 +19,6 @@ process FILTER_QUALPLOTS {
     """
     ${moduleDir}/filter_qualplots.R \
         --process_name "filter_qualplots" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --reads_paths "$reads_paths" \

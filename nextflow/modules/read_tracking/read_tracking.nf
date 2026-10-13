@@ -22,7 +22,6 @@ process READ_TRACKING {
     
     ${moduleDir}/read_tracking.R \
         --process_name "read_tracking" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --rt_samples "$rt_samples" \

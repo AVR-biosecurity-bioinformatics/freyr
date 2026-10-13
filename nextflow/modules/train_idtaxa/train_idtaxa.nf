@@ -17,7 +17,6 @@ process TRAIN_IDTAXA {
     
     ${moduleDir}/process_name.R \
         --process_name "train_idtaxa" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --ref_fasta "$ref_fasta" \

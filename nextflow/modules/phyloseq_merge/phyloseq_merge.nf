@@ -20,7 +20,6 @@ process PHYLOSEQ_MERGE {
         
     ${moduleDir}/phyloseq_merge.R \
         --process_name "phyloseq_merge" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --ps_unfiltered "$ps_unfiltered" \

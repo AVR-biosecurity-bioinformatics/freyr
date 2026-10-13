@@ -17,7 +17,12 @@ seqtab_tibble_list          <- args$seqtab_tibble_list
 fasta_list                  <- args$fasta_list
 samplesheet_split           <- args$samplesheet_split
 
-sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+# Import functions
+functions_file <- Sys.which("functions.R")
+if (functions_file == "") {
+    stop("Could not find functions.R on PATH") 
+}
+sys.source(functions_file, envir = .GlobalEnv)
 
 ### load only required packages
 process_packages <- c(

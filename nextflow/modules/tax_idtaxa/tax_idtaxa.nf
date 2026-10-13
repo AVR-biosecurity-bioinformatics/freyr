@@ -16,7 +16,6 @@ process TAX_IDTAXA {
     
     ${moduleDir}/tax_idtaxa.R \
         --process_name "tax_idtaxa" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \

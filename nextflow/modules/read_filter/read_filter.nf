@@ -17,7 +17,6 @@ process READ_FILTER {
 
     ${moduleDir}/read_filter.R \
         --process_name "read_filter" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --reads_paths "$reads_paths" \

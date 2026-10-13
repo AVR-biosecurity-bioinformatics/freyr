@@ -17,7 +17,6 @@ process TAX_BLAST {
     
     ${moduleDir}/tax_blast.R \
         --process_name "tax_blast" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \

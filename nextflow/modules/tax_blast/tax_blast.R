@@ -19,7 +19,12 @@ blast_min_identity          <- args$blast_min_identity
 blast_min_coverage          <- args$blast_min_coverage
 run_blast                   <- args$run_blast
 
-sys.source(paste0(args$projectDir,"/bin/functions.R"), envir = .GlobalEnv)
+# Import functions
+functions_file <- Sys.which("functions.R")
+if (functions_file == "") {
+    stop("Could not find functions.R on PATH") 
+}
+sys.source(functions_file, envir = .GlobalEnv)
 
 ### load only required packages
 process_packages <- c(

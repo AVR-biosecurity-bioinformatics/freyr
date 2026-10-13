@@ -16,7 +16,6 @@ process MAKE_SEQTAB_PAIRED {
     
     ${moduleDir}/make_seqtab_paired.R \
         --process_name "make_seqtab_paired" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --sample_primers "$sample_primers" \

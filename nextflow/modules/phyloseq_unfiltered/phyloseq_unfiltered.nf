@@ -18,7 +18,6 @@ process PHYLOSEQ_UNFILTERED {
     
     ${moduleDir}/phyloseq_unfiltered.R \
         --process_name "phyloseq_unfiltered" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --primers "$primers" \
