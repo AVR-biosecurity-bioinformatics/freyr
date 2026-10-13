@@ -15,7 +15,7 @@ process MISEQ_QC {
     script:
     """
 
-    miseq_qc.R \
+    ${moduleDir}/miseq_qc.R \
         --process_name "miseq_qc" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

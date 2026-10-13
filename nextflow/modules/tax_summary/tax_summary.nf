@@ -15,7 +15,7 @@ process TAX_SUMMARY {
     script:
     """
     
-    tax_summary.R \
+    ${moduleDir}/tax_summary.R \
         --process_name "tax_summary" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

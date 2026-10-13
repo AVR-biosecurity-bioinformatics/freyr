@@ -14,7 +14,7 @@ process FILTER_LENGTH {
     script:
     """
     
-    filter_length.R \
+    ${moduleDir}/filter_length.R \
         --process_name "filter_length" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

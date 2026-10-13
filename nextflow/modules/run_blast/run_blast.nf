@@ -15,7 +15,7 @@ process RUN_BLAST {
     #!/bin/bash
 
     ### run module code
-    bash run_blast.sh \
+    ${moduleDir}/run_blast.sh \
         ${primers} \
         ${read_group} \
         "${fasta}" \

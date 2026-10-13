@@ -15,7 +15,7 @@ process READ_FILTER {
     def reads_paths = reads.join(";") // concatenate reads into a single string
     """
 
-    read_filter.R \
+    ${moduleDir}/read_filter.R \
         --process_name "read_filter" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

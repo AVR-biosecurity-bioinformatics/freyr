@@ -13,7 +13,7 @@ process JOINT_TAX {
     script:
     """
     
-    joint_tax.R \
+    ${moduleDir}/joint_tax.R \
         --process_name "joint_tax" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

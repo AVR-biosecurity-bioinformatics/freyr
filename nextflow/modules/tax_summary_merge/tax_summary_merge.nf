@@ -14,7 +14,7 @@ process TAX_SUMMARY_MERGE {
     script:
     """
     
-    tax_summary_merge.R \
+    ${moduleDir}/tax_summary_merge.R \
         --process_name "tax_summary_merge" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

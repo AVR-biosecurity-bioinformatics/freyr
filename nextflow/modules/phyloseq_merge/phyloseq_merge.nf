@@ -18,7 +18,7 @@ process PHYLOSEQ_MERGE {
     script:
     """
         
-    phyloseq_merge.R \
+    ${moduleDir}/phyloseq_merge.R \
         --process_name "phyloseq_merge" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

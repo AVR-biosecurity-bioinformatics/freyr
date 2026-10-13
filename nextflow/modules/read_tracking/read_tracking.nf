@@ -1,7 +1,6 @@
 process READ_TRACKING {
     tag "Whole dataset"
     label "small"
-    // cache false 
     conda "${moduleDir}/environment.yml"
     publishDir "${launchDir}/output/modules/read_tracking", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${launchDir}/output/results/read_tracking", mode: 'copy'
@@ -21,7 +20,7 @@ process READ_TRACKING {
     script:
     """
     
-    read_tracking.R \
+    ${moduleDir}/read_tracking.R \
         --process_name "read_tracking" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

@@ -14,7 +14,7 @@ process ERROR_MODEL {
     script:
     """
 
-    error_model.R \
+    ${moduleDir}/error_model.R \
         --process_name "error_model" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

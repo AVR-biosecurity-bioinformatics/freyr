@@ -15,7 +15,7 @@ process TRAIN_IDTAXA {
     script:
     """
     
-    process_name.R \
+    ${moduleDir}/process_name.R \
         --process_name "train_idtaxa" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

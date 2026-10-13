@@ -17,7 +17,7 @@ process DENOISE {
     // def priors_path = priors.name != "NO_FILE" ? priors.name : "NO_FILE"
     """
 
-    denoise.R \
+    ${moduleDir}/denoise.R \
         --process_name "denoise" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

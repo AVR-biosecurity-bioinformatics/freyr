@@ -15,7 +15,7 @@ process TAX_BLAST {
     script:
     """
     
-    tax_blast.R \
+    ${moduleDir}/tax_blast.R \
         --process_name "tax_blast" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

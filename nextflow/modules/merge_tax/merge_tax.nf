@@ -13,7 +13,7 @@ process MERGE_TAX {
     script:
     """
     
-    merge_tax.R \
+    ${moduleDir}/merge_tax.R \
         --process_name "merge_tax" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

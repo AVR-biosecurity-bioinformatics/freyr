@@ -19,7 +19,7 @@ process FASTQC {
     #!/bin/bash
 
     ### run module code
-    bash fastqc.sh \
+    ${moduleDir}/fastqc.sh \
         "${reads_paths}" \
         ${task.memory.mega} \
         ${seq_type} \

@@ -17,7 +17,7 @@ process FILTER_QUALPLOTS {
     script:
     def reads_paths = reads.join(";") // concatenate reads into a single string
     """
-    filter_qualplots.R \
+    ${moduleDir}/filter_qualplots.R \
         --process_name "filter_qualplots" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

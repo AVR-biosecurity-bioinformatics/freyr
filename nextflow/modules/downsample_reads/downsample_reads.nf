@@ -19,7 +19,7 @@ process DOWNSAMPLE_READS {
     #!/bin/bash
 
     ### run module code
-    bash downsample_reads.sh \
+    ${moduleDir}/downsample_reads.sh \
         "${reads_paths}" \
         ${seq_type} \
         ${paired} \

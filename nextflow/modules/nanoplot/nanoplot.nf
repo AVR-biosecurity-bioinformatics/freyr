@@ -19,7 +19,7 @@ process NANOPLOT {
     #!/bin/bash
 
     ### run module code
-    bash nanoplot.sh \
+    ${moduleDir}/nanoplot.sh \
         "${reads_paths}" \
         ${sample} \
         ${seq_type} \

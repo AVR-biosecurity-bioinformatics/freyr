@@ -13,7 +13,7 @@ process FILTER_CHIMERA {
     script:
     """
     
-    filter_chimera.R \
+    ${moduleDir}/filter_chimera.R \
         --process_name "filter_chimera" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

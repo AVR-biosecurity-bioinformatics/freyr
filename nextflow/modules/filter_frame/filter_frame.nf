@@ -13,7 +13,7 @@ process FILTER_FRAME {
     script:
     """
     
-    filter_frame.R \
+    ${moduleDir}/filter_frame.R \
         --process_name "filter_frame" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

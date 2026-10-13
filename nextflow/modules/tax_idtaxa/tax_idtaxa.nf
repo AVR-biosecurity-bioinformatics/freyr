@@ -14,7 +14,7 @@ process TAX_IDTAXA {
     script:
     """
     
-    tax_idtaxa.R \
+    ${moduleDir}/tax_idtaxa.R \
         --process_name "tax_idtaxa" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

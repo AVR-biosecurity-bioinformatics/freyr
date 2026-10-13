@@ -16,7 +16,7 @@ process PHYLOSEQ_UNFILTERED {
     script:
     """
     
-    phyloseq_unfiltered.R \
+    ${moduleDir}/phyloseq_unfiltered.R \
         --process_name "phyloseq_unfiltered" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

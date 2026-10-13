@@ -25,7 +25,7 @@ process PARSE_INPUTS {
     script:
     """
 
-    parse_inputs.R \
+    ${moduleDir}/parse_inputs.R \
         --process_name "parse_inputs" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

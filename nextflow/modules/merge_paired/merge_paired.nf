@@ -14,7 +14,7 @@ process MERGE_PAIRED {
     script:
     """
      
-    merge_paired.R \
+    ${moduleDir}/merge_paired.R \
         --process_name "merge_paired" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

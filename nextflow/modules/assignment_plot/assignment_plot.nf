@@ -15,7 +15,7 @@ process ASSIGNMENT_PLOT {
     script:
     """
     
-    assignment_plot.R \
+    ${moduleDir}/assignment_plot.R \
         --process_name "assignment_plot" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

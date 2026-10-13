@@ -17,7 +17,7 @@ process PHYLOSEQ_CLUSTERED {
     script:
     """
     
-    phyloseq_clustered.R \
+    ${moduleDir}/phyloseq_clustered.R \
         --process_name "phyloseq_clustered" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

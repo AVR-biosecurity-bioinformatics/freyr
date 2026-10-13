@@ -14,7 +14,7 @@ process MAKE_SEQTAB_SINGLE {
     script:
     """
 
-    make_seqtab_single.R \
+    ${moduleDir}/make_seqtab_single.R \
         --process_name "make_seqtab_single" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

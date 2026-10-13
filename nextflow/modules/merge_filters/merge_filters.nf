@@ -20,7 +20,7 @@ process MERGE_FILTERS {
     script:
     """
     
-    merge_filters.R \
+    ${moduleDir}/merge_filters.R \
         --process_name "merge_filters" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

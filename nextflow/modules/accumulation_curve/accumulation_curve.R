@@ -34,7 +34,13 @@ process_packages <- c(
     "vegan",
     NULL
 )
-suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))
+
+# Import functions
+functions_file <- Sys.which("functions.R")
+if (functions_file == "") {
+    stop("Could not find functions.R on PATH") 
+}
+sys.source(functions_file, envir = .GlobalEnv)
 
 ## check and define variables
 ps <- readRDS(ps_file)

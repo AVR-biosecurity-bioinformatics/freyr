@@ -15,7 +15,7 @@ process MAKE_BLAST_DATABASE {
     #!/bin/bash
 
     ### run module code
-    bash make_blast_database.sh \
+    ${moduleDir}/make_blast_database.sh \
         ${primers} \
         "${process_params.ref_fasta}"
     

@@ -14,7 +14,7 @@ process MAKE_SEQTAB_PAIRED {
     script:
     """
     
-    make_seqtab_paired.R \
+    ${moduleDir}/make_seqtab_paired.R \
         --process_name "make_seqtab_paired" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

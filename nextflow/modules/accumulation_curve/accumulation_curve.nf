@@ -13,7 +13,7 @@ process ACCUMULATION_CURVE {
 
     script:
     """
-    accumulation_curve.R \
+    ${moduleDir}/accumulation_curve.R \
         --process_name "accumulation_curve" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \

@@ -18,7 +18,7 @@ process SPLIT_LOCI {
     #!/bin/bash
 
     ### run module code
-    bash split_loci.sh \
+    ${moduleDir}/split_loci.sh \
         "${reads_paths}" \
         ${process_params.for_primer_seq} \
         ${process_params.rev_primer_seq} \

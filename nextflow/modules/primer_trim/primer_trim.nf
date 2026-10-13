@@ -17,7 +17,7 @@ process PRIMER_TRIM {
     #!/bin/bash
 
     ### run module code
-    bash primer_trim.sh \
+    ${moduleDir}/primer_trim.sh \
         "${reads_paths}" \
         ${process_params.for_primer_seq} \
         ${process_params.rev_primer_seq} \

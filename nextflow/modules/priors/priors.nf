@@ -15,7 +15,7 @@ process PRIORS {
     script:
     """
     
-    priors.R \
+    ${moduleDir}/priors.R \
         --process_name "priors" \
         --projectDir "$projectDir" \
         --cpus "$task.cpus" \
