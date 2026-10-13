@@ -212,7 +212,8 @@ workflow FREYR {
         params.paired,
         ch_subsample,
         ch_extension,
-        ch_pp_params
+        ch_pp_params,
+        workflow.launchDir
     )
 
     ch_samplesheet_split = PARSE_INPUTS.out.samplesheet_split.first()

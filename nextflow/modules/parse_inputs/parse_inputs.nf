@@ -15,6 +15,7 @@ process PARSE_INPUTS {
     val(subsample)
     val(extension)
     val(pp_params)
+    val(launchdir)
 
     output: 
     path("sample_metadata.csv"),                    emit: sample_metadata
@@ -27,10 +28,9 @@ process PARSE_INPUTS {
 
     ${moduleDir}/parse_inputs.R \
         --process_name "parse_inputs" \
-        --projectDir "$projectDir" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
-        --launchDir "$launchDir" \
+        --launchDir "$launchdir" \
         --samplesheet "$samplesheet" \
         --primer_params "$primer_params" \
         --pp_type "$pp_type" \
