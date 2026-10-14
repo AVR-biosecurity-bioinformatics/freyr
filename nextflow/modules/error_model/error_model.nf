@@ -3,6 +3,7 @@ process ERROR_MODEL {
     label "high"
     label "env_r_dada2"
     publishDir { "${params.outdir}/modules/error_model" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
+    publishDir { "${params.outdir}/results/qc/dada2_error_model" }, mode: 'copy'
 
     input:
     tuple val(direction), val(primers), val(read_group), path(reads)
