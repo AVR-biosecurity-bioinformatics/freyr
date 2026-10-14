@@ -116,7 +116,7 @@ jobs:
           nextflow \
             -log nextflow-docker.log \
             run . \
-            -profile docker,test \
+            -profile docker,test,quicktest \
             -ansi-log false
 
       - name: Upload logs on failure

@@ -134,6 +134,6 @@ jobs:
           nextflow \
             -log "nextflow-${{ matrix.profile }}.log" \
             run . \
-            -profile "test,${{ matrix.profile }}" \
+            -profile "${{ matrix.profile }},test,quicktest" \
             -ansi-log false
 
