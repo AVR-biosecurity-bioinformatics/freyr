@@ -1,7 +1,7 @@
 name: container-test
 
 on:
-  push
+  workflow_dispatch
 
 permissions:
   contents: read
