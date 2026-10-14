@@ -1,7 +1,7 @@
 process MERGE_TAX {
     tag "$primers"
     label "small"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_core"
     publishDir "${params.outdir}/modules/merge_tax", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
@@ -13,7 +13,7 @@ process MERGE_TAX {
     script:
     """
     
-    ${moduleDir}/merge_tax.R \
+    Rscript --vanilla "${moduleDir}/merge_tax.R" \
         --process_name "merge_tax" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

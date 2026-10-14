@@ -32,10 +32,11 @@ sys.source(functions_file, envir = .GlobalEnv)
 process_packages <- c(
     "dplyr",
     "magrittr",
-    "purrr",
     "readr",
     "stringr",
     "tidyr",
+    "ShortRead",
+    "Biostrings",
     NULL
 )
 suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))

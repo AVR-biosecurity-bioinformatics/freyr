@@ -1,7 +1,7 @@
 process FILTER_PHMM {
     tag "$primers"
     label "small"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_phmm"
     publishDir "${params.outdir}/modules/filter_phmm", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
@@ -13,7 +13,7 @@ process FILTER_PHMM {
     script:
     """
     
-    ${moduleDir}/filter_phmm.R \
+    Rscript --vanilla "${moduleDir}/filter_phmm.R" \
         --process_name "filter_phmm" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

@@ -1,7 +1,7 @@
 process MAKE_SEQTAB_SINGLE {
     tag "$primers; $read_group"
     label "small"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_dada2"
     publishDir "${params.outdir}/modules/make_seqtab_single", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
@@ -14,7 +14,7 @@ process MAKE_SEQTAB_SINGLE {
     script:
     """
 
-    ${moduleDir}/make_seqtab_single.R \
+    Rscript --vanilla "${moduleDir}/make_seqtab_single.R" \
         --process_name "make_seqtab_single" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

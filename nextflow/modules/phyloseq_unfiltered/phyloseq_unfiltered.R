@@ -30,18 +30,15 @@ sys.source(functions_file, envir = .GlobalEnv)
 ### load only required packages
 process_packages <- c(
     "Biostrings",
-    "dada2",
     "dplyr",
     "ggplot2",
     "phyloseq",
-    "purrr",
     "readr",
     "scales",
     "stringr",
     "tibble",
-    "data.table",
     "tidyr",
-    "vegan",
+    "data.table",
     NULL
 )
 suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))

@@ -1,7 +1,7 @@
 process SPLIT_LOCI {
     tag "$sample_primers"
     label "medium"
-    conda "${moduleDir}/environment.yml"
+    label "env_cutadapt"
     publishDir "${params.outdir}/modules/split_loci", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:

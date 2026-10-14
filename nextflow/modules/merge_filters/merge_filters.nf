@@ -1,7 +1,7 @@
 process MERGE_FILTERS {
     tag "$primers"
     label "medium"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_core"
     publishDir "${params.outdir}/modules/merge_filters", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${params.outdir}/results/sequence_filtering", pattern: '{asv_cleanup,asv_abundance,asv_count}_*.{csv,pdf}', mode: 'copy'
 
@@ -17,7 +17,7 @@ process MERGE_FILTERS {
     script:
     """
     
-    ${moduleDir}/merge_filters.R \
+    Rscript --vanilla "${moduleDir}/merge_filters.R" \
         --process_name "merge_filters" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

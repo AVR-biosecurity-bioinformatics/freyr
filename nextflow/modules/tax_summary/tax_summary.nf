@@ -1,7 +1,7 @@
 process TAX_SUMMARY {
     tag "$primers; $read_group"
     label "small"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_core"
     publishDir "${params.outdir}/modules/tax_summary", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${params.outdir}/results/taxonomic_assignment", pattern: 'taxonomic_assignment_summary_*.csv', mode: 'copy'
 
@@ -15,7 +15,7 @@ process TAX_SUMMARY {
     script:
     """
     
-    ${moduleDir}/tax_summary.R \
+    Rscript --vanilla "${moduleDir}/tax_summary.R" \
         --process_name "tax_summary" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

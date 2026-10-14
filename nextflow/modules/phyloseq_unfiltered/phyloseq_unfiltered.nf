@@ -1,7 +1,6 @@
 process PHYLOSEQ_UNFILTERED {
     tag "$primers"
-    label "phyloseq"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_phyloseq"
     publishDir "${params.outdir}/modules/phyloseq_unfiltered", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${params.outdir}/results/main_outputs/unfiltered", mode: 'copy'
 
@@ -16,7 +15,7 @@ process PHYLOSEQ_UNFILTERED {
     script:
     """
     
-    ${moduleDir}/phyloseq_unfiltered.R \
+    Rscript --vanilla "${moduleDir}/phyloseq_unfiltered.R" \
         --process_name "phyloseq_unfiltered" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

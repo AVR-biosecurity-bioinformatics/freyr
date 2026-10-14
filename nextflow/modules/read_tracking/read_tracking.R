@@ -27,7 +27,6 @@ process_packages <- c(
     "dplyr",
     "forcats",
     "ggplot2",
-    "Hmisc",
     "readr",
     "scales",
     "stringr",

@@ -1,7 +1,7 @@
 process READ_FILTER {
     tag "$sample_primers"
     label "medium"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_dada2"
     publishDir "${params.outdir}/modules/read_filter", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
@@ -15,7 +15,7 @@ process READ_FILTER {
     def reads_paths = reads.join(";") // concatenate reads into a single string
     """
 
-    ${moduleDir}/read_filter.R \
+    Rscript --vanilla "${moduleDir}/read_filter.R" \
         --process_name "read_filter" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

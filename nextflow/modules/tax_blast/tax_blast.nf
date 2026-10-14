@@ -1,7 +1,7 @@
 process TAX_BLAST {
     tag "$primers; $read_group"
     label "medium"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_core"
     publishDir "${params.outdir}/modules/tax_blast", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
@@ -15,7 +15,7 @@ process TAX_BLAST {
     script:
     """
     
-    ${moduleDir}/tax_blast.R \
+    Rscript --vanilla "${moduleDir}/tax_blast.R" \
         --process_name "tax_blast" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

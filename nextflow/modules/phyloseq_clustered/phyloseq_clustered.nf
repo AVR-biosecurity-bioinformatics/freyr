@@ -1,7 +1,7 @@
 process PHYLOSEQ_CLUSTERED {
     tag "$primers"
     label "phyloseq"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_phyloseq"
     publishDir "${params.outdir}/modules/phyloseq_clustered", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${params.outdir}/results/main_outputs/clustered", mode: 'copy'
 
@@ -17,7 +17,7 @@ process PHYLOSEQ_CLUSTERED {
     script:
     """
     
-    ${moduleDir}/phyloseq_clustered.R \
+    Rscript --vanilla "${moduleDir}/phyloseq_clustered.R" \
         --process_name "phyloseq_clustered" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

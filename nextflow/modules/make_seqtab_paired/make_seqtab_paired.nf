@@ -1,7 +1,7 @@
 process MAKE_SEQTAB_PAIRED {
     tag "$primers; $read_group"
     label "long"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_dada2"
     publishDir "${params.outdir}/modules/make_seqtab_paired", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
@@ -14,7 +14,7 @@ process MAKE_SEQTAB_PAIRED {
     script:
     """
     
-    ${moduleDir}/make_seqtab_paired.R \
+    Rscript --vanilla "${moduleDir}/make_seqtab_paired.R" \
         --process_name "make_seqtab_paired" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

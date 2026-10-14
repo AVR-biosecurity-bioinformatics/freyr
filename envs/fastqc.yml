@@ -1,6 +1,7 @@
 channels:
   - conda-forge
   - bioconda
+  - nodefaults
 
 dependencies:
-  - bioconda::cutadapt=4.8
+  - bioconda::fastqc=0.12.1

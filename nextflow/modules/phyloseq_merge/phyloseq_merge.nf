@@ -1,7 +1,7 @@
 process PHYLOSEQ_MERGE {
     tag "Whole dataset"
     label "phyloseq"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_phyloseq"
     publishDir "${params.outdir}/modules/phyloseq_merge", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${params.outdir}/results/main_outputs/merged", pattern: '*{_filtered,_unfiltered}.{csv,rds,fasta}', mode: 'copy'
 
@@ -18,7 +18,7 @@ process PHYLOSEQ_MERGE {
     script:
     """
         
-    ${moduleDir}/phyloseq_merge.R \
+    Rscript --vanilla "${moduleDir}/phyloseq_merge.R" \
         --process_name "phyloseq_merge" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

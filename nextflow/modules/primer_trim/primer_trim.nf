@@ -1,7 +1,7 @@
 process PRIMER_TRIM {
     tag "$sample_primers"
     label "medium"
-    conda "${moduleDir}/environment.yml"
+    label "env_cutadapt"
     publishDir "${params.outdir}/modules/primer_trim", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:

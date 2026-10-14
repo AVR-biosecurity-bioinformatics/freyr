@@ -31,6 +31,8 @@ process_packages <- c(
     "readr",
     "stringr",
     "tibble",
+    "digest",
+    "Biostrings",
     NULL
 )
 suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))

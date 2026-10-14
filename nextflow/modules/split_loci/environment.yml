@@ -1,6 +1,0 @@
-channels:
-  - conda-forge
-  - bioconda
-
-dependencies:
-  - bioconda::cutadapt=4.8

@@ -1,7 +1,7 @@
 process PHYLOSEQ_FILTER {
     tag "$primers"
     label "phyloseq"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_phyloseq"
     publishDir "${params.outdir}/modules/phyloseq_filter", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${params.outdir}/results/main_outputs/filtered", mode: 'copy'
 
@@ -17,7 +17,7 @@ process PHYLOSEQ_FILTER {
     script:
     """
      
-    ${moduleDir}/phyloseq_filter.R \
+    Rscript --vanilla "${moduleDir}/phyloseq_filter.R" \
         --process_name "phyloseq_filter" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

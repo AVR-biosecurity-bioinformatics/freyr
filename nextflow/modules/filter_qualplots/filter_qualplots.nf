@@ -1,7 +1,7 @@
 process FILTER_QUALPLOTS {
     tag "$sample_primers"
     label "small"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_dada2"
     publishDir "${params.outdir}/modules/filter_qualplots", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${params.outdir}/results/qc/read_filtering", mode: 'copy'
 
@@ -17,7 +17,7 @@ process FILTER_QUALPLOTS {
     script:
     def reads_paths = reads.join(";") // concatenate reads into a single string
     """
-    ${moduleDir}/filter_qualplots.R \
+    Rscript --vanilla "${moduleDir}/filter_qualplots.R" \
         --process_name "filter_qualplots" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

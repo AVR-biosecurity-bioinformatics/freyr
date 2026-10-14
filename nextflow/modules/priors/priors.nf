@@ -1,7 +1,7 @@
 process PRIORS {
     tag "$primers; $read_group"
     label "small"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_dada2"
     publishDir "${params.outdir}/modules/priors", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
@@ -15,7 +15,7 @@ process PRIORS {
     script:
     """
     
-    ${moduleDir}/priors.R \
+    Rscript --vanilla "${moduleDir}/priors.R" \
         --process_name "priors" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

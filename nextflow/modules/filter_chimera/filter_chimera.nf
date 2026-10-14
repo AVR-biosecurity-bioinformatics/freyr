@@ -1,7 +1,7 @@
 process FILTER_CHIMERA {
     tag "$primers"
     label "very_high"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_dada2"
     publishDir "${params.outdir}/modules/filter_chimera", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
@@ -13,7 +13,7 @@ process FILTER_CHIMERA {
     script:
     """
     
-    ${moduleDir}/filter_chimera.R \
+    Rscript --vanilla "${moduleDir}/filter_chimera.R" \
         --process_name "filter_chimera" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

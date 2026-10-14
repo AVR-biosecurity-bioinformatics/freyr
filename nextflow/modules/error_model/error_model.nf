@@ -1,7 +1,7 @@
 process ERROR_MODEL {
     tag "$primers; $read_group"
     label "high"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_dada2"
     publishDir "${params.outdir}/modules/error_model", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
@@ -14,7 +14,7 @@ process ERROR_MODEL {
     script:
     """
 
-    ${moduleDir}/error_model.R \
+    Rscript --vanilla "${moduleDir}/error_model.R" \
         --process_name "error_model" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

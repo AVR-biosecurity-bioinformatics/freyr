@@ -1,6 +1,7 @@
 channels:
   - conda-forge
   - bioconda
+  - nodefaults
 
 dependencies:
-  - bioconda::blast=2.17.0
+  - bioconda::nanoplot=1.48.0

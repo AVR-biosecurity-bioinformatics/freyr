@@ -1,7 +1,7 @@
 process ACCUMULATION_CURVE {
     tag "$primers"
     label "phyloseq"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_phyloseq"
     publishDir "${params.outdir}/modules/accumulation_curve", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${params.outdir}/results/main_outputs/unfiltered", mode: 'copy'
 
@@ -13,7 +13,7 @@ process ACCUMULATION_CURVE {
 
     script:
     """
-    ${moduleDir}/accumulation_curve.R \
+    Rscript --vanilla "${moduleDir}/accumulation_curve.R" \
         --process_name "accumulation_curve" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

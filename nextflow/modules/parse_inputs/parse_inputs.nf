@@ -1,10 +1,9 @@
 process PARSE_INPUTS {
-    publishDir "${params.outdir}/modules/parse_inputs",  mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${params.outdir}/results/parsed_inputs", mode: 'copy'
-
     tag "Whole dataset"
     label "small"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_dada2"
+    publishDir "${params.outdir}/modules/parse_inputs",  mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir "${params.outdir}/results/parsed_inputs", mode: 'copy'
 
     input:
     path(samplesheet)
@@ -26,7 +25,7 @@ process PARSE_INPUTS {
     script:
     """
 
-    ${moduleDir}/parse_inputs.R \
+    Rscript --vanilla "${moduleDir}/parse_inputs.R" \
         --process_name "parse_inputs" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

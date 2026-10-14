@@ -1,7 +1,7 @@
 process FILTER_LENGTH {
     tag "$primers"
     label "medium"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_core"
     publishDir "${params.outdir}/modules/filter_length", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
@@ -14,7 +14,7 @@ process FILTER_LENGTH {
     script:
     """
     
-    ${moduleDir}/filter_length.R \
+    Rscript --vanilla "${moduleDir}/filter_length.R" \
         --process_name "filter_length" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

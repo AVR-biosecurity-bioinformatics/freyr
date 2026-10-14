@@ -1,7 +1,7 @@
 process TAX_SUMMARY_MERGE {
     tag "Whole dataset"
     label "small"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_core"
     publishDir "${params.outdir}/modules/tax_summary_merge", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${params.outdir}/results/taxonomic_assignment", mode: 'copy'
 
@@ -14,7 +14,7 @@ process TAX_SUMMARY_MERGE {
     script:
     """
     
-    ${moduleDir}/tax_summary_merge.R \
+    Rscript --vanilla "${moduleDir}/tax_summary_merge.R" \
         --process_name "tax_summary_merge" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

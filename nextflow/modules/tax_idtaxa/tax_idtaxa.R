@@ -27,7 +27,6 @@ sys.source(functions_file, envir = .GlobalEnv)
 ### load only required packages
 process_packages <- c(
     "Biostrings",
-    "dada2",
     "DECIPHER",
     "dplyr",
     "magrittr",

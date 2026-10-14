@@ -1,7 +1,7 @@
 process TRAIN_IDTAXA {
     tag "Whole pipeline"
     label "high"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_phyloseq"
     publishDir "${params.outdir}/modules/process_name", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${params.outdir}/results/taxonomic_assignment", mode: 'copy'
 
@@ -15,7 +15,7 @@ process TRAIN_IDTAXA {
     script:
     """
     
-    ${moduleDir}/process_name.R \
+    Rscript --vanilla "${moduleDir}/process_name.R" \
         --process_name "train_idtaxa" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

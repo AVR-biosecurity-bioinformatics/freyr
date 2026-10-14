@@ -1,7 +1,7 @@
 process MERGE_PAIRED {
     tag "$sample_primers"
     label "medium"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_dada2"
     publishDir "${params.outdir}/modules/merge_paired", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
@@ -14,7 +14,7 @@ process MERGE_PAIRED {
     script:
     """
      
-    ${moduleDir}/merge_paired.R \
+    Rscript --vanilla "${moduleDir}/merge_paired.R" \
         --process_name "merge_paired" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

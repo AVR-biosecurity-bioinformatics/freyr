@@ -1,7 +1,7 @@
 process JOINT_TAX {
     tag "$primers; $read_group"
     label "small"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_core"
     publishDir "${params.outdir}/modules/joint_tax", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
@@ -13,7 +13,7 @@ process JOINT_TAX {
     script:
     """
     
-    ${moduleDir}/joint_tax.R \
+    Rscript --vanilla "${moduleDir}/joint_tax.R" \
         --process_name "joint_tax" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

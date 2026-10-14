@@ -1,7 +1,7 @@
 process ASSIGNMENT_PLOT {
     tag "$primers; $read_group"
     label "small"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_core"
     publishDir "${params.outdir}/modules/assignment_plot", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
     publishDir "${params.outdir}/results/taxonomic_assignment", pattern: 'taxonomic_assignment_summary_*.pdf', mode: 'copy'
 
@@ -15,7 +15,7 @@ process ASSIGNMENT_PLOT {
     script:
     """
     
-    ${moduleDir}/assignment_plot.R \
+    Rscript --vanilla "${moduleDir}/assignment_plot.R" \
         --process_name "assignment_plot" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \

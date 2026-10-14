@@ -1,7 +1,7 @@
 process DENOISE {
     tag "$sample_primers"
     label "medium"
-    conda "${moduleDir}/environment.yml"
+    label "env_r_dada2"
     publishDir "${params.outdir}/modules/denoise", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
 
     input:
@@ -17,7 +17,7 @@ process DENOISE {
     // def priors_path = priors.name != "NO_FILE" ? priors.name : "NO_FILE"
     """
 
-    ${moduleDir}/denoise.R \
+    Rscript --vanilla "${moduleDir}/denoise.R" \
         --process_name "denoise" \
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
