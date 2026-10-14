@@ -2,7 +2,7 @@ process MAKE_SEQTAB_PAIRED {
     tag "$primers; $read_group"
     label "long"
     label "env_r_dada2"
-    publishDir "${params.outdir}/modules/make_seqtab_paired", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir { "${params.outdir}/modules/make_seqtab_paired" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
 
     input:
     tuple val(primers), val(read_group), val(sample), val(sample_primers), path(mergers_paths, name: 'mergers*.rds')

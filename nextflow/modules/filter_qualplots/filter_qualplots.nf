@@ -2,8 +2,8 @@ process FILTER_QUALPLOTS {
     tag "$sample_primers"
     label "small"
     label "env_r_dada2"
-    publishDir "${params.outdir}/modules/filter_qualplots", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${params.outdir}/results/qc/read_filtering", mode: 'copy'
+    publishDir { "${params.outdir}/modules/filter_qualplots" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
+    publishDir { "${params.outdir}/results/qc/read_filtering" }, mode: 'copy'
 
     input:
     tuple val(primers), val(read_group), val(sample), val(sample_primers), path(reads), val(process_params)

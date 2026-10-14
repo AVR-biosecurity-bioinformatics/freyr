@@ -2,7 +2,7 @@ process PRIORS {
     tag "$primers; $read_group"
     label "small"
     label "env_r_dada2"
-    publishDir "${params.outdir}/modules/priors", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir { "${params.outdir}/modules/priors" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
 
     input:
     tuple val(direction), val(primers), val(read_group), path(priors)

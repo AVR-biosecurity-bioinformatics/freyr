@@ -76,8 +76,8 @@ ppe <- "PIPELINE PARAMETER ERROR: "
 ssc <- colnames(samplesheet_df)
 
 # check required columns are present
-if( !any(c("sample", "primers") %in% ssc) ){
-    stop(paste0(sse, "Samplesheet must contain both of the fields 'sample' and 'primers'!"))
+if (!all(c("sample", "primers") %in% ssc)) {
+    stop(paste0(sse,"Samplesheet must contain both of the fields 'sample' and 'primers'!"))
 }
 
 read_col_which <- c("read_dir","fwd", "rev", "single")[which(c("read_dir","fwd", "rev", "single") %in% ssc)]

@@ -2,8 +2,8 @@ process TAX_SUMMARY_MERGE {
     tag "Whole dataset"
     label "small"
     label "env_r_core"
-    publishDir "${params.outdir}/modules/tax_summary_merge", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${params.outdir}/results/taxonomic_assignment", mode: 'copy'
+    publishDir { "${params.outdir}/modules/tax_summary_merge" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
+    publishDir { "${params.outdir}/results/taxonomic_assignment" }, mode: 'copy'
 
     input:
     path(tax_summary_list)

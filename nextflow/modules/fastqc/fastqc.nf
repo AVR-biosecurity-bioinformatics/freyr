@@ -2,8 +2,8 @@ process FASTQC {
     tag "$sample"
     label "small"
     label "env_fastqc"
-    publishDir "${params.outdir}/modules/fastqc", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${params.outdir}/results/qc/fastqc", mode: 'copy'
+    publishDir { "${params.outdir}/modules/fastqc" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
+    publishDir { "${params.outdir}/results/qc/fastqc" }, mode: 'copy'
 
     input:
     tuple val(sample), path(reads)

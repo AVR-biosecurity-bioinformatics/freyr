@@ -184,6 +184,13 @@
                 "description": "Minimum query coverage percentage for taxonomic assignment using BLAST.",
                 "errorMessage": "BLAST minimum coverage must be an integer between 0 and 100, inclusive."
             },
+            "cluster_threshold": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Cluster threshold can be used to cluster ASVs derived from each primer into groups (ie. OTUs).",
+                "errorMessage": "Cluster threshold must be a number between 1 and 100, inclusive."
+            },
             "target_kingdom": {
                 "type": "string",
                 "pattern": "^[^\\s,]+$",

@@ -2,7 +2,7 @@ process DOWNSAMPLE_READS {
     tag "$sample"
     label "small"
     label "env_seqtk"
-    publishDir "${params.outdir}/modules/downsample_reads", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir { "${params.outdir}/modules/downsample_reads" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
 
     input:
     tuple val(primers), val(read_group), val(sample), val(sample_primers), path(reads)

@@ -2,8 +2,8 @@ process READ_TRACKING {
     tag "Whole dataset"
     label "small"
     label "env_r_core"
-    publishDir "${params.outdir}/modules/read_tracking", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${params.outdir}/results/read_tracking", mode: 'copy'
+    publishDir { "${params.outdir}/modules/read_tracking" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
+    publishDir { "${params.outdir}/results/read_tracking" }, mode: 'copy'
     
     input:
     path(rt_samples, name: 'sample*.csv')

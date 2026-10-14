@@ -2,7 +2,7 @@ process MAKE_BLAST_DATABASE {
     tag "$primers"
     label "medium"
     label "env_blast"
-    publishDir "${params.outdir}/modules/make_blast_database", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir { "${params.outdir}/modules/make_blast_database" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
 
     input:
     tuple val(primers), val(process_params)

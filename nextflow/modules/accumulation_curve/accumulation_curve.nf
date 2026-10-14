@@ -2,8 +2,8 @@ process ACCUMULATION_CURVE {
     tag "$primers"
     label "phyloseq"
     label "env_r_phyloseq"
-    publishDir "${params.outdir}/modules/accumulation_curve", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
-    publishDir "${params.outdir}/results/main_outputs/unfiltered", mode: 'copy'
+    publishDir { "${params.outdir}/modules/accumulation_curve" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
+    publishDir { "${params.outdir}/results/main_outputs/unfiltered" }, mode: 'copy'
 
     input:
     tuple val(primers), path(ps_file), path(filters_tibble), val(process_params)

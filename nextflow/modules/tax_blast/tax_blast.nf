@@ -2,7 +2,7 @@ process TAX_BLAST {
     tag "$primers; $read_group"
     label "medium"
     label "env_r_core"
-    publishDir "${params.outdir}/modules/tax_blast", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir { "${params.outdir}/modules/tax_blast" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
 
     input:
     tuple val(primers), val(read_group), path(fasta), path(blast_tsv), val(process_params)

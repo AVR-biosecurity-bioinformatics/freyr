@@ -2,7 +2,7 @@ process DENOISE {
     tag "$sample_primers"
     label "medium"
     label "env_r_dada2"
-    publishDir "${params.outdir}/modules/denoise", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir { "${params.outdir}/modules/denoise" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
 
     input:
     tuple val(direction), val(primers), val(read_group), val(sample), val(sample_primers), path(reads), path(errormodel), path(priors)

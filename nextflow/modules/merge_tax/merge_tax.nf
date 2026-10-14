@@ -2,7 +2,7 @@ process MERGE_TAX {
     tag "$primers"
     label "small"
     label "env_r_core"
-    publishDir "${params.outdir}/modules/merge_tax", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir { "${params.outdir}/modules/merge_tax" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
 
     input:
     tuple val(primers), path(taxtabs)

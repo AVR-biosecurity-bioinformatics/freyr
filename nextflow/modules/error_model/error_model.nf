@@ -2,7 +2,7 @@ process ERROR_MODEL {
     tag "$primers; $read_group"
     label "high"
     label "env_r_dada2"
-    publishDir "${params.outdir}/modules/error_model", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir { "${params.outdir}/modules/error_model" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
 
     input:
     tuple val(direction), val(primers), val(read_group), path(reads)

@@ -2,7 +2,7 @@ process FILTER_PHMM {
     tag "$primers"
     label "small"
     label "env_r_phmm"
-    publishDir "${params.outdir}/modules/filter_phmm", mode: 'copy', enabled: "${ params.debug_mode ? true : false }"
+    publishDir { "${params.outdir}/modules/filter_phmm" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
 
     input:
     tuple val(primers), path(fasta), val(process_params)
