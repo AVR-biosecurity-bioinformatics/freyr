@@ -131,6 +131,8 @@ jobs:
         run: |
           set -euo pipefail
 
+          nextflow lint . -o concise
+
           nextflow \
             -log "nextflow-${{ matrix.profile }}.log" \
             run . \

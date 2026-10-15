@@ -113,6 +113,8 @@ jobs:
         run: |
           set -euo pipefail
 
+          nextflow lint . -o concise
+
           nextflow \
             -log nextflow-docker.log \
             run . \
