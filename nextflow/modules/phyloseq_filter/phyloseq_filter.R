@@ -67,198 +67,128 @@ if(min_taxa_ra %in% c(0, "NA", NA)){ min_taxa_ra <- NA } else { min_taxa_ra <- a
 
 cluster_threshold <- suppressWarnings(as.integer(cluster_threshold))
 
-quiet <- FALSE
-
 ### run R code
 
-## from step_filter_phyloseq()
 # Taxonomic filtering
-taxtab <- phyloseq::tax_table(ps) %>%
-    as("matrix") %>% 
-    as.data.frame()
 
-# Check if any taxonomic filters are enabled
-ps_taxfiltered <- ps
+# Extract the taxonomy and OTU table once.
+taxtab <- as(phyloseq::tax_table(ps), "matrix")
+otutab <- as(phyloseq::otu_table(ps), "matrix")
+taxa_are_rows <- phyloseq::taxa_are_rows(ps)
 
-if(any(!sapply(c(target_kingdom, target_phylum, target_class, target_order, target_family, target_genus, target_species), is.na))){
-
-    # Filter kingdom
-    if(!is.na(target_kingdom)){
-        if (any(stringr::str_detect(taxtab$Kingdom, target_kingdom))){
-        ps_taxfiltered <- ps_taxfiltered %>%
-            subset_taxa_new(
-                rank = "Kingdom",
-                value = target_kingdom
-            ) %>%
-            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
-        } else{
-        warning(paste0("No ASVs were assigned to the Kingdom", target_kingdom," - Check your target_kingdom parameter"))
-        }
-    }
-    # Filter phylum
-    if(!is.na(target_phylum)){
-        if (any(stringr::str_detect(taxtab$Phylum, target_phylum))){
-        ps_taxfiltered <- ps_taxfiltered %>%
-            subset_taxa_new(
-                rank = "Phylum",
-                value = target_phylum
-            ) %>%
-            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
-        } else{
-        warning(paste0("No ASVs were assigned to the Phylum", target_phylum," - Check your target_phylum parameter"))
-        }
-    }
-    # Filter class
-    if(!is.na(target_class)){
-        if (any(stringr::str_detect(taxtab$Class, target_class))){
-        ps_taxfiltered <- ps_taxfiltered %>%
-            subset_taxa_new(
-                rank = "Class",
-                value = target_class
-            ) %>%
-            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
-        } else{
-        warning(paste0("No ASVs were assigned to the Class", target_class," - Check your target_class parameter"))
-        }
-    }
-    # Filter order
-    if(!is.na(target_order)){
-        if (any(stringr::str_detect(taxtab$Order, target_order))){
-        ps_taxfiltered <- ps_taxfiltered %>%
-            subset_taxa_new(
-                rank = "Order",
-                value = target_order
-            ) %>%
-            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
-        } else{
-        warning(paste0("No ASVs were assigned to the Order", target_order," - Check your target_order parameter"))
-        }
-    }
-    # Filter family
-    if(!is.na(target_family)){
-        if (any(stringr::str_detect(taxtab$Family, target_family))){
-        ps_taxfiltered <- ps_taxfiltered %>%
-            subset_taxa_new(
-                rank = "Family",
-                value = target_family
-            ) %>%
-            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
-        } else{
-        warning(paste0("No ASVs were assigned to the Family", target_family," - Check your target_family parameter"))
-        }
-    }
-    # Filter genus
-    if(!is.na(target_genus)){
-        if (any(stringr::str_detect(taxtab$Genus, target_genus))){
-        ps_taxfiltered <- ps_taxfiltered %>%
-            subset_taxa_new(
-                rank = "Genus",
-                value = target_genus
-            ) %>%
-            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
-        } else{
-        warning(paste0("No ASVs were assigned to the Genus", target_genus," - Check your target_genus parameter"))
-        }
-    }
-    # Filter Species
-    if(!is.na(target_species)){
-        if (any(stringr::str_detect(taxtab$Species, target_species))){
-        ps_taxfiltered <- ps_taxfiltered %>%
-            subset_taxa_new(
-                rank = "Species",
-                value = target_species
-            ) %>%
-            phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE)
-        } else{
-        warning(paste0("No ASVs were assigned to the Species", target_species," - Check your target_species parameter"))
-        }
-    }
-} else {
-    if (!quiet){message(paste0("No taxonomic filters set - skipping this filter"))}
+if (taxa_are_rows) {
+    otutab <- t(otutab)
 }
 
-## remove sequences that failed the sequence-level soft filters
-seqs_passing <- 
-    seq_filters %>%
-    dplyr::filter(
-        chimera_filter, 
-        length_filter,
-        phmm_filter,
+# Logical vector of taxa
+keep_taxa <- rep(TRUE, nrow(taxtab))
+names(keep_taxa) <- rownames(taxtab)
+
+# Taxonomic filters
+if (!is.na(target_kingdom)) keep_taxa <- keep_taxa & taxtab[, "Kingdom"] == target_kingdom
+if (!is.na(target_phylum))  keep_taxa <- keep_taxa & taxtab[, "Phylum"]  == target_phylum
+if (!is.na(target_class))   keep_taxa <- keep_taxa & taxtab[, "Class"]   == target_class
+if (!is.na(target_order))   keep_taxa <- keep_taxa & taxtab[, "Order"]   == target_order
+if (!is.na(target_family))  keep_taxa <- keep_taxa & taxtab[, "Family"]  == target_family
+if (!is.na(target_genus))   keep_taxa <- keep_taxa & taxtab[, "Genus"]   == target_genus
+if (!is.na(target_species)) keep_taxa <- keep_taxa & taxtab[, "Species"] == target_species
+
+# Sequence level soft filters
+seqs_passing <- with(
+    seq_filters,
+    seq_name[
+        chimera_filter &
+        length_filter &
+        phmm_filter &
         frame_filter
-    ) %>%
-    dplyr::pull(seq_name)
+    ]
+)
 
-ps_seqfiltered <- phyloseq::prune_taxa(taxa = seqs_passing, ps_taxfiltered)
+keep_taxa <- keep_taxa & names(keep_taxa) %in% seqs_passing
+otutab <- otutab[, keep_taxa, drop = FALSE]
 
-# Remove any taxa under read count or relative abundance thresholds
-### TODO: Add comments explaining what is happening here
-if(!is.na(min_taxa_reads) & is.na(min_taxa_ra)){
-    ps_abfiltered <- 
-        phyloseq::transform_sample_counts(
-            ps_seqfiltered, 
-            function(OTU, ab = min_taxa_reads){ 
-                ifelse(OTU <= ab,  0, OTU) 
-            }
-        )
-} else if(is.na(min_taxa_reads) & !is.na(min_taxa_ra)){
-    ps_abfiltered <- 
-        phyloseq::transform_sample_counts(
-            ps_seqfiltered, 
-            function(OTU, ab = min_taxa_ra ){ 
-                if (sum(OTU) == 0){
-                    return(OTU)
-                } else {
-                    ifelse((OTU / sum(OTU)) <= ab,  0, OTU) 
-                }
-            }
-        )
-} else if (!is.na(min_taxa_reads) & !is.na(min_taxa_ra)){
-    ps_abfiltered <- 
-        ps_seqfiltered %>%
-        phyloseq::transform_sample_counts(
-            function(OTU, ab = min_taxa_reads){ 
-                ifelse(OTU <= ab,  0, OTU) 
-            }
-        ) %>%
-        phyloseq::transform_sample_counts(
-            function(OTU, ab = min_taxa_ra ){ 
-                if (sum(OTU) == 0){
-                    return(OTU)
-                } else {
-                    ifelse((OTU / sum(OTU)) <= ab,  0, OTU) 
-                }
-            }
-        )
-} else {
-    if (!quiet){message(paste0("No minimum abundance filters set - skipping this filter"))}
-    ps_abfiltered <- ps_seqfiltered
+if (ncol(otutab) == 0) {
+    stop("No ASVs passed the taxonomic and sequence filters for primers '",primers,"'")
 }
 
-#Remove all samples under the minimum read threshold 
-if(!is.na(min_sample_reads)){
+# Fixed read threshold
+if (!is.na(min_taxa_reads)) {
+    otutab[otutab <= min_taxa_reads] <- 0
+}
 
-    if (all(phyloseq::sample_sums(ps_abfiltered) < min_sample_reads)) {
-        stop(paste0("ERROR: No samples contained reads above the minimum threshold of ", min_sample_reads, " for primers '", primers, "' -- consider lowering this value"))
+# Relative abundance threshold
+if (!is.na(min_taxa_ra)) {
+    sample_totals <- rowSums(otutab)
+    nonzero <- sample_totals > 0
+
+    if (any(nonzero)) {
+        otutab_nonzero <- otutab[nonzero, , drop = FALSE]
+
+        ra <- sweep(
+            otutab_nonzero,
+            1,
+            sample_totals[nonzero],
+            "/"
+        )
+
+        otutab_nonzero[ra <= min_taxa_ra] <- 0
+        otutab[nonzero, ] <- otutab_nonzero
+
     }
-    
-    ps_sampfiltered <- ps_abfiltered %>%
-        phyloseq::prune_samples(phyloseq::sample_sums(.) >= min_sample_reads, .) %>% 
-        phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
+}
 
-} else if (is.na(min_sample_reads) ) {
+# Remove samples below the minimum retained-read threshold.
+sample_totals <- rowSums(otutab)
 
-    if (!quiet){message(paste0("No minimum sample reads filter set - skipping this filter"))}
+if (!is.na(min_sample_reads)) {
+    keep_samples <- sample_totals >= min_sample_reads
 
-    ps_sampfiltered <- ps_abfiltered %>%
-        phyloseq::prune_samples(phyloseq::sample_sums(.)>=0,.) %>%
-        phyloseq::filter_taxa(function(x) mean(x) > 0, TRUE) #Drop missing taxa from table
+    if (!any(keep_samples)) {
+        stop(
+            "No samples contained reads above the minimum threshold of ",
+            min_sample_reads,
+            " for primers '", primers,
+            "' -- consider lowering this value"
+        )
+    }
+    otutab <- otutab[keep_samples, , drop = FALSE]
+} 
 
+# Drop taxa with zero abundance across all retained samples
+otutab <- otutab[, colSums(otutab) > 0, drop = FALSE]
+
+if (ncol(otutab) == 0) {
+    stop("No ASVs remained after abundance and sample filtering for primers '",primers,"'")
+}
+
+# Prune the phyloseq object once for samples and once for taxa so that all
+# components, including taxonomy and reference sequences, remain synchronized.
+ps_sampfiltered <- phyloseq::prune_taxa(
+    colnames(otutab),
+    ps
+)
+
+ps_sampfiltered <- phyloseq::prune_samples(
+    rownames(otutab),
+    ps_sampfiltered
+)
+
+# Replace the abundance table with the already-filtered matrix.
+if (taxa_are_rows ) {
+    phyloseq::otu_table(ps_sampfiltered) <- phyloseq::otu_table(
+        t(otutab),
+        taxa_are_rows = TRUE
+    )
 } else {
-    stop(paste0("--min_sample_reads value is '",min_sample_reads,"', which is not allowed."))
+    phyloseq::otu_table(ps_sampfiltered) <- phyloseq::otu_table(
+        otutab,
+        taxa_are_rows = FALSE
+    )
 }
 
 # Message how many were removed
-if(!quiet){message(phyloseq::nsamples(ps) - phyloseq::nsamples(ps_sampfiltered), " Samples and ", phyloseq::ntaxa(ps) - phyloseq::ntaxa(ps_sampfiltered), " ASVs dropped")}
+message(phyloseq::nsamples(ps) - phyloseq::nsamples(ps_sampfiltered), " Samples and ", phyloseq::ntaxa(ps) - phyloseq::ntaxa(ps_sampfiltered), " ASVs dropped")
+
 
 ### cluster filtered sequences
 
@@ -304,14 +234,12 @@ if (cluster_threshold %>% is.na){
 
 # Export raw csv  - NOTE: This is memory intensive
 melt_phyloseq(ps_sampfiltered) %>% 
-    tibble::as_tibble() %>%
     dplyr::left_join(., cluster_tibble, by = "seq_name") %>% 
     dplyr::relocate(cluster, .after = sequence) %>%
     readr::write_csv(., paste0("raw_filtered_",primers,".csv"))
 
 # Export species level summary of filtered results
 summarise_phyloseq(ps_sampfiltered) %>%
-    tibble::as_tibble() %>%
     dplyr::left_join(., cluster_tibble, by = "seq_name") %>%
     dplyr::relocate(cluster, .after = sequence) %>%
     readr::write_csv(., paste0("summary_filtered_",primers,".csv"))

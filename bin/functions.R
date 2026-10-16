@@ -35,53 +35,7 @@ parse_nf_var_repeat <- function(x) {
   return(out)
 }
 
-# Sample validation -------------------------------------------------------
-
-
-#Update the sample sheet and logging sheet to deal with any newly demultiplexed files
-step_demux_samdf <- function(samdf){
-    out <- samdf %>%
-      dplyr::group_by(sample_id) %>%
-      dyplr::group_split() %>%
-      purrr::map(function(x){
-        if(any(stringr::str_detect(x$pcr_primers, ";"), na.rm = TRUE)){
-          primer_names <- unlist(stringr::str_split(unique(x$pcr_primers), ";")) 
-          x <- x %>% 
-            dplyr::mutate(count = length(primer_names)) %>% #Replicate the samples
-            tidyr::uncount(count) %>%
-            dplyr::mutate(pcr_primers = unlist(stringr::str_split(unique(x$pcr_primers), ";")),
-                   for_primer_seq = unlist(stringr::str_split(unique(x$for_primer_seq), ";")),
-                   rev_primer_seq = unlist(stringr::str_split(unique(x$rev_primer_seq), ";")),
-                   sample_id = paste0(sample_id, "_",pcr_primers)
-            ) 
-        }
-        if(!all(stringr::str_detect(x$sample_id ,paste0(x$pcr_primers, "$")))){
-          x <- x %>%
-            dplyr::mutate(sample_id = paste0(sample_id, "_",pcr_primers))
-        }
-        return(x)
-      }) %>%
-      dplyr::bind_rows()
-    
-    # Check if files exist
-    data_folders <- paste0(list.dirs("data", recursive=FALSE), "/01_trimmed")
-    fastqFs <- purrr::map(data_folders,list.files, pattern="_R1_", full.names = TRUE) %>%
-      unlist() %>%
-      stringr::str_remove(pattern = "^(.*)\\/") %>%
-      stringr::str_remove(pattern = "(?:.(?!_S))+$")
-    fastqFs <- fastqFs[!stringr::str_detect(fastqFs, "Undetermined")]
-    #Check missing fastqs
-    if (length(setdiff(out$sample_id, fastqFs)) > 0) {
-      warning(paste0("The fastq file: ",
-                     setdiff(out$sample_id, fastqFs),
-                     " is missing, dropping from samplesheet \n")) 
-      out <- out %>%
-        filter(!sample_id %in% setdiff(out$sample_id, fastqFs))
-    }
-    return(out)
-}
-
-
+# Coalesce taxonomy function
 coalesce_tax <- function (x, y, suffix = c(".x", ".y"), prefer="left", join = dplyr::full_join, 
                           ...) {
   if(!"OTU" %in% colnames(x)){
@@ -119,108 +73,10 @@ coalesce_tax <- function (x, y, suffix = c(".x", ".y"), prefer="left", join = dp
   return(out)
 }
 
-
-step_phyloseq <- function(seqtab, taxtab, samdf, seqs=NULL, phylo=NULL, name_variants=FALSE){
-
-  # Check if seqtab is a path
-  if(is(seqtab, "character")){
-    if(file.exists(seqtab)){
-      seqtab <- readRDS(normalizePath(seqtab))
-    } else {
-      stop("seqtab does not exist")
-    }
-  }
-  
-  # Check if taxtab is a path
-  if(is(taxtab, "character") ){
-    if(file.exists(taxtab)){
-      taxtab <- readRDS(normalizePath(taxtab))
-    } else {
-      stop("taxtab does not exist")
-    }
-  }
-  
-  # Check if samdf is a path - if so read in
-  if(is(samdf, "character")){
-    if (file.exists(samdf)){
-      samdf <- readr::read_csv(normalizePath(samdf))
-    } else {
-      stop("samdf does not exist")
-    }
-  } 
-  # Check if samdf is a path - if so read in
-  if(is(seqs, "character")){
-    if (file.exists(seqs)){
-      seqs <- readRDS(normalizePath(seqs))
-      names(seqs) <- seqs
-    } else {
-      stop("seqs path does not exist")
-    }
-  } else if (class(seqs) == "DNAStringSet"){
-    seqs <- seqs
-  } else {
-    seqs <- Biostrings::DNAStringSet(colnames(seqtab))
-    names(seqs) <- seqs
-  }
-  
-  #Check if phy is a path - if so read in
-  if(is(phylo, "character")){
-    if (file.exists(phylo)){
-      phy <- ape::read.tree(normalizePath(phylo))
-    } else {
-      stop("phy path does not exist")
-    }
-  } else if (class(phylo) == "phylo"){
-    phy <- phylo
-  } else {
-    phy <- NULL
-  }
-  
-  #Extract start of sequence names
-  rownames(seqtab) <- stringr::str_remove(rownames(seqtab), pattern="_S[0-9]+_R[1-2]_.*$")
-  
-  #Load sample information
-  samdf <- samdf %>%
-    dplyr::filter(!duplicated(sample_id)) %>%
-    as.data.frame()%>%
-    magrittr::set_rownames(.$sample_id)
-  
-  missing_seqtab_asvs <- length(colnames(seqtab)[!colnames(seqtab) %in% rownames(taxtab)])
-  missing_taxtab_asvs <-length(rownames(taxtab)[!rownames(taxtab) %in% colnames(seqtab)])
-  
-  if(missing_seqtab_asvs > 0 | missing_taxtab_asvs){
-    stop(paste0(missing_seqtab_asvs, " ASVs are in seqtab and not taxtab, and ",
-                missing_taxtab_asvs, " ASVs are in taxtab but not seqtab"))
-  }
-  
-  if(is.null(phy)){
-    ps <- phyloseq(phyloseq::tax_table(taxtab),
-                   phyloseq::sample_data(samdf),
-                   phyloseq::otu_table(seqtab, taxa_are_rows = FALSE),
-                   phyloseq::refseq(seqs))
-  } else {
-    ps <- phyloseq(phyloseq::tax_table(taxtab),
-                   phyloseq::sample_data(samdf),
-                   phyloseq::otu_table(seqtab, taxa_are_rows = FALSE),
-                   phy_tree(phy),
-                   phyloseq::refseq(seqs))
-  }
-  
-  if(name_variants){
-    phyloseq::taxa_names(ps) <- paste0("SV", seq(ntaxa(ps)),"-",tax_table(ps)[,8])
-  }
-  
-  if(nrow(seqtab) > nrow(phyloseq::sample_data(ps))){
-    message("Warning: the following samples were not included in phyloseq object, check sample names match the sample metadata")
-    message(rownames(seqtab)[!rownames(seqtab) %in% phyloseq::sample_names(ps)])
-  }
-  return(ps)
-}
-
+# Safely bind two data frames/tibbles that may contain the same columns with different classes.
 new_bind <- function(a, b) {
   common_cols <- intersect(names(a), names(b))
-  b[common_cols] <- map2_df(b[common_cols], 
-                            map(a[common_cols], class), ~{class(.x) <- .y;.x})
+  b[common_cols] <- map2_df(b[common_cols], map(a[common_cols], class), ~{class(.x) <- .y;.x})
   bind_rows(a, b)  
 }
 
@@ -241,95 +97,112 @@ subset_taxa_new <- function(physeq, rank, value){
 }
 
 # New merge phyloseq function that accepts a list of phyloseq objects
-merge_phyloseq_new <- function (arguments){
-  comp.list <- list()
-  for (i in 1:length(arguments)) {
-    comp.list <- c(comp.list, phyloseq:::splat.phyloseq.objects(arguments[[i]]))
-  }
-  merged.list <- list()
-  for (i in unique(names(comp.list))) {
-    i.list <- comp.list[names(comp.list) == i]
-    if (length(i.list) == 1) {
-      merged.list <- c(merged.list, i.list)
-    } else {
-      x1 <- i.list[[1]]
-      for (j in 2:length(i.list)) {
-        x1 <- phyloseq::merge_phyloseq_pair(x1, i.list[[j]])
-      }
-      x1 <- list(x1)
-      names(x1) <- i
-      merged.list <- c(merged.list, x1)
-    }
-    gc()
-  }
-  names(merged.list) <- NULL
-  return(do.call(phyloseq, merged.list))
+merge_phyloseq_new <- function(arguments) {
+    comp.list <- unlist(
+        lapply(arguments, phyloseq:::splat.phyloseq.objects),
+        recursive = FALSE
+    )
+    comp.groups <- split(comp.list, names(comp.list))
+    merged.list <- lapply(comp.groups, function(x) {
+
+        if (length(x) == 1L) {
+            x[[1]]
+        } else {
+            Reduce(
+                phyloseq::merge_phyloseq_pair,
+                x
+            )
+        }
+    })
+    do.call(phyloseq::phyloseq, unname(merged.list))
 }
 
-summarise_phyloseq <- function(ps){
-  phyloseq::otu_table(ps) %>%
-    # t() %>%     # removed because rows are sequence names not samples
-    as.data.frame() %>%
-    tibble::rownames_to_column("seq_name") %>%
-    dplyr::left_join(
-      phyloseq::tax_table(ps) %>%
-        as.data.frame() %>%
-        tibble::rownames_to_column("seq_name"),
-      by = "seq_name"
-    ) %>%  
-    dplyr::left_join(
-      phyloseq::refseq(ps) %>% 
-        as.character() %>% 
-        tibble::enframe(name="seq_name", value="sequence"),
-      by = "seq_name"
-    )  %>%
-    dplyr::select(seq_name, sequence, phyloseq::rank_names(ps), phyloseq::sample_names(ps))
+summarise_phyloseq <- function(ps) {
+    otutab <- as(phyloseq::otu_table(ps), "matrix")
+    if (!phyloseq::taxa_are_rows(ps)) {otutab <- t(otutab)}
+
+    taxtab <- as(phyloseq::tax_table(ps), "matrix")
+
+    df <- data.table::as.data.table(
+      otutab,
+      keep.rownames = "seq_name"
+    )
+
+    df[, sequence := as.character(phyloseq::refseq(ps)[seq_name])]
+
+    taxtab <- data.table::as.data.table(
+      as(phyloseq::tax_table(ps), "matrix"),
+      keep.rownames = "seq_name"
+    )
+
+    df <- taxtab[df, on = "seq_name"]
+
+    df
 }
 
+# Convert a phyloseq object into a long data.table containing one row per non-zero sample–taxon observation.
 melt_phyloseq <- function(ps) {
   
-  # Enforce OTU table orientation. Redundant-looking step
-  seqtab <- phyloseq::otu_table(ps)
-  if(!taxa_are_rows(seqtab)){seqtab <- t(seqtab)}
+  ## Abundance table-
+  otutab <- as(phyloseq::otu_table(ps), "matrix")
+  if(!phyloseq::taxa_are_rows(ps)){otutab <- t(otutab)}
   
+  # Identify only non-zero observations.
+  index <- which(otutab > 0, arr.ind = TRUE)
+
+  # If no non-zero obs, exit early
+  if (length(index) == 0L) {return(data.table::data.table()) }
+
   # Convert otu table to tall form (one sample-taxon per row)
-  df <- seqtab %>% 
-    as("matrix") %>%
-    data.table::as.data.table(keep.rownames = "seq_name") %>%
-    data.table::melt(id.vars = c("seq_name"), variable.name = "sample_primers", 
-                     value.name = "Abundance", variable.factor = FALSE)
+  df <- data.table::data.table(
+      seq_name = rownames(otutab)[index[, "row"]],
+      sample_primers = colnames(otutab)[index[, "col"]],
+      Abundance = otutab[index]
+  )
   
-  # Remove observations with no abundance
-  df <- df[Abundance > 0]
-  
-  #sample data
-  if(!is.null(phyloseq::sample_variables(ps))) {
-    samdf <- phyloseq::sample_data(ps) %>%
-      as("data.frame") %>% 
-      data.table::as.data.table(keep.rownames = FALSE)
-    df <- df[samdf, on = .(sample_primers = sample_primers)]
+  ## Add Sample metadata
+  if (length(phyloseq::sample_variables(ps)) > 0L) {
+    samdf <- data.table::as.data.table(
+            as(phyloseq::sample_data(ps), "data.frame"),
+            keep.rownames = ".sample_name"
+        )
+
+    # Match metadata against sample names in the abundance table.
+    sample_index <- match(df$sample_primers, samdf$.sample_name)
+
+    # Avoid duplicating the sample identifier if sample_data already has sample_primers
+    sample_columns <- setdiff(names(samdf), c(".sample_name", "sample_primers"))
+    if (length(sample_columns) > 0L) {
+            df <- cbind(
+                df,
+                samdf[sample_index, sample_columns, with = FALSE]
+            )
+    }
+  }
+
+  ## Add Taxonomy table
+  if (length(phyloseq::rank_names(ps)) > 0L) {
+    taxtab <- data.table::as.data.table(
+      as(phyloseq::tax_table(ps), "matrix"),
+      keep.rownames = ".seq_name"
+    )
+    taxon_index <- match(df$seq_name, taxtab$.seq_name)
+    taxonomy_columns <- setdiff(names(taxtab),".seq_name")
+
+    if (length(taxonomy_columns) > 0L) {
+      df <- cbind(df, taxtab[taxon_index, taxonomy_columns, with = FALSE] )
+    }
   }
   
-  # Add the tax table if it exists
-  if(!is.null(phyloseq::rank_names(ps))) {
-    taxtab <- phyloseq::tax_table(ps) %>%
-      as("matrix") %>%
-      data.table::as.data.table(keep.rownames = "seq_name")
-    df <- df[taxtab, on = .(seq_name = seq_name)]
+  ## Add sequences
+  seqs <- phyloseq::refseq(ps)
+  if (!is.null(seqs)) {
+    sequence_index <- match(df$seq_name, names(seqs))
+    df[, sequence := as.character(seqs[sequence_index])]
   }
-  
-  # Add the sequences if they exist
-  if(!is.null(phyloseq::refseq(ps))) {
-    seqs <- phyloseq::refseq(ps) %>%
-      as("character") %>%
-      data.table::as.data.table(keep.rownames = "seq_name")
-    data.table::setnames(seqs, old = c("seq_name", "."), new = c("seq_name", "sequence"))
-    df <- df[seqs, on = .(seq_name = seq_name)]
-  }
-  
+
   # Arrange by Abundance, then sequence names (to approx. phyloseq behavior)
-  df <- df %>%
-    data.table::setorder(-Abundance, seq_name) 
+  data.table::setorder(df, -Abundance, seq_name )
   return(df)
 }
 
@@ -382,17 +255,7 @@ rareplot <- function(ps, step="auto", threshold=0){
   return(gg.rare)
 }
 
-#' write fasta
-#'
-#' @param x a list of sequences in DNAbin or AAbin format, or a vector of sequences as concatenated upper-case character strings.
-#' @param file character string giving a valid file path to output the text to. If file = "" (default setting) the text file is written to the console.
-#' @param compress logical indicating whether the output file should be gzipped.
-#' @param quiet Whether progress should be printed to consoe
-#'
-#' @return
-#' @export
-#'
-#' @examples
+#' write DNAbin or AAbin to fasta
 write_fasta <- function(x, file = "", compress = FALSE, quiet=FALSE) {
   if(stringr::str_detect(file, "\\.gz$") & !compress){
     compress <- TRUE
@@ -737,18 +600,7 @@ train_idtaxa <- function(
 }
 
 
-#' Convert DNABin to DNAStringSet
-#'
-#' @param x a DNABin object
-#' @param remove_gaps Whether gaps should be removed
-#'
-#' @return
-#' @export
-#' @import purrr
-#' @importFrom Biostrings DNA_ALPHABET
-#' @importFrom Biostrings DNAStringSet
-#' @importFrom methods is
-#'
+# Convert DNABin to DNAStringSet
 DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
   if(!methods::is(x, "DNAbin")){
     stop("Input must be a DNAbin")
@@ -767,6 +619,7 @@ DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
     Biostrings::DNAStringSet()
 }
 
+# Convert DNA character string to binary DNAbin
 char2DNAbin <- function (x) {
   dbytes <- as.raw(c(136, 24, 72, 40, 96, 144, 192, 48, 80,
                      160, 112, 224, 176, 208, 240, 240, 4, 2))
@@ -782,14 +635,7 @@ char2DNAbin <- function (x) {
   return(out)
 }
 
-#' DNAbin to char
-#'
-#' @param x A DNAbin object
-#'
-#' @return
-#' @export
-#'
-#' @examples
+# Convert binary DNAbin to character
 DNAbin2char <- function(x){
   cbytes <- as.raw(c(65, 84, 71, 67, 83, 87, 82, 89, 75, 77,
                      66, 86, 72, 68, 78, 45, 63))
@@ -807,33 +653,3 @@ DNAbin2char <- function(x){
   return(out)
 }
 
-# Multithread -------------------------------------------------------------
-#' Setup multithreading
-#'
-#' @param multithread Number of cores
-#' @param quiet Whether progress should be printed to console
-#'
-#' @return
-#' @import future
-#'
-#' @examples
-setup_multithread <- function(multithread, quiet=FALSE){
-  ncores <- future::availableCores()
-  if(isTRUE(multithread)){
-    cores <- ncores-1
-    if(!quiet){message("Multithreading with ", cores, " cores")}
-    future::plan(future::multisession, workers=cores)
-  } else if (is.numeric(multithread) & multithread > 1){
-    cores <- multithread
-    if(cores > ncores){
-      cores <- ncores
-      warning("The value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
-    }
-    if(!quiet){message("Multithreading with ", cores, " cores")}
-    future::plan(future::multisession, workers=cores)
-  } else if(isFALSE(multithread) | multithread==1){
-    future::plan(future::sequential)
-  } else (
-    stop("Multithread must be a logical or numeric vector of the numbers of cores to use")
-  )
-}
