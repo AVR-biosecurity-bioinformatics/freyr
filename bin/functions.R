@@ -581,119 +581,159 @@ get_qual_stats <- function (input, n = 5e+05) {
 
 # train IDTAXA -----------------------------------------------------------
 
-#' Train IDTAXA
-#'
-#' @param seqs A DNAbin
-#' @param max_group_size The maximum size of any taxonomic group. This can be set to Inf (infinity) to allow for an unlimited number of sequences per group.
-#' @param max_iterations The number of iterations to conduct training for in order to identify  any training sequences whose assigned classifications completely disagree with their predicted classification.
-#' @param allow_group_removal  Whether sequences that are the last remaining representatives of an entire group in the training data can be removed.
-#' This can occur if the entire group appears to be misplaced in the taxonomic tree.
-#' @param orient Training sequences must all be in the same orientation. Set this to TRUE to reorient the sequences if you are unsure.
-#' @param quiet Whether progress should be printed to console.
-#'
-#' @return
-#' @export
-#' @import stringr
-#' @importFrom DECIPHER RemoveGaps
-#' @importFrom DECIPHER OrientNucleotides
-#' @importFrom DECIPHER LearnTaxa
-#'
-train_idtaxa <- function(seqs, max_group_size=10, max_iterations = 3,  allow_group_removal = TRUE, orient=FALSE, quiet = FALSE) {
-  time <- Sys.time() # get time
+train_idtaxa <- function(
+    x,
+    max_group_size = 10,
+    max_iterations = 3,
+    allow_group_removal = TRUE,
+    orient = FALSE,
+    drop_malformed = FALSE,
+    quiet = FALSE
+) {
+    time <- Sys.time()
 
-  #Remove NA's
-  if(length(names(seqs)[stringr::str_detect(names(seqs), ";NA;")]) > 1){
-    remove <- names(seqs)[stringr::str_detect(names(seqs), ";NA;")]
-    subset <- seqs[!names(seqs) %in% remove]
-    message(paste0(length(seqs) - length(subset)," Sequences with NA's in taxonomy removed"))
-    seqs <- subset
-  }
-
-  # Convert to DNAstringset for DECIPHER
-  if(methods::is(seqs, "DNAbin")){
-    seqs <- DNAbin2DNAstringset(seqs)
-  }
-
-  # Remove gaps
-  if(!quiet){ message("Removing gaps")}
-  seqs <- DECIPHER::RemoveGaps(seqs)
-
-  if(orient){
-    if(!quiet){ message("Orienting sequences")}
-    seqs <- DECIPHER::OrientNucleotides(seqs)
-  }
-
-  # As taxonomies are encoded in the sequence names rather than a separate file, use:
-  taxid <- NULL
-
-  #Add Root Rank
-  names(seqs) <- names(seqs)  %>% stringr::str_replace(";[;]*", ";Root;")
-
-  # obtain the taxonomic assignments
-  groups <- names(seqs) # sequence names
-
-  # assume the taxonomy begins with 'Root;'
-  groups <- gsub("(.*)(Root;)", "\\2", groups) # extract the group label
-  groupCounts <- table(groups)
-  u_groups <- names(groupCounts) # unique groups
-
-  if (!quiet) {message(paste0(length(u_groups), " unique species"))}
-
-  # Pruning training set
-  remove <- logical(length(seqs))
-  for (i in which(groupCounts > max_group_size)) {
-    index <- which(groups==u_groups[i])
-    keep <- sample(length(index),
-                   max_group_size)
-    remove[index[-keep]] <- TRUE
-  }
-  if (!quiet) {message(paste0(sum(remove), " sequences pruned from over-represented groups"))}
-
-  # Training the classifier
-  probSeqsPrev <- integer() # suspected problem sequences from prior iteration
-
-  train <- seqs[!remove]
-  taxonomy <- gsub("(.*)(Root;)", "\\2", names(train))
-  remove <- logical(length(train))
-
-  for (i in seq_len(max_iterations)) {
-    if (!quiet) {message("Training iteration: ", i, "\n", sep="")}
-    # train the classifier
-    trainingSet <- DECIPHER::LearnTaxa(train[!remove], taxonomy[!remove], taxid)
-
-    # look for problem sequences
-    probSeqs <- trainingSet$problemSequences$Index
-    if (length(probSeqs)==0) {
-      if (!quiet) {message("No problem sequences remaining.\n")}
-      break
-    } else if (length(probSeqs)==length(probSeqsPrev) &&
-               all(probSeqsPrev==probSeqs)) {
-      if (!quiet) {message("Iterations converged.\n")}
-      break
+    # Convert input
+    if (methods::is(x, "DNAbin")) {
+        seqs <- DNAbin2DNAstringset(x)
+    } else if (methods::is(x, "DNAStringSet")) {
+        seqs <- x
+    } else {
+        stop("'x' must be a DNAbin or DNAStringSet.")
     }
-    if (i==max_iterations)
-      break
-    probSeqsPrev <- probSeqs
 
-    # remove any problem sequences
-    index <- which(!remove)[probSeqs]
-    remove[index] <- TRUE # remove all problem sequences
-    if (!allow_group_removal) {
-      # replace any removed groups
-      missing <- !(u_groups %in% groups[!remove])
-      missing <- u_groups[missing]
-      if (length(missing) > 0) {
-        index <- index[groups[index] %in% missing]
-        remove[index] <- FALSE # don't remove
-      }
+    if (length(seqs) == 0L) {
+        stop("Reference FASTA contains no sequences.")
     }
-  }
-  if (!quiet) {message(paste0(sum(remove), " sequences removed"))}
-  if (!quiet) {message(paste0(length(probSeqs), " problem sequences remaining"))}
 
-  time <- Sys.time() - time
-  if (!quiet) (message(paste0("trained IDTAXA on ", length(seqs), " sequences in ", format(time, digits = 2))))
-  return(trainingSet)
+    # Remove Ns and gaps while preserving headers
+    headers <- names(seqs)
+
+    seqs <- Biostrings::DNAStringSet(
+        gsub("[Nn.-]", "", as.character(seqs))
+    )
+    names(seqs) <- headers
+
+    # Identify malformed records
+    malformed <- (
+        is.na(headers) |
+        headers == "" |
+        !grepl(";", headers, fixed = TRUE) |
+        grepl("(^;|;;|;$)", headers) |
+        grepl("(^|;)NA(;|$)", headers, ignore.case = TRUE) |
+        Biostrings::width(seqs) == 0L |
+        !grepl("[ACGT]", as.character(seqs), ignore.case = TRUE)
+    )
+
+    if (any(malformed)) {
+        bad_headers <- headers[malformed]
+        bad_headers[is.na(bad_headers) | bad_headers == ""] <- "<missing header>"
+
+        report <- paste0(sum(malformed)," malformed FASTA record(s) detected:\n  ",
+            paste(head(bad_headers, 20L), collapse = "\n  "),
+            if (sum(malformed) > 20L) {
+                paste0(
+                    "\n  ... and ",
+                    sum(malformed) - 20L,
+                    " additional record(s)"
+                )
+            } else {
+                ""
+            }
+        )
+        if (!drop_malformed) {
+          stop(report, "\nSet 'drop_malformed = TRUE' to remove them.", call. = FALSE)
+        }
+        warning(report,"\nThese records will be removed.",call. = FALSE,immediate. = TRUE)
+        seqs <- seqs[!malformed]
+    }
+
+    if (length(seqs) < 2L) {
+        stop("Fewer than two usable reference sequences remain.")
+    }
+
+    if (orient) {
+        if (!quiet) message("Orienting sequences")
+        seqs <- DECIPHER::OrientNucleotides(seqs)
+    }
+
+    # Extract taxonomy and add Root rank
+    taxonomy <- sub("^[^;]+;", "Root;", names(seqs))
+
+    if (!quiet) {
+        message(length(unique(taxonomy)), " unique terminal taxa")
+    }
+
+    # Prune over-represented terminal taxa
+    group_counts <- table(taxonomy)
+    remove <- logical(length(seqs))
+
+    for (group in names(group_counts[group_counts > max_group_size])) {
+        index <- which(taxonomy == group)
+        remove[sample(index, length(index) - max_group_size)] <- TRUE
+    }
+
+    if (!quiet) {
+        message(
+            sum(remove),
+            " sequences pruned from over-represented groups"
+        )
+    }
+
+    train <- seqs[!remove]
+    taxonomy <- taxonomy[!remove]
+    groups <- taxonomy
+    original_groups <- unique(groups)
+
+    # Iteratively train and remove problem sequences
+    remove <- logical(length(train))
+    previous_problem_sequences <- integer()
+    problem_sequences <- integer()
+
+    for (i in seq_len(max_iterations)) {
+        if (!quiet) message("Training iteration: ", i)
+
+        training_set <- DECIPHER::LearnTaxa(
+            train = train[!remove],
+            taxonomy = taxonomy[!remove],
+            rank = NULL
+        )
+
+        problem_sequences <- training_set$problemSequences$Index
+
+        if (
+            length(problem_sequences) == 0L ||
+            identical(problem_sequences, previous_problem_sequences) ||
+            i == max_iterations
+        ) {
+            break
+        }
+
+        previous_problem_sequences <- problem_sequences
+        index <- which(!remove)[problem_sequences]
+        remove[index] <- TRUE
+
+        if (!allow_group_removal) {
+            missing_groups <- setdiff(
+                original_groups,
+                groups[!remove]
+            )
+
+            restore <- index[groups[index] %in% missing_groups]
+            remove[restore] <- FALSE
+        }
+
+        if (sum(!remove) < 2L) {
+            stop("Fewer than two sequences remain after removing problematic training sequences.")
+        }
+    }
+
+    if (!quiet) {
+        message(sum(remove), " problem sequences removed")
+        message(length(problem_sequences), " problem sequences remaining")
+        message("Trained IDTAXA on ",sum(!remove)," sequences in ",format(Sys.time() - time, digits = 2))
+    }
+
+    return(training_set)
 }
 
 

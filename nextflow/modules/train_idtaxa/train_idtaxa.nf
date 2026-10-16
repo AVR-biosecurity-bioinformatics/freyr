@@ -7,7 +7,6 @@ process TRAIN_IDTAXA {
 
     input:
     tuple val(primers), path(ref_fasta)
-    val(fasta_type)
     val(max_group_size)
     val(max_iterations)
     val(allow_group_removal)
@@ -24,7 +23,6 @@ process TRAIN_IDTAXA {
         --cpus "$task.cpus" \
         --rdata "$params.rdata" \
         --ref_fasta "$ref_fasta" \
-        --fasta_type "$fasta_type" \
         --max_group_size "$max_group_size" \
         --max_iterations "$max_iterations" \
         --allow_group_removal "$allow_group_removal" \
