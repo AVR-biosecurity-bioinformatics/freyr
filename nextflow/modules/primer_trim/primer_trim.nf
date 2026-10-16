@@ -16,6 +16,10 @@ process PRIMER_TRIM {
     """
     #!/bin/bash
 
+    # Remove ~/.local/bin from PATH - prevents contamination of conda environment
+    export PATH=\$(echo "\$PATH" | sed "s#${System.getenv('HOME')}/.local/bin:##g")
+    hash -r
+
     ### run module code
     ${moduleDir}/primer_trim.sh \
         "${reads_paths}" \
