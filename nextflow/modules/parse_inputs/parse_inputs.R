@@ -20,6 +20,7 @@ subsample           <- args$subsample
 extension           <- args$extension
 pp_params           <- args$pp_params
 launchDir           <- args$launchDir
+train_idtaxa        <- args$train_idtaxa
 
 # Import functions
 functions_file <- Sys.which("functions.R")
@@ -787,7 +788,7 @@ if ( !all(ss_pp %in% primer_params_up$primers) ){
 
 
 # if `idtaxa_db` is not provided and `params.train_idtaxa` is not true, throw error
-if ( any(primer_params_up$idtaxa_db %in% c("null",NA) ) && params.train_idtaxa %in% c("null","false") ) {
+if ( any(primer_params_up$idtaxa_db %in% c("null",NA) ) && train_idtaxa %in% c("null","false") ) {
     stop (paste0(prpe, "One or more values of 'idtaxa_db' are missing and 'params.train_idtaxa' is set to 'null' or 'false'."))
 }
 
