@@ -22,7 +22,7 @@ params {
     ///// Input options
     samplesheet: String?                = null                              // location of samplesheet .csv; path
     primer_params: String?              = null                              // location of primer parameters .csv; path
-    train_idtaxa: String?                = null                              // train IDTAXA model on ref_fasta database; 'formatted' or 'unformatted'
+    train_idtaxa: Boolean               = false                             // train IDTAXA model on ref_fasta database; boolean
 
     extension: String?                  = null                              // extension of the .fastq read files, immediately after the digit indicating forward/reverse identity; string
     seq_type: String                    = "illumina"                        // data input is Illumina reads; string (illumina, nanopore, pacbio)
@@ -33,6 +33,13 @@ params {
     primer_error_rate: Float            = 1.0                               // error rate allowed when matching primers with cutadapt ('cutadapt -e'); number
     primer_n_trim: Boolean               = false                             // use '--match-read-wildcards' with cutadapt in PRIMER_TRIM to recognise N bases in reads
 
+
+    // IDTAXA training options
+    max_group_size: Integer              = 10
+    max_iterations: Integer              = 3
+    allow_group_removal: Boolean         = true
+    drop_malformed: Boolean              = false
+    
     /// TODO: replace this with equivalent input-file option
     high_sensitivity: Boolean            = true                              // enable dada2 high-sensitivity (pseudo-pooling) mode; boolean
     prior_min_samples: Integer           = 2                                 // minimum number of samples an ASV must be present in to be classified as a "prior" when --high_sensitivity; integer > 0

@@ -57,10 +57,31 @@
                     "schema": "assets/schema_primer_params.json"
                 },
                 "train_idtaxa": {
-                    "type": "string",
-                    "pattern": "^(formatted|unformatted)$",
-                    "description": "Train IDTAXA model(s) using the reference database .fasta file(s), which are correctly formatted ('formatted') or unformatted ('unformatted').",
-                    "errorMessage": "Must be 'formatted' or 'unformatted'."
+                    "type": "boolean",
+                    "description": "Train IDTAXA model(s) from the reference FASTA file(s). If false, pre-trained IDTAXA database files must be provided via 'idtaxa_db'.",
+                    "errorMessage": "Must be true or false."
+                },
+                "max_group_size": {
+                    "type": "integer",
+                    "default": 10,
+                    "minimum": 1,
+                    "description": "Maximum number of training sequences retained per terminal taxonomic group when training IDTAXA."
+                },
+                "max_iterations": {
+                    "type": "integer",
+                    "default": 3,
+                    "minimum": 1,
+                    "description": "Maximum number of IDTAXA training iterations used to identify and remove problematic training sequences."
+                },
+                "allow_group_removal": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Allow removal of problematic sequences even when this removes the final representative of a taxonomic group."
+                },
+                "drop_malformed": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Allow removal of malformed sequences for IDTAXA training, i.e. those with NA in their higher ranks."
                 },
                 "extension": {
                     "type": "string",

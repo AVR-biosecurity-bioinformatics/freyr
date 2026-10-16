@@ -154,7 +154,11 @@ workflow FREYR {
         //// train model
         TRAIN_IDTAXA (
             ch_train_idtaxa_input,
-            params.train_idtaxa
+            params.train_idtaxa,
+            params.max_group_size,
+            params.max_iterations,
+            params.allow_group_removal,
+            params.drop_malformed
         )
 
         //// update primer_params with new models
