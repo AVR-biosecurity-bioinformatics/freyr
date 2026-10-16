@@ -52,83 +52,81 @@ unfiltered_seqs_list <-
 
 ### unfiltered ---------------------------------------------------------------------------------------------
 
-# combine fasta DSS objects, removing redundant sequences
-seqs_uf <- 
-    unfiltered_seqs_list %>%
-    lapply(., as.character) %>%
-    unlist(use.names = T) %>% 
-    tibble::enframe() %>%
-    dplyr::group_by(name, value) %>%
-    dplyr::slice(1) %>%
-    dplyr::ungroup() %>%
-    tibble::deframe() %>%
-    Biostrings::DNAStringSet()
-
-# save combined fasta of filtered sequences
+# Combine DNAStringSet objects, retaining the first occurrence of each ASV name.
+seqs_uf <- unlist(
+    lapply(unfiltered_seqs_list, as.character),
+    use.names = TRUE
+)
+seqs_uf <- Biostrings::DNAStringSet(
+    seqs_uf[!duplicated(names(seqs_uf))]
+)
 write_fasta(seqs_uf, "asvs_unfiltered.fasta")
 
-gc()
 
 ## merge unfiltered phyloseq objects
 ps_u <- merge_phyloseq_new(ps_unfiltered)
 
-gc()
+# Check taxonomy table outputs
+### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
+expected_ranks <- c(
+    "Root",
+    "Kingdom",
+    "Phylum",
+    "Class",
+    "Order",
+    "Family",
+    "Genus",
+    "Species"
+)
+
+if (!identical(phyloseq::rank_names(ps_u), expected_ranks)) {
+    warning(
+        "Taxonomy ranks do not meet staging database expectations.\n",
+        "Expected: ", paste(expected_ranks, collapse = ", "), "\n",
+        "Observed: ", paste(phyloseq::rank_names(ps_u), collapse = ", ")
+    )
+}
 
 ## output merged data tables 
-melt_phyloseq(ps_u) %>% 
-  readr::write_csv(., paste0("raw_unfiltered.csv"))
-
-gc()
+data.table::fwrite(
+    melt_phyloseq(ps_u),
+    "raw_unfiltered.csv"
+)
 
 # Export species level summary of unfiltered results
 summarise_phyloseq(ps_u) %>%
     readr::write_csv(., paste0("summary_unfiltered.csv"))
 
-gc()
+## output phyloseq and component data
 
-## output phyloseq and component data; from step_output_ps
+# Write out whole phyloseq object
+saveRDS(ps_u, paste0("ps_unfiltered.rds"))
 
 # save seqtab as wide tibble (rows = sample_primers, cols = ASV name (hash), cells = abundance)
-seqtab_out_u <- phyloseq::otu_table(ps_u) %>%
+phyloseq::otu_table(ps_u) %>%
     as("matrix") %>%
-    tibble::as_tibble(rownames = "sample_primers")
-
-gc()
+    tibble::as_tibble(rownames = "sample_primers") %>%
+    readr::write_csv("seqtab_unfiltered.csv")
 
 # save taxtab as long tibble (rows = ASV, cols = tax rankings)
-taxtab_out_u <- phyloseq::tax_table(ps_u) %>%
+phyloseq::tax_table(ps_u) %>%
     as("matrix") %>%
     tibble::as_tibble(rownames = "seq_name") %>%
     # convert propagated taxonomy to NA values
     dplyr::mutate( 
         dplyr::across(Root:Species, ~ dplyr::if_else(stringr::str_detect(.x, "^\\w__"), NA, .x))
-    )
-
-gc()
-
-# Check taxonomy table outputs
-### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
-if(!all(colnames(taxtab_out_u) == c("seq_name", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
-    message("Warning: Taxonomy table columns do not meet expectations for the staging database \n
-            Database requires the columns: seq_name, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species ")
-}
+    ) %>%
+    readr::write_csv("taxtab_unfiltered.csv")
 
 # save samplesheet
-samdf_out_u <- phyloseq::sample_data(ps_u) %>%
+phyloseq::sample_data(ps_u) %>%
     as("matrix") %>%
-    tibble::as_tibble()
+    tibble::as_tibble() %>%
+    readr::write_csv("samdf_unfiltered.csv")
 
-# Write out
-readr::write_csv(seqtab_out_u, paste0("seqtab_unfiltered.csv"))
-readr::write_csv(taxtab_out_u, paste0("taxtab_unfiltered.csv"))
-readr::write_csv(samdf_out_u, paste0("samdf_unfiltered.csv"))
-saveRDS(ps_u, paste0("ps_unfiltered.rds"))
-
+# Clean up
 rm(ps_unfiltered)
 rm(seqs_uf)
-rm(seqtab_out_u)
-rm(taxtab_out_u)
-rm(samdf_out_u)
 gc()
 
 ## read tracking output from unfiltered phyloseq
@@ -190,46 +188,49 @@ filtered_seqs_list <-
     stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
     lapply(., Biostrings::readDNAStringSet)
 
-# combine fasta DSS objects, removing redundant sequences
-seqs_f <- 
-    filtered_seqs_list %>%
-    lapply(., as.character) %>%
-    unlist(use.names = T) %>% 
-    tibble::enframe() %>%
-    dplyr::group_by(name, value) %>%
-    dplyr::slice(1) %>%
-    dplyr::ungroup() %>%
-    tibble::deframe() %>%
-    Biostrings::DNAStringSet()
 
-# save combined fasta of filtered sequences
+# Combine DNAStringSet objects, retaining the first occurrence of each ASV name.
+seqs_f <- unlist(
+    lapply(unfiltered_seqs_list, as.character),
+    use.names = TRUE
+)
+seqs_f <- Biostrings::DNAStringSet(
+    seqs_f[!duplicated(names(seqs_f))]
+)
 write_fasta(seqs_f, "asvs_filtered.fasta")
-
-gc()
 
 ## merge filtered phyloseq objects
 ps_f <- merge_phyloseq_new(ps_filtered)
 
-gc()
+if (!identical(phyloseq::rank_names(ps_f), expected_ranks)) {
+    warning(
+        "Taxonomy ranks do not meet staging database expectations.\n",
+        "Expected: ", paste(expected_ranks, collapse = ", "), "\n",
+        "Observed: ", paste(phyloseq::rank_names(ps_f), collapse = ", ")
+    )
+}
 
 ## output merged raw data tables - NOTE: This is memory intensive
-melt_phyloseq(ps_f) %>% 
-    readr::write_csv(., paste0("raw_filtered.csv"))
-
-gc()
-
+data.table::fwrite(
+    melt_phyloseq(ps_f),
+    "raw_filtered.csv"
+)
 # Export species level summary of filtered results
-summarise_phyloseq(ps_f) %>%
-    readr::write_csv(., paste0("summary_filtered.csv"))
+data.table::fwrite(
+    summarise_phyloseq(ps_f),
+    "summary_filtered.csv"
+)
 
-gc()
+## output phyloseq and component data
 
-## output phyloseq and component data; from step_output_ps
+# Write out phyloseq
+saveRDS(ps_f, paste0("ps_filtered.rds"))
 
 # save seqtab as wide tibble (rows = sample_primers, cols = ASV name (hash), cells = abundance)
 seqtab_out_f <- phyloseq::otu_table(ps_f) %>%
     as("matrix") %>%
-    tibble::as_tibble(rownames = "sample_primers")
+    tibble::as_tibble(rownames = "sample_primers") %>%
+    write_csv("seqtab_filtered.csv")
 
 # save taxtab as long tibble (rows = ASV, cols = tax rankings)
 taxtab_out_f <- phyloseq::tax_table(ps_f) %>%
@@ -238,7 +239,8 @@ taxtab_out_f <- phyloseq::tax_table(ps_f) %>%
     # convert propagated taxonomy to NA values
     dplyr::mutate( 
         dplyr::across(Root:Species, ~ dplyr::if_else(stringr::str_detect(.x, "^\\w__"), NA, .x))
-    )
+    ) %>%
+    write_csv("taxtab_filtered.csv")
 
 # Check taxonomy table outputs
 ### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
@@ -248,17 +250,10 @@ if(!all(colnames(taxtab_out_f) == c("seq_name", "Root", "Kingdom", "Phylum", "Cl
 }
 
 # save samplesheet
-samdf_out_f <- phyloseq::sample_data(ps_f) %>%
+phyloseq::sample_data(ps_f) %>%
     as("matrix") %>%
-    tibble::as_tibble()
-
-# Write out
-readr::write_csv(seqtab_out_f, paste0("seqtab_filtered.csv"))
-readr::write_csv(taxtab_out_f, paste0("taxtab_filtered.csv"))
-readr::write_csv(samdf_out_f, paste0("samdf_filtered.csv"))
-saveRDS(ps_f, paste0("ps_filtered.rds"))
-
-gc()
+    tibble::as_tibble() %>%
+    write_csv("samdf_filtered.csv")
 
 ## read tracking output from filtered phyloseq
 phyloseq::sample_sums(ps_f) %>%
@@ -269,9 +264,6 @@ phyloseq::sample_sums(ps_f) %>%
     dplyr::mutate(stage = "filter_sample_taxon") %>% 
     dplyr::select(stage, sample_primers, read_group, primers, pairs) %>% 
     readr::write_csv("ps_f_readsout.csv")
-    
-
-gc()
 
 # stop(" *** stopped manually *** ") ##########################################
 }, 
