@@ -37,7 +37,8 @@ process PARSE_INPUTS {
         --paired "$paired" \
         --subsample "$subsample" \
         --extension "$extension" \
-        --pp_params "$pp_params"
+        --pp_params "$pp_params" \
+        --train_idtaxa "$params.train_idtaxa"
 
     """
 }

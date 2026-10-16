@@ -20,6 +20,7 @@ subsample           <- args$subsample
 extension           <- args$extension
 pp_params           <- args$pp_params
 launchDir           <- args$launchDir
+train_idtaxa_enabled         <- as.logical(args$train_idtaxa)
 
 # Import functions
 functions_file <- Sys.which("functions.R")
@@ -787,8 +788,8 @@ if ( !all(ss_pp %in% primer_params_up$primers) ){
 
 
 # if `idtaxa_db` is not provided and `params.train_idtaxa` is not true, throw error
-if ( any(primer_params_up$idtaxa_db %in% c("null",NA) ) && params.train_idtaxa %in% c("null","false") ) {
-    stop (paste0(prpe, "One or more values of 'idtaxa_db' are missing and 'params.train_idtaxa' is set to 'null' or 'false'."))
+if (any(is.na(primer_params_up$idtaxa_db) | primer_params_up$idtaxa_db == "null") && !train_idtaxa_enabled) {
+    stop(paste0(prpe,"One or more values of 'idtaxa_db' are missing and ","'train_idtaxa' is FALSE."))
 }
 
 # check locus, for_primer_seq and rev_primer_seq are not NA

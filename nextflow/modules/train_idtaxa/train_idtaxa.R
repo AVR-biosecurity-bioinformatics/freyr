@@ -11,8 +11,11 @@ cat("\n")
 
 ### process arguments 
 
-ref_fasta <- args$ref_fasta
-fasta_type <- args$fasta_type
+ref_fasta          <- args$ref_fasta
+max_group_size     <- as.integer(args$max_group_size)
+max_iterations     <- as.integer(args$max_iterations)
+allow_group_removal <- as.logical(args$allow_group_removal)
+drop_malformed     <- as.logical(args$drop_malformed)
 
 # Import functions
 functions_file <- Sys.which("functions.R")
@@ -45,33 +48,14 @@ hierarchy <- ape::read.FASTA(
     type = "DNA"
     )
 
-# formatted vs unformatted fasta input
-if ( fasta_type == "formatted" ) {
-
-    db <- NULL
-    get_lineage <- FALSE
-
-} else if ( fasta_type == "unformatted" ) {
-
-    db <- get_ncbi_taxonomy()
-    get_lineage <- TRUE
-
-} else {
-    stop("'fasta_type' (params.ncbi_idtaxa) must be 'formatted' or 'unformatted'")
-}
-
-
-
-
-
+# Train IDTAXA model
 idtaxa_model <- train_idtaxa(
     x = hierarchy, 
-    max_group_size = 10, 
-    max_iterations = 3, 
-    allow_group_removal = TRUE, 
+    max_group_size = max_group_size, 
+    max_iterations = max_iterations, 
+    allow_group_removal = allow_group_removal, 
+    drop_malformed = drop_malformed,
     orient = FALSE, 
-    get_lineage = get_lineage, 
-    db = db, 
     quiet = FALSE
     )
 
