@@ -1,0 +1,33 @@
+process PHYLOSEQ_MERGE {
+    tag "Whole dataset"
+    label "phyloseq"
+    label "env_r_phyloseq"
+    publishDir { "${params.outdir}/modules/phyloseq_merge" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
+    publishDir { "${params.outdir}/results/main_outputs/merged" }, pattern: '*{_filtered,_unfiltered}.{csv,rds,fasta}', mode: 'copy'
+
+    input:
+    path(ps_unfiltered)
+    path(ps_filtered)
+    path(unfiltered_fastas, name: "unfiltered_*.fasta")
+    path(filtered_fastas, name: "filtered_*.fasta")
+
+    output:
+    path("*{_filtered,_unfiltered}.{csv,rds,fasta}")
+    path("*_readsout.csv"), emit: read_tracking
+
+    script:
+    """
+        
+    Rscript --vanilla "${moduleDir}/phyloseq_merge.R" \
+        --process_name "phyloseq_merge" \
+        --cpus "$task.cpus" \
+        --rdata "$params.rdata" \
+        --ps_unfiltered "$ps_unfiltered" \
+        --ps_filtered "$ps_filtered" \
+        --unfiltered_fastas "$unfiltered_fastas" \
+        --filtered_fastas "$filtered_fastas" 
+        
+        
+    """
+    
+}

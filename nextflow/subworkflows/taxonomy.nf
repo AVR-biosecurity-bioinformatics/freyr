@@ -4,15 +4,15 @@
 
 
 //// modules to import
-include { MAKE_BLAST_DATABASE                       } from '../modules/make_blast_database'
-include { RUN_BLAST                                 } from '../modules/run_blast'
-include { TAX_IDTAXA                                } from '../modules/tax_idtaxa'
-include { TAX_BLAST                                 } from '../modules/tax_blast'
-include { JOINT_TAX                                 } from '../modules/joint_tax'
-include { MERGE_TAX                                 } from '../modules/merge_tax'
-include { ASSIGNMENT_PLOT                           } from '../modules/assignment_plot'
-include { TAX_SUMMARY                               } from '../modules/tax_summary'
-include { TAX_SUMMARY_MERGE                         } from '../modules/tax_summary_merge'
+include { MAKE_BLAST_DATABASE                       } from '../modules/make_blast_database/make_blast_database'
+include { RUN_BLAST                                 } from '../modules/run_blast/run_blast'
+include { TAX_IDTAXA                                } from '../modules/tax_idtaxa/tax_idtaxa'
+include { TAX_BLAST                                 } from '../modules/tax_blast/tax_blast'
+include { JOINT_TAX                                 } from '../modules/joint_tax/joint_tax'
+include { MERGE_TAX                                 } from '../modules/merge_tax/merge_tax'
+include { ASSIGNMENT_PLOT                           } from '../modules/assignment_plot/assignment_plot'
+include { TAX_SUMMARY                               } from '../modules/tax_summary/tax_summary'
+include { TAX_SUMMARY_MERGE                         } from '../modules/tax_summary_merge/tax_summary_merge'
 
 workflow TAXONOMY {
 
@@ -25,7 +25,7 @@ workflow TAXONOMY {
 
     //// just keep fasta files for input
     ch_seqtab
-        .map { primers, read_group, seqtab, fasta -> 
+        .map { primers, read_group, _seqtab, fasta -> 
             [ primers, read_group, fasta ] }
         .set { ch_fasta }
 
@@ -132,7 +132,7 @@ workflow TAXONOMY {
 
     //// group taxtab across flowcells (per locus)
     JOINT_TAX.out.joint
-        .map { primers, read_group, tax_tibble -> [ primers, tax_tibble ] }
+        .map { primers, _read_group, tax_tibble -> [ primers, tax_tibble ] }
         .groupTuple ( by: 0 ) // group into tuples using primers
         .set { ch_mergetax_input }
 
@@ -186,7 +186,7 @@ workflow TAXONOMY {
 
     // create channel containing a single list of all TAX_SUMMARY outputs
     TAX_SUMMARY.out.csv
-        .map { primers, read_group, tax_summary ->
+        .map { _primers, _read_group, tax_summary ->
             [ tax_summary ] } 
         .collect()
         .set { ch_tax_summaries } 

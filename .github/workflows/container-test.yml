@@ -1,0 +1,141 @@
+name: container-test
+
+on:
+  workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.profile }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    strategy:
+      fail-fast: false
+      matrix:
+        profile:
+          - docker
+          - conda
+          - singularity
+
+    steps:
+      - name: Check out selected branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Show tested revision
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Repository: ${{ github.repository }}"
+          echo "Ref:        ${{ github.ref }}"
+          echo "Commit:     ${{ github.sha }}"
+          git log -1 --oneline
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v2
+        with:
+          version: latest-stable
+
+      - name: Install Conda
+        if: matrix.profile == 'conda'
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          channels: conda-forge,bioconda,nodefaults
+          channel-priority: strict
+
+      - name: Install Go
+        if: matrix.profile == 'singularity'
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+
+      - name: Install SingularityCE
+        if: matrix.profile == 'singularity'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          sudo apt-get update
+
+          sudo apt-get install -y \
+            build-essential \
+            autoconf \
+            automake \
+            cryptsetup \
+            fuse2fs \
+            fuse3 \
+            git \
+            libfuse3-dev \
+            libglib2.0-dev \
+            libseccomp-dev \
+            libtool \
+            pkg-config \
+            runc \
+            squashfs-tools \
+            uidmap \
+            wget \
+            zlib1g-dev
+
+          git clone \
+            --depth 1 \
+            --branch v3.11.5 \
+            --recurse-submodules \
+            --shallow-submodules \
+            https://github.com/sylabs/singularity.git
+
+          cd singularity
+
+          pkg-config --modversion glib-2.0
+          git submodule status
+
+          ./mconfig
+          make -C builddir
+          sudo make -C builddir install
+
+          singularity --version
+
+      - name: Show tool versions
+        shell: bash -el {0}
+        run: |
+          set -euo pipefail
+
+          nextflow -version
+
+          case "${{ matrix.profile }}" in
+            docker)
+              docker --version
+              ;;
+            conda)
+              conda --version
+              ;;
+            singularity)
+              singularity --version
+              ;;
+          esac
+
+      - name: Run test
+        shell: bash -el {0}
+        run: |
+          set -euo pipefail
+
+          nextflow lint . -o concise
+
+          nextflow \
+            -log "nextflow-${{ matrix.profile }}.log" \
+            run . \
+            -profile "${{ matrix.profile }},test,quicktest" \
+            -ansi-log false
+

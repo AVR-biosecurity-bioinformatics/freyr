@@ -4,14 +4,13 @@
 
 
 //// modules to import
-include { FASTQC                                    } from '../modules/fastqc'
-include { NANOPLOT                                  } from '../modules/nanoplot'
-include { MISEQ_QC                                  } from '../modules/miseq_qc'
-include { SPLIT_LOCI                                } from '../modules/split_loci'
-include { PRIMER_TRIM                               } from '../modules/primer_trim'
-include { READ_FILTER                               } from '../modules/read_filter' 
-include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_PRE  } from '../modules/filter_qualplots'
-include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_POST } from '../modules/filter_qualplots'
+include { FASTQC                                    } from '../modules/fastqc/fastqc'
+include { NANOPLOT                                  } from '../modules/nanoplot/nanoplot'
+include { SPLIT_LOCI                                } from '../modules/split_loci/split_loci'
+include { PRIMER_TRIM                               } from '../modules/primer_trim/primer_trim'
+include { READ_FILTER                               } from '../modules/read_filter/read_filter' 
+include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_PRE  } from '../modules/filter_qualplots/filter_qualplots'
+include { FILTER_QUALPLOTS as FILTER_QUALPLOTS_POST } from '../modules/filter_qualplots/filter_qualplots'
 
 workflow PROCESS_READS {
 
@@ -21,7 +20,6 @@ workflow PROCESS_READS {
     ch_primer_params
     seq_type 
     paired
-    ch_read_groups
 
 
     main:
@@ -30,28 +28,15 @@ workflow PROCESS_READS {
     ch_paired = channel.value ( paired )
 
     if ( params.miseq_dir ) {
-        ch_miseq_dir = Channel.fromPath(params.miseq_dir).first()
+        ch_miseq_dir = channel.fromPath(params.miseq_dir).first()
     } else {
-        ch_miseq_dir = Channel.empty()
+        ch_miseq_dir = channel.empty()
     }
 
     //// create empty channels
-    ch_processed_fwd = Channel.empty()
-    ch_processed_rev = Channel.empty()
-    ch_processed_single = Channel.empty()
-
-    //// run SEQ_QC per flow cell if data is internal MiSeq
-    if ( params.miseq_internal == true ) {
-
-        if ( !ch_miseq_dir ) {
-            error "'--miseq_dir' must be specified when using '--miseq_internal'"
-        }
-
-        MISEQ_QC ( 
-            ch_read_groups,
-            ch_miseq_dir
-        ) 
-    }
+    ch_processed_fwd = channel.empty()
+    ch_processed_rev = channel.empty()
+    ch_processed_single = channel.empty()
 
     //// run fastqc on input reads
     FASTQC (
@@ -180,9 +165,6 @@ workflow PROCESS_READS {
 
 
     emit:
-
     ch_processed_reads
     ch_read_tracker_samples
-
-
 }

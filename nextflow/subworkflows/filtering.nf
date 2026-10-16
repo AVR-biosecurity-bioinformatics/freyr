@@ -4,17 +4,16 @@
 
 
 //// modules to import
-include { FILTER_CHIMERA                            } from '../modules/filter_chimera'
-include { FILTER_FRAME                              } from '../modules/filter_frame'
-include { FILTER_LENGTH                             } from '../modules/filter_length'
-include { FILTER_PHMM                               } from '../modules/filter_phmm'
-include { MERGE_FILTERS                             } from '../modules/merge_filters'
+include { FILTER_CHIMERA                            } from '../modules/filter_chimera/filter_chimera'
+include { FILTER_FRAME                              } from '../modules/filter_frame/filter_frame'
+include { FILTER_LENGTH                             } from '../modules/filter_length/filter_length'
+include { FILTER_PHMM                               } from '../modules/filter_phmm/filter_phmm'
+include { MERGE_FILTERS                             } from '../modules/merge_filters/merge_filters'
 
 workflow FILTERING {
 
     take:
     ch_seqtab
-    ch_read_groups
     ch_primer_params
     ch_samplesheet_split
 
@@ -22,7 +21,7 @@ workflow FILTERING {
 
     //// group all flowcells (per primer pair) into a single element for filtering
     ch_seqtab
-        .map { primers, read_group, seqtab_tibble, fasta -> 
+        .map { primers, _read_group, seqtab_tibble, fasta -> 
             [ primers, seqtab_tibble, fasta ] }
         .groupTuple ( by: 0 )
         .set { ch_filter_input }
@@ -30,7 +29,7 @@ workflow FILTERING {
 
     //// combine FILTER_CHIMERA parameters to input channel
     ch_primer_params
-        .map { primers, primer_params ->
+        .map { primers, _primer_params ->
             [ primers, [ 'chimera_sample_frac': params.chimera_sample_frac ] ] }
         .set { ch_filter_chimera_params } 
 
@@ -72,7 +71,7 @@ workflow FILTERING {
 
     //// special input channel for FILTER_PHMM to chunk .fasta input
     ch_seqtab
-        .map { primers, read_group, seqtab_tibble, fasta -> [ primers, fasta ]}
+        .map { primers, _read_group, _seqtab_tibble, fasta -> [ primers, fasta ]}
         .splitFasta ( by: 1000, file: true, elem: 1 )
         .combine ( ch_filter_phmm_params, by: 0 )
         .set { ch_filter_phmm_input }

@@ -4,12 +4,12 @@
 
 
 //// modules to import
-include { ACCUMULATION_CURVE                        } from '../modules/accumulation_curve'
-include { PHYLOSEQ_CLUSTERED                        } from '../modules/phyloseq_clustered'
-include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_filter'
-include { PHYLOSEQ_MERGE                            } from '../modules/phyloseq_merge'
-include { PHYLOSEQ_UNFILTERED                       } from '../modules/phyloseq_unfiltered'
-include { READ_TRACKING                             } from '../modules/read_tracking'
+include { ACCUMULATION_CURVE                        } from '../modules/accumulation_curve/accumulation_curve'
+include { PHYLOSEQ_CLUSTERED                        } from '../modules/phyloseq_clustered/phyloseq_clustered'
+include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_filter/phyloseq_filter'
+include { PHYLOSEQ_MERGE                            } from '../modules/phyloseq_merge/phyloseq_merge'
+include { PHYLOSEQ_UNFILTERED                       } from '../modules/phyloseq_unfiltered/phyloseq_unfiltered'
+include { READ_TRACKING                             } from '../modules/read_tracking/read_tracking'
 
 
 workflow RESULT_SUMMARIES {
@@ -99,12 +99,12 @@ workflow RESULT_SUMMARIES {
 
     //// combine phyloseq outputs to merge across loci
     PHYLOSEQ_UNFILTERED.out.ps // val(primers), path("ps_unfiltered_*.rds")
-        .map { primers, ps, filters_tibble -> [ ps ] }
+        .map { _primers, ps, _filters_tibble -> [ ps ] }
         .collect()
         .set { ch_ps_unfiltered }
 
     PHYLOSEQ_FILTER.out.ps // val(primers), path("ps_filtered_*.rds")
-        .map { primers, ps -> [ ps ] }
+        .map { _primers, ps -> [ ps ] }
         .collect()
         .set { ch_ps_filtered }
 

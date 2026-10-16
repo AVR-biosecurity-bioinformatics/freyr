@@ -1,4 +1,6 @@
 ### load listed R scripts 
+.libPaths(.Library)
+
 if (!exists("projectDir")) { projectDir <- "." } # if not running in Nextflow, use current directory
 
 source(file.path(projectDir, "bin/functions.R"))

@@ -4,15 +4,40 @@
     "title": "AVR-biosecurity-bioinformatics/freyr pipeline parameters",
     "description": "Metabarcoding pipeline [IN DEVELOPMENT]",
     "type": "object",
-    "defs": {
+    "allOf": [
+        {
+            "$ref": "#/$defs/main_arguments"
+        },
+        {
+            "$ref": "#/$defs/pp_override_options"
+        },
+        {
+            "$ref": "#/$defs/debugging_options"
+        },
+        {
+            "$ref": "#/$defs/max_job_request_options"
+        }
+    ],
+    "$defs": {
         "main_arguments": {
             "title": "Main arguments",
             "type": "object",
             "description": "Main arguments for the pipeline.",
             "required": [ 
-                "samplesheet"
+                "samplesheet", "outdir"
             ],
             "properties": {
+                "help": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Display the pipeline help message.",
+                    "hidden": true
+                },
+                "outdir": {
+                    "type": "string",
+                    "default": "output",
+                    "description": "Directory where pipeline outputs are published"
+                },
                 "samplesheet": {
                     "type": "string",
                     "format": "file-path",
@@ -295,7 +320,7 @@
                 }
             }
         },
-        "deugging_options": {
+        "debugging_options": {
             "title": "Debugging options",
             "type": "object",
             "description": "Arguments that can be used to debug the pipeline; should be used with caution.",

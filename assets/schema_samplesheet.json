@@ -7,29 +7,22 @@
     "items": {
       "type": "object",
       "required": [
-        "sample_id", 
-        "sample_name", 
-        "fcid",
-        "pcr_primers"
+        "sample", 
+        "primers"
         ],
       "properties": {
-        "sample_id": {
+        "sample": {
           "type": "string",
           "pattern": "^[^\\s,]+$",
           "description": "Identifier of samples and unique across all samples in the samplesheet. Sample ID must be a unique identifier of the read files for each sample, if explicit read paths are not given with 'fwd' and 'rev'.",
           "errorMessage": "Sample ID must be unique across all samples, and cannot contain spaces or commas."
         },
-        "sample_name": {
-            "type": "string",
-            "pattern": "^[^\\s,]+$",
-            "errorMessage": "Sample name must be unique within a flowcell, and cannot contain spaces or commas."
-        },
-        "fcid": {
+        "read_group": {
             "type": "string",
             "pattern": "^[^\\s,]+$",
             "errorMessage": "Flowcell ID must be provided, and cannot contain spaces or commas."
         },
-        "pcr_primers": {
+        "primers": {
             "type": "string",
             "pattern": "^[^,]+$",
             "errorMessage": "PCR primer name cannot contain spaces or commas; it may be a list of two or more items separated by a semi-colon (';')."

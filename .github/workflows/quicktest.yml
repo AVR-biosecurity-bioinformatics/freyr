@@ -1,0 +1,138 @@
+name: quicktest
+
+on:
+  push:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "LICENSE"
+
+permissions:
+  contents: read
+
+env:
+  NEXTFLOW_VERSION: "26.10.0"
+  NF_SCHEMA_VERSION: "3.0.0"
+  NF_WAVE_VERSION: "1.22.2"
+  NXF_HOME: ${{ github.workspace }}/.nextflow
+  NXF_PLUGINS_DIR: ${{ github.workspace }}/.nextflow/plugins
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v2
+        with:
+          version: ${{ env.NEXTFLOW_VERSION }}
+
+      - name: Cache Nextflow plugins
+        id: plugin-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NXF_PLUGINS_DIR }}
+          key: >-
+            nextflow-plugins-${{ runner.os }}-${{
+            env.NEXTFLOW_VERSION }}-nf-schema-${{
+            env.NF_SCHEMA_VERSION }}-nf-wave-${{
+            env.NF_WAVE_VERSION }}
+
+      - name: Install Nextflow plugins
+        if: steps.plugin-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p "${NXF_PLUGINS_DIR}"
+
+          install_plugin() {
+            local plugin="$1"
+            local max_attempts=5
+            local attempt
+
+            for attempt in $(seq 1 "${max_attempts}"); do
+              echo "Installing ${plugin}, attempt ${attempt}/${max_attempts}"
+
+              if nextflow plugin install "${plugin}"; then
+                echo "Installed ${plugin}"
+                return 0
+              fi
+
+              if [[ "${attempt}" -lt "${max_attempts}" ]]; then
+                delay=$((attempt * 15))
+                echo "Plugin installation failed; retrying after ${delay} seconds"
+                sleep "${delay}"
+              fi
+            done
+
+            echo "Failed to install ${plugin} after ${max_attempts} attempts" >&2
+            return 1
+          }
+
+          install_plugin "nf-schema@${NF_SCHEMA_VERSION}"
+          install_plugin "nf-wave@${NF_WAVE_VERSION}"
+
+      - name: Verify Nextflow plugins
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Nextflow version:"
+          nextflow -version
+
+          echo "Plugin cache contents:"
+          find "${NXF_PLUGINS_DIR}" \
+            -mindepth 1 \
+            -maxdepth 2 \
+            -print
+
+          test -d \
+            "${NXF_PLUGINS_DIR}/nf-schema-${NF_SCHEMA_VERSION}"
+
+          test -d \
+            "${NXF_PLUGINS_DIR}/nf-wave-${NF_WAVE_VERSION}"
+
+      - name: Run test
+        shell: bash
+        env:
+          NXF_OFFLINE: "true"
+        run: |
+          set -euo pipefail
+
+          nextflow lint . -o concise
+
+          nextflow \
+            -log nextflow-docker.log \
+            run . \
+            -profile docker,test,quicktest \
+            -ansi-log false
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quicktest-docker-logs-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            nextflow-docker.log
+            .nextflow.log
+            work/**/.command.log
+            work/**/.command.err
+            work/**/.command.out
+            work/**/.command.sh
+            work/**/.command.run
