@@ -21,7 +21,7 @@ parse_nf_var_repeat <- function(x) {
     stringr::str_extract_all(
       x, 
       pattern = "[^\\s,\\[\\]]+" # extract all runs of characters that aren't ' ' ',' '[' or ']' 
-      ) %>% 
+    ) %>% 
     unlist() %>%
     tibble::as_tibble_col(column_name = "col") %>% 
     unique() %>%
@@ -98,46 +98,299 @@ subset_taxa_new <- function(physeq, rank, value){
 
 # New merge phyloseq function that accepts a list of phyloseq objects
 merge_phyloseq_new <- function(arguments) {
-    comp.list <- unlist(
-        lapply(arguments, phyloseq:::splat.phyloseq.objects),
-        recursive = FALSE
-    )
-    comp.groups <- split(comp.list, names(comp.list))
-    merged.list <- lapply(comp.groups, function(x) {
+  comp.list <- unlist(
+    lapply(arguments, phyloseq:::splat.phyloseq.objects),
+    recursive = FALSE
+  )
+  comp.groups <- split(comp.list, names(comp.list))
+  merged.list <- lapply(comp.groups, function(x) {
+    
+    if (length(x) == 1L) {
+      x[[1]]
+    } else {
+      Reduce(
+        phyloseq::merge_phyloseq_pair,
+        x
+      )
+    }
+  })
+  do.call(phyloseq::phyloseq, unname(merged.list))
+}
 
-        if (length(x) == 1L) {
-            x[[1]]
-        } else {
-            Reduce(
-                phyloseq::merge_phyloseq_pair,
-                x
-            )
-        }
+# Merge reference sequences, retaining the first sequence for each ASV name.
+merge_refseq <- function(x) {
+  
+  seqs <- do.call(
+    c,
+    lapply(x, function(z) {
+      out <- as.character(z)
+      names(out) <- names(z)
+      out
     })
-    do.call(phyloseq::phyloseq, unname(merged.list))
+  )
+  seqs <- seqs[!duplicated(names(seqs))]
+  names(seqs) <- sub("^refseq\\.", "", names(seqs)) # remove refseq prefix
+  Biostrings::DNAStringSet(seqs)
+}
+
+# Merge integer count matrices with taxa as rows and disjoint samples.
+merge_count_matrices <- function(x) {
+  if (!length(x)) {
+    stop("No count matrices were provided.")
+  }
+
+  taxa <- unique(unlist(
+    lapply(x, rownames),
+    use.names = FALSE
+  ))
+
+  samples <- unlist(
+    lapply(x, colnames),
+    use.names = FALSE
+  )
+
+  taxa_index <- stats::setNames(
+    seq_along(taxa),
+    taxa
+  )
+
+  # Allocate the final abundance matrix once.
+  merged <- matrix(
+    0L,
+    nrow = length(taxa),
+    ncol = length(samples),
+    dimnames = list(taxa, samples)
+  )
+
+  column_start <- 1L
+
+  for (i in seq_along(x)) {
+    current <- x[[i]]
+
+    if (is.null(rownames(current))) {
+      stop("Count matrix ", i, " has no taxon row names.")
+    }
+
+    if (is.null(colnames(current))) {
+      stop("Count matrix ", i, " has no sample column names.")
+    }
+
+    # Convert legacy double-backed count matrices if necessary.
+    if (typeof(current) != "integer") {
+      storage.mode(current) <- "integer"
+    }
+
+    row_index <- unname(
+      taxa_index[rownames(current)]
+    )
+
+    if (anyNA(row_index)) {
+      stop(
+        "Failed to match all taxa from count matrix ",
+        i,
+        " to the merged taxon set."
+      )
+    }
+
+    column_end <- column_start + ncol(current) - 1L
+
+    merged[
+      row_index,
+      seq.int(column_start, column_end)
+    ] <- current
+
+    column_start <- column_end + 1L
+  }
+
+  merged
+}
+
+
+# Merge phyloseq function for disjoint samples that accepts a list of phyloseq objects
+merge_phyloseq_disjoint_samples <- function(arguments) {
+  if (!length(arguments)) {
+    stop("arguments must contain at least one object.")
+  }
+  
+  arguments <- unname(arguments)
+  
+  # Require sample names to be unique across all input objects.
+  samples <- unlist(
+    lapply(arguments, phyloseq::sample_names),
+    use.names = FALSE
+  )
+  
+  duplicated_samples <- unique(
+    samples[duplicated(samples)]
+  )
+  
+  if (length(duplicated_samples)) {
+    stop(
+      "Sample names must not overlap between input phyloseq objects. ",
+      "Duplicated sample names: ",
+      paste(duplicated_samples, collapse = ", ")
+    )
+  }
+  
+  # Merge integer OTU tables with taxa as rows and disjoint samples.
+  merge_otu_tables <- function(x) {
+    taxa_rows <- vapply(
+      x,
+      phyloseq::taxa_are_rows,
+      logical(1)
+    )
+
+    if (!all(taxa_rows)) {
+      stop(
+        "All OTU tables must have taxa as rows. ",
+        "Incorrect input indices: ",
+        paste(which(!taxa_rows), collapse = ", ")
+      )
+    }
+
+    matrices <- lapply(
+      x,
+      function(current) {
+        as(current, "matrix")
+      }
+    )
+
+    phyloseq::otu_table(
+      merge_count_matrices(matrices),
+      taxa_are_rows = TRUE
+    )
+  }
+  
+  # Merge sample metadata with disjoint sample rows.
+  merge_sample_data <- function(x) {
+    merged <- data.table::rbindlist(
+      lapply(
+        x,
+        function(current) {
+          data.table::as.data.table(
+            as(current, "data.frame"),
+            keep.rownames = "sample_name"
+          )
+        }
+      ),
+      use.names = TRUE,
+      fill = TRUE
+    )
+    
+    sample_ids <- merged[["sample_name"]]
+    merged[, sample_name := NULL]
+    
+    merged <- as.data.frame(merged)
+    rownames(merged) <- sample_ids
+    
+    phyloseq::sample_data(merged)
+  }
+  
+  # Merge taxonomy tables, retaining the first assignment for duplicate ASVs.
+  # Assumes taxonomy assignments for the same ASV are consistent across inputs.
+  merge_tax_tables <- function(x) {
+    merged <- data.table::rbindlist(
+      lapply(
+        x,
+        function(current) {
+          data.table::as.data.table(
+            as(current, "matrix"),
+            keep.rownames = "seq_name"
+          )
+        }
+      ),
+      use.names = TRUE,
+      fill = TRUE
+    )
+    
+    merged <- merged[!duplicated(seq_name)]
+    
+    seq_names <- merged[["seq_name"]]
+    merged[, seq_name := NULL]
+    
+    merged <- as.matrix(merged)
+    rownames(merged) <- seq_names
+    
+    phyloseq::tax_table(merged)
+  }
+    
+  # Split each phyloseq object into its constituent components.
+  comp.list <- unlist(
+    lapply(
+      arguments,
+      phyloseq:::splat.phyloseq.objects
+    ),
+    recursive = FALSE
+  )
+  
+  comp.groups <- split(
+    comp.list,
+    names(comp.list)
+  )
+  
+  merged.list <- lapply(
+    names(comp.groups),
+    function(component) {
+      x <- comp.groups[[component]]
+      
+      if (length(x) == 1L) {
+        return(x[[1L]])
+      }
+      
+      if (component == "otu_table") {
+        merge_otu_tables(x)
+      } else if (component == "sam_data") {
+        merge_sample_data(x)
+      } else if (component == "tax_table") {
+        merge_tax_tables(x)
+      } else if (component == "refseq") {
+        merge_refseq(x)
+      } else {
+        # Retain standard phyloseq behaviour for other components,
+        # such as phylogenetic trees.
+        Reduce(
+          phyloseq::merge_phyloseq_pair,
+          x
+        )
+      }
+    }
+  )
+  
+  do.call(
+    phyloseq::phyloseq,
+    unname(merged.list)
+  )
 }
 
 summarise_phyloseq <- function(ps) {
-    otutab <- as(phyloseq::otu_table(ps), "matrix")
-    if (!phyloseq::taxa_are_rows(ps)) {otutab <- t(otutab)}
-
-    taxtab <- as(phyloseq::tax_table(ps), "matrix")
-
-    df <- data.table::as.data.table(
-      otutab,
-      keep.rownames = "seq_name"
-    )
-
-    df[, sequence := as.character(phyloseq::refseq(ps)[seq_name])]
-
-    taxtab <- data.table::as.data.table(
-      as(phyloseq::tax_table(ps), "matrix"),
-      keep.rownames = "seq_name"
-    )
-
-    df <- taxtab[df, on = "seq_name"]
-
-    df
+  otutab <- as(phyloseq::otu_table(ps), "matrix")
+  storage.mode(otutab) <- "integer" # Force integer storage of discrete count matrix
+  if (!phyloseq::taxa_are_rows(ps)) otutab <- t(otutab)
+  
+  sample_cols <- colnames(otutab)
+  
+  df <- data.table::as.data.table(
+    otutab,
+    keep.rownames = "seq_name"
+  )
+  
+  df[, sequence := as.character(phyloseq::refseq(ps)[seq_name])]
+  
+  taxtab <- data.table::as.data.table(
+    as(phyloseq::tax_table(ps), "matrix"),
+    keep.rownames = "seq_name"
+  )
+  
+  tax_cols <- setdiff(names(taxtab), "seq_name")
+  
+  df <- taxtab[df, on = "seq_name"]
+  
+  data.table::setcolorder(
+    df,
+    c("seq_name", "sequence", tax_cols, sample_cols)
+  )
+  
+  df
 }
 
 # Convert a phyloseq object into a long data.table containing one row per non-zero sample–taxon observation.
@@ -145,41 +398,42 @@ melt_phyloseq <- function(ps) {
   
   ## Abundance table-
   otutab <- as(phyloseq::otu_table(ps), "matrix")
+  storage.mode(otutab) <- "integer" # Force integer storage of discrete count matrix
   if(!phyloseq::taxa_are_rows(ps)){otutab <- t(otutab)}
   
   # Identify only non-zero observations.
   index <- which(otutab > 0, arr.ind = TRUE)
-
+  
   # If no non-zero obs, exit early
   if (length(index) == 0L) {return(data.table::data.table()) }
-
+  
   # Convert otu table to tall form (one sample-taxon per row)
   df <- data.table::data.table(
-      seq_name = rownames(otutab)[index[, "row"]],
-      sample_primers = colnames(otutab)[index[, "col"]],
-      Abundance = otutab[index]
+    seq_name = rownames(otutab)[index[, "row"]],
+    sample_primers = colnames(otutab)[index[, "col"]],
+    Abundance = otutab[index]
   )
   
   ## Add Sample metadata
   if (length(phyloseq::sample_variables(ps)) > 0L) {
     samdf <- data.table::as.data.table(
-            as(phyloseq::sample_data(ps), "data.frame"),
-            keep.rownames = ".sample_name"
-        )
-
+      as(phyloseq::sample_data(ps), "data.frame"),
+      keep.rownames = ".sample_name"
+    )
+    
     # Match metadata against sample names in the abundance table.
     sample_index <- match(df$sample_primers, samdf$.sample_name)
-
+    
     # Avoid duplicating the sample identifier if sample_data already has sample_primers
     sample_columns <- setdiff(names(samdf), c(".sample_name", "sample_primers"))
     if (length(sample_columns) > 0L) {
-            df <- cbind(
-                df,
-                samdf[sample_index, sample_columns, with = FALSE]
-            )
+      df <- cbind(
+        df,
+        samdf[sample_index, sample_columns, with = FALSE]
+      )
     }
   }
-
+  
   ## Add Taxonomy table
   if (length(phyloseq::rank_names(ps)) > 0L) {
     taxtab <- data.table::as.data.table(
@@ -188,7 +442,7 @@ melt_phyloseq <- function(ps) {
     )
     taxon_index <- match(df$seq_name, taxtab$.seq_name)
     taxonomy_columns <- setdiff(names(taxtab),".seq_name")
-
+    
     if (length(taxonomy_columns) > 0L) {
       df <- cbind(df, taxtab[taxon_index, taxonomy_columns, with = FALSE] )
     }
@@ -200,12 +454,106 @@ melt_phyloseq <- function(ps) {
     sequence_index <- match(df$seq_name, names(seqs))
     df[, sequence := as.character(seqs[sequence_index])]
   }
-
+  
   # Arrange by Abundance, then sequence names (to approx. phyloseq behavior)
   data.table::setorder(df, -Abundance, seq_name )
   return(df)
 }
 
+# Write raw phyloseq
+write_raw_phyloseq <- function(
+    ps,
+    cluster_dt,
+    filename
+) {
+  
+  raw_dt <- cluster_dt[
+    melt_phyloseq(ps),
+    on = "seq_name"
+  ]
+  
+  data.table::setcolorder(
+    raw_dt,
+    c(
+      "seq_name",
+      "sequence",
+      "cluster",
+      setdiff(
+        names(raw_dt),
+        c(
+          "seq_name",
+          "sequence",
+          "cluster"
+        )
+      )
+    )
+  )
+  
+  data.table::fwrite(
+    raw_dt,
+    filename
+  )
+  
+  invisible(NULL)
+}
+
+# Write phyloseq summary
+write_phyloseq_summary <- function(
+    ps,
+    cluster_dt,
+    filename,
+    tax_cols,
+    filters = NULL
+) {
+  summary_dt <- summarise_phyloseq(ps)
+  
+  # Optionally add sequence-filter results.
+  if (!is.null(filters)) {
+    summary_dt <- filters[
+      summary_dt,
+      on = c("seq_name", "sequence")
+    ]
+  }
+  
+  # Add cluster assignments.
+  summary_dt <- cluster_dt[
+    summary_dt,
+    on = "seq_name"
+  ]
+  
+  preferred_cols <- c(
+    "seq_name",
+    "sequence",
+    "cluster",
+    tax_cols,
+    "chimera_filter",
+    "length_filter",
+    "phmm_filter",
+    "frame_filter"
+  )
+  
+  preferred_cols <- intersect(
+    preferred_cols,
+    names(summary_dt)
+  )
+  
+  data.table::setcolorder(
+    summary_dt,
+    c(
+      preferred_cols,
+      setdiff(names(summary_dt), preferred_cols)
+    )
+  )
+  
+  data.table::fwrite(
+    summary_dt,
+    filename
+  )
+  
+  invisible(NULL)
+}
+
+# Rarefaction / species accumulation plot
 rareplot <- function(ps, step="auto", threshold=0){
   if(step == "auto"){
     step <- ceiling(median(phyloseq::sample_sums(ps)) / 100)
@@ -216,9 +564,11 @@ rareplot <- function(ps, step="auto", threshold=0){
   }
   if(phyloseq::taxa_are_rows(ps)){
     otutab <- t(as(phyloseq::otu_table(ps), "matrix"))
+    storage.mode(otutab) <- "integer" # Force integer storage of discrete count matrix
   } else {
     otutab <- as(phyloseq::otu_table(ps), "matrix")
- }
+    storage.mode(otutab) <- "integer" # Force integer storage of discrete count matrix
+  }
   otutab <- otutab[rowSums(otutab) > 0, colSums(otutab) > 0]
   rare <- vegan::rarecurve(otutab, step=step, tidy=TRUE)%>%
     dplyr::rename(sample_primers = Site, count = Sample, ASV = Species) %>%
@@ -256,10 +606,9 @@ rareplot <- function(ps, step="auto", threshold=0){
 }
 
 #' write DNAbin or AAbin to fasta
-write_fasta <- function(x, file = "", compress = FALSE, quiet=FALSE) {
+write_fasta <- function(x, file = "", compress = FALSE) {
   if(stringr::str_detect(file, "\\.gz$") & !compress){
     compress <- TRUE
-    if(!quiet) message(".gz detected in filename, compressing output file")
   }
   if (!is.null(dim(x))) {
     x <- as.list(as.data.frame(t(unclass(x))))
@@ -267,7 +616,7 @@ write_fasta <- function(x, file = "", compress = FALSE, quiet=FALSE) {
   if (inherits(x, "DNAbin")) {
     tmp <- DNAbin2char(x)
   } else if (is.list(x)) {
-    if (length(x[[1]] == 1)) {
+    if (length(x[[1]]) == 1L) {
       tmp <- unlist(x, use.names = TRUE)
     }
     else {
@@ -282,16 +631,15 @@ write_fasta <- function(x, file = "", compress = FALSE, quiet=FALSE) {
   res[seq(2, reslen, by = 2)] <- tmp
   if(!file == ""){
     f <- if(compress){
-        gzfile(file, "w")
-      } else {
-        file(file, "w")
+      gzfile(file, "w")
+    } else {
+      file(file, "w")
     }
     writeLines(res, f)
     close(f)
   } else {
     writeLines(res)
   }
-  if(!quiet){message("Wrote ", length(tmp), " sequences to ", file)}
   invisible(NULL)
 }
 
@@ -313,12 +661,12 @@ write_fasta <- function(x, file = "", compress = FALSE, quiet=FALSE) {
 summarise_index <- function(fq, qualityType = "Auto") {
   fF <- ShortRead::FastqStreamer(fq)
   on.exit(close(fF))
-
+  
   #Stream through fasta
   while( length(suppressWarnings(fqF <- yield(fF, qualityType = qualityType)))) {
     idF <- ShortRead::id(fqF)
   }
-
+  
   # Check if index is present in fastq header
   index_check <- stringr::str_extract(as.character(idF[[1]]), pattern="(?!:)(?:.(?!:))+$")
   if(stringr::str_detect(index_check, "[A-Z]+[A-Z]")){
@@ -346,7 +694,7 @@ summarise_index <- function(fq, qualityType = "Auto") {
 #'
 #' @examples
 get_qual_stats <- function (input, n = 5e+05) {
-
+  
   statdf <- data.frame(Cycle = integer(0), Mean = numeric(0),
                        Q25 = numeric(0), Q50 = numeric(0), Q75 = numeric(0),
                        Cum = numeric(0), file = character(0))
@@ -372,7 +720,7 @@ get_qual_stats <- function (input, n = 5e+05) {
     }  else {      rclabel <- paste("Reads: ", rc)
     }
     means <- rowsum(df$Score * df$Count, df$Cycle)/rowsum(df$Count,  df$Cycle)
-
+    
     get_quant <- function(xx, yy, q) {
       xx[which(cumsum(yy)/sum(yy) >= q)][[1]]
     }
@@ -389,7 +737,7 @@ get_qual_stats <- function (input, n = 5e+05) {
     } else {
       plotdf <- rbind(plotdf, cbind(df, file = basename(f)))
     }
-
+    
     statdf <- rbind(statdf, data.frame(Cycle = as.integer(rownames(means)),
                                        Mean = means, Q25 = as.vector(q25s), Q50 = as.vector(q50s),
                                        Q75 = as.vector(q75s), Cum = 10 * as.vector(cums)/rc,
@@ -398,15 +746,15 @@ get_qual_stats <- function (input, n = 5e+05) {
                                      label = basename(f), rclabel = rclabel, rc = rc,
                                      file = basename(f)))
   }
-
+  
   anndf$minScore <- min(anndf$minScore)
-
+  
   get_ee <- function(Q){
     ee <- 10^(-Q/ 10)
     return(ee)
   }
-
-
+  
+  
   plotdf.summary <- aggregate(Count ~ Cycle + Score, plotdf, sum)
   plotdf.summary$label <- paste(nrow(anndf), "files (aggregated)")
   means <- rowsum(plotdf.summary$Score * plotdf.summary$Count, plotdf.summary$Cycle)/rowsum(plotdf.summary$Count, plotdf.summary$Cycle)
@@ -453,150 +801,150 @@ train_idtaxa <- function(
     drop_malformed = FALSE,
     quiet = FALSE
 ) {
-    time <- Sys.time()
-
-    # Convert input
-    if (methods::is(x, "DNAbin")) {
-        seqs <- DNAbin2DNAstringset(x)
-    } else if (methods::is(x, "DNAStringSet")) {
-        seqs <- x
-    } else {
-        stop("'x' must be a DNAbin or DNAStringSet.")
-    }
-
-    if (length(seqs) == 0L) {
-        stop("Reference FASTA contains no sequences.")
-    }
-
-    # Remove Ns and gaps while preserving headers
-    headers <- names(seqs)
-
-    seqs <- Biostrings::DNAStringSet(
-        gsub("[Nn.-]", "", as.character(seqs))
+  time <- Sys.time()
+  
+  # Convert input
+  if (methods::is(x, "DNAbin")) {
+    seqs <- DNAbin2DNAstringset(x)
+  } else if (methods::is(x, "DNAStringSet")) {
+    seqs <- x
+  } else {
+    stop("'x' must be a DNAbin or DNAStringSet.")
+  }
+  
+  if (length(seqs) == 0L) {
+    stop("Reference FASTA contains no sequences.")
+  }
+  
+  # Remove Ns and gaps while preserving headers
+  headers <- names(seqs)
+  
+  seqs <- Biostrings::DNAStringSet(
+    gsub("[Nn.-]", "", as.character(seqs))
+  )
+  names(seqs) <- headers
+  
+  # Identify malformed records
+  malformed <- (
+    is.na(headers) |
+      headers == "" |
+      !grepl(";", headers, fixed = TRUE) |
+      grepl("(^;|;;|;$)", headers) |
+      grepl("(^|;)NA(;|$)", headers, ignore.case = TRUE) |
+      Biostrings::width(seqs) == 0L |
+      !grepl("[ACGT]", as.character(seqs), ignore.case = TRUE)
+  )
+  
+  if (any(malformed)) {
+    bad_headers <- headers[malformed]
+    bad_headers[is.na(bad_headers) | bad_headers == ""] <- "<missing header>"
+    
+    report <- paste0(sum(malformed)," malformed FASTA record(s) detected:\n  ",
+                     paste(head(bad_headers, 20L), collapse = "\n  "),
+                     if (sum(malformed) > 20L) {
+                       paste0(
+                         "\n  ... and ",
+                         sum(malformed) - 20L,
+                         " additional record(s)"
+                       )
+                     } else {
+                       ""
+                     }
     )
-    names(seqs) <- headers
-
-    # Identify malformed records
-    malformed <- (
-        is.na(headers) |
-        headers == "" |
-        !grepl(";", headers, fixed = TRUE) |
-        grepl("(^;|;;|;$)", headers) |
-        grepl("(^|;)NA(;|$)", headers, ignore.case = TRUE) |
-        Biostrings::width(seqs) == 0L |
-        !grepl("[ACGT]", as.character(seqs), ignore.case = TRUE)
+    if (!drop_malformed) {
+      stop(report, "\nSet 'drop_malformed = TRUE' to remove them.", call. = FALSE)
+    }
+    warning(report,"\nThese records will be removed.",call. = FALSE,immediate. = TRUE)
+    seqs <- seqs[!malformed]
+  }
+  
+  if (length(seqs) < 2L) {
+    stop("Fewer than two usable reference sequences remain.")
+  }
+  
+  if (orient) {
+    if (!quiet) message("Orienting sequences")
+    seqs <- DECIPHER::OrientNucleotides(seqs)
+  }
+  
+  # Extract taxonomy and add Root rank
+  taxonomy <- sub("^[^;]+;", "Root;", names(seqs))
+  
+  if (!quiet) {
+    message(length(unique(taxonomy)), " unique terminal taxa")
+  }
+  
+  # Prune over-represented terminal taxa
+  group_counts <- table(taxonomy)
+  remove <- logical(length(seqs))
+  
+  for (group in names(group_counts[group_counts > max_group_size])) {
+    index <- which(taxonomy == group)
+    remove[sample(index, length(index) - max_group_size)] <- TRUE
+  }
+  
+  if (!quiet) {
+    message(
+      sum(remove),
+      " sequences pruned from over-represented groups"
     )
-
-    if (any(malformed)) {
-        bad_headers <- headers[malformed]
-        bad_headers[is.na(bad_headers) | bad_headers == ""] <- "<missing header>"
-
-        report <- paste0(sum(malformed)," malformed FASTA record(s) detected:\n  ",
-            paste(head(bad_headers, 20L), collapse = "\n  "),
-            if (sum(malformed) > 20L) {
-                paste0(
-                    "\n  ... and ",
-                    sum(malformed) - 20L,
-                    " additional record(s)"
-                )
-            } else {
-                ""
-            }
-        )
-        if (!drop_malformed) {
-          stop(report, "\nSet 'drop_malformed = TRUE' to remove them.", call. = FALSE)
-        }
-        warning(report,"\nThese records will be removed.",call. = FALSE,immediate. = TRUE)
-        seqs <- seqs[!malformed]
+  }
+  
+  train <- seqs[!remove]
+  taxonomy <- taxonomy[!remove]
+  groups <- taxonomy
+  original_groups <- unique(groups)
+  
+  # Iteratively train and remove problem sequences
+  remove <- logical(length(train))
+  previous_problem_sequences <- integer()
+  problem_sequences <- integer()
+  
+  for (i in seq_len(max_iterations)) {
+    if (!quiet) message("Training iteration: ", i)
+    
+    training_set <- DECIPHER::LearnTaxa(
+      train = train[!remove],
+      taxonomy = taxonomy[!remove],
+      rank = NULL
+    )
+    
+    problem_sequences <- training_set$problemSequences$Index
+    
+    if (
+      length(problem_sequences) == 0L ||
+      identical(problem_sequences, previous_problem_sequences) ||
+      i == max_iterations
+    ) {
+      break
     }
-
-    if (length(seqs) < 2L) {
-        stop("Fewer than two usable reference sequences remain.")
+    
+    previous_problem_sequences <- problem_sequences
+    index <- which(!remove)[problem_sequences]
+    remove[index] <- TRUE
+    
+    if (!allow_group_removal) {
+      missing_groups <- setdiff(
+        original_groups,
+        groups[!remove]
+      )
+      
+      restore <- index[groups[index] %in% missing_groups]
+      remove[restore] <- FALSE
     }
-
-    if (orient) {
-        if (!quiet) message("Orienting sequences")
-        seqs <- DECIPHER::OrientNucleotides(seqs)
+    
+    if (sum(!remove) < 2L) {
+      stop("Fewer than two sequences remain after removing problematic training sequences.")
     }
-
-    # Extract taxonomy and add Root rank
-    taxonomy <- sub("^[^;]+;", "Root;", names(seqs))
-
-    if (!quiet) {
-        message(length(unique(taxonomy)), " unique terminal taxa")
-    }
-
-    # Prune over-represented terminal taxa
-    group_counts <- table(taxonomy)
-    remove <- logical(length(seqs))
-
-    for (group in names(group_counts[group_counts > max_group_size])) {
-        index <- which(taxonomy == group)
-        remove[sample(index, length(index) - max_group_size)] <- TRUE
-    }
-
-    if (!quiet) {
-        message(
-            sum(remove),
-            " sequences pruned from over-represented groups"
-        )
-    }
-
-    train <- seqs[!remove]
-    taxonomy <- taxonomy[!remove]
-    groups <- taxonomy
-    original_groups <- unique(groups)
-
-    # Iteratively train and remove problem sequences
-    remove <- logical(length(train))
-    previous_problem_sequences <- integer()
-    problem_sequences <- integer()
-
-    for (i in seq_len(max_iterations)) {
-        if (!quiet) message("Training iteration: ", i)
-
-        training_set <- DECIPHER::LearnTaxa(
-            train = train[!remove],
-            taxonomy = taxonomy[!remove],
-            rank = NULL
-        )
-
-        problem_sequences <- training_set$problemSequences$Index
-
-        if (
-            length(problem_sequences) == 0L ||
-            identical(problem_sequences, previous_problem_sequences) ||
-            i == max_iterations
-        ) {
-            break
-        }
-
-        previous_problem_sequences <- problem_sequences
-        index <- which(!remove)[problem_sequences]
-        remove[index] <- TRUE
-
-        if (!allow_group_removal) {
-            missing_groups <- setdiff(
-                original_groups,
-                groups[!remove]
-            )
-
-            restore <- index[groups[index] %in% missing_groups]
-            remove[restore] <- FALSE
-        }
-
-        if (sum(!remove) < 2L) {
-            stop("Fewer than two sequences remain after removing problematic training sequences.")
-        }
-    }
-
-    if (!quiet) {
-        message(sum(remove), " problem sequences removed")
-        message(length(problem_sequences), " problem sequences remaining")
-        message("Trained IDTAXA on ",sum(!remove)," sequences in ",format(Sys.time() - time, digits = 2))
-    }
-
-    return(training_set)
+  }
+  
+  if (!quiet) {
+    message(sum(remove), " problem sequences removed")
+    message(length(problem_sequences), " problem sequences remaining")
+    message("Trained IDTAXA on ",sum(!remove)," sequences in ",format(Sys.time() - time, digits = 2))
+  }
+  
+  return(training_set)
 }
 
 
