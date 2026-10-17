@@ -1,6 +1,6 @@
 process PHYLOSEQ_FILTER {
     tag "$primers"
-    label "phyloseq"
+    label "medium"
     label "env_r_phyloseq"
     publishDir { "${params.outdir}/modules/phyloseq_filter" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
     publishDir { "${params.outdir}/results/main_outputs/filtered" }, mode: 'copy'

@@ -1,6 +1,6 @@
 process MAKE_SEQTAB_PAIRED {
     tag "$primers; $read_group"
-    label "long"
+    label "medium"
     label "env_r_dada2"
     publishDir { "${params.outdir}/modules/make_seqtab_paired" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
 
