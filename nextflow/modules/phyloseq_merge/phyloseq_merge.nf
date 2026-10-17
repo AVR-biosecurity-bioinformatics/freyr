@@ -1,6 +1,6 @@
 process PHYLOSEQ_MERGE {
     tag "Whole dataset"
-    label "phyloseq"
+    label "high"
     label "env_r_phyloseq"
     publishDir { "${params.outdir}/modules/phyloseq_merge" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
     publishDir { "${params.outdir}/results/main_outputs/merged" }, pattern: '*{_filtered,_unfiltered}.{csv,rds,fasta}', mode: 'copy'
