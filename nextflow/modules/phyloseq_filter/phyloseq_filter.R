@@ -71,9 +71,31 @@ cluster_threshold <- suppressWarnings(as.integer(cluster_threshold))
 
 # Taxonomic filtering
 
+# Check taxonomy table outputs
+### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
+tax_cols <- c(
+    "Root",
+    "Kingdom",
+    "Phylum",
+    "Class",
+    "Order",
+    "Family",
+    "Genus",
+    "Species"
+)
+
+if (!identical(phyloseq::rank_names(ps), tax_cols)) {
+    warning(
+        "Taxonomy ranks do not meet staging database expectations.\n",
+        "Expected: ", paste(tax_cols, collapse = ", "), "\n",
+        "Observed: ", paste(phyloseq::rank_names(ps), collapse = ", ")
+    )
+}
+
 # Extract the taxonomy and OTU table once.
 taxtab <- as(phyloseq::tax_table(ps), "matrix")
 otutab <- as(phyloseq::otu_table(ps), "matrix")
+storage.mode(otutab) <- "integer" # Force integer storage of discrete count matrix
 taxa_are_rows <- phyloseq::taxa_are_rows(ps)
 
 if (taxa_are_rows) {
@@ -84,14 +106,20 @@ if (taxa_are_rows) {
 keep_taxa <- rep(TRUE, nrow(taxtab))
 names(keep_taxa) <- rownames(taxtab)
 
+# Helper function that handles missing taxonomy
+matches_taxon <- function(values, target) {
+    is.na(target) | (!is.na(values) & values == target)
+}
+
 # Taxonomic filters
-if (!is.na(target_kingdom)) keep_taxa <- keep_taxa & taxtab[, "Kingdom"] == target_kingdom
-if (!is.na(target_phylum))  keep_taxa <- keep_taxa & taxtab[, "Phylum"]  == target_phylum
-if (!is.na(target_class))   keep_taxa <- keep_taxa & taxtab[, "Class"]   == target_class
-if (!is.na(target_order))   keep_taxa <- keep_taxa & taxtab[, "Order"]   == target_order
-if (!is.na(target_family))  keep_taxa <- keep_taxa & taxtab[, "Family"]  == target_family
-if (!is.na(target_genus))   keep_taxa <- keep_taxa & taxtab[, "Genus"]   == target_genus
-if (!is.na(target_species)) keep_taxa <- keep_taxa & taxtab[, "Species"] == target_species
+keep_taxa <- keep_taxa &
+    matches_taxon(taxtab[, "Kingdom"], target_kingdom) &
+    matches_taxon(taxtab[, "Phylum"], target_phylum) &
+    matches_taxon(taxtab[, "Class"], target_class) &
+    matches_taxon(taxtab[, "Order"], target_order) &
+    matches_taxon(taxtab[, "Family"], target_family) &
+    matches_taxon(taxtab[, "Genus"], target_genus) &
+    matches_taxon(taxtab[, "Species"], target_species)
 
 # Sequence level soft filters
 seqs_passing <- with(
@@ -190,118 +218,160 @@ if (taxa_are_rows ) {
 message(phyloseq::nsamples(ps) - phyloseq::nsamples(ps_sampfiltered), " Samples and ", phyloseq::ntaxa(ps) - phyloseq::ntaxa(ps_sampfiltered), " ASVs dropped")
 
 
-### cluster filtered sequences
+### cluster filtered ASVs ------------------------------------------------------------------------
 
 seqs <- ps_sampfiltered %>% phyloseq::refseq()
 
-if (cluster_threshold %>% is.na){
-  
-    # make clusters "NA" if threshold not given   
-    cluster_tibble <- 
-        tibble::as_tibble_col(names(seqs_combined), column_name = "seq_name") %>%
-        dplyr::mutate(cluster = NA_integer_)
+if (is.na(cluster_threshold)) {
 
-    # for export
-    clusters_out <- cluster_tibble
+    # No clustering requested.
+    cluster_dt <- data.table::data.table(
+        seq_name = names(seqs),
+        cluster = NA_integer_
+    )
+
+    clusters_out <- data.table::copy(cluster_dt)
 
 } else {
-    set.seed(1); clusters <- DECIPHER::Clusterize(
-        seqs, 
+
+    set.seed(1)
+
+    clusters <- DECIPHER::Clusterize(
+        seqs,
         cutoff = 1 - (cluster_threshold / 100),
         invertCenters = TRUE,
         # maxPhase1 = 1e5,
         # maxPhase2 = 1e4,
-        # maxPhase3 = 1e4, 
+        # maxPhase3 = 1e4,
         # singleLinkage = FALSE,
         # rareKmers = 100,
         processors = 1
     )
 
-    # for internal use
-    cluster_tibble <- 
-        clusters %>% 
-        tibble::as_tibble(rownames = "seq_name") %>%
-        dplyr::mutate(cluster = abs(cluster))
+    # Clusterize returns sequence names as row names and cluster assignments
+    # in a one-column object.
+    clusters_out <- data.table::data.table(
+        seq_name = rownames(clusters),
+        cluster = as.integer(clusters[, 1L])
+    )
 
-    # for export
-    clusters_out <- 
-        clusters %>% 
-        tibble::as_tibble(rownames = "seq_name") 
-  
+    # Internal lookup uses absolute cluster IDs.
+    cluster_dt <- data.table::copy(clusters_out)
+    cluster_dt[, cluster := abs(cluster)]
 }
 
-### output filtered results per primer pair; from step_output_summary()
+data.table::setkey(cluster_dt, seq_name)
 
-# Export raw csv  - NOTE: This is memory intensive
-melt_phyloseq(ps_sampfiltered) %>% 
-    dplyr::left_join(., cluster_tibble, by = "seq_name") %>% 
-    dplyr::relocate(cluster, .after = sequence) %>%
-    readr::write_csv(., paste0("raw_filtered_",primers,".csv"))
+### outputs -----------------------------------------------------------------------------
 
-# Export species level summary of filtered results
-summarise_phyloseq(ps_sampfiltered) %>%
-    dplyr::left_join(., cluster_tibble, by = "seq_name") %>%
-    dplyr::relocate(cluster, .after = sequence) %>%
-    readr::write_csv(., paste0("summary_filtered_",primers,".csv"))
+# Export raw csv 
+write_raw_phyloseq(
+    ps = ps_sampfiltered,
+    cluster_dt = cluster_dt,
+    filename = paste0(
+        "raw_filtered_",
+        primers,
+        ".csv"
+    )
+)
 
-# save sequences as .fasta file (with taxonomy in header, in format "seq_name|primers;Root;Kingdom;Phylum;Class;Order;Family;Genus;Species")
-seqs_output <- phyloseq::refseq(ps_sampfiltered)
+# Create summmary from phyloseq
+write_phyloseq_summary(
+    ps = ps_sampfiltered,
+    cluster_dt = cluster_dt,
+    tax_cols = tax_cols,
+    filename = paste0(
+        "summary_filtered_",
+        primers,
+        ".csv"
+    )
+)
 
-seq_names_new <- 
-    phyloseq::tax_table(ps_sampfiltered) %>%
-    as("matrix") %>%
-    tibble::as_tibble(rownames = "seq_name") %>%
-    # ensure sequence name order is same as the DSS object
-    dplyr::arrange(factor(seq_name, levels = names(seqs_output))) %>%
-    # add primers
-    dplyr::mutate(primers = primers, .after = seq_name) %>%
-    # unite columns into a single header string per sequence
-    tidyr::unite(col = "lineage", Root:Species, sep = ";") %>%
-    tidyr::unite(col = "id", c(seq_name, primers), sep = "|") %>%
-    tidyr::unite(col = "header", c(id, lineage), sep = ";") %>%
-    dplyr::pull(header)
+### Phyloseq outputs -----------------------------------------------------------------------------
 
-names(seqs_output) <- seq_names_new
-
-write_fasta(seqs_output, paste0("asvs_filtered_", primers, ".fasta"))  
 
 ## output phyloseq and component data; from step_output_ps
 
 # save seqtab as wide tibble (rows = seq_name, cols = ASV name (hash), cells = abundance)
-seqtab_out <- phyloseq::otu_table(ps_sampfiltered) %>%
-    as("matrix") %>%
-    tibble::as_tibble(rownames = "seq_name") %>%
-    dplyr::left_join(., cluster_tibble, by = "seq_name") %>% 
-    dplyr::relocate(cluster, .after = seq_name)
+seqtab_out <- data.table::as.data.table(
+    as(phyloseq::otu_table(ps_sampfiltered), "matrix"),
+    keep.rownames = "seq_name"
+)
+seqtab_out <- cluster_dt[seqtab_out, on = "seq_name"]
+data.table::setcolorder(seqtab_out, c("seq_name", "cluster", setdiff(names(seqtab_out), c("seq_name", "cluster"))) )
 
 # save taxtab as long tibble (rows = ASV, cols = tax rankings)
-taxtab_out <- phyloseq::tax_table(ps_sampfiltered) %>%
-    as("matrix") %>%
-    tibble::as_tibble(rownames = "seq_name") %>%
-    dplyr::left_join(., cluster_tibble, by = "seq_name") %>% 
-    dplyr::relocate(cluster, .after = seq_name) %>%
-    # convert propagated taxonomy to NA values
-    dplyr::mutate( 
-        dplyr::across(Root:Species, ~ dplyr::if_else(stringr::str_detect(.x, "^\\w__"), NA, .x))
+taxtab_out <- data.table::as.data.table(
+    as(phyloseq::tax_table(ps_sampfiltered), "matrix"),
+    keep.rownames = "seq_name"
+)
+
+taxtab_out <- cluster_dt[
+    taxtab_out,
+    on = "seq_name"
+]
+
+data.table::setcolorder(
+    taxtab_out,
+    c(
+        "seq_name",
+        "cluster",
+        setdiff(
+            names(taxtab_out),
+            c("seq_name", "cluster")
+        )
     )
+)
+
+for (col in tax_cols) {
+    taxtab_out[
+        grepl("^\\w__", get(col)),
+        (col) := NA_character_
+    ]
+}
 
 # Check taxonomy table outputs
 ### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
-if(!all(colnames(taxtab_out) == c("seq_name", "cluster", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
-    message("Warning: Taxonomy table columns do not meet expectations for the staging database \n
-            Database requires the columns: seq_name, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species ")
+expected_cols <- c("seq_name", "cluster", tax_cols)
+if (!identical(names(taxtab_out), expected_cols)) {
+    message(
+        "Warning: Taxonomy table columns do not meet expectations for the staging database.\n",
+        "Database requires the columns: ", paste(expected_cols, collapse = ", ")
+    )
 }
 
+# save sequences as .fasta file (with taxonomy in header, in format "seq_name|primers;Root;Kingdom;Phylum;Class;Order;Family;Genus;Species")
+seqs_output <- phyloseq::refseq(ps_sampfiltered)
+
+# Reuse taxtab output
+taxtab_fasta <- taxtab_out[
+    match(names(seqs_output), seq_name)
+]
+
+seq_names_new <- taxtab_fasta[
+    ,
+    paste(
+        paste(seq_name, primers, sep = "|"),
+        do.call(paste, c(.SD, sep = ";")),
+        sep = ";"
+    ),
+    .SDcols = tax_cols
+]
+
+names(seqs_output) <- seq_names_new
+
 # save samplesheet
-samdf_out <- phyloseq::sample_data(ps_sampfiltered) %>%
-    as("matrix") %>%
-    tibble::as_tibble()
+samdf_out <- data.table::as.data.table(
+    as(phyloseq::sample_data(ps_sampfiltered), "data.frame"),
+    keep.rownames = "sample_primers"
+)
 
 # Write out
-readr::write_csv(clusters_out, paste0("clusters_",primers,".csv"))
-readr::write_csv(seqtab_out, paste0("seqtab_filtered_",primers,".csv"))
-readr::write_csv(taxtab_out, paste0("taxtab_filtered_",primers,".csv"))
-readr::write_csv(samdf_out, paste0("samdf_filtered_",primers,".csv"))
+data.table::fwrite(clusters_out, paste0("clusters_", primers, ".csv"))
+data.table::fwrite(seqtab_out, paste0("seqtab_filtered_", primers, ".csv"))
+data.table::fwrite(taxtab_out, paste0("taxtab_filtered_", primers, ".csv"))
+data.table::fwrite(samdf_out, paste0("samdf_filtered_", primers, ".csv"))
+write_fasta(seqs_output, paste0("asvs_filtered_", primers, ".fasta"))  
 saveRDS(ps_sampfiltered, paste0("ps_filtered_",primers,".rds"))
 
 

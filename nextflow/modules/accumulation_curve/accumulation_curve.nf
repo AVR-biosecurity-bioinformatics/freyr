@@ -1,6 +1,6 @@
 process ACCUMULATION_CURVE {
     tag "$primers"
-    label "phyloseq"
+    label "high"
     label "env_r_phyloseq"
     publishDir { "${params.outdir}/modules/accumulation_curve" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
     publishDir { "${params.outdir}/results/main_outputs/unfiltered" }, mode: 'copy'

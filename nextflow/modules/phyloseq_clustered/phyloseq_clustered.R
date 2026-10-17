@@ -326,12 +326,17 @@ if ( !any(clusters_tibble$cluster %>% is.na) ){
         dplyr::relocate(Root, Kingdom, Phylum, Class, Order, Family, Genus, Species, sequence, cluster, .after = last_col())
 
     # create clustered phyloseq object
-    otutab_clustered_ps <- 
-        seqtab_clustered %>%
+    otutab_clustered <- seqtab_clustered %>%
         dplyr::select(-cluster) %>%
         tibble::column_to_rownames(var = "seq_name") %>%
-        as.matrix() %>%
-        phyloseq::otu_table(taxa_are_rows = TRUE)
+        as.matrix()
+
+    storage.mode(otutab_clustered) <- "integer"
+
+    otutab_clustered_ps <- phyloseq::otu_table(
+        otutab_clustered,
+        taxa_are_rows = TRUE
+    )
 
     taxtab_clustered_ps <- 
         taxtab_clustered %>%

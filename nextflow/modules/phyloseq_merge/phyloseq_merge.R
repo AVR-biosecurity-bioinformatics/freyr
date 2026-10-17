@@ -63,12 +63,12 @@ seqs_uf <- Biostrings::DNAStringSet(
 write_fasta(seqs_uf, "asvs_unfiltered.fasta")
 
 
-## merge unfiltered phyloseq objects
-ps_u <- merge_phyloseq_new(ps_unfiltered)
+## merge unfiltered phyloseq objects - These must have disjoint samples
+ps_u <- merge_phyloseq_disjoint_samples(ps_unfiltered)
 
 # Check taxonomy table outputs
 ### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
-expected_ranks <- c(
+tax_cols <- c(
     "Root",
     "Kingdom",
     "Phylum",
@@ -79,10 +79,10 @@ expected_ranks <- c(
     "Species"
 )
 
-if (!identical(phyloseq::rank_names(ps_u), expected_ranks)) {
+if (!identical(phyloseq::rank_names(ps_u), tax_cols)) {
     warning(
         "Taxonomy ranks do not meet staging database expectations.\n",
-        "Expected: ", paste(expected_ranks, collapse = ", "), "\n",
+        "Expected: ", paste(tax_cols, collapse = ", "), "\n",
         "Observed: ", paste(phyloseq::rank_names(ps_u), collapse = ", ")
     )
 }
@@ -94,13 +94,52 @@ data.table::fwrite(
 )
 
 # Export species level summary of unfiltered results
-summarise_phyloseq(ps_u) %>%
-    readr::write_csv(., paste0("summary_unfiltered.csv"))
+ps_u_summary <- summarise_phyloseq(ps_u)
+data.table::fwrite(ps_u_summary, "summary_unfiltered.csv")
 
 ## output phyloseq and component data
 
 # Write out whole phyloseq object
 saveRDS(ps_u, paste0("ps_unfiltered.rds"))
+
+## read tracking output from unfiltered phyloseq
+## Summarise classified reads at each taxonomic rank.
+samdf <- data.table::as.data.table(
+  as(phyloseq::sample_data(ps_u), "data.frame"),
+  keep.rownames = "sample_primers"
+)
+
+sample_cols <- samdf$sample_primers
+
+abundance <- as.matrix(ps_u_summary[, ..sample_cols])
+storage.mode(abundance) <- "integer"
+
+readsout <- data.table::rbindlist(
+  lapply(tax_cols, function(rank) {
+    data.table::data.table(
+      stage = paste0("classified_", tolower(rank)),
+      sample_primers = sample_cols,
+      pairs = colSums(
+        abundance[
+          !is.na(ps_u_summary[[rank]]) &
+            !grepl("^\\w__", ps_u_summary[[rank]]),
+          ,
+          drop = FALSE
+        ]
+      )
+    )
+  })
+)
+
+readsout <- samdf[
+  readsout,
+  on = "sample_primers"
+][
+  ,
+  .(stage, sample_primers, read_group, primers, pairs)
+]
+
+data.table::fwrite(readsout,"ps_u_readsout.csv" )
 
 # save seqtab as wide tibble (rows = sample_primers, cols = ASV name (hash), cells = abundance)
 phyloseq::otu_table(ps_u) %>%
@@ -129,55 +168,7 @@ rm(ps_unfiltered)
 rm(seqs_uf)
 gc()
 
-## read tracking output from unfiltered phyloseq
-rank_cols <- colnames(phyloseq::tax_table(ps_u)) # only retrieve this once
-
-# try to save memory
-ps_u_summary <- summarise_phyloseq(ps_u)
-ps_u_samplenames <- sample_names(ps_u)
-ps_u_sampledata <- 
-    phyloseq::sample_data(ps_u) %>%
-    as("data.frame") %>%
-    dplyr::select(sample_primers, read_group, primers)
-rm(ps_u)
-gc()
-message("Pre-readcount files created!")
-
-ps_u_summary %>% 
-    dplyr::mutate(
-        dplyr::across(
-            tidyselect::all_of(ps_u_samplenames), 
-            ~ dplyr::na_if(., 0)
-        )
-    ) %>%
-    tidyr::pivot_longer(cols = ps_u_samplenames, names_to="sample_primers", values_to = "Abundance", values_drop_na = TRUE) %>%
-    dplyr::left_join(ps_u_sampledata, by = "sample_primers") %>%
-    dplyr::mutate(
-        dplyr::across(
-            tidyselect::any_of(rank_cols), 
-            ~ ifelse(!stringr::str_detect(.x, "__"), Abundance, NA_integer_)
-        )
-    ) %>% 
-    dplyr::group_by(sample_primers, read_group, primers) %>%
-    dplyr::summarise(
-        dplyr::across(
-            tidyselect::any_of(rank_cols),
-            ~ sum(., na.rm = TRUE),
-            .names = "classified_{.col}"
-        )
-    ) %>% 
-    tidyr::pivot_longer(cols = tidyselect::starts_with("classified_"), names_to = "stage", values_to = "pairs") %>% 
-    dplyr::mutate(stage = stringr::str_to_lower(stage)) %>%
-    dplyr::select(stage, sample_primers, read_group, primers, pairs) %>%
-    readr::write_csv("ps_u_readsout.csv")
-
-rm(ps_u_summary)
-rm(ps_u_samplenames)
-rm(ps_u_sampledata)
-gc()
-
 ### filtered ----------------------------------------------------------------------------------------------------------
-
 
 ps_filtered <- # convert Groovy to R list format
     stringr::str_extract_all(ps_filtered, pattern = "[^\\s,\\[\\]]+") %>% unlist()
@@ -199,13 +190,13 @@ seqs_f <- Biostrings::DNAStringSet(
 )
 write_fasta(seqs_f, "asvs_filtered.fasta")
 
-## merge filtered phyloseq objects
-ps_f <- merge_phyloseq_new(ps_filtered)
+## merge filtered phyloseq objects - These must have disjoint samples
+ps_f <- merge_phyloseq_disjoint_samples(ps_filtered)
 
-if (!identical(phyloseq::rank_names(ps_f), expected_ranks)) {
+if (!identical(phyloseq::rank_names(ps_f), tax_cols)) {
     warning(
         "Taxonomy ranks do not meet staging database expectations.\n",
-        "Expected: ", paste(expected_ranks, collapse = ", "), "\n",
+        "Expected: ", paste(tax_cols, collapse = ", "), "\n",
         "Observed: ", paste(phyloseq::rank_names(ps_f), collapse = ", ")
     )
 }
@@ -227,43 +218,76 @@ data.table::fwrite(
 saveRDS(ps_f, paste0("ps_filtered.rds"))
 
 # save seqtab as wide tibble (rows = sample_primers, cols = ASV name (hash), cells = abundance)
-seqtab_out_f <- phyloseq::otu_table(ps_f) %>%
-    as("matrix") %>%
-    tibble::as_tibble(rownames = "sample_primers") %>%
-    write_csv("seqtab_filtered.csv")
+data.table::fwrite(
+    data.table::as.data.table(
+        as(phyloseq::otu_table(ps_f), "matrix"),
+        keep.rownames = "sample_primers"
+    ),
+    "seqtab_filtered.csv"
+)
 
 # save taxtab as long tibble (rows = ASV, cols = tax rankings)
-taxtab_out_f <- phyloseq::tax_table(ps_f) %>%
-    as("matrix") %>%
-    tibble::as_tibble(rownames = "seq_name") %>%
-    # convert propagated taxonomy to NA values
-    dplyr::mutate( 
-        dplyr::across(Root:Species, ~ dplyr::if_else(stringr::str_detect(.x, "^\\w__"), NA, .x))
-    ) %>%
-    write_csv("taxtab_filtered.csv")
+taxtab_out_f <- data.table::as.data.table(
+    as(phyloseq::tax_table(ps_f), "matrix"),
+    keep.rownames = "seq_name"
+)
+for (col in tax_cols) {
+    taxtab_out_f[
+        grepl("^\\w__", get(col)),
+        (col) := NA_character_
+    ]
+}
+data.table::fwrite(
+    taxtab_out_f,
+    "taxtab_filtered.csv"
+)
 
 # Check taxonomy table outputs
 ### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
-if(!all(colnames(taxtab_out_f) == c("seq_name", "Root", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"))){
-    message("Warning: Taxonomy table columns do not meet expectations for the staging database \n
-            Database requires the columns: seq_name, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species ")
+expected_cols <- c("seq_name", tax_cols)
+if (!identical(names(taxtab_out_f), expected_cols)) {
+    message(
+        "Warning: Taxonomy table columns do not meet expectations for the staging database.\n",
+        "Database requires the columns: ", paste(expected_cols, collapse = ", ")
+    )
 }
 
 # save samplesheet
-phyloseq::sample_data(ps_f) %>%
-    as("matrix") %>%
-    tibble::as_tibble() %>%
-    write_csv("samdf_filtered.csv")
+samdf <- data.table::as.data.table(
+    as(phyloseq::sample_data(ps_f), "data.frame")
+)
+data.table::fwrite(samdf, "samdf_filtered.csv")
 
 ## read tracking output from filtered phyloseq
-phyloseq::sample_sums(ps_f) %>%
-    tibble::enframe(name = "sample_primers", value = "pairs")%>%
-    dplyr::left_join(phyloseq::sample_data(ps_f) %>%
-                     as("data.frame") %>%
-                     dplyr::select(sample_primers, read_group, primers)) %>% 
-    dplyr::mutate(stage = "filter_sample_taxon") %>% 
-    dplyr::select(stage, sample_primers, read_group, primers, pairs) %>% 
-    readr::write_csv("ps_f_readsout.csv")
+sample_sums_f <- phyloseq::sample_sums(ps_f)
+
+readsout <- data.table::data.table(
+    sample_primers = names(sample_sums_f),
+    pairs = unname(sample_sums_f)
+)
+
+readsout <- samdf[
+    readsout,
+    on = "sample_primers"
+]
+
+readsout[, stage := "filter_sample_taxon"]
+
+required_cols <- c(
+    "stage",
+    "sample_primers",
+    "read_group",
+    "primers",
+    "pairs"
+)
+
+# Reorder and drop all unwanted metadata columns.
+readsout <- readsout[, ..required_cols]
+
+data.table::fwrite(
+    readsout,
+    "ps_f_readsout.csv"
+)
 
 # stop(" *** stopped manually *** ") ##########################################
 }, 
