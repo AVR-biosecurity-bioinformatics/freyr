@@ -136,7 +136,10 @@ workflow FREYR {
     //// create channel of primer parameters
     PARSE_INPUTS.out.primer_params_parsed
         .flatten()
-        .splitCsv ( header: true )
+        .splitCsv(
+            header: true,
+            sep: '\t'
+        )
         .map { header -> 
             [ header.primers, header ]
             }
