@@ -362,195 +362,221 @@ merge_phyloseq_disjoint_samples <- function(arguments) {
   )
 }
 
-summarise_phyloseq <- function(ps) {
-  otutab <- as(phyloseq::otu_table(ps), "matrix")
-  storage.mode(otutab) <- "integer" # Force integer storage of discrete count matrix
-  if (!phyloseq::taxa_are_rows(ps)) otutab <- t(otutab)
-  
-  sample_cols <- colnames(otutab)
-  
-  df <- data.table::as.data.table(
-    otutab,
-    keep.rownames = "seq_name"
-  )
-  
-  df[, sequence := as.character(phyloseq::refseq(ps)[seq_name])]
-  
-  taxtab <- data.table::as.data.table(
-    as(phyloseq::tax_table(ps), "matrix"),
-    keep.rownames = "seq_name"
-  )
-  
-  tax_cols <- setdiff(names(taxtab), "seq_name")
-  
-  df <- taxtab[df, on = "seq_name"]
-  
-  data.table::setcolorder(
-    df,
-    c("seq_name", "sequence", tax_cols, sample_cols)
-  )
-  
-  df
+summarise_phyloseq <- function(
+    ps = NULL,
+    otutab = NULL,
+    taxtab = NULL,
+    seqs = NULL
+) {
+
+    # Extract components from phyloseq if supplied.
+    if (!is.null(ps)) {
+        otutab <- as(phyloseq::otu_table(ps),"matrix")
+        storage.mode(otutab) <- "integer"
+
+        if (!phyloseq::taxa_are_rows(ps)) {
+            otutab <- t(otutab)
+        }
+
+        taxtab <- data.table::as.data.table(
+            as(phyloseq::tax_table(ps),"matrix"),
+            keep.rownames = "seq_name"
+        )
+
+        seqs <- phyloseq::refseq(ps)
+
+    } else {
+
+        if (is.null(otutab)) {
+            stop("Either ps or otutab must be supplied.")
+        }
+
+        if (!is.matrix(otutab)) {
+            stop("otutab must be a matrix.")
+        }
+    }
+
+    # Convert abundance matrix to wide output table.
+    sample_cols <- colnames(otutab)
+
+    df <- data.table::as.data.table(
+        otutab,
+        keep.rownames = "seq_name"
+    )
+
+    # Add sequences if available.
+    if (!is.null(seqs)) {
+        df[,sequence := as.character(seqs[seq_name])]
+    }
+
+    # Add taxonomy if available.
+    if (!is.null(taxtab)) {
+        taxtab <- data.table::as.data.table(
+            taxtab,
+            keep.rownames = "seq_name"
+        )
+
+        tax_cols <- setdiff(
+            names(taxtab),
+            "seq_name"
+        )
+
+        df <- taxtab[
+            df,
+            on = "seq_name"
+        ]
+
+        data.table::setcolorder(
+            df,
+            c(
+                "seq_name",
+                if (!is.null(seqs)) "sequence",
+                tax_cols,
+                sample_cols
+            )
+        )
+    }
+
+    df
 }
 
 # Convert a phyloseq object into a long data.table containing one row per non-zero sample–taxon observation.
-melt_phyloseq <- function(ps) {
-  
-  ## Abundance table-
-  otutab <- as(phyloseq::otu_table(ps), "matrix")
-  storage.mode(otutab) <- "integer" # Force integer storage of discrete count matrix
-  if(!phyloseq::taxa_are_rows(ps)){otutab <- t(otutab)}
-  
-  # Identify only non-zero observations.
-  index <- which(otutab > 0, arr.ind = TRUE)
-  
-  # If no non-zero obs, exit early
-  if (length(index) == 0L) {return(data.table::data.table()) }
-  
-  # Convert otu table to tall form (one sample-taxon per row)
-  df <- data.table::data.table(
-    seq_name = rownames(otutab)[index[, "row"]],
-    sample_primers = colnames(otutab)[index[, "col"]],
-    Abundance = otutab[index]
-  )
-  
-  ## Add Sample metadata
-  if (length(phyloseq::sample_variables(ps)) > 0L) {
-    samdf <- data.table::as.data.table(
-      as(phyloseq::sample_data(ps), "data.frame"),
-      keep.rownames = ".sample_name"
-    )
-    
-    # Match metadata against sample names in the abundance table.
-    sample_index <- match(df$sample_primers, samdf$.sample_name)
-    
-    # Avoid duplicating the sample identifier if sample_data already has sample_primers
-    sample_columns <- setdiff(names(samdf), c(".sample_name", "sample_primers"))
-    if (length(sample_columns) > 0L) {
-      df <- cbind(
-        df,
-        samdf[sample_index, sample_columns, with = FALSE]
-      )
-    }
-  }
-  
-  ## Add Taxonomy table
-  if (length(phyloseq::rank_names(ps)) > 0L) {
-    taxtab <- data.table::as.data.table(
-      as(phyloseq::tax_table(ps), "matrix"),
-      keep.rownames = ".seq_name"
-    )
-    taxon_index <- match(df$seq_name, taxtab$.seq_name)
-    taxonomy_columns <- setdiff(names(taxtab),".seq_name")
-    
-    if (length(taxonomy_columns) > 0L) {
-      df <- cbind(df, taxtab[taxon_index, taxonomy_columns, with = FALSE] )
-    }
-  }
-  
-  ## Add sequences
-  seqs <- phyloseq::refseq(ps)
-  if (!is.null(seqs)) {
-    sequence_index <- match(df$seq_name, names(seqs))
-    df[, sequence := as.character(seqs[sequence_index])]
-  }
-  
-  # Arrange by Abundance, then sequence names (to approx. phyloseq behavior)
-  data.table::setorder(df, -Abundance, seq_name )
-  return(df)
-}
-
-# Write raw phyloseq
-write_raw_phyloseq <- function(
-    ps,
-    cluster_dt,
-    filename
+melt_phyloseq <- function(
+    ps = NULL,
+    otutab = NULL,
+    taxtab = NULL,
+    samdf = NULL,
+    seqs = NULL
 ) {
-  
-  raw_dt <- cluster_dt[
-    melt_phyloseq(ps),
-    on = "seq_name"
-  ]
-  
-  data.table::setcolorder(
-    raw_dt,
-    c(
-      "seq_name",
-      "sequence",
-      "cluster",
-      setdiff(
-        names(raw_dt),
-        c(
-          "seq_name",
-          "sequence",
-          "cluster"
+
+    # Extract components from phyloseq if supplied.
+    if (!is.null(ps)) {
+        otutab <- as(phyloseq::otu_table(ps),"matrix")
+        storage.mode(otutab) <- "integer"
+
+        if (!phyloseq::taxa_are_rows(ps)) {
+            otutab <- t(otutab)
+        }
+
+        if (length(phyloseq::sample_variables(ps)) > 0L) {
+            samdf <- data.table::as.data.table(
+                as(phyloseq::sample_data(ps),"data.frame"),
+                keep.rownames = "sample_primers"
+            )
+        }
+
+        if (length(phyloseq::rank_names(ps)) > 0L) {
+            taxtab <- data.table::as.data.table(
+                as(phyloseq::tax_table(ps),"matrix"),
+                keep.rownames = "seq_name"
+            )
+        }
+
+        seqs <- phyloseq::refseq(ps)
+
+    } else {
+        # Individual objects input
+        if (is.null(otutab)) {
+            stop("Either ps or otutab must be supplied.")
+        }
+
+        if (!is.matrix(otutab)) {
+          stop("otutab must be a matrix.")
+        }
+    }
+
+    # Identify non-zero observations.
+    index <- which(otutab > 0, arr.ind = TRUE )
+
+    # Exit early if no observations exist.
+    if (!nrow(index)) {
+        return(data.table::data.table())
+    }
+
+    # Convert to one row per sample-taxon observation.
+    df <- data.table::data.table(
+        seq_name = rownames(otutab)[index[, "row"]],
+        sample_primers = colnames(otutab)[index[, "col"]],
+        Abundance = otutab[index]
+    )
+
+    # Add sample metadata.
+    if (!is.null(samdf)) {
+        samdf <- data.table::as.data.table(
+            samdf,
+            keep.rownames = "sample_primers"
         )
-      )
-    )
-  )
-  
-  data.table::fwrite(
-    raw_dt,
-    filename
-  )
-  
-  invisible(NULL)
-}
 
-# Write phyloseq summary
-write_phyloseq_summary <- function(
-    ps,
-    cluster_dt,
-    filename,
-    tax_cols,
-    filters = NULL
-) {
-  summary_dt <- summarise_phyloseq(ps)
-  
-  # Optionally add sequence-filter results.
-  if (!is.null(filters)) {
-    summary_dt <- filters[
-      summary_dt,
-      on = c("seq_name", "sequence")
-    ]
-  }
-  
-  # Add cluster assignments.
-  summary_dt <- cluster_dt[
-    summary_dt,
-    on = "seq_name"
-  ]
-  
-  preferred_cols <- c(
-    "seq_name",
-    "sequence",
-    "cluster",
-    tax_cols,
-    "chimera_filter",
-    "length_filter",
-    "phmm_filter",
-    "frame_filter"
-  )
-  
-  preferred_cols <- intersect(
-    preferred_cols,
-    names(summary_dt)
-  )
-  
-  data.table::setcolorder(
-    summary_dt,
-    c(
-      preferred_cols,
-      setdiff(names(summary_dt), preferred_cols)
+        sample_columns <- setdiff(
+            names(samdf),
+            "sample_primers"
+        )
+
+        if (length(sample_columns)) {
+            sample_index <- match(
+                df$sample_primers,
+                samdf$sample_primers
+            )
+
+            df <- cbind(
+                df,
+                samdf[
+                    sample_index,
+                    sample_columns,
+                    with = FALSE
+                ]
+            )
+        }
+    }
+
+    # Add taxonomy.
+    if (!is.null(taxtab)) {
+        taxtab <- data.table::as.data.table(
+            taxtab,
+            keep.rownames = "seq_name"
+        )
+
+        taxonomy_columns <- setdiff(
+            names(taxtab),
+            "seq_name"
+        )
+
+        if (length(taxonomy_columns)) {
+            taxon_index <- match(
+                df$seq_name,
+                taxtab$seq_name
+            )
+
+            df <- cbind(
+                df,
+                taxtab[
+                    taxon_index,
+                    taxonomy_columns,
+                    with = FALSE
+                ]
+            )
+        }
+    }
+
+    # Add sequences.
+    if (!is.null(seqs)) {
+        sequence_index <- match(df$seq_name,names(seqs))
+
+        df[
+            ,
+            sequence := as.character(
+                seqs[sequence_index]
+            )
+        ]
+    }
+
+    data.table::setorder(
+        df,
+        -Abundance,
+        seq_name
     )
-  )
-  
-  data.table::fwrite(
-    summary_dt,
-    filename
-  )
-  
-  invisible(NULL)
+
+    df
 }
 
 # Rarefaction / species accumulation plot
@@ -1001,3 +1027,361 @@ DNAbin2char <- function(x){
   return(out)
 }
 
+
+# Convert missing lower-rank classifications to labels based on the
+# lowest successfully classified rank.
+na_to_unclassified <- function(
+    x,
+    sep = "__",
+    rownames = TRUE,
+    quiet = FALSE
+) {
+
+  # Extract the taxonomy table and record the input type.
+  if (inherits(x, "phyloseq")) {
+    tax <- as(
+      phyloseq::tax_table(x),
+      "matrix"
+    )
+
+    input_type <- "phyloseq"
+    id_col <- NULL
+
+    if (!quiet) {
+      message("Input is a phyloseq object")
+    }
+
+  } else if (is.matrix(x)) {
+    tax <- x
+    input_type <- "matrix"
+    id_col <- NULL
+
+  } else if (is.data.frame(x)) {
+    input_type <- "data.frame"
+
+    # Detect a supported identifier column.
+    id_col <- intersect(
+      c("OTU", "seq_name"),
+      names(x)
+    )[1L]
+
+    if (!is.na(id_col)) {
+      tax_names <- as.character(x[[id_col]])
+
+      tax <- as.matrix(
+        x[
+          ,
+          setdiff(names(x), id_col),
+          drop = FALSE
+        ]
+      )
+
+      rownames(tax) <- tax_names
+
+    } else {
+      id_col <- NULL
+      tax <- as.matrix(x)
+    }
+
+  } else {
+    stop(
+      "x must be a matrix, data frame, or phyloseq object."
+    )
+  }
+
+  # Ensure taxonomy values are stored as character strings.
+  storage.mode(tax) <- "character"
+
+  if (is.null(rownames(tax))) {
+    stop(
+      "The taxonomy table must have row names, ",
+      "an OTU column, or a seq_name column."
+    )
+  }
+
+  if (is.null(colnames(tax))) {
+    stop(
+      "The taxonomy table must have named taxonomy columns."
+    )
+  }
+
+  # Treat empty strings as missing classifications.
+  tax[tax == ""] <- NA_character_
+
+  # Identify which taxonomy values are classified.
+  classified <- !is.na(tax)
+
+  # Identify the lowest classified rank in each row.
+  lowest_index <- max.col(
+    classified *
+      rep(
+        seq_len(ncol(tax)),
+        each = nrow(tax)
+      ),
+    ties.method = "last"
+  )
+
+  # Identify rows containing at least one classification.
+  has_classification <- rowSums(classified) > 0L
+  row_index <- seq_len(nrow(tax))
+
+  # Create one propagated label per row from its lowest classified rank.
+  replacement <- rep(
+    NA_character_,
+    nrow(tax)
+  )
+
+  replacement[has_classification] <- paste0(
+    substr(
+      colnames(tax)[lowest_index[has_classification]],
+      1L,
+      1L
+    ),
+    sep,
+    tax[
+      cbind(
+        row_index[has_classification],
+        lowest_index[has_classification]
+      )
+    ]
+  )
+
+  # Locate missing taxonomy values in classified rows.
+  missing <- which(
+    is.na(tax) &
+      has_classification[row(tax)],
+    arr.ind = TRUE
+  )
+
+  # Fill missing ranks using the row-specific propagated label.
+  if (nrow(missing)) {
+    tax[missing] <- replacement[
+      missing[, "row"]
+    ]
+  }
+
+  # Return a modified phyloseq object.
+  if (input_type == "phyloseq") {
+    phyloseq::tax_table(x) <- phyloseq::tax_table(tax)
+    return(x)
+  }
+
+  # Return a matrix when the input was a matrix and row names are requested.
+  if (input_type == "matrix" && rownames) {
+    return(tax)
+  }
+
+  # Convert the final taxonomy matrix to a data frame.
+  tax_df <- as.data.frame(
+    tax,
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+
+  # Return a data frame with taxonomy identifiers in the row names.
+  if (rownames) {
+    return(tax_df)
+  }
+
+  # Restore the detected identifier column, defaulting to OTU.
+  output_id_col <- if (is.null(id_col)) {
+    "OTU"
+  } else {
+    id_col
+  }
+
+  output <- data.frame(
+    identifier = rownames(tax),
+    tax_df,
+    row.names = NULL,
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+
+  names(output)[1L] <- output_id_col
+
+  output
+}
+
+
+# Convert labels generated by na_to_unclassified() back to NA.
+unclassified_to_na <- function(
+    x,
+    sep = "__",
+    rownames = TRUE,
+    quiet = FALSE
+) {
+
+  # Extract the taxonomy table and record the input type.
+  if (inherits(x, "phyloseq")) {
+    tax <- as(phyloseq::tax_table(x), "matrix")
+    input_type <- "phyloseq"
+
+    if (!quiet) {
+      message("Input is a phyloseq object")
+    }
+
+  } else if (is.matrix(x)) {
+    tax <- x
+    input_type <- "matrix"
+
+  } else if (is.data.frame(x)) {
+    input_type <- "data.frame"
+
+    if ("OTU" %in% names(x)) {
+      otu_names <- as.character(x[["OTU"]])
+      tax <- as.matrix(x[, setdiff(names(x), "OTU"), drop = FALSE])
+      rownames(tax) <- otu_names
+    } else {
+      tax <- as.matrix(x)
+    }
+
+  } else {
+    stop("x must be a matrix, data frame, or phyloseq object.")
+  }
+
+  # Ensure taxonomy values are character rather than factors.
+  storage.mode(tax) <- "character"
+
+  if (is.null(rownames(tax))) {
+    stop("The taxonomy table must have row names or an OTU column.")
+  }
+
+  # Match labels such as G__Drosophila or F__Drosophilidae.
+  separator_pattern <- paste0(
+    "^[[:alnum:]]",
+    escape_regex(sep)
+  )
+
+  generated <- grepl(
+    separator_pattern,
+    tax
+  )
+
+  generated[is.na(generated)] <- FALSE
+  tax[generated] <- NA_character_
+
+  # Return the same broad object type as the input.
+  if (input_type == "phyloseq") {
+    phyloseq::tax_table(x) <- phyloseq::tax_table(tax)
+    return(x)
+  }
+
+  if (input_type == "matrix") {
+    if (rownames) {
+      return(tax)
+    }
+
+    return(data.frame(
+      OTU = rownames(tax),
+      tax,
+      row.names = NULL,
+      check.names = FALSE
+    ))
+  }
+
+  tax <- as.data.frame(
+    tax,
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+
+  if (rownames) {
+    return(tax)
+  }
+
+  data.frame(
+    OTU = rownames(tax),
+    tax,
+    row.names = NULL,
+    check.names = FALSE
+  )
+}
+
+
+# Escape a literal separator before using it in a regular expression.
+escape_regex <- function(x) {
+  gsub(
+    "([][{}()+*^$|\\\\?.])",
+    "\\\\\\1",
+    x
+  )
+}
+
+# Validate inputs are suitable for creating a phyloseq object.
+validate_phyloseq_inputs <- function(
+    otutab,
+    taxtab,
+    samdf,
+    seqs = NULL,
+    tax_cols = NULL
+) {
+
+   # Report identifiers that differ between two objects.
+    check_names <- function(x, y, x_name, y_name) {
+        only_x <- setdiff(x, y)
+        only_y <- setdiff(y, x)
+
+        if (length(only_x) || length(only_y)) {
+            stop(x_name, " and ", y_name," contain different identifiers.",
+                if (length(only_x)) {
+                    paste0("\nPresent only in ", x_name,": ",paste(only_x, collapse = ", "))
+                },
+                if (length(only_y)) {
+                    paste0("\nPresent only in ", y_name, ": ",paste(only_y, collapse = ", "))
+                }
+            )
+        }
+    }
+
+    # Basic object checks
+    if (!is.matrix(otutab)) {stop("otutab must be a matrix.")}
+    if (!is.matrix(taxtab)) {stop("taxtab must be a matrix.")}
+    if (!is.data.frame(samdf)) {stop("samdf must be a data.frame.")}
+    if (is.null(rownames(otutab))) {stop("otutab must have taxa as rownames.")}
+    if (is.null(colnames(otutab))) {stop("otutab must have sample names as colnames.")}
+    if (is.null(rownames(taxtab))) {stop("taxtab must have taxa as rownames.")}
+    if (is.null(rownames(samdf))) {stop("samdf must have sample names as rownames.")}
+    if (anyDuplicated(rownames(samdf))) {stop("samdf contains duplicated sample names.")}
+
+    # Check taxonomy columns.
+
+    if (!is.null(tax_cols) && !identical(colnames(taxtab), tax_cols)) {
+        stop( "Unexpected taxonomy columns.\n",
+            "Expected: ",paste(tax_cols, collapse = ", "),
+            "\nObserved: ",paste(colnames(taxtab), collapse = ", ")
+        )
+    }
+
+    # Check sample names between the OTU table and sample metadata.
+    check_names(
+        colnames(otutab),
+        rownames(samdf),
+        "otutab samples",
+        "samdf samples"
+    )
+
+    # Check taxon names between the OTU and taxonomy tables.
+    check_names(
+        rownames(otutab),
+        rownames(taxtab),
+        "otutab taxa",
+        "taxtab taxa"
+    )
+
+    # Check taxon names between the OTU table and reference sequences.
+    if (!is.null(seqs)) {
+        if (is.null(names(seqs))) {
+            stop("seqs must have taxon names.")
+        }
+
+        check_names(
+            rownames(otutab),
+            names(seqs),
+            "otutab taxa",
+            "seqs"
+        )
+    }
+
+    invisible(TRUE)
+}

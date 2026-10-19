@@ -10,7 +10,6 @@ str(args, no.list = T, nchar.max = 1E6)
 cat("\n")
 
 ### process arguments 
-
 primers                     <- args$primers
 taxtab_file                 <- args$taxtab_file
 seqtab_file                 <- args$seqtab_file
@@ -43,36 +42,30 @@ process_packages <- c(
 )
 suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))
 
-## check and define variables
+## Read in objects
 taxtab <- data.table::fread(taxtab_file)
-
 seqtab_combined <- data.table::fread(seqtab_file)
-
 filters <- data.table::fread(filters_file)
-
 seqs <- Biostrings::readDNAStringSet(fasta_file)
-
-samplesheet_split <- readr::read_csv(samplesheet_split_file, show_col_types = FALSE)
-
-sample_metadata <- readr::read_csv(sample_metadata_file, show_col_types = FALSE)
-
 cluster_threshold <- suppressWarnings(as.integer(cluster_threshold))
 
-## check taxonomy, seqtab, filters, and fasta all have the same sequences, none are missing
-if(!setequal(seqtab_combined$seq_name, taxtab$seq_name)){
-    stop("seqtab_combined and taxtab do not contain the exact same sequence names")
-}
+# Create the complete sample metadata table.
+samples_df <- data.table::fread(samplesheet_split_file)[
+  data.table::fread(sample_metadata_file),
+  on = .(sample, read_group)
+] %>%
+  as.data.frame() %>%
+  dplyr::filter(primers == .env$primers)
 
-if(!setequal(seqtab_combined$seq_name, filters$seq_name)){
-    stop("seqtab_combined and filters do not contain the exact same sequence names")
-} 
+rownames(samples_df) <- samples_df$sample_primers
 
-if(!setequal(seqtab_combined$seq_name, names(seqs))){
-    stop("seqtab_combined and seqs do not contain the exact same sequence names")
-}
+# create phyloseq-format otu_table (seqtab), ignoring filters -- ASV names are rows
+otu_cols <- setdiff( names(seqtab_combined), c("seq_name", "sequence", "cluster"))
+otutab_matrix <- as.matrix(seqtab_combined[, ..otu_cols])
+rownames(otutab_matrix) <- seqtab_combined[["seq_name"]]
+storage.mode(otutab_matrix) <- "integer"
 
-# Validate inported taxonomy 
-
+# create phyloseq-format taxtab
 ### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
 tax_cols <- c(
     "Root",
@@ -84,96 +77,17 @@ tax_cols <- c(
     "Genus",
     "Species"
 )
-
-observed_tax_cols <- setdiff(names(taxtab), "seq_name")
-
-if (!identical(observed_tax_cols, tax_cols)) {
-  warning(
-    "Taxonomy ranks do not meet staging database expectations.\n",
-    "Expected: ", paste(tax_cols, collapse = ", "), "\n",
-    "Observed: ", paste(observed_tax_cols, collapse = ", ")
-  )
-}
-
-### run R code
-
-## create complete samplesheet with arbitrary metadata from original --samplesheet .csv
-samplesheet_complete <- 
-    samplesheet_split %>%
-    dplyr::left_join(., sample_metadata, by = dplyr::join_by("sample","read_group"))
-
-# create phyloseq-format otu_table (seqtab), ignoring filters -- ASV names are rows
-otu_cols <- setdiff(
-  names(seqtab_combined),
-  c("seq_name", "sequence", "cluster")
-)
-
-otutab_matrix <- as.matrix(
-  seqtab_combined[, ..otu_cols]
-)
-
-rownames(otutab_matrix) <- seqtab_combined[["seq_name"]]
-
-missing_samples <- setdiff(
-  colnames(otutab_matrix),
-  samplesheet_complete[["sample_primers"]]
-)
-
-if (length(missing_samples)) {
-  stop(
-    "OTU-table samples are missing from the sample metadata: ",
-    paste(missing_samples, collapse = ", ")
-  )
-}
-
-# Force integer storage for discrete counts.
-storage.mode(otutab_matrix) <- "integer"
-
-otutab_ps <- phyloseq::otu_table(
-  otutab_matrix,
-  taxa_are_rows = TRUE
-)
-
-# create dada2-format taxtab
-taxtab_matrix <- as.matrix(
-  taxtab[, ..tax_cols]
-)
-
+taxtab_matrix <- as.matrix(taxtab[, ..tax_cols])
 rownames(taxtab_matrix) <- taxtab[["seq_name"]]
 
-taxtab_ps <- phyloseq::tax_table(
-  taxtab_matrix
+# validate all objects are compatible with phyloseq
+validate_phyloseq_inputs(
+    otutab = otutab_matrix,
+    taxtab = taxtab_matrix,
+    samdf = samples_df,
+    seqs = seqs,
+    tax_cols = tax_cols
 )
-
-# create sample information phyloseq object
-samples_df <- as.data.frame(
-  samplesheet_complete
-)
-
-if (anyDuplicated(samples_df[["sample_primers"]])) {
-  stop("samplesheet_complete contains duplicated sample_primers values.")
-}
-
-rownames(samples_df) <- samples_df[["sample_primers"]]
-
-samples_ps <- phyloseq::sample_data(
-  samples_df
-)
-
-# create refseq object
-refseq_ps <- 
-    seqs %>%
-    phyloseq::refseq()
-
-
-## create phyloseq object
-ps_uf <- 
-    phyloseq::phyloseq(
-        otutab_ps, 
-        taxtab_ps,
-        samples_ps,
-        refseq_ps
-    )
 
 ### Cluster unfiltered ASVs -----------------------------------------------
 
@@ -216,150 +130,175 @@ if (is.na(cluster_threshold)) {
 }
 
 data.table::setkey(cluster_dt, seq_name)
+cluster_lookup <- cluster_dt$cluster
+names(cluster_lookup) <- cluster_dt$seq_name
+
+# Write clusters_out
+data.table::fwrite(clusters_out, paste0("clusters_", primers, ".csv"))
 
 ### outputs -----------------------------------------------------------------------------
 
-# Export raw csv 
-write_raw_phyloseq(
-    ps = ps_uf,
-    cluster_dt = cluster_dt,
-    filename = paste0(
+# Export raw CSV. No longer requires phyloseq object
+raw_dt <- melt_phyloseq(
+    otutab = otutab_matrix,
+    taxtab = taxtab_matrix,
+    samdf = samples_df,
+    seqs = seqs
+)
+
+# Add cluster assignments.
+raw_dt[, cluster := cluster_lookup[seq_name]]
+
+# Set column order
+data.table::setcolorder(
+    raw_dt,
+    c(
+        "seq_name",
+        "sequence",
+        "cluster",
+        setdiff(
+            names(raw_dt),
+            c("seq_name", "sequence", "cluster")
+        )
+    )
+)
+
+data.table::fwrite(
+    raw_dt,
+    paste0(
         "raw_unfiltered_",
         primers,
         ".csv"
     )
 )
 
-# Export summary CSV
-write_phyloseq_summary(
-    ps = ps_uf,
-    cluster_dt = cluster_dt,
-    filters = filters,
-    tax_cols = tax_cols,
-    filename = paste0(
-        "summary_unfiltered_",
-        primers,
-        ".csv"
+
+# Export summary CSV. No longer requires phyloseq object
+summary_dt <- summarise_phyloseq(
+    otutab = otutab_matrix,
+    taxtab = taxtab_matrix,
+    seqs = seqs
+)
+
+summary_dt <- filters[
+    summary_dt,
+    on = c(
+        "seq_name",
+        "sequence"
+    )
+]
+
+# Add cluster assignments.
+summary_dt[, cluster := cluster_lookup[seq_name]]
+
+preferred_cols <- c(
+    "seq_name",
+    "sequence",
+    "cluster",
+    tax_cols,
+    "chimera_filter",
+    "length_filter",
+    "phmm_filter",
+    "frame_filter"
+)
+
+preferred_cols <- intersect(
+    preferred_cols,
+    names(summary_dt)
+)
+
+# Set column order
+data.table::setcolorder(
+    summary_dt,
+    c(
+        preferred_cols,
+        setdiff(
+            names(summary_dt),
+            preferred_cols
+        )
     )
 )
 
-### Phyloseq outputs -----------------------------------------------------------------------------
+data.table::fwrite(summary_dt, paste0("summary_unfiltered_", primers, ".csv"))
 
 # save seqtab (data) as wide tibble (rows = seq_name, columns = cluster, all of sample_primers)
 seqtab_out <- data.table::as.data.table(
-  as(phyloseq::otu_table(ps_uf), "matrix"),
-  keep.rownames = "seq_name"
+    otutab_matrix,
+    keep.rownames = "seq_name"
 )
 
-seqtab_out <- cluster_dt[
-  seqtab_out,
-  on = "seq_name"
-]
+# Add cluster assignments.
+seqtab_out[, cluster := cluster_lookup[seq_name]]
 
-data.table::setcolorder(
-  seqtab_out,
-  c(
-    "seq_name",
-    "cluster",
-    setdiff(
-      names(seqtab_out),
-      c("seq_name", "cluster")
+# Set column order
+data.table::setcolorder(seqtab_out, c( "seq_name", "cluster", setdiff( names(seqtab_out), c("seq_name", "cluster"))))
+
+# Write out
+data.table::fwrite(seqtab_out, paste0("seqtab_unfiltered_", primers, ".csv"))
+
+# save taxtab as tibble (rows = seq_name, columns = taxonomic ranks (Root -> Species)) with unclassified labels converted to NA.
+# Use taxtab_matrix directy, no need to re-extract from phyloseq
+taxtab_out <- taxtab_matrix %>%
+    unclassified_to_na() %>%
+    data.table::as.data.table(
+        keep.rownames = "seq_name"
     )
-  )
-)
 
-# save taxtab as tibble (rows = seq_name, columns = taxonomic ranks (Root -> Species))
-taxtab_out <- data.table::as.data.table(
-  as(phyloseq::tax_table(ps_uf), "matrix"),
-  keep.rownames = "seq_name"
-)
+# Add cluster assignments.
+taxtab_out[ , cluster := cluster_lookup[seq_name]]
 
-taxtab_out <- cluster_dt[
-  taxtab_out,
-  on = "seq_name"
-]
+# Place identifier columns before taxonomy columns.
+data.table::setcolorder(taxtab_out, c("seq_name", "cluster", tax_cols))
 
-data.table::setcolorder(
-  taxtab_out,
-  c(
-    "seq_name",
-    "cluster",
-    tax_cols
-  )
-)
-
-# Convert propagated taxonomy labels to NA.
-for (column in tax_cols) {
-  data.table::set(
-    taxtab_out,
-    i = which(
-      !is.na(taxtab_out[[column]]) &
-        grepl("^\\w__", taxtab_out[[column]])
-    ),
-    j = column,
-    value = NA_character_
-  )
-}
+# Write out
+data.table::fwrite(taxtab_out, paste0("taxtab_unfiltered_", primers, ".csv"))
 
 # save sequences as .fasta file (with taxonomy in header, in format "seq_name|primers;Root;Kingdom;Phylum;Class;Order;Family;Genus;Species")
 seqs_output <- seqs
 
-taxtab_fasta <- taxtab_out[
-  match(names(seqs_output), seq_name)
-]
+# Match taxonomy rows to the FASTA sequence order.
+taxtab_fasta <- taxtab_out[ match( names(seqs_output), taxtab_out$seq_name ),]
 
-if (anyNA(taxtab_fasta[["seq_name"]])) {
-  stop("Could not match all FASTA sequences to the taxonomy table.")
-}
-
-seq_names_new <- taxtab_fasta[
-  ,
-  paste(
-    paste(seq_name, primers, sep = "|"),
-    do.call(
-      paste,
-      c(.SD, sep = ";")
-    ),
-    sep = ";"
-  ),
-  .SDcols = tax_cols
-]
-
-names(seqs_output) <- seq_names_new
-
-# save samdf 
-samdf_out <- data.table::as.data.table(
-  as(phyloseq::sample_data(ps_uf), "data.frame"),
-  keep.rownames = "sample_id"
+# Collapse taxonomy ranks into a single string.
+taxonomy_strings <- apply(
+    taxtab_fasta[, ..tax_cols, drop = FALSE],
+    1,
+    paste,
+    collapse = ";"
 )
 
-if ("sample_primers" %in% names(samdf_out)) {
-  if (!identical(
-    as.character(samdf_out[["sample_id"]]),
-    as.character(samdf_out[["sample_primers"]])
-  )) {
-    stop(
-      "sample_data row names do not match its sample_primers column."
-    )
-  }
-
-  samdf_out[, sample_id := NULL]
-} else {
-  data.table::setnames(
-    samdf_out,
-    "sample_id",
-    "sample_primers"
-  )
-}
-
-# Write out
-data.table::fwrite(clusters_out, paste0("clusters_", primers, ".csv"))
-data.table::fwrite(filters,paste0("filters_", primers, ".csv"))
-data.table::fwrite(seqtab_out, paste0("seqtab_unfiltered_", primers, ".csv"))
-data.table::fwrite(taxtab_out, paste0("taxtab_unfiltered_", primers, ".csv"))
-data.table::fwrite(samdf_out, paste0("samdf_unfiltered_", primers, ".csv"))
+# Create FASTA headers.
+names(seqs_output) <- paste(
+    paste(
+        taxtab_fasta$seq_name,
+        primers,
+        sep = "|"
+    ),
+    taxonomy_strings,
+    sep = ";"
+)
 write_fasta(seqs_output, paste0("asvs_unfiltered_", primers, ".fasta"))  
+
+# save samplesheet
+data.table::as.data.table(
+    samples_df,
+    keep.rownames = "sample_primers"
+  ) %>%
+    data.table::fwrite(file = paste0("samdf_unfiltered_",primers,".csv"))
+
+
+## create phyloseq object
+ps_uf <- 
+    phyloseq::phyloseq(
+        phyloseq::otu_table(otutab_matrix, taxa_are_rows = TRUE), 
+        phyloseq::tax_table(taxtab_matrix),
+        phyloseq::sample_data(samples_df),
+        phyloseq::refseq(seqs)
+    )
 saveRDS(ps_uf, paste0("ps_unfiltered_",primers,".rds"))
+
+# Write filters out
+data.table::fwrite(filters,paste0("filters_", primers, ".csv"))
 
 }, 
 finally = {
