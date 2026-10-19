@@ -102,16 +102,18 @@ if (taxa_are_rows) {
     otutab <- t(otutab)
 }
 
-# Logical vector of taxa
+## Per-taxon filters (removes whole ASVs)
+
+# Logical vector of taxa - Start by retaining every taxon.
 keep_taxa <- rep(TRUE, nrow(taxtab))
 names(keep_taxa) <- rownames(taxtab)
 
-# Helper function that handles missing taxonomy
+# Return TRUE when no filter is requested or the classification matches the target.
 matches_taxon <- function(values, target) {
     is.na(target) | (!is.na(values) & values == target)
 }
 
-# Taxonomic filters
+# Retain only taxa matching every requested taxonomic filter.
 keep_taxa <- keep_taxa &
     matches_taxon(taxtab[, "Kingdom"], target_kingdom) &
     matches_taxon(taxtab[, "Phylum"], target_phylum) &
@@ -121,7 +123,7 @@ keep_taxa <- keep_taxa &
     matches_taxon(taxtab[, "Genus"], target_genus) &
     matches_taxon(taxtab[, "Species"], target_species)
 
-# Sequence level soft filters
+# Identify sequences that passed all four sequence-quality filters.
 seqs_passing <- with(
     seq_filters,
     seq_name[
@@ -132,19 +134,25 @@ seqs_passing <- with(
     ]
 )
 
+# Further restrict the retained taxa to sequences passing all soft filters.
 keep_taxa <- keep_taxa & names(keep_taxa) %in% seqs_passing
+
+# Subset the OTU matrix using retained taxa logical vector
 otutab <- otutab[, keep_taxa, drop = FALSE]
 
 if (ncol(otutab) == 0) {
     stop("No ASVs passed the taxonomic and sequence filters for primers '",primers,"'")
 }
 
-# Fixed read threshold
+## Per-observation filters (removes observations of ASVs within samples)
+
+# Set observations below fixed read threshold to 0
 if (!is.na(min_taxa_reads)) {
     otutab[otutab <= min_taxa_reads] <- 0
 }
 
-# Relative abundance threshold
+# Convert to relative abundance, remove low-abundance observations,
+# and retain the count matrix.
 if (!is.na(min_taxa_ra)) {
     sample_totals <- rowSums(otutab)
     nonzero <- sample_totals > 0
@@ -164,6 +172,8 @@ if (!is.na(min_taxa_ra)) {
 
     }
 }
+
+## Sample-level filters
 
 # Remove samples below the minimum retained-read threshold.
 sample_totals <- rowSums(otutab)
@@ -217,7 +227,6 @@ if (taxa_are_rows ) {
 # Message how many were removed
 message(phyloseq::nsamples(ps) - phyloseq::nsamples(ps_sampfiltered), " Samples and ", phyloseq::ntaxa(ps) - phyloseq::ntaxa(ps_sampfiltered), " ASVs dropped")
 
-
 ### cluster filtered ASVs ------------------------------------------------------------------------
 
 seqs <- ps_sampfiltered %>% phyloseq::refseq()
@@ -261,31 +270,71 @@ if (is.na(cluster_threshold)) {
 }
 
 data.table::setkey(cluster_dt, seq_name)
+cluster_lookup <- cluster_dt$cluster
+names(cluster_lookup) <- cluster_dt$seq_name
 
 ### outputs -----------------------------------------------------------------------------
 
 # Export raw csv 
-write_raw_phyloseq(
-    ps = ps_sampfiltered,
-    cluster_dt = cluster_dt,
-    filename = paste0(
-        "raw_filtered_",
-        primers,
-        ".csv"
+# TODO: melt_phyloseq now handles raw seqtab, taxtab, samdf - update to use these
+raw_filtered <- cluster_dt[
+    melt_phyloseq(
+        ps = ps_sampfiltered
+    ),
+    on = "seq_name"
+]
+
+data.table::setcolorder(
+    raw_filtered,
+    c(
+        "seq_name",
+        "sequence",
+        "cluster",
+        setdiff(
+            names(raw_filtered),
+            c(
+                "seq_name",
+                "sequence",
+                "cluster"
+            )
+        )
     )
 )
 
+data.table::fwrite(raw_filtered, paste0("raw_filtered_", primers, ".csv"))
+
 # Create summmary from phyloseq
-write_phyloseq_summary(
-    ps = ps_sampfiltered,
-    cluster_dt = cluster_dt,
-    tax_cols = tax_cols,
-    filename = paste0(
-        "summary_filtered_",
-        primers,
-        ".csv"
+# TODO: melt_phyloseq now handles raw seqtab, taxtab, samdf - update to use these
+summary_filtered <- summarise_phyloseq(ps_sampfiltered)
+
+summary_filtered[
+    ,
+    cluster := cluster_lookup[seq_name]
+]
+
+preferred_cols <- c(
+    "seq_name",
+    "sequence",
+    "cluster",
+    tax_cols
+)
+
+data.table::setcolorder(
+    summary_filtered,
+    c(
+        intersect(
+            preferred_cols,
+            names(summary_filtered)
+        ),
+        setdiff(
+            names(summary_filtered),
+            preferred_cols
+        )
     )
 )
+
+data.table::fwrite(summary_filtered, paste0( "summary_filtered_",primers,".csv"))
+
 
 ### Phyloseq outputs -----------------------------------------------------------------------------
 
@@ -300,35 +349,33 @@ seqtab_out <- data.table::as.data.table(
 seqtab_out <- cluster_dt[seqtab_out, on = "seq_name"]
 data.table::setcolorder(seqtab_out, c("seq_name", "cluster", setdiff(names(seqtab_out), c("seq_name", "cluster"))) )
 
-# save taxtab as long tibble (rows = ASV, cols = tax rankings)
-taxtab_out <- data.table::as.data.table(
-    as(phyloseq::tax_table(ps_sampfiltered), "matrix"),
+# save taxtab as long tibble (rows = ASV, cols = tax rankings) with unclassified labels converted to NA.
+taxtab_out <- phyloseq::tax_table(ps_sampfiltered) %>%
+  as("matrix") %>%
+  unclassified_to_na() %>%
+  data.table::as.data.table(
     keep.rownames = "seq_name"
-)
+  )
 
+# Add cluster assignments.
 taxtab_out <- cluster_dt[
-    taxtab_out,
-    on = "seq_name"
+  taxtab_out,
+  on = "seq_name"
 ]
 
+# Place identifier columns before the taxonomy columns.
 data.table::setcolorder(
-    taxtab_out,
-    c(
-        "seq_name",
-        "cluster",
-        setdiff(
-            names(taxtab_out),
-            c("seq_name", "cluster")
-        )
+  taxtab_out,
+  c(
+    "seq_name",
+    "cluster",
+    setdiff(
+      names(taxtab_out),
+      c("seq_name", "cluster")
     )
+  )
 )
 
-for (col in tax_cols) {
-    taxtab_out[
-        grepl("^\\w__", get(col)),
-        (col) := NA_character_
-    ]
-}
 
 # Check taxonomy table outputs
 ### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
@@ -343,22 +390,32 @@ if (!identical(names(taxtab_out), expected_cols)) {
 # save sequences as .fasta file (with taxonomy in header, in format "seq_name|primers;Root;Kingdom;Phylum;Class;Order;Family;Genus;Species")
 seqs_output <- phyloseq::refseq(ps_sampfiltered)
 
-# Reuse taxtab output
+# Match taxonomy rows to the FASTA sequence order.
 taxtab_fasta <- taxtab_out[
-    match(names(seqs_output), seq_name)
-]
-
-seq_names_new <- taxtab_fasta[
-    ,
-    paste(
-        paste(seq_name, primers, sep = "|"),
-        do.call(paste, c(.SD, sep = ";")),
-        sep = ";"
+    match(
+        names(seqs_output),
+        taxtab_out$seq_name
     ),
-    .SDcols = tax_cols
 ]
 
-names(seqs_output) <- seq_names_new
+# Collapse taxonomy ranks into a single string.
+taxonomy_strings <- apply(
+    taxtab_fasta[, ..tax_cols, drop = FALSE],
+    1,
+    paste,
+    collapse = ";"
+)
+
+# Create FASTA headers.
+names(seqs_output) <- paste(
+    paste(
+        taxtab_fasta$seq_name,
+        primers,
+        sep = "|"
+    ),
+    taxonomy_strings,
+    sep = ";"
+)
 
 # save samplesheet
 samdf_out <- data.table::as.data.table(

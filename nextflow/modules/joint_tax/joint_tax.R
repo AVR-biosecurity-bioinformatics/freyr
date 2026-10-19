@@ -93,30 +93,9 @@ if(nrow(idtaxa_output) > 0 & nrow(blast_output) > 0){
         # keep only taxon rank columns + seq_name
         dplyr::select(seq_name, Root, Kingdom, Phylum, Class, Order, Family, Genus, Species) %>%
         # replace "NA" taxa with the lowest assigned rank in the "G__Genus" format
-        dplyr::mutate(
-            # unsure Root is always "Root"
-            Root = "Root",
-            # determine the lowest assigned rank, choosing the first true case
-            lowest_assignment = dplyr::case_when(
-                is.na(Kingdom)  ~ paste0("R__",Root),
-                is.na(Phylum)   ~ paste0("K__",Kingdom),
-                is.na(Class)    ~ paste0("P__",Phylum),
-                is.na(Order)    ~ paste0("C__",Class),
-                is.na(Family)   ~ paste0("O__",Order),
-                is.na(Genus)    ~ paste0("F__",Family),
-                is.na(Species)  ~ paste0("G__",Genus),
-                .default        = NA
-            ),
-            # replace NA ranks with the "G__Genus" format ('propagate')
-            dplyr::across(
-                Kingdom:Species, 
-                ~dplyr::case_when(
-                    is.na(.) & !is.na(lowest_assignment) ~ lowest_assignment, 
-                    .default = .
-                )
-            )
-        ) %>%
-        dplyr::select(-lowest_assignment)
+        na_to_unclassified(
+            rownames = FALSE
+        )
 } else {
     stop("Either idtaxa_output or blast_output is empty")
 }

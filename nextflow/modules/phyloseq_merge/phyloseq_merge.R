@@ -37,34 +37,24 @@ process_packages <- c(
 )
 suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))
 
-## check and define variables
-ps_unfiltered <- # convert Groovy to R list format
-    stringr::str_extract_all(ps_unfiltered, pattern = "[^\\s,\\[\\]]+") %>% unlist()
-ps_unfiltered <- lapply(ps_unfiltered, readRDS) # read in phyloseq objects and store as list
-
-# import fasta files
-unfiltered_seqs_list <- 
-    unfiltered_fastas %>%
-    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
-    lapply(., Biostrings::readDNAStringSet)
 
 ### run R code
 
 ### unfiltered ---------------------------------------------------------------------------------------------
 
-# Combine DNAStringSet objects, retaining the first occurrence of each ASV name.
-seqs_uf <- unlist(
-    lapply(unfiltered_seqs_list, as.character),
-    use.names = TRUE
-)
-seqs_uf <- Biostrings::DNAStringSet(
-    seqs_uf[!duplicated(names(seqs_uf))]
-)
-write_fasta(seqs_uf, "asvs_unfiltered.fasta")
-
-
 ## merge unfiltered phyloseq objects - These must have disjoint samples
-ps_u <- merge_phyloseq_disjoint_samples(ps_unfiltered)
+ps_u <- ps_unfiltered %>%
+  stringr::str_extract_all(pattern = "[^\\s,\\[\\]]+") %>%
+  unlist() %>%
+  lapply(readRDS) %>%
+  merge_phyloseq_disjoint_samples()
+
+# Merge DNAStringSet objects, retaining the first occurrence of each ASV name, and write out
+unfiltered_fastas %>%
+  stringr::str_split_1(pattern = " ") %>%
+  lapply(Biostrings::readDNAStringSet) %>%
+  merge_refseq() %>%
+  write_fasta("asvs_unfiltered.fasta")
 
 # Check taxonomy table outputs
 ### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
@@ -141,57 +131,50 @@ readsout <- samdf[
 
 data.table::fwrite(readsout,"ps_u_readsout.csv" )
 
+# Clean up
+rm(abundance, readsout, ps_u_summary)
+gc()
+
 # save seqtab as wide tibble (rows = sample_primers, cols = ASV name (hash), cells = abundance)
 phyloseq::otu_table(ps_u) %>%
     as("matrix") %>%
-    tibble::as_tibble(rownames = "sample_primers") %>%
-    readr::write_csv("seqtab_unfiltered.csv")
+    data.table::as.data.table(
+        keep.rownames = "sample_primers"
+    ) %>%
+    data.table::fwrite(file = "seqtab_unfiltered.csv")
 
 # save taxtab as long tibble (rows = ASV, cols = tax rankings)
 phyloseq::tax_table(ps_u) %>%
     as("matrix") %>%
-    tibble::as_tibble(rownames = "seq_name") %>%
-    # convert propagated taxonomy to NA values
-    dplyr::mutate( 
-        dplyr::across(Root:Species, ~ dplyr::if_else(stringr::str_detect(.x, "^\\w__"), NA, .x))
-    ) %>%
-    readr::write_csv("taxtab_unfiltered.csv")
+    unclassified_to_na() %>%
+    data.table::as.data.table(keep.rownames = "seq_name") %>%
+    data.table::fwrite(file = "taxtab_unfiltered.csv")
 
 # save samplesheet
 phyloseq::sample_data(ps_u) %>%
-    as("matrix") %>%
-    tibble::as_tibble() %>%
-    readr::write_csv("samdf_unfiltered.csv")
+    as("data.frame") %>%
+    data.table::as.data.table(keep.rownames = "sample_primers") %>%
+    data.table::fwrite(file = "samdf_unfiltered.csv")
 
 # Clean up
-rm(ps_unfiltered)
-rm(seqs_uf)
+rm(ps_u)
 gc()
 
 ### filtered ----------------------------------------------------------------------------------------------------------
 
-ps_filtered <- # convert Groovy to R list format
-    stringr::str_extract_all(ps_filtered, pattern = "[^\\s,\\[\\]]+") %>% unlist()
-ps_filtered <- lapply(ps_filtered, readRDS) # read in phyloseq objects and store as list
+## Merge filtered phyloseq objects with disjoint samples.
+ps_f <- ps_filtered %>%
+  stringr::str_extract_all(pattern = "[^\\s,\\[\\]]+") %>%
+  unlist() %>%
+  lapply(readRDS) %>%
+  merge_phyloseq_disjoint_samples()
 
-filtered_seqs_list <- 
-    filtered_fastas %>%
-    stringr::str_split_1(., pattern = " ") %>% # split string of filenames into vector
-    lapply(., Biostrings::readDNAStringSet)
-
-
-# Combine DNAStringSet objects, retaining the first occurrence of each ASV name.
-seqs_f <- unlist(
-    lapply(unfiltered_seqs_list, as.character),
-    use.names = TRUE
-)
-seqs_f <- Biostrings::DNAStringSet(
-    seqs_f[!duplicated(names(seqs_f))]
-)
-write_fasta(seqs_f, "asvs_filtered.fasta")
-
-## merge filtered phyloseq objects - These must have disjoint samples
-ps_f <- merge_phyloseq_disjoint_samples(ps_filtered)
+# Merge DNAStringSet objects, retaining the first occurrence of each ASV name, and write out
+filtered_fastas %>%
+  stringr::str_split_1(pattern = " ") %>%
+  lapply(Biostrings::readDNAStringSet) %>%
+  merge_refseq() %>%
+  write_fasta("asvs_filtered.fasta")
 
 if (!identical(phyloseq::rank_names(ps_f), tax_cols)) {
     warning(
@@ -206,6 +189,7 @@ data.table::fwrite(
     melt_phyloseq(ps_f),
     "raw_filtered.csv"
 )
+
 # Export species level summary of filtered results
 data.table::fwrite(
     summarise_phyloseq(ps_f),
@@ -218,53 +202,33 @@ data.table::fwrite(
 saveRDS(ps_f, paste0("ps_filtered.rds"))
 
 # save seqtab as wide tibble (rows = sample_primers, cols = ASV name (hash), cells = abundance)
-data.table::fwrite(
-    data.table::as.data.table(
-        as(phyloseq::otu_table(ps_f), "matrix"),
-        keep.rownames = "sample_primers"
-    ),
-    "seqtab_filtered.csv"
-)
+phyloseq::otu_table(ps_f) %>%
+    as("matrix") %>%
+    data.table::as.data.table(keep.rownames = "sample_primers") %>%
+    data.table::fwrite(file = "seqtab_filtered.csv")
 
-# save taxtab as long tibble (rows = ASV, cols = tax rankings)
-taxtab_out_f <- data.table::as.data.table(
-    as(phyloseq::tax_table(ps_f), "matrix"),
-    keep.rownames = "seq_name"
-)
-for (col in tax_cols) {
-    taxtab_out_f[
-        grepl("^\\w__", get(col)),
-        (col) := NA_character_
-    ]
-}
-data.table::fwrite(
-    taxtab_out_f,
-    "taxtab_filtered.csv"
-)
-
-# Check taxonomy table outputs
-### TODO: use 'ranks' pipeline parameter (from loci_params?) to set this explicitly rather than guessing
-expected_cols <- c("seq_name", tax_cols)
-if (!identical(names(taxtab_out_f), expected_cols)) {
-    message(
-        "Warning: Taxonomy table columns do not meet expectations for the staging database.\n",
-        "Database requires the columns: ", paste(expected_cols, collapse = ", ")
-    )
-}
+# save taxtab as long tibble (rows = ASV, cols = tax rankings) with unclassified labels converted to NA.
+phyloseq::tax_table(ps_f) %>%
+    as("matrix") %>%
+    unclassified_to_na() %>%
+    data.table::as.data.table(keep.rownames = "seq_name") %>%
+    data.table::fwrite(file = "taxtab_filtered.csv")
 
 # save samplesheet
 samdf <- data.table::as.data.table(
-    as(phyloseq::sample_data(ps_f), "data.frame")
+    as(phyloseq::sample_data(ps_f), "data.frame"),
+    keep.rownames = "sample_primers"
 )
 data.table::fwrite(samdf, "samdf_filtered.csv")
 
 ## read tracking output from filtered phyloseq
-sample_sums_f <- phyloseq::sample_sums(ps_f)
-
-readsout <- data.table::data.table(
-    sample_primers = names(sample_sums_f),
-    pairs = unname(sample_sums_f)
-)
+readsout <- {
+    ss <- phyloseq::sample_sums(ps_f)
+    data.table::data.table(
+        sample_primers = names(ss),
+        pairs = unname(ss)
+    )
+}
 
 readsout <- samdf[
     readsout,
