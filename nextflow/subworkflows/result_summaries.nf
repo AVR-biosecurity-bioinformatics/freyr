@@ -73,9 +73,10 @@ workflow RESULT_SUMMARIES {
             [ primers, process_params ] }
         .set { ch_phyloseq_filter_params } 
 
-    PHYLOSEQ_UNFILTERED.out.ps
-        .combine ( ch_phyloseq_filter_params, by: 0 )
+    PHYLOSEQ_UNFILTERED.out.filter_inputs
+        .combine(ch_phyloseq_filter_params, by: 0)
         .set { ch_phyloseq_filter_input }
+
 
     //// apply taxonomic and minimum abundance filtering per locus (from loci_params), then combine to output filtered summary tables
     PHYLOSEQ_FILTER ( 
