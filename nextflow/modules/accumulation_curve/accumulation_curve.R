@@ -12,7 +12,8 @@ cat("\n")
 ### process arguments 
 
 primers                     <- args$primers
-ps_file                     <- args$ps_file
+seqtab_file                 <- args$seqtab_file
+samdf_file                  <- args$samdf_file
 min_sample_reads            <- args$min_sample_reads
 
 # Import functions
@@ -31,17 +32,27 @@ process_packages <- c(
 )
 suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))
 
-## check and define variables
-ps <- readRDS(ps_file)
-min_sample_reads <- as.numeric(min_sample_reads)
+## Read in inputs
+seqtab_dt <- data.table::fread(seqtab_file)
 
+sample_cols <- setdiff( names(seqtab_dt), c("seq_name", "cluster"))
+
+otutab <- as.matrix(seqtab_dt[, ..sample_cols])
+rownames(otutab) <- seqtab_dt$seq_name
+storage.mode(otutab) <- "integer"
+
+samdf <- as.data.frame(data.table::fread(samdf_file))
+rownames(samdf) <- samdf$sample_primers
+
+min_sample_reads <- as.numeric(min_sample_reads)
 ### run R code
 
 ## creates accumulation curve plots and saves plot
-gg.acc_curve <- 
+gg.acc_curve <-
     rareplot(
-        ps, 
-        step="auto", 
+        otutab = otutab,
+        samdf = samdf,
+        step = "auto",
         threshold = min_sample_reads
     )
 

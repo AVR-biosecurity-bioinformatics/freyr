@@ -6,7 +6,7 @@ process ACCUMULATION_CURVE {
     publishDir { "${params.outdir}/results/main_outputs/unfiltered" }, mode: 'copy'
 
     input:
-    tuple val(primers), path(ps_file), path(filters_tibble), val(process_params)
+    tuple val(primers), path(seqtab), path(samdf), val(process_params)
 
     output:
     path("accumulation_curve_*.pdf"),                                          emit: pdf
@@ -18,7 +18,8 @@ process ACCUMULATION_CURVE {
         --cpus="$task.cpus" \
         --rdata="$params.rdata" \
         --primers="$primers" \
-        --ps_file="$ps_file" \
+        --seqtab_file="$seqtab" \
+        --samdf_file="$samdf" \
         --min_sample_reads="$process_params.min_sample_reads"
         
     """
