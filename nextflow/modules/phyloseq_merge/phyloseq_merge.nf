@@ -6,9 +6,11 @@ process PHYLOSEQ_MERGE {
     publishDir { "${params.outdir}/results/main_outputs/merged" }, pattern: '*{_filtered,_unfiltered}.{csv,rds,fasta}', mode: 'copy'
 
     input:
-    path ps_files
-    path fasta_files
-    val dataset
+    tuple val(dataset),
+        path(seqtab_files),
+        path(taxtab_files),
+        path(samdf_files),
+        path(fasta_files)
 
     output:
     path("*{_filtered,_unfiltered}.{csv,rds,fasta}")
@@ -22,10 +24,11 @@ process PHYLOSEQ_MERGE {
         --cpus="$task.cpus" \
         --rdata="$params.rdata" \
         --dataset="$dataset" \
-        --ps_files="${ps_files.join(' ')}" \
+        --seqtab_files="${seqtab_files.join(' ')}" \
+        --taxtab_files="${taxtab_files.join(' ')}" \
+        --samdf_files="${samdf_files.join(' ')}" \
         --fasta_files="${fasta_files.join(' ')}"
-        
-                
+
     """
     
 }

@@ -134,7 +134,7 @@ merge_refseq <- function(x) {
 }
 
 # Merge integer count matrices with taxa as rows and disjoint samples.
-merge_count_matrices <- function(x) {
+merge_seqtabs <- function(x) {
   if (!length(x)) {
     stop("No count matrices were provided.")
   }
@@ -185,181 +185,220 @@ merge_count_matrices <- function(x) {
     )
 
     if (anyNA(row_index)) {
-      stop(
-        "Failed to match all taxa from count matrix ",
-        i,
-        " to the merged taxon set."
-      )
+      stop("Failed to match all taxa from count matrix ", i, " to the merged taxon set.")
     }
 
     column_end <- column_start + ncol(current) - 1L
-
-    merged[
-      row_index,
-      seq.int(column_start, column_end)
-    ] <- current
-
+    merged[row_index, seq.int(column_start, column_end)] <- current
     column_start <- column_end + 1L
   }
 
   merged
 }
 
+merge_taxtabs <- function(x) {
 
-# Merge phyloseq function for disjoint samples that accepts a list of phyloseq objects
-merge_phyloseq_disjoint_samples <- function(arguments) {
-  if (!length(arguments)) {
-    stop("arguments must contain at least one object.")
-  }
-  
-  arguments <- unname(arguments)
-  
-  # Require sample names to be unique across all input objects.
-  samples <- unlist(
-    lapply(arguments, phyloseq::sample_names),
-    use.names = FALSE
-  )
-  
-  duplicated_samples <- unique(
-    samples[duplicated(samples)]
-  )
-  
-  if (length(duplicated_samples)) {
-    stop(
-      "Sample names must not overlap between input phyloseq objects. ",
-      "Duplicated sample names: ",
-      paste(duplicated_samples, collapse = ", ")
-    )
-  }
-  
-  # Merge integer OTU tables with taxa as rows and disjoint samples.
-  merge_otu_tables <- function(x) {
-    taxa_rows <- vapply(
-      x,
-      phyloseq::taxa_are_rows,
-      logical(1)
-    )
-
-    if (!all(taxa_rows)) {
-      stop(
-        "All OTU tables must have taxa as rows. ",
-        "Incorrect input indices: ",
-        paste(which(!taxa_rows), collapse = ", ")
-      )
-    }
-
-    matrices <- lapply(
-      x,
-      function(current) {
-        as(current, "matrix")
-      }
-    )
-
-    phyloseq::otu_table(
-      merge_count_matrices(matrices),
-      taxa_are_rows = TRUE
-    )
-  }
-  
-  # Merge sample metadata with disjoint sample rows.
-  merge_sample_data <- function(x) {
     merged <- data.table::rbindlist(
-      lapply(
-        x,
-        function(current) {
-          data.table::as.data.table(
-            as(current, "data.frame"),
-            keep.rownames = "sample_name"
-          )
-        }
-      ),
-      use.names = TRUE,
-      fill = TRUE
+        lapply(
+            x,
+            function(current) {
+                data.table::as.data.table(
+                    current,
+                    keep.rownames = "seq_name"
+                )
+            }
+        ),
+        use.names = TRUE,
+        fill = TRUE
     )
-    
-    sample_ids <- merged[["sample_name"]]
-    merged[, sample_name := NULL]
-    
-    merged <- as.data.frame(merged)
-    rownames(merged) <- sample_ids
-    
-    phyloseq::sample_data(merged)
-  }
-  
-  # Merge taxonomy tables, retaining the first assignment for duplicate ASVs.
-  # Assumes taxonomy assignments for the same ASV are consistent across inputs.
-  merge_tax_tables <- function(x) {
-    merged <- data.table::rbindlist(
-      lapply(
-        x,
-        function(current) {
-          data.table::as.data.table(
-            as(current, "matrix"),
-            keep.rownames = "seq_name"
-          )
-        }
-      ),
-      use.names = TRUE,
-      fill = TRUE
-    )
-    
+
     merged <- merged[!duplicated(seq_name)]
-    
-    seq_names <- merged[["seq_name"]]
+
+    seq_names <- merged$seq_name
     merged[, seq_name := NULL]
-    
+
     merged <- as.matrix(merged)
     rownames(merged) <- seq_names
-    
-    phyloseq::tax_table(merged)
-  }
-    
-  # Split each phyloseq object into its constituent components.
-  comp.list <- unlist(
-    lapply(
-      arguments,
-      phyloseq:::splat.phyloseq.objects
-    ),
-    recursive = FALSE
-  )
-  
-  comp.groups <- split(
-    comp.list,
-    names(comp.list)
-  )
-  
-  merged.list <- lapply(
-    names(comp.groups),
-    function(component) {
-      x <- comp.groups[[component]]
-      
-      if (length(x) == 1L) {
-        return(x[[1L]])
-      }
-      
-      if (component == "otu_table") {
-        merge_otu_tables(x)
-      } else if (component == "sam_data") {
-        merge_sample_data(x)
-      } else if (component == "tax_table") {
-        merge_tax_tables(x)
-      } else if (component == "refseq") {
-        merge_refseq(x)
-      } else {
-        # Retain standard phyloseq behaviour for other components,
-        # such as phylogenetic trees.
-        Reduce(
-          phyloseq::merge_phyloseq_pair,
-          x
-        )
-      }
+
+    merged
+}
+
+merge_samdfs <- function(x) {
+
+    merged <- data.table::rbindlist(
+        lapply(
+            x,
+            function(current) {
+                data.table::as.data.table(
+                    current,
+                    keep.rownames = "sample_primers"
+                )
+            }
+        ),
+        use.names = TRUE,
+        fill = TRUE
+    )
+
+    sample_ids <- merged$sample_primers
+    merged[, sample_primers := NULL]
+
+    merged <- as.data.frame(merged)
+    rownames(merged) <- sample_ids
+
+    merged
+}
+
+# Merge phyloseq objects containing disjoint samples.
+#
+# All OTU tables are standardized to taxa as rows before merging.
+# Taxonomy and reference sequences for duplicate ASVs retain the first
+# occurrence, subject to the behaviour of merge_taxtabs() and merge_refseq().
+merge_phyloseq_disjoint_samples <- function(arguments) {
+
+    if (!length(arguments)) {
+        stop("arguments must contain at least one phyloseq object.")
     }
-  )
-  
-  do.call(
-    phyloseq::phyloseq,
-    unname(merged.list)
-  )
+
+    arguments <- unname(arguments)
+
+    # Validate input types.
+    valid_inputs <- vapply(
+        arguments,
+        methods::is,
+        logical(1),
+        class2 = "phyloseq"
+    )
+
+    if (!all(valid_inputs)) {
+        stop(
+            "All inputs must be phyloseq objects. ",
+            "Invalid input indices: ",
+            paste(which(!valid_inputs), collapse = ", ")
+        )
+    }
+
+    # Require sample names to be unique across all input objects.
+    samples <- unlist(
+        lapply(
+            arguments,
+            phyloseq::sample_names
+        ),
+        use.names = FALSE
+    )
+
+    duplicated_samples <- unique(
+        samples[duplicated(samples)]
+    )
+
+    if (length(duplicated_samples)) {
+        stop(
+            "Sample names must not overlap between input phyloseq objects. ",
+            "Duplicated sample names: ",
+            paste(duplicated_samples, collapse = ", ")
+        )
+    }
+
+    # Extract OTU tables and standardize to:
+    # rows = ASVs, columns = samples.
+    seqtabs <- lapply(
+        arguments,
+        function(ps) {
+            seqtab <- as(phyloseq::otu_table(ps),"matrix")
+            if (!phyloseq::taxa_are_rows(ps)) {seqtab <- t(seqtab)}
+            storage.mode(seqtab) <- "integer"
+            seqtab
+        }
+    )
+
+    # Extract taxonomy tables.
+    taxtabs <- lapply(
+        arguments,
+        function(ps) {
+            as(phyloseq::tax_table(ps),"matrix")
+        }
+    )
+
+    # Extract sample metadata.
+    samdfs <- lapply(
+        arguments,
+        function(ps) {
+            as(phyloseq::sample_data(ps),"data.frame")
+        }
+    )
+
+    # Extract reference sequences.
+    refseqs <- lapply(
+        arguments,
+        function(ps){
+          phyloseq::refseq(ps)
+        }
+    )
+
+    # Merge the individual components.
+    seqtab_merged <- merge_seqtabs(seqtabs)
+    taxtab_merged <- merge_taxtabs(taxtabs)
+    samdf_merged <- merge_samdf(samdfs)
+    refseq_merged <- merge_refseq(refseqs)
+
+    # Synchronize all taxa-bearing components with the merged abundance table.
+    taxa <- rownames(seqtab_merged)
+
+    missing_taxa <- list(
+        taxtab = setdiff(taxa, rownames(taxtab_merged)),
+        refseq = setdiff(taxa, names(refseq_merged))
+    )
+
+    missing_taxa <- missing_taxa[
+        lengths(missing_taxa) > 0L
+    ]
+
+    if (length(missing_taxa)) {
+        details <- vapply(
+            names(missing_taxa),
+            function(component) {
+                paste0(
+                    component,
+                    ": ",
+                    paste(missing_taxa[[component]], collapse = ", ")
+                )
+            },
+            character(1)
+        )
+
+        stop(
+            "Merged components are missing ASVs present in the sequence table. ",
+            paste(details, collapse = "; ")
+        )
+    }
+
+    taxtab_merged <- taxtab_merged[taxa, , drop = FALSE]
+    refseq_merged <- refseq_merged[taxa]
+
+    # Synchronize sample metadata with the merged abundance table.
+    samples <- colnames(seqtab_merged)
+
+    missing_samples <- setdiff(
+        samples,
+        rownames(samdf_merged)
+    )
+
+    if (length(missing_samples)) {
+        stop(
+            "Merged sample metadata is missing samples present in the ",
+            "sequence table: ",
+            paste(missing_samples, collapse = ", ")
+        )
+    }
+
+    samdf_merged <- samdf_merged[samples, , drop = FALSE]
+
+    # Construct the merged phyloseq object once.
+    phyloseq::phyloseq(
+        phyloseq::otu_table(seqtab_merged, taxa_are_rows = TRUE),
+        phyloseq::tax_table(taxtab_merged),
+        phyloseq::sample_data(samdf_merged),
+        phyloseq::refseq(refseq_merged)
+    )
 }
 
 summarise_phyloseq <- function(

@@ -12,8 +12,10 @@ cat("\n")
 ### process arguments 
 
 dataset    <- args$dataset
-ps_files   <- args$ps_files
-fasta_files <- args$fasta_files
+seqtab_files <- unlist(stringr::str_extract_all(args$seqtab_files, "[^\\s,\\[\\]]+"))
+taxtab_files <- unlist(stringr::str_extract_all(args$taxtab_files, "[^\\s,\\[\\]]+"))
+samdf_files <- unlist(stringr::str_extract_all(args$samdf_files, "[^\\s,\\[\\]]+" ))
+fasta_files <- unlist(stringr::str_extract_all(args$fasta_files, "[^\\s,\\[\\]]+" ))
 
 if (!dataset %in% c("filtered", "unfiltered")) {
     stop("dataset must be 'filtered' or 'unfiltered'; received: ",dataset)
@@ -29,13 +31,10 @@ sys.source(functions_file, envir = .GlobalEnv)
 ### load only required packages
 process_packages <- c(
     "Biostrings",
-    "dplyr",
     "phyloseq",
-    "readr",
     "stringr",
-    "tibble",
     "data.table",
-    "tidyr",
+    "magrittr",
     NULL
 )
 suppressPackageStartupMessages(invisible(lapply(process_packages, library, character.only = TRUE, warn.conflicts = FALSE)))
@@ -55,86 +54,115 @@ tax_cols <- c(
     "Species"
 )
 
-## merge unfiltered phyloseq objects - These must have disjoint samples
-ps_merged <- ps_files %>%
-  stringr::str_extract_all(pattern = "[^\\s,\\[\\]]+") %>%
-  unlist() %>%
-  lapply(readRDS) %>%
-  merge_phyloseq_disjoint_samples()
+# Read in and merge seqtabs 
+# rows = ASVs, columns = samples, as integer matrices
+seqtab <- seqtab_files %>%
+    lapply(function(file) {
+        seqtab_dt <- data.table::fread(file)
+        sample_cols <- setdiff(names(seqtab_dt),c("seq_name", "cluster"))
+        seqtab <- as.matrix(seqtab_dt[, ..sample_cols])
+        rownames(seqtab) <- seqtab_dt$seq_name
+        storage.mode(seqtab) <- "integer"
+        seqtab
+    }) %>%
+    merge_seqtabs()
 
-# Merge DNAStringSet objects, retaining the first occurrence of each ASV name, and write out
-fasta_files %>%
-  stringr::str_split_1(pattern = " ") %>%
-  lapply(Biostrings::readDNAStringSet) %>%
-  merge_refseq() %>%
-  write_fasta(paste0("asvs_", dataset, ".fasta"))
+# Read in and merge taxtabs
+# rows = ASVs, columns = taxonomy ranks, as character matrices
+taxtab <- taxtab_files %>%
+    lapply(function(file) {
+        taxtab_dt <- data.table::fread(file)
+        taxtab <- as.matrix(taxtab_dt[, ..tax_cols])
+        rownames(taxtab) <- taxtab_dt$seq_name
+        taxtab
+    }) %>%
+    merge_taxtabs()
 
-## output merged data tables 
+# Read in and merge samdfs
+# rows = samples, columns = metadata variables, as data frame
+samdf <- samdf_files %>%
+    lapply(function(file) {
+        samdf <- as.data.frame(data.table::fread(file))
+        rownames(samdf) <- samdf$sample_primers
+        samdf
+    }) %>%
+    merge_samdfs()
+
+# Read reference sequences and remove any taxonomy information (if present).
+seqs <- fasta_files %>%
+    lapply(function(file) {
+        seqs <- Biostrings::readDNAStringSet(file)
+        names(seqs) <- sub("\\|.*$","",names(seqs))
+        seqs
+    }) %>%
+    merge_refseq()
+
+# Write out merged files
 data.table::fwrite(
-    melt_phyloseq(ps_merged),
-    paste0("raw_", dataset, ".csv")
+    data.table::as.data.table(
+        seqtab,
+        keep.rownames = "seq_name"
+    ),
+    paste0("seqtab_", dataset, ".csv")
 )
 
+data.table::fwrite(
+    data.table::as.data.table(
+        taxtab,
+        keep.rownames = "seq_name"
+    ),
+    paste0("taxtab_", dataset, ".csv")
+)
+data.table::fwrite(samdf, file = paste0("samdf_", dataset, ".csv"))
+write_fasta(seqs, paste0("asvs_", dataset, ".fasta"))
+
+## output merged data tables 
+raw_dt <- melt_phyloseq(
+    otutab = seqtab,
+    taxtab = taxtab,
+    samdf = samdf,
+    seqs = seqs
+)
+
+data.table::fwrite(raw_dt, paste0("raw_", dataset, ".csv"))
+
+rm(raw_dt)
+gc()
+
 # Export species level summary of unfiltered results
-ps_merged_summary <- summarise_phyloseq(ps_merged)
-data.table::fwrite(ps_merged_summary, paste0("summary_", dataset, ".csv"))
-
-## output phyloseq and component data
-
-# Write out whole phyloseq object
-saveRDS(ps_merged, paste0("ps_", dataset, ".rds"))
+summary_dt <- summarise_phyloseq(
+    otutab = seqtab,
+    taxtab = taxtab,
+    seqs = seqs
+)
+data.table::fwrite(summary_dt, paste0("summary_", dataset, ".csv"))
+rm(summary_dt)
+gc()
 
 ## Read-tracking output --------------------------------------------------------
 
-# Convert sample metadata without duplicating sample_primers.
-samdf_df <- as(phyloseq::sample_data(ps_merged), "data.frame")
-samdf <- data.table::as.data.table(samdf_df)
-
 if (dataset == "unfiltered") {
-
     # Summarise reads classified at each taxonomic rank.
-    sample_cols <- samdf$sample_primers
-
-    abundance <- as.matrix(ps_merged_summary[ , ..sample_cols])
-    storage.mode(abundance) <- "integer"
-
     readsout <- data.table::rbindlist(
         lapply(
             tax_cols,
             function(rank) {
 
-                classified <- (
-                    !is.na(ps_merged_summary[[rank]]) &
-                    !grepl(
-                        "^\\w__",
-                        ps_merged_summary[[rank]]
-                    )
-                )
+                keep <- !is.na(taxtab[, rank]) &
+                    !grepl("^\\w__", taxtab[, rank])
 
                 data.table::data.table(
-                    stage = paste0(
-                        "classified_",
-                        tolower(rank)
-                    ),
-                    sample_primers = sample_cols,
-                    pairs = colSums(
-                        abundance[
-                            classified,
-                            ,
-                            drop = FALSE
-                        ]
-                    )
+                    stage = paste0("classified_", tolower(rank)),
+                    sample_primers = colnames(seqtab),
+                    pairs = colSums(seqtab[keep, , drop = FALSE])
                 )
             }
         )
     )
 
 } else {
-
-    # Summarise reads remaining after all taxon-, observation- and
-    # sample-level filtering.
-    sample_totals <- phyloseq::sample_sums(ps_merged)
-
+    # Summarise total reads
+    sample_totals <- colSums(seqtab)
     readsout <- data.table::data.table(
         stage = "filter_sample_taxon",
         sample_primers = names(sample_totals),
@@ -143,54 +171,26 @@ if (dataset == "unfiltered") {
 }
 
 # Add sample metadata required by READ_TRACKING.
-readsout <- samdf[readsout, on = "sample_primers"][
+readsout <- data.table::as.data.table(samdf)[
+    readsout,
+    on = "sample_primers"
+][
     ,
-    .(
-        stage,
-        sample_primers,
-        read_group,
-        primers,
-        pairs
-    )
+    .(stage, sample_primers, read_group, primers, pairs)
 ]
 
-data.table::fwrite(
-    readsout,
-    paste0(
-        "ps_",
-        dataset,
-        "_readsout.csv"
+
+data.table::fwrite(readsout, paste0("ps_", dataset,"_readsout.csv" ))
+
+## create merged phyloseq object
+ps_merged <- 
+    phyloseq::phyloseq(
+        phyloseq::otu_table(seqtab, taxa_are_rows = TRUE), 
+        phyloseq::tax_table(taxtab),
+        phyloseq::sample_data(samdf),
+        phyloseq::refseq(seqs)
     )
-)
-
-# Clean up large summary objects.
-rm(readsout, ps_merged_summary)
-if (exists("abundance")) {
-    # Only exists in unfiltered ouput
-    rm(abundance)
-}
-gc()
-
-# save seqtab as wide tibble (rows = sample_primers, cols = ASV name (hash), cells = abundance)
-phyloseq::otu_table(ps_merged) %>%
-    as("matrix") %>%
-    data.table::as.data.table(
-        keep.rownames = "sample_primers"
-    ) %>%
-    data.table::fwrite(file = paste0("seqtab_", dataset, ".csv"))
-
-# save taxtab as long tibble (rows = ASV, cols = tax rankings)
-phyloseq::tax_table(ps_merged) %>%
-    as("matrix") %>%
-    unclassified_to_na() %>%
-    data.table::as.data.table(keep.rownames = "seq_name") %>%
-    data.table::fwrite(file = paste0("taxtab_", dataset, ".csv"))
-
-# save samplesheet
-phyloseq::sample_data(ps_merged) %>%
-    as("data.frame") %>%
-    data.table::as.data.table(keep.rownames = "sample_primers") %>%
-    data.table::fwrite(file = paste0("samdf_", dataset, ".csv"))
+saveRDS(ps_merged, paste0("ps_", dataset, ".rds"))
 
 # stop(" *** stopped manually *** ") ##########################################
 }, 
