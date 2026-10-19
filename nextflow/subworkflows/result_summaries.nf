@@ -7,8 +7,9 @@
 include { ACCUMULATION_CURVE                        } from '../modules/accumulation_curve/accumulation_curve'
 include { PHYLOSEQ_CLUSTERED                        } from '../modules/phyloseq_clustered/phyloseq_clustered'
 include { PHYLOSEQ_FILTER                           } from '../modules/phyloseq_filter/phyloseq_filter'
-include { PHYLOSEQ_MERGE                            } from '../modules/phyloseq_merge/phyloseq_merge'
 include { PHYLOSEQ_UNFILTERED                       } from '../modules/phyloseq_unfiltered/phyloseq_unfiltered'
+include { PHYLOSEQ_MERGE as MERGE_UNFILTERED        } from '../modules/phyloseq_merge/phyloseq_merge'
+include { PHYLOSEQ_MERGE as MERGE_FILTERED          } from '../modules/phyloseq_merge/phyloseq_merge'
 include { READ_TRACKING                             } from '../modules/read_tracking/read_tracking'
 
 
@@ -55,8 +56,9 @@ workflow RESULT_SUMMARIES {
             [ primers, process_params ] }
         .set { ch_accumulation_curve_params } 
 
-    PHYLOSEQ_UNFILTERED.out.ps
-        .combine ( ch_accumulation_curve_params, by: 0 )
+    PHYLOSEQ_UNFILTERED.out.filter_inputs
+        .map { primers, seqtab, _taxtab, samdf, _filters, _fasta -> [ primers, seqtab, samdf ]}
+        .combine(ch_accumulation_curve_params, by: 0)
         .set { ch_accumulation_curve_input }
 
     //// create accumulation curve plots
@@ -98,34 +100,49 @@ workflow RESULT_SUMMARIES {
         
     }
 
-    //// combine phyloseq outputs to merge across loci
-    PHYLOSEQ_UNFILTERED.out.ps // val(primers), path("ps_unfiltered_*.rds")
-        .map { _primers, ps, _filters_tibble -> [ ps ] }
+    //// Collect unfiltered inputs across loci.
+    ch_ps_unfiltered = PHYLOSEQ_UNFILTERED.out.ps
+        .map { _primers, ps, _filters_tibble -> ps }
         .collect()
-        .set { ch_ps_unfiltered }
 
-    PHYLOSEQ_FILTER.out.ps // val(primers), path("ps_filtered_*.rds")
-        .map { _primers, ps -> [ ps ] }
+    ch_fasta_unfiltered = PHYLOSEQ_UNFILTERED.out.asv_fasta
         .collect()
-        .set { ch_ps_filtered }
 
-    PHYLOSEQ_MERGE ( 
-        ch_ps_unfiltered, 
-        ch_ps_filtered,
-        PHYLOSEQ_UNFILTERED.out.asv_fasta.collect(),
-        PHYLOSEQ_FILTER.out.asv_fasta.collect()
+    //// Collect filtered inputs across loci.
+    ch_ps_filtered = PHYLOSEQ_FILTER.out.ps
+        .map { _primers, ps -> ps }
+        .collect()
+
+    ch_fasta_filtered = PHYLOSEQ_FILTER.out.asv_fasta
+        .collect()
+
+    //// Merge filtered and unfiltered objects in separate process tasks.
+    MERGE_UNFILTERED(
+        ch_ps_unfiltered,
+        ch_fasta_unfiltered,
+        "unfiltered"
     )
-    
 
-    ch_read_tracker_grouped = 
-        ch_read_tracker_grouped
-        .concat( PHYLOSEQ_MERGE.out.read_tracking.flatten() ) 
+    MERGE_FILTERED(
+        ch_ps_filtered,
+        ch_fasta_filtered,
+        "filtered"
+    )
+
+    //// Add merged filtered and unfiltered read-tracking outputs.
+    ch_read_tracker_grouped_final = ch_read_tracker_grouped
+        .concat(
+            MERGE_UNFILTERED.out.read_tracking,
+            MERGE_FILTERED.out.read_tracking
+        )
         .collect()
 
-    // track reads and sequences across the pipeline
-    READ_TRACKING ( 
-        ch_read_tracker_samples.collectFile(name: 'read_tracker_samples.csv'), 
-        ch_read_tracker_grouped,
+    //// Track reads and sequences across the pipeline.
+    READ_TRACKING(
+        ch_read_tracker_samples.collectFile(
+            name: "read_tracker_samples.csv"
+        ),
+        ch_read_tracker_grouped_final,
         ch_samplesheet_split
     )
 
