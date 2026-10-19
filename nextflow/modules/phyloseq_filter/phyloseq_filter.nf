@@ -6,8 +6,14 @@ process PHYLOSEQ_FILTER {
     publishDir { "${params.outdir}/results/main_outputs/filtered" }, mode: 'copy'
 
     input:
-    tuple val(primers), path(ps), path(filters_tibble), val(process_params)
-
+    tuple val(primers),
+        path(seqtab),
+        path(taxtab),
+        path(samdf),
+        path(filters),
+        path(fasta),
+        val(process_params)
+        
     output:
     tuple val(primers), path("seqtab_filtered_*.csv"), path("taxtab_filtered_*.csv"), path("samdf_filtered_*.csv"), path("raw_filtered_*.csv"), path("summary_filtered_*.csv"), emit: csvs
     tuple val(primers), path("ps_filtered_*.rds"),                          emit: ps 
@@ -22,8 +28,11 @@ process PHYLOSEQ_FILTER {
         --cpus="$task.cpus" \
         --rdata="$params.rdata" \
         --primers="$primers" \
-        --ps="$ps" \
-        --filters_tibble="$filters_tibble" \
+        --taxtab_file="$taxtab" \
+        --seqtab_file="$seqtab" \
+        --samdf_file="$samdf" \
+        --filters_file="$filters" \
+        --fasta_file="$fasta" \
         --cluster_threshold="$process_params.cluster_threshold" \
         --target_kingdom="$process_params.target_kingdom" \
         --target_phylum="$process_params.target_phylum" \
