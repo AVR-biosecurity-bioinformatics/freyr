@@ -6,10 +6,9 @@ process PHYLOSEQ_MERGE {
     publishDir { "${params.outdir}/results/main_outputs/merged" }, pattern: '*{_filtered,_unfiltered}.{csv,rds,fasta}', mode: 'copy'
 
     input:
-    path(ps_unfiltered)
-    path(ps_filtered)
-    path(unfiltered_fastas, name: "unfiltered_*.fasta")
-    path(filtered_fastas, name: "filtered_*.fasta")
+    path ps_files
+    path fasta_files
+    val dataset
 
     output:
     path("*{_filtered,_unfiltered}.{csv,rds,fasta}")
@@ -22,12 +21,11 @@ process PHYLOSEQ_MERGE {
         --process_name="phyloseq_merge" \
         --cpus="$task.cpus" \
         --rdata="$params.rdata" \
-        --ps_unfiltered="$ps_unfiltered" \
-        --ps_filtered="$ps_filtered" \
-        --unfiltered_fastas="$unfiltered_fastas" \
-        --filtered_fastas="$filtered_fastas" 
+        --dataset="$dataset" \
+        --ps_files="${ps_files.join(' ')}" \
+        --fasta_files="${fasta_files.join(' ')}"
         
-        
+                
     """
     
 }

@@ -280,12 +280,10 @@ names(seqs_output) <- paste(
 write_fasta(seqs_output, paste0("asvs_unfiltered_", primers, ".fasta"))  
 
 # save samplesheet
-data.table::as.data.table(
-    samples_df,
-    keep.rownames = "sample_primers"
-  ) %>%
-    data.table::fwrite(file = paste0("samdf_unfiltered_",primers,".csv"))
-
+data.table::fwrite(
+    data.table::as.data.table(samples_df),
+    file = paste0("samdf_unfiltered_", primers, ".csv")
+)
 
 ## create phyloseq object
 ps_uf <- 

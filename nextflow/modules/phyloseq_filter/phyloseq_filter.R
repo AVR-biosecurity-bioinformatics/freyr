@@ -11,11 +11,11 @@ cat("\n")
 
 ### process arguments 
 primers                 <- args$primers
-taxtab                  <- args$taxtab_file
-seqtab                  <- args$seqtab_file
-samdf                   <- args$samdf_file
+taxtab_file             <- args$taxtab_file
+seqtab_file             <- args$seqtab_file
+samdf_file              <- args$samdf_file
 filters_file            <- args$filters_file
-fasta                   <- args$fasta_file
+fasta_file              <- args$fasta_file
 cluster_threshold       <- args$cluster_threshold
 target_kingdom          <- args$target_kingdom
 target_phylum           <- args$target_phylum
@@ -74,11 +74,10 @@ tax_cols <- c(
 )
 
 ## Read input files
-taxtab_dt <- data.table::fread(taxtab)
-seqtab_dt <- data.table::fread(seqtab)
-samdf_dt <- data.table::fread(samdf)
+taxtab_dt <- data.table::fread(taxtab_file)
+seqtab_dt <- data.table::fread(seqtab_file)
 seq_filters <- data.table::fread(filters_file)
-seqs <- Biostrings::readDNAStringSet(fasta)
+seqs <- Biostrings::readDNAStringSet(fasta_file)
 
 # Restore the original ASV identifier from the annotated FASTA header.
 names(seqs) <- sub("\\|.*$","",names(seqs))
@@ -94,9 +93,8 @@ rownames(seqtab) <- seqtab_dt$seq_name
 storage.mode(seqtab) <- "integer"
 
 # Reconstruct sample metadata with sample identifiers as row names.
-samdf <- as.data.frame(samdf_dt)
+samdf <- as.data.frame(data.table::fread(samdf_file))
 rownames(samdf) <- samdf$sample_primers
-
 
 ## Per-taxon filters (removes whole ASVs)
 # Convert a comma-separated taxonomic filter into a character vector.
