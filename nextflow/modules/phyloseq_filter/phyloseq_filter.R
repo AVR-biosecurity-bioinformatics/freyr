@@ -51,15 +51,6 @@ suppressPackageStartupMessages(invisible(lapply(process_packages, library, chara
 ps <- readRDS(ps)
 seq_filters <- readr::read_csv(filters_tibble)
 
-# convert "NA" strings to true NA
-if(target_kingdom == "NA"){ target_kingdom <- NA }
-if(target_phylum == "NA"){ target_phylum <- NA }
-if(target_class == "NA"){ target_class <- NA }
-if(target_order == "NA"){ target_order <- NA }
-if(target_family == "NA"){ target_family <- NA }
-if(target_genus == "NA"){ target_genus <- NA }
-if(target_species == "NA"){ target_species <- NA }
-
 # convert "NA" strings to true NA, or convert number strings to numeric
 if(min_sample_reads %in% c(0, "NA", NA)){ min_sample_reads <- NA } else { min_sample_reads <- as.numeric(min_sample_reads) }
 if(min_taxa_reads %in% c(0, "NA", NA)){ min_taxa_reads <- NA } else { min_taxa_reads <- as.numeric(min_taxa_reads) }  
@@ -103,27 +94,64 @@ if (taxa_are_rows) {
 }
 
 ## Per-taxon filters (removes whole ASVs)
+# Convert a comma-separated taxonomic filter into a character vector.
+# Examples:
+#   "Insecta,Gastropoda" -> c("Insecta", "Gastropoda")
+#   "NA"                 -> NULL (no filter)
+#   NA_character_        -> NULL (no filter)
+#   ""                   -> NULL (no filter)
+parse_taxa_filter <- function(x) {
+    if (is.null(x) || length(x) == 0L || all(is.na(x)) || all(trimws(x) %in% c("", "NA"))) {
+        return(NULL)
+    }
+    taxa <- trimws(unlist(strsplit(x, ",", fixed = TRUE)))
 
-# Logical vector of taxa - Start by retaining every taxon.
-keep_taxa <- rep(TRUE, nrow(taxtab))
-names(keep_taxa) <- rownames(taxtab)
+    # Remove empty values and literal "NA" values.
+    taxa <- taxa[!is.na(taxa) & nzchar(taxa) & taxa != "NA"]
 
-# Return TRUE when no filter is requested or the classification matches the target.
-matches_taxon <- function(values, target) {
-    is.na(target) | (!is.na(values) & values == target)
+    if (length(taxa) == 0L) {
+        NULL
+    } else {
+        unique(taxa)
+    }
 }
 
-# Retain only taxa matching every requested taxonomic filter.
-keep_taxa <- keep_taxa &
+# Parse taxonomic filters. Each target may contain one or more
+# comma-separated taxa, for example "Insecta,Gastropoda".
+target_kingdom <- parse_taxa_filter(target_kingdom)
+target_phylum  <- parse_taxa_filter(target_phylum)
+target_class   <- parse_taxa_filter(target_class)
+target_order   <- parse_taxa_filter(target_order)
+target_family  <- parse_taxa_filter(target_family)
+target_genus   <- parse_taxa_filter(target_genus)
+target_species <- parse_taxa_filter(target_species)
+
+
+# Return TRUE for every sequence when no filter is requested.
+# Otherwise, return TRUE where the classification matches any target taxon.
+matches_taxon <- function(values, targets) {
+    if (is.null(targets)) {
+        return(rep(TRUE, length(values)))
+    }
+
+    !is.na(values) & values %in% targets
+}
+
+# Retain only taxa matching every requested taxonomic rank.
+# Multiple taxa within a rank use OR logic: Class = Insecta OR Gastropoda
+# Filters across ranks use AND logic: Phylum = Arthropoda AND Class = Insecta
+keep_taxa <-
     matches_taxon(taxtab[, "Kingdom"], target_kingdom) &
-    matches_taxon(taxtab[, "Phylum"], target_phylum) &
-    matches_taxon(taxtab[, "Class"], target_class) &
-    matches_taxon(taxtab[, "Order"], target_order) &
-    matches_taxon(taxtab[, "Family"], target_family) &
-    matches_taxon(taxtab[, "Genus"], target_genus) &
+    matches_taxon(taxtab[, "Phylum"],  target_phylum) &
+    matches_taxon(taxtab[, "Class"],   target_class) &
+    matches_taxon(taxtab[, "Order"],   target_order) &
+    matches_taxon(taxtab[, "Family"],  target_family) &
+    matches_taxon(taxtab[, "Genus"],   target_genus) &
     matches_taxon(taxtab[, "Species"], target_species)
 
-# Identify sequences that passed all four sequence-quality filters.
+names(keep_taxa) <- rownames(taxtab)
+
+# Identify sequences that passed all sequence-quality filters.
 seqs_passing <- with(
     seq_filters,
     seq_name[
