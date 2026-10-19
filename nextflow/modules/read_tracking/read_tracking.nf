@@ -21,12 +21,12 @@ process READ_TRACKING {
     """
     
     Rscript --vanilla "${moduleDir}/read_tracking.R" \
-        --process_name "read_tracking" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --rt_samples "$rt_samples" \
-        --rt_group "$rt_group" \
-        --samplesheet_split_file "$samplesheet_split" 
+        --process_name="read_tracking" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --rt_samples="$rt_samples" \
+        --rt_group="$rt_group" \
+        --samplesheet_split_file="$samplesheet_split" 
         
     """
 

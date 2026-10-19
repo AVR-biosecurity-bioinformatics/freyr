@@ -14,12 +14,12 @@ process ACCUMULATION_CURVE {
     script:
     """
     Rscript --vanilla "${moduleDir}/accumulation_curve.R" \
-        --process_name "accumulation_curve" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --primers "$primers" \
-        --ps_file "$ps_file" \
-        --min_sample_reads "$process_params.min_sample_reads"
+        --process_name="accumulation_curve" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --primers="$primers" \
+        --ps_file="$ps_file" \
+        --min_sample_reads="$process_params.min_sample_reads"
         
     """
 

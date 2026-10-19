@@ -15,13 +15,13 @@ process MAKE_SEQTAB_PAIRED {
     """
     
     Rscript --vanilla "${moduleDir}/make_seqtab_paired.R" \
-        --process_name "make_seqtab_paired" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --sample_primers "$sample_primers" \
-        --primers "$primers" \
-        --read_group "$read_group" \
-        --mergers_paths "$mergers_paths" 
+        --process_name="make_seqtab_paired" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --sample_primers="$sample_primers" \
+        --primers="$primers" \
+        --read_group="$read_group" \
+        --mergers_paths="$mergers_paths" 
 
     """
 

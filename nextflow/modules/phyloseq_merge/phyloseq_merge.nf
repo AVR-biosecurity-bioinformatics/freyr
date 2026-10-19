@@ -19,13 +19,13 @@ process PHYLOSEQ_MERGE {
     """
         
     Rscript --vanilla "${moduleDir}/phyloseq_merge.R" \
-        --process_name "phyloseq_merge" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --ps_unfiltered "$ps_unfiltered" \
-        --ps_filtered "$ps_filtered" \
-        --unfiltered_fastas "$unfiltered_fastas" \
-        --filtered_fastas "$filtered_fastas" 
+        --process_name="phyloseq_merge" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --ps_unfiltered="$ps_unfiltered" \
+        --ps_filtered="$ps_filtered" \
+        --unfiltered_fastas="$unfiltered_fastas" \
+        --filtered_fastas="$filtered_fastas" 
         
         
     """

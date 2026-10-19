@@ -16,16 +16,16 @@ process ASSIGNMENT_PLOT {
     """
     
     Rscript --vanilla "${moduleDir}/assignment_plot.R" \
-        --process_name "assignment_plot" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --primers "$primers" \
-        --read_group "$read_group" \
-        --fasta "$fasta" \
-        --tax "$tax" \
-        --blast_list "$blast" \
-        --idtaxa_db "$process_params.idtaxa_db" \
-        --ref_fasta "$process_params.ref_fasta"
+        --process_name="assignment_plot" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --primers="$primers" \
+        --read_group="$read_group" \
+        --fasta="$fasta" \
+        --tax="$tax" \
+        --blast_list="$blast" \
+        --idtaxa_db="$process_params.idtaxa_db" \
+        --ref_fasta="$process_params.ref_fasta"
         
     """
 

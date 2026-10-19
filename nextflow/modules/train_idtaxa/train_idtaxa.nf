@@ -19,14 +19,14 @@ process TRAIN_IDTAXA {
     """
     
     Rscript --vanilla "${moduleDir}/train_idtaxa.R" \
-        --process_name "train_idtaxa" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --ref_fasta "$ref_fasta" \
-        --max_group_size "$max_group_size" \
-        --max_iterations "$max_iterations" \
-        --allow_group_removal "$allow_group_removal" \
-        --drop_malformed "$drop_malformed"
+        --process_name="train_idtaxa" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --ref_fasta="$ref_fasta" \
+        --max_group_size="$max_group_size" \
+        --max_iterations="$max_iterations" \
+        --allow_group_removal="$allow_group_removal" \
+        --drop_malformed="$drop_malformed"
         
     """
 

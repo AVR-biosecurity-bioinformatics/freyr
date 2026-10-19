@@ -16,14 +16,14 @@ process PRIORS {
     """
     
     Rscript --vanilla "${moduleDir}/priors.R" \
-        --process_name "priors" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --primers "$primers" \
-        --direction "$direction" \
-        --read_group "$read_group" \
-        --priors "$priors" \
-        --prior_min_samples "$prior_min_samples" 
+        --process_name="priors" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --primers="$primers" \
+        --direction="$direction" \
+        --read_group="$read_group" \
+        --priors="$priors" \
+        --prior_min_samples="$prior_min_samples" 
         
     """
     

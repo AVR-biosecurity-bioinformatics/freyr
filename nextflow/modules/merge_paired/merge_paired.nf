@@ -15,17 +15,17 @@ process MERGE_PAIRED {
     """
      
     Rscript --vanilla "${moduleDir}/merge_paired.R" \
-        --process_name "merge_paired" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --sample_primers "$sample_primers" \
-        --primers "$primers" \
-        --read_group "$read_group" \
-        --reads_F "$readsF" \
-        --reads_R "$readsR" \
-        --seqs_F "$seqsF" \
-        --seqs_R "$seqsR" \
-        --concat_unmerged "$concat_unmerged"
+        --process_name="merge_paired" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --sample_primers="$sample_primers" \
+        --primers="$primers" \
+        --read_group="$read_group" \
+        --reads_F="$readsF" \
+        --reads_R="$readsR" \
+        --seqs_F="$seqsF" \
+        --seqs_R="$seqsR" \
+        --concat_unmerged="$concat_unmerged"
 
     """
 

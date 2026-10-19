@@ -18,18 +18,18 @@ process PHYLOSEQ_CLUSTERED {
     """
     
     Rscript --vanilla "${moduleDir}/phyloseq_clustered.R" \
-        --process_name "phyloseq_clustered" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --primers "$primers" \
-        --seqtab_file "$seqtab" \
-        --taxtab_file "$taxtab" \
-        --samdf_file "$samdf" \
-        --raw_file "$raw" \
-        --summary_file "$summary" \
-        --ps_file "$ps" \
-        --clusters_file "$clusters" \
-        --merge_clusters "$merge_clusters" 
+        --process_name="phyloseq_clustered" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --primers="$primers" \
+        --seqtab_file="$seqtab" \
+        --taxtab_file="$taxtab" \
+        --samdf_file="$samdf" \
+        --raw_file="$raw" \
+        --summary_file="$summary" \
+        --ps_file="$ps" \
+        --clusters_file="$clusters" \
+        --merge_clusters="$merge_clusters" 
         
     """
 

@@ -16,17 +16,17 @@ process PHYLOSEQ_UNFILTERED {
     """
     
     Rscript --vanilla "${moduleDir}/phyloseq_unfiltered.R" \
-        --process_name "phyloseq_unfiltered" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --primers "$primers" \
-        --taxtab_file "$taxtab" \
-        --seqtab_file "$seqtab" \
-        --filters_file "$filters" \
-        --fasta_file "$fasta" \
-        --samplesheet_split_file "$samplesheet_split" \
-        --sample_metadata_file "$sample_metadata" \
-        --cluster_threshold "$process_params.cluster_threshold" 
+        --process_name="phyloseq_unfiltered" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --primers="$primers" \
+        --taxtab_file="$taxtab" \
+        --seqtab_file="$seqtab" \
+        --filters_file="$filters" \
+        --fasta_file="$fasta" \
+        --samplesheet_split_file="$samplesheet_split" \
+        --sample_metadata_file="$sample_metadata" \
+        --cluster_threshold="$process_params.cluster_threshold" 
         
     """
 

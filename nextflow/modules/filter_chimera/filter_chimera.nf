@@ -14,13 +14,13 @@ process FILTER_CHIMERA {
     """
     
     Rscript --vanilla "${moduleDir}/filter_chimera.R" \
-        --process_name "filter_chimera" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --primers "$primers" \
-        --seqtab_tibble_list "$seqtab_tibble_list" \
-        --fasta_list "$fasta_list" \
-        --minSampleFraction "$process_params.chimera_sample_frac"
+        --process_name="filter_chimera" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --primers="$primers" \
+        --seqtab_tibble_list="$seqtab_tibble_list" \
+        --fasta_list="$fasta_list" \
+        --minSampleFraction="$process_params.chimera_sample_frac"
     
     """
 

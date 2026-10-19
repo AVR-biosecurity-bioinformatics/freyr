@@ -26,19 +26,19 @@ process PARSE_INPUTS {
     """
 
     Rscript --vanilla "${moduleDir}/parse_inputs.R" \
-        --process_name "parse_inputs" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --launchDir "$launchdir" \
-        --samplesheet "$samplesheet" \
-        --primer_params "$primer_params" \
-        --pp_type "$pp_type" \
-        --seq_type "$seq_type" \
-        --paired "$paired" \
-        --subsample "$subsample" \
-        --extension "$extension" \
-        --pp_params "$pp_params" \
-        --train_idtaxa "$params.train_idtaxa"
+        --process_name="parse_inputs" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --launchDir="$launchdir" \
+        --samplesheet="$samplesheet" \
+        --primer_params="$primer_params" \
+        --pp_type="$pp_type" \
+        --seq_type="$seq_type" \
+        --paired="$paired" \
+        --subsample="$subsample" \
+        --extension="$extension" \
+        --pp_params="$pp_params" \
+        --train_idtaxa="$params.train_idtaxa"
 
     """
 }

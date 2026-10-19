@@ -18,14 +18,14 @@ process MERGE_FILTERS {
     """
     
     Rscript --vanilla "${moduleDir}/merge_filters.R" \
-        --process_name "merge_filters" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --primers "$primers" \
-        --filter_tibble_list "$filter_tibble_list" \
-        --seqtab_tibble_list "$seqtab_tibble_list" \
-        --fasta_list "$fasta_list" \
-        --samplesheet_split "$samplesheet_split" 
+        --process_name="merge_filters" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --primers="$primers" \
+        --filter_tibble_list="$filter_tibble_list" \
+        --seqtab_tibble_list="$seqtab_tibble_list" \
+        --fasta_list="$fasta_list" \
+        --samplesheet_split="$samplesheet_split" 
         
     """
 

@@ -16,11 +16,11 @@ process MISEQ_QC {
     """
 
     Rscript --vanilla "${moduleDir}/miseq_qc.R" \
-        --process_name "miseq_qc" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --read_group "$read_group" \
-        --miseq_dir "$miseq_dir"
+        --process_name="miseq_qc" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --read_group="$read_group" \
+        --miseq_dir="$miseq_dir"
 
     """
 }

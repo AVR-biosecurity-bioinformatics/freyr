@@ -16,13 +16,13 @@ process ERROR_MODEL {
     """
 
     Rscript --vanilla "${moduleDir}/error_model.R" \
-        --process_name "error_model" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --reads "$reads" \
-        --primers "$primers" \
-        --read_group "$read_group" \
-        --direction "$direction"
+        --process_name="error_model" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --reads="$reads" \
+        --primers="$primers" \
+        --read_group="$read_group" \
+        --direction="$direction"
 
     """
     

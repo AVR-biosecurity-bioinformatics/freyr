@@ -16,16 +16,16 @@ process TAX_BLAST {
     """
     
     Rscript --vanilla "${moduleDir}/tax_blast.R" \
-        --process_name "tax_blast" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --primers "$primers" \
-        --read_group "$read_group" \
-        --fasta "$fasta" \
-        --blast_tsv "$blast_tsv" \
-        --blast_min_identity "$process_params.blast_min_identity" \
-        --blast_min_coverage "$process_params.blast_min_coverage" \
-        --run_blast "$process_params.run_blast"
+        --process_name="tax_blast" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --primers="$primers" \
+        --read_group="$read_group" \
+        --fasta="$fasta" \
+        --blast_tsv="$blast_tsv" \
+        --blast_min_identity="$process_params.blast_min_identity" \
+        --blast_min_coverage="$process_params.blast_min_coverage" \
+        --run_blast="$process_params.run_blast"
         
     """
 
