@@ -142,14 +142,24 @@ gc()
 ## Read-tracking output --------------------------------------------------------
 
 if (dataset == "unfiltered") {
+    # Align taxonomy rows to the abundance matrix.
+    stopifnot(
+        !anyDuplicated(rownames(taxtab)),
+        all(rownames(seqtab) %in% rownames(taxtab))
+    )
+    taxtab <- taxtab[rownames(seqtab), , drop = FALSE]
+
     # Summarise reads classified at each taxonomic rank.
     readsout <- data.table::rbindlist(
         lapply(
             tax_cols,
             function(rank) {
+                values <- trimws(taxtab[, rank])
 
-                keep <- !is.na(taxtab[, rank]) &
-                    !grepl("^\\w__", taxtab[, rank])
+                # Exclude missing, blank, and propagated classifications.
+                keep <- !is.na(values) &
+                    nzchar(values) &
+                    !grepl("__", values, fixed = TRUE)
 
                 data.table::data.table(
                     stage = paste0("classified_", tolower(rank)),
