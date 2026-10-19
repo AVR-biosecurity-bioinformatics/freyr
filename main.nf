@@ -161,7 +161,9 @@ workflow {
     }
 
     // validate input params
-    validateParameters()
+    validateParameters(
+        cast_cli_params: true
+    )
     
     // Print summary of supplied parameters (that differ from defaults)
     log.info(
