@@ -492,9 +492,27 @@ samplesheet_complete %>%
 
 ### validate primer_params content -------------------------------------------------------------------------------------
 
-# check none of the primer_params values contain spaces or commas 
-if (!all(stringr::str_detect(primer_params_df %>% unlist %>% unname, "^[^\\s,;]+$") %>% .[!is.na(.)] )){
-    stop(paste0(prpe, "Primer parameters must not contain spaces, commas or semi-colons."))
+target_cols <- grep("^target_", names(primer_params_df), value = TRUE)
+check_cols  <- setdiff(names(primer_params_df), target_cols)
+
+# Non target_* columns cannot contain spaces, commas, or semicolons
+values <- unlist(primer_params_df[check_cols], use.names = FALSE)
+
+if (!all(stringr::str_detect(values[!is.na(values)], "^[^\\s,;]+$"))) {
+    stop(paste0(prpe," Primer parameters must not contain spaces, commas or semi-colons."))
+}
+
+# target_* columns may contain commas (i.e. Insecta,Gastropoda) but not spaces or semicolons
+if (length(target_cols) > 0) {
+    
+    target_values <- unlist(
+        primer_params_df[target_cols],
+        use.names = FALSE
+    )
+
+    if (!all(stringr::str_detect(target_values[!is.na(target_values)],"^[^\\s;]+$"))) {
+        stop(paste0(prpe," target_* parameters must not contain spaces or semi-colons."))
+    }
 }
 
 # add missing columns with default values
@@ -811,9 +829,10 @@ if (!all(stringr::str_detect(primer_params_up$rev_primer_seq, "^[GATCRYMKSWHBVDN
     stop(paste0(prpe, "One or more values of 'rev_primer_seq' contains non-IUPAC characters: '", stringr::str_flatten(primer_params_up$rev_primer_seq, " / "),"'."))
 }
 
-# check that still none of the primer_params values contain spaces or commas 
-if (!all(stringr::str_detect(primer_params_up %>% unlist %>% unname, "^[^\\s,;]+$") %>% .[!is.na(.)] )){
-    stop(paste0(prpe, "Primer parameters must not contain spaces, commas or semi-colons."))
+# check that still none of the primer_params (other than targets_*) values contain spaces or commas 
+values <- unlist(primer_params_up[check_cols], use.names = FALSE)
+if (!all(stringr::str_detect(values[!is.na(values)], "^[^\\s,;]+$"))) {
+    stop(paste0(prpe," Primer parameters must not contain spaces, commas or semi-colons."))
 }
 
 # check max_primer_mismatch is an integer >= 0
@@ -972,7 +991,7 @@ if (not_num %>% length() > 0){
     }
 }
 
-# NOTE: target_* fields should already be validated as lacking spaces or commas -- invalid taxa names should be ignored at this stage
+# NOTE: target_* fields should already be validated as lacking spaces -- invalid taxa names should be ignored at this stage
 
 # check min_sample_reads is an integer >= 0
 integerTest(
@@ -995,7 +1014,7 @@ if ( primer_params_up$min_taxa_ra %>% as.numeric %>% between(., 0, 1) %>% all %i
 
 
 ## write parsed primer_params to file
-readr::write_csv(primer_params_up, "primer_params_parsed.csv")
+readr::write_tsv(primer_params_up, "primer_params_parsed.tsv")
 
 # stop("stopped manually")
 

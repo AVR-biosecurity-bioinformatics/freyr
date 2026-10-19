@@ -20,7 +20,7 @@ process PARSE_INPUTS {
     path("sample_metadata.csv"),                    emit: sample_metadata
     path("samplesheet_unsplit.csv"),                emit: samplesheet_unsplit
     path("samplesheet_split.csv"),                  emit: samplesheet_split
-    path("primer_params_parsed.csv"),               emit: primer_params_parsed
+    path("primer_params_parsed.tsv"),               emit: primer_params_parsed
 
     script:
     """
