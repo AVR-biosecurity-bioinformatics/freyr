@@ -580,29 +580,72 @@ melt_phyloseq <- function(
 }
 
 # Rarefaction / species accumulation plot
-rareplot <- function(ps, step="auto", threshold=0){
-  if(step == "auto"){
-    step <- ceiling(median(phyloseq::sample_sums(ps)) / 100)
-  } else if (is.numeric(step)){
-    step <- as.numeric(ceiling(step))
-  } else {
-    stop("Step must be an integer or 'auto' ")
-  }
-  if(phyloseq::taxa_are_rows(ps)){
-    otutab <- t(as(phyloseq::otu_table(ps), "matrix"))
-    storage.mode(otutab) <- "integer" # Force integer storage of discrete count matrix
-  } else {
-    otutab <- as(phyloseq::otu_table(ps), "matrix")
-    storage.mode(otutab) <- "integer" # Force integer storage of discrete count matrix
-  }
-  otutab <- otutab[rowSums(otutab) > 0, colSums(otutab) > 0]
-  rare <- vegan::rarecurve(otutab, step=step, tidy=TRUE)%>%
-    dplyr::rename(sample_primers = Site, count = Sample, ASV = Species) %>%
-    dplyr::left_join(
-      data.frame(sample_primers = phyloseq::sample_data(ps)$sample_primers,
-                 read_group = phyloseq::sample_data(ps)$read_group),
-      by = "sample_primers"
-    )
+rareplot <- function(
+      ps = NULL,
+      otutab = NULL,
+      samdf = NULL,
+      step = "auto",
+      threshold = 0
+  ) {
+
+    # Extract components from phyloseq if supplied.
+    if (!is.null(ps)) {
+        otutab <- as(phyloseq::otu_table(ps), "matrix")
+        storage.mode(otutab) <- "integer"
+
+        if (!phyloseq::taxa_are_rows(ps)) {
+            otutab <- t(otutab)
+        }
+
+        samdf <- as(phyloseq::sample_data(ps),"data.frame")
+
+    } else {
+        if (is.null(otutab)) {
+            stop("Either ps or otutab must be supplied.")
+        }
+        if (!is.matrix(otutab)) {
+            stop("otutab must be a matrix.")
+        }
+        if (is.null(samdf)) {
+            stop("samdf must be supplied when ps is not provided.")
+        }
+    }
+
+    # Remove empty taxa and samples.
+    otutab <- otutab[
+        rowSums(otutab) > 0,
+        colSums(otutab) > 0,
+        drop = FALSE
+    ]
+
+    # Determine rarefaction step size.
+    if (identical(step, "auto")) {
+        step <- max(1L, ceiling(median(colSums(otutab)) / 100))
+    } else if (is.numeric(step)) {
+        step <- as.numeric(ceiling(step))
+    } else {
+        stop("Step must be numeric or 'auto'.")
+    }
+
+    # vegan expects samples as rows and taxa as columns.
+    rare <- vegan::rarecurve(
+        t(otutab),
+        step = step,
+        tidy = TRUE
+    ) %>%
+        dplyr::rename(
+            sample_primers = Site,
+            count = Sample,
+            ASV = Species
+        ) %>%
+        dplyr::left_join(
+            samdf %>%
+                dplyr::select(
+                    sample_primers,
+                    read_group
+                ),
+            by = "sample_primers"
+        )
   
   gg.rare <- rare %>%
     ggplot2::ggplot() +
