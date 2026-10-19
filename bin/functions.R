@@ -134,7 +134,7 @@ merge_refseq <- function(x) {
 }
 
 # Merge integer count matrices with taxa as rows and disjoint samples.
-merge_seqtabs <- function(x) {
+merge_seqtab <- function(x) {
   if (!length(x)) {
     stop("No count matrices were provided.")
   }
@@ -196,7 +196,7 @@ merge_seqtabs <- function(x) {
   merged
 }
 
-merge_taxtabs <- function(x) {
+merge_taxtab <- function(x) {
 
     merged <- data.table::rbindlist(
         lapply(
@@ -223,7 +223,7 @@ merge_taxtabs <- function(x) {
     merged
 }
 
-merge_samdfs <- function(x) {
+merge_samdf <- function(x) {
 
     merged <- data.table::rbindlist(
         lapply(
@@ -252,7 +252,7 @@ merge_samdfs <- function(x) {
 #
 # All OTU tables are standardized to taxa as rows before merging.
 # Taxonomy and reference sequences for duplicate ASVs retain the first
-# occurrence, subject to the behaviour of merge_taxtabs() and merge_refseq().
+# occurrence, subject to the behaviour of merge_taxtab() and merge_refseq().
 merge_phyloseq_disjoint_samples <- function(arguments) {
 
     if (!length(arguments)) {
@@ -335,8 +335,8 @@ merge_phyloseq_disjoint_samples <- function(arguments) {
     )
 
     # Merge the individual components.
-    seqtab_merged <- merge_seqtabs(seqtabs)
-    taxtab_merged <- merge_taxtabs(taxtabs)
+    seqtab_merged <- merge_seqtab(seqtabs)
+    taxtab_merged <- merge_taxtab(taxtabs)
     samdf_merged <- merge_samdf(samdfs)
     refseq_merged <- merge_refseq(refseqs)
 

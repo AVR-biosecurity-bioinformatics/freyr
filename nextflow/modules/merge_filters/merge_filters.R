@@ -40,7 +40,7 @@ suppressPackageStartupMessages(invisible(lapply(process_packages, library, chara
 ### run R code
 
 # combine seqtabs together (wide format)
-seqtab_combined <- merge_seqtabs(
+seqtab_combined <- merge_seqtab(
     lapply(
         stringr::str_split_1(seqtab_tibble_list, pattern = " "),
         function(f) {
