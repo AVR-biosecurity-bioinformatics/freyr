@@ -92,6 +92,19 @@ seqtab <- as.matrix( seqtab_dt[, ..sample_cols] )
 rownames(seqtab) <- seqtab_dt$seq_name
 storage.mode(seqtab) <- "integer"
 
+# Ensure seqtabs and taxtabs are aligned
+# Require unique ASV identifiers and matching ASV sets.
+stopifnot(
+    !anyDuplicated(rownames(seqtab)),
+    !anyDuplicated(rownames(taxtab)),
+    setequal(rownames(seqtab), rownames(taxtab))
+)
+
+# Align taxonomy rows to the abundance matrix before constructing keep_taxa.
+taxtab <- taxtab[rownames(seqtab), , drop = FALSE]
+
+stopifnot(identical(rownames(seqtab), rownames(taxtab)))
+
 # Reconstruct sample metadata with sample identifiers as row names.
 samdf <- as.data.frame(data.table::fread(samdf_file))
 rownames(samdf) <- samdf$sample_primers
