@@ -14,13 +14,13 @@ process JOINT_TAX {
     """
     
     Rscript --vanilla "${moduleDir}/joint_tax.R" \
-        --process_name "joint_tax" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --primers "$primers" \
-        --read_group "$read_group" \
-        --idtaxa_list "$tax" \
-        --blast_list "$blast" 
+        --process_name="joint_tax" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --primers="$primers" \
+        --read_group="$read_group" \
+        --idtaxa_list="$tax" \
+        --blast_list="$blast" 
         
     """
 

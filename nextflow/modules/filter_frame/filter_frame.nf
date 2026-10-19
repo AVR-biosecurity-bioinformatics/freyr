@@ -14,14 +14,14 @@ process FILTER_FRAME {
     """
     
     Rscript --vanilla "${moduleDir}/filter_frame.R" \
-        --process_name "filter_frame" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --primers "$primers" \
-        --seqtab_tibble_list "$seqtab_tibble_list" \
-        --fasta_list "$fasta_list" \
-        --coding "$process_params.coding" \
-        --genetic_code "$process_params.genetic_code"
+        --process_name="filter_frame" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --primers="$primers" \
+        --seqtab_tibble_list="$seqtab_tibble_list" \
+        --fasta_list="$fasta_list" \
+        --coding="$process_params.coding" \
+        --genetic_code="$process_params.genetic_code"
     
     """
 

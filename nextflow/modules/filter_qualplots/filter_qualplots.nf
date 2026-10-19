@@ -18,17 +18,17 @@ process FILTER_QUALPLOTS {
     def reads_paths = reads.join(";") // concatenate reads into a single string
     """
     Rscript --vanilla "${moduleDir}/filter_qualplots.R" \
-        --process_name "filter_qualplots" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --reads_paths "$reads_paths" \
-        --locus "$process_params.locus" \
-        --seq_type "$process_params.seq_type" \
-        --paired "$process_params.paired" \
-        --sample_primers "$sample_primers" \
-        --primers "$primers" \
-        --read_group "$read_group" \
-        --file_suffix "$file_suffix"
+        --process_name="filter_qualplots" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --reads_paths="$reads_paths" \
+        --locus="$process_params.locus" \
+        --seq_type="$process_params.seq_type" \
+        --paired="$process_params.paired" \
+        --sample_primers="$sample_primers" \
+        --primers="$primers" \
+        --read_group="$read_group" \
+        --file_suffix="$file_suffix"
 
     """
 

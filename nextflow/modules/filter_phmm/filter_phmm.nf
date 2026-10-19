@@ -14,15 +14,15 @@ process FILTER_PHMM {
     """
     
     Rscript --vanilla "${moduleDir}/filter_phmm.R" \
-        --process_name "filter_phmm" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --primers "$primers" \
-        --fasta "$fasta" \
-        --phmm "$process_params.phmm" \
-        --for_primer_seq "$process_params.for_primer_seq" \
-        --rev_primer_seq "$process_params.rev_primer_seq" \
-        --coding "$process_params.coding" 
+        --process_name="filter_phmm" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --primers="$primers" \
+        --fasta="$fasta" \
+        --phmm="$process_params.phmm" \
+        --for_primer_seq="$process_params.for_primer_seq" \
+        --rev_primer_seq="$process_params.rev_primer_seq" \
+        --coding="$process_params.coding" 
     
     """
 

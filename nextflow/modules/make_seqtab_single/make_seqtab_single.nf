@@ -15,15 +15,15 @@ process MAKE_SEQTAB_SINGLE {
     """
 
     Rscript --vanilla "${moduleDir}/make_seqtab_single.R" \
-        --process_name "make_seqtab_single" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --sample_primers "$sample_primers" \
-        --primers "$primers" \
-        --read_group "$read_group" \
-        --reads "$reads" \
-        --seqs "$seqs" \
-        --concat_unmerged "$concat_unmerged"
+        --process_name="make_seqtab_single" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --sample_primers="$sample_primers" \
+        --primers="$primers" \
+        --read_group="$read_group" \
+        --reads="$reads" \
+        --seqs="$seqs" \
+        --concat_unmerged="$concat_unmerged"
 
     """
 

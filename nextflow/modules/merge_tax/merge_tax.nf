@@ -14,11 +14,11 @@ process MERGE_TAX {
     """
     
     Rscript --vanilla "${moduleDir}/merge_tax.R" \
-        --process_name "merge_tax" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --primers "$primers" \
-        --taxtabs "$taxtabs" 
+        --process_name="merge_tax" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --primers="$primers" \
+        --taxtabs="$taxtabs" 
         
     """
     

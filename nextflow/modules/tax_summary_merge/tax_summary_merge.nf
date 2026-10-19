@@ -15,10 +15,10 @@ process TAX_SUMMARY_MERGE {
     """
     
     Rscript --vanilla "${moduleDir}/tax_summary_merge.R" \
-        --process_name "tax_summary_merge" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --tax_summary_list "$tax_summary_list"
+        --process_name="tax_summary_merge" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --tax_summary_list="$tax_summary_list"
         
     """
 

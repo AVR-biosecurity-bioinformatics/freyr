@@ -15,14 +15,14 @@ process FILTER_LENGTH {
     """
     
     Rscript --vanilla "${moduleDir}/filter_length.R" \
-        --process_name "filter_length" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --primers "$primers" \
-        --seqtab_tibble_list "$seqtab_tibble_list" \
-        --fasta_list "$fasta_list" \
-        --asv_min_length "$process_params.asv_min_length" \
-        --asv_max_length "$process_params.asv_max_length"
+        --process_name="filter_length" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --primers="$primers" \
+        --seqtab_tibble_list="$seqtab_tibble_list" \
+        --fasta_list="$fasta_list" \
+        --asv_min_length="$process_params.asv_min_length" \
+        --asv_max_length="$process_params.asv_max_length"
     
     """
 

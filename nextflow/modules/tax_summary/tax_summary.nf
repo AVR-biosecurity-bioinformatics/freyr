@@ -16,18 +16,18 @@ process TAX_SUMMARY {
     """
     
     Rscript --vanilla "${moduleDir}/tax_summary.R" \
-        --process_name "tax_summary" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --primers "$primers" \
-        --read_group "$read_group" \
-        --fasta "$fasta" \
-        --tax_list "$tax" \
-        --ids_list "$ids" \
-        --joint_file "$joint" \
-        --locus "$process_params.locus" \
-        --idtaxa_db "$process_params.idtaxa_db" \
-        --ref_fasta "$process_params.ref_fasta"
+        --process_name="tax_summary" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --primers="$primers" \
+        --read_group="$read_group" \
+        --fasta="$fasta" \
+        --tax_list="$tax" \
+        --ids_list="$ids" \
+        --joint_file="$joint" \
+        --locus="$process_params.locus" \
+        --idtaxa_db="$process_params.idtaxa_db" \
+        --ref_fasta="$process_params.ref_fasta"
         
     """
 

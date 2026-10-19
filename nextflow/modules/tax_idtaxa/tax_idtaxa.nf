@@ -15,14 +15,14 @@ process TAX_IDTAXA {
     """
     
     Rscript --vanilla "${moduleDir}/tax_idtaxa.R" \
-        --process_name "tax_idtaxa" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --primers "$primers" \
-        --read_group "$read_group" \
-        --idtaxa_confidence "$process_params.idtaxa_confidence" \
-        --idtaxa_db "$process_params.idtaxa_db" \
-        --fasta "$fasta" 
+        --process_name="tax_idtaxa" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --primers="$primers" \
+        --read_group="$read_group" \
+        --idtaxa_confidence="$process_params.idtaxa_confidence" \
+        --idtaxa_db="$process_params.idtaxa_db" \
+        --fasta="$fasta" 
         
     """
 

@@ -18,19 +18,19 @@ process DENOISE {
     """
 
     Rscript --vanilla "${moduleDir}/denoise.R" \
-        --process_name "denoise" \
-        --cpus "$task.cpus" \
-        --rdata "$params.rdata" \
-        --reads "$reads" \
-        --sample_primers "$sample_primers" \
-        --primers "$primers" \
-        --read_group "$read_group" \
-        --direction "$direction" \
-        --errormodel "$errormodel" \
-        --n_pass "$n_pass" \
-        --priors "$priors" \
-        --dada_band_size "$dada_band_size" \
-        --dada_homopolymer "$dada_homopolymer"
+        --process_name="denoise" \
+        --cpus="$task.cpus" \
+        --rdata="$params.rdata" \
+        --reads="$reads" \
+        --sample_primers="$sample_primers" \
+        --primers="$primers" \
+        --read_group="$read_group" \
+        --direction="$direction" \
+        --errormodel="$errormodel" \
+        --n_pass="$n_pass" \
+        --priors="$priors" \
+        --dada_band_size="$dada_band_size" \
+        --dada_homopolymer="$dada_homopolymer"
 
     """
     
