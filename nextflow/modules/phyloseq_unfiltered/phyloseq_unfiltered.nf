@@ -12,9 +12,10 @@ process PHYLOSEQ_UNFILTERED {
       path("seqtab_unfiltered_*.csv"),
       path("taxtab_unfiltered_*.csv"),
       path("samdf_unfiltered_*.csv"),
-      path("filters_*.csv"),
       path("asvs_unfiltered_*.fasta"),
-      emit: filter_inputs    
+      path("filters_*.csv"),
+      emit: components    
+
     tuple val(primers), path("seqtab_unfiltered_*.csv"), path("taxtab_unfiltered_*.csv"), path("samdf_unfiltered_*.csv"), path("raw_unfiltered_*.csv"), path("summary_unfiltered_*.csv"), emit: csvs
     tuple val(primers), path("ps_unfiltered_*.rds"), path("filters_*.csv"),                        emit: ps 
     path("asvs_unfiltered_*.fasta"),                                                               emit: asv_fasta

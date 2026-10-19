@@ -56,8 +56,8 @@ workflow RESULT_SUMMARIES {
             [ primers, process_params ] }
         .set { ch_accumulation_curve_params } 
 
-    PHYLOSEQ_UNFILTERED.out.filter_inputs
-        .map { primers, seqtab, _taxtab, samdf, _filters, _fasta -> [ primers, seqtab, samdf ]}
+    PHYLOSEQ_UNFILTERED.out.components
+        .map { primers, seqtab, _taxtab, samdf, _fasta, _filters -> [ primers, seqtab, samdf ]}
         .combine(ch_accumulation_curve_params, by: 0)
         .set { ch_accumulation_curve_input }
 
@@ -75,7 +75,7 @@ workflow RESULT_SUMMARIES {
             [ primers, process_params ] }
         .set { ch_phyloseq_filter_params } 
 
-    PHYLOSEQ_UNFILTERED.out.filter_inputs
+    PHYLOSEQ_UNFILTERED.out.components
         .combine(ch_phyloseq_filter_params, by: 0)
         .set { ch_phyloseq_filter_input }
 
@@ -100,33 +100,48 @@ workflow RESULT_SUMMARIES {
         
     }
 
-    //// Collect unfiltered inputs across loci.
-    ch_ps_unfiltered = PHYLOSEQ_UNFILTERED.out.ps
-        .map { _primers, ps, _filters_tibble -> ps }
-        .collect()
+    //// Collect unfiltered components across loci.
+    PHYLOSEQ_UNFILTERED.out.components
+        .map { primers, seqtab, taxtab, samdf, fasta, _filters ->
+            tuple(seqtab, taxtab, samdf, fasta)
+        }
+        .collect(flat: false)
+        .map { components ->
+            tuple(
+                "unfiltered",
+                components.collect { component -> component[0] },
+                components.collect { component -> component[1] },
+                components.collect { component -> component[2] },
+                components.collect { component -> component[3] }
+            )
+        }
+        .set { ch_merge_unfiltered_input }
 
-    ch_fasta_unfiltered = PHYLOSEQ_UNFILTERED.out.asv_fasta
-        .collect()
+    //// Collect filtered components across loci.
+    PHYLOSEQ_FILTER.out.components
+        .map { primers, seqtab, taxtab, samdf, fasta, _filters ->
+            tuple(seqtab, taxtab, samdf, fasta)
+        }
+        .collect(flat: false)
+        .map { components ->
+            tuple(
+                "filtered",
+                components.collect { component -> component[0] },
+                components.collect { component -> component[1] },
+                components.collect { component -> component[2] },
+                components.collect { component -> component[3] }
+            )
+        }
+        .set { ch_merge_filtered_input }
 
-    //// Collect filtered inputs across loci.
-    ch_ps_filtered = PHYLOSEQ_FILTER.out.ps
-        .map { _primers, ps -> ps }
-        .collect()
-
-    ch_fasta_filtered = PHYLOSEQ_FILTER.out.asv_fasta
-        .collect()
 
     //// Merge filtered and unfiltered objects in separate process tasks.
     MERGE_UNFILTERED(
-        ch_ps_unfiltered,
-        ch_fasta_unfiltered,
-        "unfiltered"
+        ch_merge_unfiltered_input
     )
 
     MERGE_FILTERED(
-        ch_ps_filtered,
-        ch_fasta_filtered,
-        "filtered"
+        ch_merge_filtered_input
     )
 
     //// Add merged filtered and unfiltered read-tracking outputs.

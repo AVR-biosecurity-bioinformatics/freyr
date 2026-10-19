@@ -206,15 +206,6 @@ sample_totals <- colSums(seqtab)
 
 if (!is.na(min_sample_reads)) {
     keep_samples <- sample_totals >= min_sample_reads
-
-    #if (!any(keep_samples)) {
-    #    stop(
-    #        "No samples contained reads above the minimum threshold of ",
-    #        min_sample_reads,
-    #        " for primers '", primers,
-    #        "' -- consider lowering this value"
-    #    )
-    #}
     seqtab <- seqtab[, keep_samples, drop = FALSE]
 } 
 

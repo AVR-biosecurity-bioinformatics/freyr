@@ -10,11 +10,19 @@ process PHYLOSEQ_FILTER {
         path(seqtab),
         path(taxtab),
         path(samdf),
-        path(filters),
         path(fasta),
+        path(filters),
         val(process_params)
         
     output:
+    tuple val(primers),
+        path("seqtab_filtered_*.csv"),
+        path("taxtab_filtered_*.csv"),
+        path("samdf_filtered_*.csv"),
+        path("asvs_filtered_*.fasta"),
+        path(filters),
+        emit: components
+
     tuple val(primers), path("seqtab_filtered_*.csv"), path("taxtab_filtered_*.csv"), path("samdf_filtered_*.csv"), path("raw_filtered_*.csv"), path("summary_filtered_*.csv"), emit: csvs
     tuple val(primers), path("ps_filtered_*.rds"),                          emit: ps 
     path("*.fasta"),                                                        emit: asv_fasta
