@@ -66,7 +66,6 @@ workflow RESULT_SUMMARIES {
         ch_accumulation_curve_input
     )
 
-
     //// combine PHYLOSEQ_FILTER parameters to input channel
     ch_primer_params
         .map { primers, primer_params ->

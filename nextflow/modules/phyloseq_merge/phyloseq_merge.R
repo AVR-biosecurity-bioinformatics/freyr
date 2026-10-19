@@ -65,7 +65,7 @@ seqtab <- seqtab_files %>%
         storage.mode(seqtab) <- "integer"
         seqtab
     }) %>%
-    merge_seqtabs()
+    merge_seqtab()
 
 # Read in and merge taxtabs
 # rows = ASVs, columns = taxonomy ranks, as character matrices
@@ -76,7 +76,7 @@ taxtab <- taxtab_files %>%
         rownames(taxtab) <- taxtab_dt$seq_name
         taxtab
     }) %>%
-    merge_taxtabs()
+    merge_taxtab()
 
 # Read in and merge samdfs
 # rows = samples, columns = metadata variables, as data frame
@@ -86,7 +86,7 @@ samdf <- samdf_files %>%
         rownames(samdf) <- samdf$sample_primers
         samdf
     }) %>%
-    merge_samdfs()
+    merge_samdf()
 
 # Read reference sequences and remove any taxonomy information (if present).
 seqs <- fasta_files %>%
