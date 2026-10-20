@@ -91,10 +91,17 @@
                 "errorMessage": "Maximum expected errors must be an integer >= 0."
             },
             "read_trunc_length": {
-                "type": "integer",
-                "minimum": 1,
+                "anyOf": [
+                    {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    {
+                        "const": "NA"
+                    }
+                ],
                 "description": "Length to which all reads will be truncated, if longer.",
-                "errorMessage": "Read truncation length must be an integer >= 1."
+                "errorMessage": "Read truncation length must be an integer >= 1. or NA"
             },
             "read_trim_left": {
                 "type": "integer",
@@ -185,11 +192,18 @@
                 "errorMessage": "BLAST minimum coverage must be an integer between 0 and 100, inclusive."
             },
             "cluster_threshold": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 100,
+                "anyOf": [
+                    {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                    },
+                    {
+                        "const": "NA"
+                    }
+                ],
                 "description": "Cluster threshold can be used to cluster ASVs derived from each primer into groups (ie. OTUs).",
-                "errorMessage": "Cluster threshold must be a number between 1 and 100, inclusive."
+                "errorMessage": "Cluster threshold must be a number between 1 and 100 inclusive, or NA"
             },
             "target_kingdom": {
                 "type": "string",
