@@ -96,65 +96,88 @@ if (nrow(blast_out) > 0 & isTRUE(run_blast)){
                 sseqid = stringr::str_replace_all(sseqid, "\\!\\?\\!\\?", " "),
                 stitle = stringr::str_replace_all(stitle, "\\!\\?\\!\\?", " ")
             ) %>% 
-            dplyr::filter(
-                !is.na(sseqid)
-            ) %>%
+            dplyr::filter(!is.na(sseqid)) %>% # Filter out results with no hit
             dplyr::mutate(
-                q_align = qend - qstart + 1, # Length of alignment between query and reference
-                q_len_adj = ifelse(qlen > slen, slen, qlen) # Handle case when query is longer than subject
+                # Normalise coordinates, accounting for reverse-strand alignments.
+                q_left  = pmin(qstart, qend),
+                q_right = pmax(qstart, qend),
+                s_left  = pmin(sstart, send),
+                s_right = pmax(sstart, send),
+                
+                # Count sequence positions spanned by each hit.
+                q_align = q_right - q_left + 1,
+                s_align = s_right - s_left + 1
             ) %>%
-            dplyr::mutate(full_pident = (pident * length)/(length - q_align + q_len_adj)) %>%
-            # Handle rare cases where there are multiple identical scoring matches within a single subject sequence (I.e multiple 16s copies)
-            dplyr::group_by(qseqid, sseqid, stitle, qstart, qend, length, full_pident) %>%
-            dplyr::slice(1) %>% 
-            dplyr::ungroup() %>%
-            # Handle cases where there are multiple matches overlapping the same segment of a subject by picking the highest scoring hit
-            # This is common when paired end reads that do not overlap are joined together (i.e. with concat_unmerged in freyr)
             dplyr::group_by(qseqid, sseqid, stitle) %>%
-            dplyr::group_modify(~{
-                if(nrow(.x) > 1){ # Don't check cases with single unique hits
-                #browser()  
-                # Check if hits overlap the same region
-                    # setup the IRanges object from the input qstart and qend
-                    ir <- IRanges::IRanges(as.numeric(.x$qstart), as.numeric(.x$qend))
-                    # find which hit ids overlap with each other
-                    ovrlp <- IRanges::findOverlaps(ir, drop.self = TRUE, drop.redundant = TRUE)
-                    # store id indices for further use
-                    hit1 <- queryHits(ovrlp)
-                    hit2 <- subjectHits(ovrlp)
-                    # width of overlaps between ids
-                    widths <- width(IRanges::pintersect(ir[hit1], ir[hit2])) - 1
-                    # result
-                    overlaps <- data.frame(id1 = hit1, id2 = hit2, widths)
-                    # if the multiple hits are overlapping, get the best hit - otherwise leave them as they will have been handled correctly when summing full_pident
-                    if(nrow(overlaps) > 0){
-                        newdf <- list()
-                        for (i in 1:nrow(overlaps)){
-                            newdf[[i]] <- 
-                                .x %>%
-                                dplyr::top_n(1, bitscore) %>%
-                                dplyr::top_n(1, pident) %>%
-                                dplyr::top_n(1, qcovs)
-                        }
-                        return(newdf %>% bind_rows() %>% distinct())
-                    } else {
-                        return(.x)
+            dplyr::group_modify(~ {
+                # This code loops through hits from best match to worst
+                # Top hit is always selected
+                # Seperate lower ranked hit(s) are retained only if they dont overlap both query and subject
+                # This is common when paired end reads that do not overlap are joined together (i.e. with concat_unmerged in freyr)
+                # NOTE: This selection is conservative - a single overlapping base will cause the lower hit to be discarded
+
+                # Sort by bitscore > pident > qcovs
+                # Ties are broken reproducibly using coordinates.
+                hits <- dplyr::arrange(
+                    .x,
+                    dplyr::desc(bitscore),
+                    dplyr::desc(pident),
+                    dplyr::desc(qcovs),
+                    q_left, q_right, s_left, s_right
+                )
+                            
+                keep <- integer(nrow(hits))
+                n_keep <- 0L
+                
+                # Loop through hits - Starting with best hit
+                for (i in seq_len(nrow(hits))) {
+                    # NOTE: top hit is always retianed
+                    retained <- keep[seq_len(n_keep)]
+                    
+                    # Check whether current hit shares any **query** positions with a retained better hit
+                    # If it does, it will be removed
+                    overlaps_query <- any(
+                        hits$q_left[i] <= hits$q_right[retained] &
+                        hits$q_right[i] >= hits$q_left[retained]
+                    )
+                    
+                    # Check whether current hit shares any **subject** positions with a retained better hit
+                    # If it does, it will be removed
+                    overlaps_subject <- any(
+                        hits$s_left[i] <= hits$s_right[retained] &
+                        hits$s_right[i] >= hits$s_left[retained]
+                    )
+                    
+                    # Retain only hits that overlap on neither sequence.
+                    if (!overlaps_query && !overlaps_subject) {
+                        n_keep <- n_keep + 1L
+                        keep[n_keep] <- i
                     }
-                } else {
-                    return(.x)
                 }
+                
+                hits[keep[seq_len(n_keep)], , drop = FALSE]
             }) %>%
             dplyr::summarise(
-                pident = sum(full_pident), # Combine hit stats for multiple discontiguous matches
-                qcovs = unique(qcovs),
+                # Adjust each full sequence length for alignment columns containing gaps
+                # Use the shorter of the two lengths
+                # This handles cases where query is longer than subject. See issue #26
+                pident = sum(pident * length) /
+                    min(
+                        dplyr::first(qlen) + sum(length - q_align),
+                        dplyr::first(slen) + sum(length - s_align)
+                    ),
+                
+                # Coverage of retained, non-overlapping query intervals.
+                qcovs = 100 * sum(q_align) / dplyr::first(qlen),
+                
                 max_score = max(bitscore),
                 total_score = sum(bitscore),
-                evalue = min(evalue)
-            ) %>%
-            # low stringency filters
+                evalue = min(evalue),
+                .groups = "drop"
+            )%>%
+            # Initial low stringency filters
             dplyr::filter(pident > 60, qcovs > 80) %>%
-            dplyr::ungroup() %>%
-            # get top hit per query
+            # Retain the best-ranked subject(s) per query, preserving exact ties.
             dplyr::group_by(qseqid) %>%
             dplyr::top_n(1, total_score) %>%
             dplyr::top_n(1, max_score) %>%
