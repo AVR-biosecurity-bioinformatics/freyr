@@ -127,42 +127,40 @@ sapply(seqs_extracted, getN) %>%
 
 ### convert DADA2 format sequence table to both .fasta of sequences with hashes and .csv of sample abundances
 
-# sequences as vector
-seq_vec <- seqtab %>% dada2::getSequences()
+seq_vec <- dada2::getSequences(seqtab)
 
 # sequences as hash
-hash_vec <- seq_vec %>% lapply(., digest::digest, algo = "sha256") %>% unlist()
+hash_vec <- vapply(
+    seq_vec,
+    digest::digest,
+    character(1),
+    algo = "sha256"
+)
 
-# named vector of sequences
-names(seq_vec) <- hash_vec
+# Replace sequence columns with hashes
+colnames(seqtab) <- hash_vec
 
-# named DSS
-seq_DSS <- Biostrings::DNAStringSet(seq_vec)
+# Export one row per sequence: seq_name followed by sample abundances.
+# Do not include a sequence column: downstream expects all other
+# columns to contain numeric sample counts.
+seqtab_out <- data.frame(
+    seq_name = hash_vec,
+    t(seqtab),
+    check.names = FALSE,
+    row.names = NULL
+)
 
-# tibble of hash and seq
-seq_tibble <- tibble::enframe(seq_vec, name = "seq_name", value = "sequence")
-
-# convert seqtab to one row per sequence, ID with hash
-seqtab_tibble <- 
-    seqtab %>% 
-    tidyr::as_tibble(rownames = "sample_primers") %>%
-    tidyr::pivot_longer(cols = !sample_primers, names_to = "sequence", values_to = "abundance") %>%
-    # join to seq_tibble
-    dplyr::left_join(., seq_tibble, by = "sequence") %>%
-    dplyr::select(-sequence) %>% # remove sequence
-    tidyr::pivot_wider(names_from = sample_primers, values_from = abundance)
-
-# add 0 abundance samples to seqtab
-if (length(sample_primers_fail) > 0){
-    seqtab_tibble[sample_primers_fail] <- 0L
+# Add samples with no sequences
+if (length(empty_mergers) > 0) {
+    seqtab_out[empty_mergers] <- 0L
 }
 
-# save DSS as .fasta
+# Write outputs
+seq_DSS <- Biostrings::DNAStringSet(seq_vec)
+names(seq_DSS) <- hash_vec
 write_fasta(seq_DSS, file = paste0(read_group, "_", primers, "_seqs.fasta"))
 
-# save seqtab_tidy as .csv
-readr::write_csv(seqtab_tibble, paste0(read_group, "_", primers, "_seqtab_tibble.csv"))
-
+data.table::fwrite(seqtab_out, paste0(read_group, "_", primers, "_seqtab_tibble.csv"))
 
 # stop(" *** stopped manually *** ") ##########################################
 }, 

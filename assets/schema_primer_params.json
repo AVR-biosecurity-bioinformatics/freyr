@@ -91,17 +91,10 @@
                 "errorMessage": "Maximum expected errors must be an integer >= 0."
             },
             "read_trunc_length": {
-                "anyOf": [
-                    {
-                        "type": "integer",
-                        "minimum": 1
-                    },
-                    {
-                        "const": "NA"
-                    }
-                ],
+                "type": "integer",
+                "minimum": 0,
                 "description": "Length to which all reads will be truncated, if longer.",
-                "errorMessage": "Read truncation length must be an integer >= 1. or NA"
+                "errorMessage": "Read truncation length must be an integer >= 0"
             },
             "read_trim_left": {
                 "type": "integer",
