@@ -134,66 +134,94 @@ merge_refseq <- function(x) {
 }
 
 # Merge integer count matrices with taxa as rows and disjoint samples.
-merge_seqtab <- function(x) {
-  if (!length(x)) {
-    stop("No count matrices were provided.")
-  }
+# Optionally return samples as rows and use DNA sequences as taxon names.
+merge_seqtab <- function(x, taxa_are_rows = TRUE, refseq = NULL) {
 
-  taxa <- unique(unlist(
-    lapply(x, rownames),
-    use.names = FALSE
-  ))
-
-  samples <- unlist(
-    lapply(x, colnames),
-    use.names = FALSE
-  )
-
-  taxa_index <- stats::setNames(
-    seq_along(taxa),
-    taxa
-  )
-
-  # Allocate the final abundance matrix once.
-  merged <- matrix(
-    0L,
-    nrow = length(taxa),
-    ncol = length(samples),
-    dimnames = list(taxa, samples)
-  )
-
-  column_start <- 1L
-
-  for (i in seq_along(x)) {
-    current <- x[[i]]
-
-    if (is.null(rownames(current))) {
-      stop("Count matrix ", i, " has no taxon row names.")
+    if (!length(x)) {
+        stop("No count matrices were provided.")
     }
 
-    if (is.null(colnames(current))) {
-      stop("Count matrix ", i, " has no sample column names.")
-    }
+    taxa <- unique(unlist(
+        lapply(x, rownames),
+        use.names = FALSE
+    ))
 
-    # Convert legacy double-backed count matrices if necessary.
-    if (typeof(current) != "integer") {
-      storage.mode(current) <- "integer"
-    }
-
-    row_index <- unname(
-      taxa_index[rownames(current)]
+    samples <- unlist(
+        lapply(x, colnames),
+        use.names = FALSE
     )
 
-    if (anyNA(row_index)) {
-      stop("Failed to match all taxa from count matrix ", i, " to the merged taxon set.")
+    taxa_index <- stats::setNames(
+        seq_along(taxa),
+        taxa
+    )
+
+    # Optionally replace ASV IDs with matching DNA sequences.
+    taxa_names <- if (is.null(refseq)) {
+        taxa
+    } else {
+        as.character(refseq)[match(taxa, names(refseq))]
     }
 
-    column_end <- column_start + ncol(current) - 1L
-    merged[row_index, seq.int(column_start, column_end)] <- current
-    column_start <- column_end + 1L
-  }
+    # Allocate the final matrix in the requested orientation.
+    merged <- if (taxa_are_rows) {
+        matrix(
+            0L,
+            nrow = length(taxa),
+            ncol = length(samples),
+            dimnames = list(taxa_names, samples)
+        )
+    } else {
+        matrix(
+            0L,
+            nrow = length(samples),
+            ncol = length(taxa),
+            dimnames = list(samples, taxa_names)
+        )
+    }
 
-  merged
+    column_start <- 1L
+
+    for (i in seq_along(x)) {
+        current <- x[[i]]
+
+        if (is.null(rownames(current))) {
+            stop("Count matrix ", i, " has no taxon row names.")
+        }
+
+        if (is.null(colnames(current))) {
+            stop("Count matrix ", i, " has no sample column names.")
+        }
+
+        # Convert legacy double-backed count matrices if necessary.
+        if (typeof(current) != "integer") {
+            storage.mode(current) <- "integer"
+        }
+
+        row_index <- unname(
+            taxa_index[rownames(current)]
+        )
+
+        if (anyNA(row_index)) {
+            stop(
+                "Failed to match all taxa from count matrix ",
+                i, " to the merged taxon set."
+            )
+        }
+
+        column_end <- column_start + ncol(current) - 1L
+        sample_index <- seq.int(column_start, column_end)
+
+        if (taxa_are_rows) {
+            merged[row_index, sample_index] <- current
+        } else {
+            merged[sample_index, row_index] <- t(current)
+        }
+
+        column_start <- column_end + 1L
+    }
+
+    merged
 }
 
 merge_taxtab <- function(x) {
