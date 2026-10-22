@@ -753,3 +753,32 @@ subset_model <- function(x, primers=NULL, positions=NULL, trimprimers=FALSE, min
   message(paste0("PHMM model subset to ", newPHMM$size, " base pairs"))
   return(newPHMM)
 }
+
+# Find a binding primer, optionally trimming its 5' end.
+find_binding_primer <- function(primer, model, try_trim = FALSE) {
+    binding <- get_binding_position(
+        primer,
+        model = model,
+        tryRC = TRUE,
+        min_score = 10
+    )
+    if (!is.na(binding$start)) {
+        return(primer)
+    }
+    # Keep at least 10 bases, matching the existing minimum score.
+    if (try_trim && nchar(primer) > 10L) {
+        for (r in seq_len(nchar(primer) - 10L)) {
+            candidate <- substring(primer, r + 1L)
+            binding <- get_binding_position(
+                candidate,
+                model = model,
+                tryRC = TRUE,
+                min_score = 10
+            )
+            if (!is.na(binding$start)) {
+                return(candidate)
+            }
+        }
+    }
+    NULL
+}
