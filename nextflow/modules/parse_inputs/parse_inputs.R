@@ -36,7 +36,6 @@ process_packages <- c(
     "readr",
     "stringr",
     "tidyr",
-    "ShortRead",
     "Biostrings",
     NULL
 )
@@ -298,9 +297,7 @@ if (nrow(samplesheet_df_er) == 0){
 }
 
 
-
-
-### extract read_group from read headers
+### Extract read_group from read headers if not present
 
 # # example for MiSeq data
 # id_miseq <- "M01054:780:000000000-K77JP:1:2116:15731:20801 1:N:0:TGGCATGT+CCTTGTAG"
@@ -314,132 +311,39 @@ if (nrow(samplesheet_df_er) == 0){
 # # MinION format
 # id_minion <- "837ed09c-2662-426a-bac9-ba59af484392 runid=3639b6d214857c63e9ea16dcba8f6471fbee372c ch=365 start_time=2025-03-05T14:38:32.214861+11:00 flow_cell_id=FBA86592 basecall_gpu=NVIDIA_RTX_A2000_12GB protocol_group_id=20250305_Grains_COI sample_id= barcode=barcode01 barcode_alias=barcode01 parent_read_id=837ed09c-2662-426a-bac9-ba59af484392 basecall_model_version_id=dna_r10.4.1_e8.2_400bps_sup@v4.3.0"
 
+if ("read_group" %in% colnames(samplesheet_df_er)) {
 
-### extract read_group from read headers if not present
-if ("read_group" %in% colnames(samplesheet_df_er)){
-  
-  if (any(samplesheet_df_er$read_group %>% is.na())){
-        stop(paste0("Some values of 'read_group' are NA!"))
-  } else {
-        # keep as-is -- information given by user
-        samplesheet_df_rg <- samplesheet_df_er
-  }
-
-} else {
-  
-    # extract read_group from read headers
-    samplesheet_df_rg <- samplesheet_df_er %>% dplyr::mutate(read_group = NA)
-
-    ## loop through each sample
-    for ( i in 1:length(samplesheet_df_rg$sample)){
-        sample_i_name <- samplesheet_df_rg$sample[i]
-        if ( paired == "true"){
-            # if paired, use fwd read
-            read_path <- samplesheet_df_rg$fwd[i]
-        } else if ( paired == "false" ){
-            # if unpaired, use single read
-            read_path <- samplesheet_df_rg$single[i]
-        }
-        # sample 10 reads from read file
-        read_sampler <- ShortRead::FastqSampler(read_path, 10)
-        set.seed(1); read_yield <- ShortRead::yield(read_sampler)
-        close(read_sampler) # close connection to file
-        # get vector of headers
-        read_headers <- read_yield@id %>% as.character
-        
-        ## detect format of sequencer and parse header accordingly
-        # Illumina format (MiSeq or NovaSeq)
-        if ( all(stringr::str_detect(read_headers, "^[[:alnum:]]+:\\d+:[[:alnum:]-]+:\\d+:\\d+:\\d+:\\d+ [12]:[YN]:\\d+((:[[:alpha:]+]+)|(:\\d+))?$"))){
-        
-            message(paste0("Read header format for sample '",sample_i_name,"' detected as Illumina (MiSeq or NovaSeq)"))
-            if ( seq_type == "nanopore" ){
-                stop(paste0(ppe, "'--seq_type' given as 'nanopore', but read header format appears to be Illumina!"))
-            }
-            # get sample flowcell (3rd element from : delimited list)
-            sample_flowcell <- read_headers %>% stringr::str_split(., ":") %>% sapply(., `[`, 3) %>% unique()
-            # check exactly one flowcell ID found
-            if (length(sample_flowcell) != 1){
-                stop(paste0("Invalid flowcell detection for sample '",sample_i_name,"'"))
-            }
-            # get sample lane (4th element from : delimited list)
-            sample_lane <- read_headers %>% stringr::str_split(., ":") %>% sapply(., `[`, 4) %>% unique()
-            # check exactly one lane number found
-            if (length(sample_lane) != 1){
-                stop(paste0("Invalid lane detection for sample '",sample_i_name,"'"))
-            }
-            # combine flowcell and lane into a single 'read_group' string
-            sample_rg <- paste0(sample_flowcell,"__",sample_lane)
-        
-        # MGI internal format 
-        } else if ( all(stringr::str_detect(read_headers, "^[[:alnum:]]+:\\d+:[[:alnum:]-]+:\\d+:[[:alnum:]]+:\\d+:\\d+ [12]:[YN]:\\d+((:[[:alpha:]+]+)|(:\\d+))?$")) ) {
-        
-            message(paste0("Read header format for sample '",sample_i_name,"' detected as MGI (converted)"))
-            if ( seq_type == "nanopore" ){
-                stop(paste0(ppe, "'--seq_type' given as 'nanopore', but read header format appears to be MGI!"))
-            }
-            # get sample flowcell (3rd element from : delimited list)
-            sample_flowcell <- read_headers %>% stringr::str_split(., ":") %>% sapply(., `[`, 3) %>% unique()
-            # check exactly one flowcell ID found
-            if (length(sample_flowcell) != 1){
-                stop(paste0("Invalid flowcell detection for sample '",sample_i_name,"'"))
-            }
-            # get sample lane (4th element from : delimited list)
-            sample_lane <- read_headers %>% stringr::str_split(., ":") %>% sapply(., `[`, 4) %>% unique()
-            # check exactly one lane number found
-            if (length(sample_lane) != 1){
-                stop(paste0("Invalid lane detection for sample '",sample_i_name,"'"))
-            }
-            # combine flowcell and lane into a single 'read_group' string
-            sample_rg <- paste0(sample_flowcell,"__",sample_lane)
-            
-        # MGI raw format
-        } else if ( all(stringr::str_detect(read_headers, "^[[:alnum:]]+/[12]$")) ) {
-        
-            message(paste0("Read header format for sample '",sample_i_name,"' detected as MGI (native)"))
-            if ( seq_type == "nanopore" ){
-                stop(paste0(ppe, "'--seq_type' given as 'nanopore', but read header format appears to be MGI!"))
-            }
-            # get sample flowcell (3rd element from : delimited list)
-            sample_flowcell <- stringr::str_extract(read_headers, "^[[:alnum:]]+?(?=L)") %>% unique()
-            # check exactly one flowcell ID found
-            if (length(sample_flowcell) != 1){
-                stop(paste0("Invalid flowcell detection for sample '",sample_i_name,"'"))
-            }
-            # get sample lane (4th element from : delimited list)
-            sample_lane <- stringr::str_extract(read_headers, "(?<=L)\\d+") %>% unique()
-            # check exactly one lane number found
-            if (length(sample_lane) != 1){
-                stop(paste0("Invalid lane detection for sample '",sample_i_name,"'"))
-            }
-            # combine flowcell and lane into a single 'read_group' string
-            sample_rg <- paste0(sample_flowcell,"__",sample_lane)
-        
-        # ONT format
-        } else if ( all(stringr::str_detect(read_headers, " runid=[[:alnum:]]+")) && all(stringr::str_detect(read_headers, " flow_cell_id=[[:alnum:]]+"))  ) {
-        
-            message(paste0("Read header format for sample '",sample_i_name,"' detected as ONT"))
-            if ( seq_type != "nanopore" ){
-                stop(paste0(ppe, "'--seq_type' given as '",seq_type,"', but read header format appears to be ONT/'nanopore'!"))
-            }
-
-            # extract flowcell ID as read group (no lanes)
-            sample_rg <- stringr::str_extract(id_minion, "(?<=flow_cell_id=)[[:alnum:]]+(?=( |$))") %>% unique() %>% paste0(., "__1")
-            # check only one sample_rg extracted
-            if (length(sample_rg) != 1){
-                stop(paste0("Invalid flowcell detection for sample '",sample_i_name,"'"))
-            }
-        
-        } else {
-            stop(paste0("Read header format for sample '",sample_i_name,"' could not be parsed!"))
-        }
-        
-        # update samplesheet tibble with new read_group for this sample
-        samplesheet_df_rg <- 
-            samplesheet_df_rg %>%
-            dplyr::mutate(read_group = dplyr::if_else(sample == sample_i_name, sample_rg, read_group))
-        
+    if (anyNA(samplesheet_df_er$read_group)) {
+        stop("Some values of 'read_group' are NA!")
     }
 
+    # Keep user-supplied read groups
+    samplesheet_df_rg <- samplesheet_df_er
+
+} else {
+
+    samplesheet_df_rg <- samplesheet_df_er
+
+    # Select the appropriate FASTQ path column
+    read_paths <- if (paired == "true") {
+        samplesheet_df_rg$fwd
+    } else {
+        samplesheet_df_rg$single
+    }
+
+    # Extract read groups from FASTQ headers
+    samplesheet_df_rg$read_group <- vapply(
+        seq_len(nrow(samplesheet_df_rg)),
+        function(i) {
+            extract_read_group(
+                read_path   = read_paths[i],
+                sample_name = samplesheet_df_rg$sample[i],
+                seq_type    = seq_type,
+                ppe         = ppe
+            )
+        },
+        character(1)
+    )
 }
 
 # check if any 'read_group' values are still NA
