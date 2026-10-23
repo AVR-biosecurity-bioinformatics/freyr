@@ -1,7 +1,7 @@
 process PARSE_INPUTS {
     tag "Whole dataset"
     label "small"
-    label "env_r_dada2"
+    label "env_r_core"
     publishDir { "${params.outdir}/modules/parse_inputs" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
     publishDir { "${params.outdir}/results/parsed_inputs"}, mode: 'copy'
 

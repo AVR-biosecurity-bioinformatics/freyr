@@ -1495,3 +1495,78 @@ validate_phyloseq_inputs <- function(
 
     invisible(TRUE)
 }
+
+
+# Extract sequencing read group from the first read in a FASTQ file.
+extract_read_group <- function(
+    read_path,
+    sample_name,
+    seq_type,
+    ppe = ""
+) {
+
+    # Open FASTQ (gzipped or plain text)
+    con <- if (grepl("\\.gz$", read_path, ignore.case = TRUE)) {
+        gzfile(read_path, "rt")
+    } else {
+        file(read_path, "rt")
+    }
+
+    on.exit(close(con), add = TRUE)
+
+    header <- readLines(con, n = 1)
+
+    if (length(header) == 0L) {
+        stop(paste0("No reads found for sample '", sample_name, "'"))
+    }
+
+    # Remove leading '@'
+    header <- sub("^@", "", header)
+
+    # Detect format
+    ILLUMINA_REGEX <- "^[[:alnum:]]+:\\d+:[[:alnum:]-]+:\\d+:\\d+:\\d+:\\d+ [12]:[YN]:\\d+((:[[:alpha:]+]+)|(:\\d+))?$"
+    MGI_CONVERTED_REGEX <- "^[[:alnum:]]+:\\d+:[[:alnum:]-]+:\\d+:[[:alnum:]]+:\\d+:\\d+ [12]:[YN]:\\d+((:[[:alpha:]+]+)|(:\\d+))?$"
+    MGI_NATIVE_REGEX <- "^[[:alnum:]]+/[12]$"
+    ONT_RUNID_REGEX <- " runid=[[:alnum:]]+"
+    ONT_FLOWCELL_REGEX <- " flow_cell_id=[[:alnum:]]+"
+
+    if (str_detect(header, ILLUMINA_REGEX)) {
+        format <- "illumina"
+    } else if (str_detect(header, MGI_CONVERTED_REGEX)) {
+        format <- "mgi_converted"
+    } else if (str_detect(header, MGI_NATIVE_REGEX)) {
+        format <- "mgi_native"
+    } else if (str_detect(header, ONT_RUNID_REGEX) && str_detect(header, ONT_FLOWCELL_REGEX)) {
+        format <- "ont"
+    } else {
+        stop(paste0("Read header format for sample '", sample_name, "' could not be parsed!"))
+    }
+
+    message(paste0("Read header format for sample '",sample_name, "' detected as ", format))
+
+    # Break if seq_type doesn't match detected format
+    if (format == "ont" && seq_type != "nanopore") {
+        stop(paste0(ppe,"'--seq_type' given as '",seq_type,"', but read header format appears to be ONT/'nanopore'!"))
+    }
+    if (format != "ont" && seq_type == "nanopore") {
+        stop(paste0(ppe,"'--seq_type' given as 'nanopore', but read header format appears to be ",format,"!"))
+    }
+
+    # Extract read group
+    if (format %in% c("illumina", "mgi_converted")) {
+        fields <- strsplit(sub(" .*", "", header),":",fixed = TRUE)[[1]]
+        flowcell <- fields[3]
+        lane <- fields[4]
+    }
+
+    if (format == "mgi_native") {
+        flowcell <- stringr::str_extract(header, "^[[:alnum:]]+?(?=L)")
+        lane <- stringr::str_extract(header, "(?<=L)\\d+")
+    }
+
+    if (format == "ont") {
+        flowcell <- stringr::str_extract(header,"(?<=flow_cell_id=)[[:alnum:]]+(?=( |$))")
+        lane <- "1"
+    }
+    return(paste0(flowcell, "__", lane))
+}
