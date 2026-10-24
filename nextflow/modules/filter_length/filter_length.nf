@@ -1,6 +1,6 @@
 process FILTER_LENGTH {
     tag "$primers"
-    label "medium"
+    label "small"
     label "env_r_core"
     publishDir { "${params.outdir}/modules/filter_length" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
 

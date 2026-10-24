@@ -37,9 +37,6 @@ sys.source(functions_file, envir = .GlobalEnv)
 process_packages <- c(
     "Biostrings",
     "dada2",
-    "dplyr",
-    "ggplot2",
-    "patchwork",
     "readr",
     "stringr",
     "tibble",
