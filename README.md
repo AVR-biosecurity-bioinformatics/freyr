@@ -8,7 +8,11 @@ This pipeline is being developed by [Agriculture Victoria Research](https://agri
 
 ### News
 
-**2025-06-19:** The samplesheet and primer parameter inputs to `freyr` have recently changed -- please see the [Usage](/docs/usage.md) page for detailed information on how to run the pipeline. 
+**2026-10-24:** Piperline style submission through the supplementary script is no longer supported. please see the [Usage](/docs/usage.md) page for detailed information on how to run the pipeline.
+
+**2026-10-16:** The submission process for `freyr` on BASC has recently changed to use conda software containers -- please check the [Usage](/docs/usage.md) page.
+
+**2025-06-19:** The samplesheet and primer parameter inputs to `freyr` have recently changed -- please check the [Usage](/docs/usage.md) page.
 
 **2024-08-26:** A [step-by-step guide/tutorial](/docs/nanopore_tutorial.md) focused on analyses of Nanopore data is now available for AgVic users of the pipeline with access to the BASC HPC system.
 
@@ -17,7 +21,9 @@ This pipeline is being developed by [Agriculture Victoria Research](https://agri
 
 ### Introduction
 
-> This pipeline is currently **experimental** and being actively developed, with no stable releases as yet! If you need a stable metabarcoding pipeline, we currently recommend [`pipeRline`](https://github.com/alexpiper/piperline) or [`nfcore/ampliseq`](https://github.com/nf-core/ampliseq).
+> [!WARNING]
+> This pipeline is currently under active development. The code, configuration and outputs may change without notice, and there is no guarantee that the current version is stable or suitable for production analyses.
+
 
 `freyr` is designed for analysing amplicon-based metabarcoding data where sequencing libraries were prepared without fragmentation. Currently short-read (eg. Illumina, MGI) paired- and single-end data are best supported, but long-read Nanopore data is supported in a very experimental state. 
 
@@ -55,7 +61,6 @@ For detailed information on how to run the pipeline, see [Usage](/docs/usage.md)
 
 The following are earmarked for inclusion into the pipeline in the near future. If you would like to request a specific feature, please [open an issue](https://github.com/AVR-biosecurity-bioinformatics/freyr/issues).
 - Support for additional taxonomic classifiers other than `IDTAXA` and `BLAST`
-- Support for newer versions of `nextflow`
 - Increased barcode flexibility
 - Improved reporting outputs for biosecurity and biosurveillance applications
 - Improved support for Nanopore data

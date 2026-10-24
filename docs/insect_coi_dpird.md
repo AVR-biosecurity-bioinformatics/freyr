@@ -201,8 +201,7 @@ cd $working_dir
 module load Java/17.0.6
 
 # run nextflow on test data
-NXF_VER=23.05.0-edge \
-    nextflow run . \
+nextflow run . \
     -profile basc_slurm,test
 
 # once the dataset has run, clean up your analysis directory

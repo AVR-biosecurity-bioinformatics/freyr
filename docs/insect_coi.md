@@ -120,8 +120,7 @@ module load Java/17.0.6
 
 # run the pipeline
 # make sure you replace the square bracketed file names (including the brackets) with the names of the files you made earlier
-NXF_VER=23.05.0-edge \
-    nextflow run . \
+nextflow run . \
     --samplesheet ./inputs/[your_samplesheet].csv \
     --primer_params ./inputs/[your_primer_params].csv \
     -profile basc_slurm
