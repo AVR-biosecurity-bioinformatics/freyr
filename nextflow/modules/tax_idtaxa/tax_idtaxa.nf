@@ -1,6 +1,6 @@
 process TAX_IDTAXA {
     tag "$primers; $read_group"
-    label "medium"
+    //label "medium"
     label "env_r_phyloseq"
     publishDir { "${params.outdir}/modules/tax_idtaxa" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
 

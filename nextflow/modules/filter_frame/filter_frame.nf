@@ -1,6 +1,6 @@
 process FILTER_FRAME {
     tag "$primers"
-    label "medium"
+    label "small"
     label "env_r_phyloseq"
     publishDir { "${params.outdir}/modules/filter_frame" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
 

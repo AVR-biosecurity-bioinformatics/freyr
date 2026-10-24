@@ -1,6 +1,6 @@
 process FILTER_CHIMERA {
     tag "$primers"
-    label "high"
+    //label "high"
     label "env_r_dada2"
     publishDir { "${params.outdir}/modules/filter_chimera" }, mode: 'copy', enabled: params.debug_mode.toString().toBoolean()
 
