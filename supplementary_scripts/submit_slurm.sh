@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# NOTE: This script is deprecated and should be deleted once users have moved to new format
+
 # The name of the job:
 #SBATCH --job-name="freyr"
 

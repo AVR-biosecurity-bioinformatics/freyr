@@ -30,10 +30,6 @@ git clone https://github.com/AVR-biosecurity-bioinformatics/freyr $analysis_dir
 
 cd $analysis_dir
 
-# set nextflow version
-
-export NXF_VER=23.05.0-edge 
-
 # run pipeline using your particular container manager and test data with a local executor
 
 nextflow run . -profile test,[my_container_manager] -executor local  
